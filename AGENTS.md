@@ -83,6 +83,14 @@ budget without filing `trellis-XXXX` and noting it in the commit body.
 - Directories: `kebab-case`.
 - Golden fixtures live under `__golden__/` (e.g. captured Pi RPC sessions,
   SPEC §9.7). Regenerate only via the documented update gate, never by hand.
+  Investigation goldens (`src/investigation/__golden__/<area>.jsonl`) are
+  re-recorded with `TRELLIS_UPDATE_PI_GOLDEN=1 bun run
+  scripts/update-pi-golden.ts --live` — both gates are required, so CI (which
+  sets neither) never makes a model call. Until a live capture exists the frozen
+  fixtures are hand-authored to the v0.74.0 wire shape (see
+  `src/investigation/__golden__/README.md`); the offline harness
+  (`src/investigation/golden.test.ts`) replays parser → zod → grader with no
+  network either way.
 - YAML config keys (rubric data, `targets.yaml`) stay in the schema's casing.
 
 Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.

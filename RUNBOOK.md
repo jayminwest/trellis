@@ -229,6 +229,50 @@ installs); it surfaces a warning at install time.
   `> ⚠️ This release contains a regression. Use vX.Y.(Z+1) or later.`
 - File `trellis-XXXX` with root cause + remediation links.
 
+## 4. Regenerating investigation goldens (SPEC §9.7)
+
+The investigation layer is tested offline against frozen `pi --mode rpc`
+sessions under `src/investigation/__golden__/` — one `<area>.jsonl` per area plus
+a `corrupted.jsonl`. `golden.test.ts` replays each stream through the real
+parser → zod validation → deterministic grader with **no network**. Until a live
+capture exists the fixtures are **hand-authored** to the v0.74.0 wire shape
+(marked in `__golden__/README.md`).
+
+### 4.1 When to regenerate
+
+- The Pi RPC envelope shape changes (a supported-version bump in `version.ts`).
+- A findings schema (`findings.ts`) changes the `submit_findings` argument shape.
+- You are replacing a hand-authored fixture with a real captured session.
+
+### 4.2 How to regenerate (operator, makes real model calls)
+
+Capture is **double-gated** so CI can never trigger a model call — it refuses
+unless both the env flag and `--live` are present:
+
+```bash
+# All four areas, against this repo:
+TRELLIS_UPDATE_PI_GOLDEN=1 bun run scripts/update-pi-golden.ts --live
+
+# A single area, against another checkout:
+TRELLIS_UPDATE_PI_GOLDEN=1 bun run scripts/update-pi-golden.ts --live \
+  --area documentation --repo /path/to/repo
+```
+
+Requires a working `pi` on `PATH` (>= the version in `version.ts`) and the
+provider credentials in the environment (e.g. `ANTHROPIC_API_KEY`, or `pi
+/login`). Each area is investigated through the real provider path; the raw
+stdout stream is canonicalized (volatile ids/timestamps/usage → fixed
+placeholders) and frozen.
+
+### 4.3 After regenerating
+
+1. Re-read the diff — only the captured **facts** should change, never the
+   placeholders.
+2. Update the `EXPECTED_GRADES` in `src/investigation/golden.test.ts` to match
+   the new facts, then `bun test src/investigation/golden.test.ts`.
+3. Run it twice — goldens must grade identically across consecutive runs.
+4. `bun run check:all` and commit the `__golden__/` change with the test update.
+
 ## Appendix — Common commands
 
 ```bash
