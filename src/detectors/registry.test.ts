@@ -20,6 +20,20 @@ const stub =
 /** Minimal context — registry resolution never touches it. */
 const ctx = { app: { path: ".", languages: [] } } as unknown as DetectionContext;
 
+/**
+ * Empty-repo context: real common detectors execute against this in the
+ * acceptance sweep, so its capabilities answer "nothing here" honestly —
+ * `readFile`→null, `glob`→[], `run`→exit 127 (tool missing). Every detector
+ * must still return a schema-valid result against it.
+ */
+const emptyCtx: DetectionContext = {
+	repoPath: "/tmp/empty",
+	app: { path: ".", languages: ["typescript"] },
+	run: async () => ({ exitCode: 127, stdout: "", stderr: "", timedOut: false }),
+	readFile: async () => null,
+	glob: async () => [],
+};
+
 describe("DetectorRegistry.resolve", () => {
 	test("returns the common detector for a common binding", async () => {
 		const reg = new DetectorRegistry({ codeowners: commonBinding(stub("common")) });
@@ -92,7 +106,7 @@ describe("registry covers the rubric (acceptance)", () => {
 			const result: DetectorResult = await REGISTRY.resolve(
 				c.id,
 				c.scope === "app" ? ["typescript"] : [],
-			)(ctx);
+			)(emptyCtx);
 			expect(detectorResultSchema.safeParse(result).success).toBe(true);
 		}
 	});

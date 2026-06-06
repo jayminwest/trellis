@@ -17,6 +17,7 @@
  * criterion resolves through the `no-detector` fallback — which still satisfies
  * the "covers all 70" contract, since resolution always yields a detector.
  */
+import * as common from "./common/index.ts";
 import { type Detector, type Language, noDetector } from "./types.ts";
 
 /** A criterion binding: one common detector, or a per-language adapter map. */
@@ -38,12 +39,54 @@ export function languageBinding(byLanguage: Partial<Record<Language, Detector>>)
 }
 
 /**
- * The authored criterion → detector bindings. Empty until the detector issues
- * populate it; the registry's fallback covers every unbound criterion. Keys must
- * be **deterministic** criterion ids — binding an agent criterion is a wiring
- * bug the registry tests catch by cross-checking keys against the rubric.
+ * The authored criterion → detector bindings. Per-language adapters (trellis-299e
+ * / 3d67 / 89b4) and os-eco-native detectors (trellis-7f70) extend this; the
+ * registry's fallback covers every still-unbound criterion. Keys must be
+ * **deterministic** criterion ids — binding an agent criterion is a wiring bug
+ * the registry tests catch by cross-checking keys against the rubric.
+ *
+ * Bound here (trellis-d600): the language-agnostic common detectors for §5.4
+ * Environment & Setup, §5.5 CI/Release/Deployment, §5.7 Security & Data, §5.8
+ * Process & Collaboration, and the language-agnostic §5.2 hygiene checks.
  */
-export const BINDINGS: Readonly<Record<string, Binding>> = {};
+export const BINDINGS: Readonly<Record<string, Binding>> = {
+	// §5.4 Environment & Setup
+	env_template: commonBinding(common.envTemplate),
+	gitignore_comprehensive: commonBinding(common.gitignoreComprehensive),
+	deps_pinned: commonBinding(common.depsPinned),
+	devcontainer: commonBinding(common.devcontainer),
+	// §5.5 CI, Release & Deployment
+	vcs_cli_tools: commonBinding(common.vcsCliTools),
+	monorepo_tooling: commonBinding(common.monorepoTooling),
+	dependency_update_automation: commonBinding(common.dependencyUpdateAutomation),
+	release_notes_automation: commonBinding(common.releaseNotesAutomation),
+	release_automation: commonBinding(common.releaseAutomation),
+	version_drift_detection: commonBinding(common.versionDriftDetection),
+	dead_feature_flag_detection: commonBinding(common.deadFeatureFlagDetection),
+	feature_flag_infrastructure: commonBinding(common.featureFlagInfrastructure),
+	fast_ci_feedback: commonBinding(common.fastCiFeedback),
+	build_performance_tracking: commonBinding(common.buildPerformanceTracking),
+	deployment_frequency: commonBinding(common.deploymentFrequency),
+	progressive_rollout: commonBinding(common.progressiveRollout),
+	rollback_automation: commonBinding(common.rollbackAutomation),
+	// §5.7 Security & Data
+	branch_protection: commonBinding(common.branchProtection),
+	automated_security_review: commonBinding(common.automatedSecurityReview),
+	secret_scanning: commonBinding(common.secretScanning),
+	min_release_age: commonBinding(common.minReleaseAge),
+	privacy_compliance: commonBinding(common.privacyCompliance),
+	// §5.8 Process & Collaboration
+	codeowners: commonBinding(common.codeowners),
+	issue_templates: commonBinding(common.issueTemplates),
+	issue_labeling_system: commonBinding(common.issueLabelingSystem),
+	pr_templates: commonBinding(common.prTemplates),
+	automated_pr_review: commonBinding(common.automatedPrReview),
+	backlog_health: commonBinding(common.backlogHealth),
+	// §5.2 Code Quality (language-agnostic hygiene) + §5.5 pre-commit
+	large_file_detection: commonBinding(common.largeFileDetection),
+	tech_debt_tracking: commonBinding(common.techDebtTracking),
+	pre_commit_hooks: commonBinding(common.preCommitHooks),
+};
 
 /** No-detector stub for a criterion with no binding at all. */
 function unboundStub(criterionId: string): Detector {
