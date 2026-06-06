@@ -111,6 +111,11 @@ export interface DriftOptions {
 	canonicalVersion?: string;
 	/** Per-repo whitelist (SPEC §6.5); standalone `trellis drift` defaults to empty. */
 	allowedDeltas?: readonly AllowedDelta[];
+	/**
+	 * Repo id stamped on the {@link DriftReport} — the fleet supplies the
+	 * `targets.yaml` id (SPEC §6.5); defaults to the audited path's basename.
+	 */
+	repoId?: string;
 	/** Test hook: load the manifest from an alternate directory. */
 	manifestDir?: string;
 	/** Test hook: read canonical bytes from an alternate directory. */
@@ -386,5 +391,5 @@ export function driftRepo(repoPath: string, opts: DriftOptions = {}): DriftRepor
 	const files = manifest.files.map((file) => driftFile(repoPath, file, deltas, opts.canonicalDir));
 	const summary = emptySummary();
 	for (const file of files) summary[file.state] += 1;
-	return { repo: basename(repoPath), canonicalVersion, files, summary };
+	return { repo: opts.repoId ?? basename(repoPath), canonicalVersion, files, summary };
 }

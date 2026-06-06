@@ -13,6 +13,7 @@ import { Command } from "commander";
 import { VERSION } from "../index.ts";
 import { registerAudit } from "./audit.ts";
 import { registerDrift } from "./drift.ts";
+import { registerFleet } from "./fleet.ts";
 import { CliError, EXIT, type OutputFormat, renderError, resolveFormat } from "./output.ts";
 import { registerRubric } from "./rubric.ts";
 import { registerStandards } from "./standards.ts";
@@ -37,12 +38,7 @@ export function buildProgram(): Command {
 
 	registerAudit(program);
 	registerDrift(program);
-
-	program
-		.command("fleet")
-		.description("audit every target in targets.yaml")
-		.option("--targets <file>", "fleet declaration", "targets.yaml")
-		.action(stub("fleet"));
+	registerFleet(program);
 
 	program
 		.command("report")

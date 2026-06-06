@@ -39,7 +39,7 @@ import {
 	type ScorecardEntry,
 	scoreRun,
 } from "../scoring/index.ts";
-import { type DriftOptions, driftRepo } from "../standards/index.ts";
+import { type DriftOptions, type DriftReport, driftRepo } from "../standards/index.ts";
 import type { Report } from "./types.ts";
 
 /** Rationale stamped on agent criteria when no investigation is wired into the audit. */
@@ -79,7 +79,28 @@ export interface AuditOptions {
 	 * `report.drift`; absent → no `drift` key is emitted (the §6.3 default).
 	 */
 	canonical?: DriftOptions;
+	/**
+	 * Repo id for the report + investigation cache + drift (SPEC §6.4/§6.5). The
+	 * fleet supplies the `targets.yaml` id so central state keys on a stable name;
+	 * defaults to the audited path's basename.
+	 */
+	repoId?: string;
+	/**
+	 * Criterion ids to force not-applicable (SPEC §6.5 `targets.yaml` `skip`).
+	 * Each listed criterion is graded `not-applicable` with the rationale {@link
+	 * SKIPPED_VIA_TARGETS}, skipping its detector/area entirely.
+	 */
+	skip?: readonly string[];
+	/**
+	 * os-eco-native detector toggle (SPEC §6.5/§8.4), surfaced on every detection
+	 * context for the os-eco adapter (trellis-7f70). Default on; `false` opts an
+	 * external repo out of seeds/mulch/canopy evidence.
+	 */
+	osecoDetectors?: boolean;
 }
+
+/** Rationale stamped on a criterion forced not-applicable by `targets.yaml` `skip` (SPEC §6.5). */
+export const SKIPPED_VIA_TARGETS = "skipped via targets.yaml";
 
 /** Map a {@link DetectorResult} onto the aggregator's {@link Outcome} vocabulary. */
 function outcomeOf(result: DetectorResult): Outcome {
@@ -105,6 +126,21 @@ function agentNoDetector(
 		denominator: scope === "app" ? appCount : 1,
 		rationale: clip(rationale),
 		naKind: "no-detector",
+	};
+}
+
+/**
+ * A `not-applicable` entry for a criterion the fleet forced to skip (SPEC §6.5).
+ * Denominator honors §6.2 (app → N, repo → 1); the kind is `not-applicable` (an
+ * intentional exclusion, not a coverage gap) with the {@link SKIPPED_VIA_TARGETS}
+ * rationale.
+ */
+function skippedEntry(scope: "repo" | "app", appCount: number): ScorecardEntry {
+	return {
+		numerator: null,
+		denominator: scope === "app" ? appCount : 1,
+		rationale: SKIPPED_VIA_TARGETS,
+		naKind: "not-applicable",
 	};
 }
 
@@ -179,6 +215,80 @@ function neededAreas(rubric: Rubric): AreaId[] {
 	return [...set];
 }
 
+/** One detection context paired with the app it views (repo-scope uses `app.path === "."`). */
+interface AppContext {
+	app: App;
+	ctx: ReturnType<typeof createDetectionContext>;
+}
+
+/**
+ * Score one deterministic criterion via its bound detector(s): a repo-scope
+ * criterion runs once at the root; an app-scope criterion runs per app and the
+ * results roll up (SPEC §3.1). The registry resolution is total, so an unbound
+ * criterion (or one with no adapter for the app's languages) lands as
+ * `no-detector` without throwing.
+ */
+async function deterministicEntry(
+	criterion: CriterionRecord,
+	registry: DetectorRegistry,
+	repoCtx: ReturnType<typeof createDetectionContext>,
+	appCtxs: readonly AppContext[],
+): Promise<ScorecardEntry> {
+	if (criterion.scope === "repo") {
+		const result = await registry.resolve(criterion.id, repoCtx.app.languages)(repoCtx);
+		return aggregateRepoScope({ outcome: outcomeOf(result), rationale: result.rationale });
+	}
+	const perApp = await Promise.all(
+		appCtxs.map(async ({ app, ctx }) => {
+			const result = await registry.resolve(criterion.id, app.languages)(ctx);
+			return { app: app.path, outcome: outcomeOf(result), rationale: result.rationale };
+		}),
+	);
+	return aggregateAppScope(perApp);
+}
+
+/**
+ * Score every rubric criterion into its §6.2 entry, in rubric order. Three
+ * disciplines coexist: a `skip`-listed criterion is forced not-applicable; an
+ * agent criterion is graded from its area's findings; everything else runs its
+ * deterministic detector(s).
+ */
+async function scoreAllCriteria(
+	rubric: Rubric,
+	skip: ReadonlySet<string>,
+	resolutions: Map<AreaId, AreaResolution>,
+	registry: DetectorRegistry,
+	repoCtx: ReturnType<typeof createDetectionContext>,
+	appCtxs: readonly AppContext[],
+	appCount: number,
+): Promise<Record<string, ScorecardEntry>> {
+	const criteria: Record<string, ScorecardEntry> = {};
+	for (const criterion of rubric.criteria) {
+		if (skip.has(criterion.id)) {
+			criteria[criterion.id] = skippedEntry(criterion.scope, appCount);
+		} else if (criterion.discoveryVia === "agent") {
+			criteria[criterion.id] = agentEntry(criterion, appCount, resolutions);
+		} else {
+			criteria[criterion.id] = await deterministicEntry(criterion, registry, repoCtx, appCtxs);
+		}
+	}
+	return criteria;
+}
+
+/**
+ * Fold canonical-config drift into the run (SPEC §10) when a canonical version is
+ * wired, else `undefined` (the §6.3 default omits the key). The audit's `repoId`
+ * seeds the drift report's id; an explicit `canonical.repoId` (the fleet sets one)
+ * still wins.
+ */
+function foldDrift(root: string, opts: AuditOptions): DriftReport | undefined {
+	if (!opts.canonical) return undefined;
+	return driftRepo(root, {
+		...(opts.repoId === undefined ? {} : { repoId: opts.repoId }),
+		...opts.canonical,
+	});
+}
+
 /** Union of every app's languages, sorted — the language set repo-scope detectors resolve against. */
 function repoLanguages(apps: readonly App[]): Language[] {
 	const set = new Set<Language>();
@@ -215,8 +325,12 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 	const root = resolve(repoPath);
 	const rubric = opts.rubric ?? loadRubric(opts.rubricDir);
 	const registry = opts.registry ?? REGISTRY;
-	const ctxOpts = opts.timeoutMs === undefined ? {} : { timeoutMs: opts.timeoutMs };
-	const repo = basename(root);
+	const ctxOpts = {
+		...(opts.timeoutMs === undefined ? {} : { timeoutMs: opts.timeoutMs }),
+		...(opts.osecoDetectors === undefined ? {} : { osecoDetectors: opts.osecoDetectors }),
+	};
+	const repo = opts.repoId ?? basename(root);
+	const skip = new Set(opts.skip ?? []);
 	const scoredAt = (opts.now ?? new Date()).toISOString();
 
 	const apps = await discoverApps(root, {
@@ -246,36 +360,23 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 			)
 		: new Map<AreaId, AreaResolution>();
 
-	const criteria: Record<string, ScorecardEntry> = {};
-	for (const criterion of rubric.criteria) {
-		if (criterion.discoveryVia === "agent") {
-			criteria[criterion.id] = agentEntry(criterion, apps.length, resolutions);
-			continue;
-		}
-		if (criterion.scope === "repo") {
-			const detector = registry.resolve(criterion.id, repoCtx.app.languages);
-			const result = await detector(repoCtx);
-			criteria[criterion.id] = aggregateRepoScope({
-				outcome: outcomeOf(result),
-				rationale: result.rationale,
-			});
-			continue;
-		}
-		const perApp = await Promise.all(
-			appCtxs.map(async ({ app, ctx }) => {
-				const detector = registry.resolve(criterion.id, app.languages);
-				const result = await detector(ctx);
-				return { app: app.path, outcome: outcomeOf(result), rationale: result.rationale };
-			}),
-		);
-		criteria[criterion.id] = aggregateAppScope(perApp);
-	}
+	const criteria = await scoreAllCriteria(
+		rubric,
+		skip,
+		resolutions,
+		registry,
+		repoCtx,
+		appCtxs,
+		apps.length,
+	);
 
 	const entries = new Map(Object.entries(criteria));
 	const score = scoreRun(
 		rubric.criteria.map((c) => c.id),
 		entries,
 	);
+
+	const drift = foldDrift(root, opts);
 
 	return {
 		repo,
@@ -287,8 +388,6 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 		coverage: score.coverage,
 		apps: toAppMap(apps),
 		criteria,
-		// `drift` stays absent (not `undefined`) when canonical comparison is off, so
-		// the §6.3 JSON omits the key entirely and the golden shape is unperturbed.
-		...(opts.canonical ? { drift: driftRepo(root, opts.canonical) } : {}),
+		...(drift ? { drift } : {}),
 	};
 }

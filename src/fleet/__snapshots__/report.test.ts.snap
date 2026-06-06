@@ -1,0 +1,27 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`renderFleetTerminal renders the aggregate dashboard 1`] = `
+"trellis fleet · 3 targets · rubric 1.0.0 · canonical 1.0.0 · 2 ok · 1 error
+scored 2026-06-06T00:00:00.000Z
+
+  target         level   pass    cov  drift             Δ     note
+  warren         L4       78%    90%  drift 0 · miss 0  +1
+  my-swift-app   L3       55%    80%  drift 2 · miss 1  new
+  external-repo  —          —      —  —                 —     error: path not found or not a directory
+
+2 ok · 1 error"
+`;
+
+exports[`renderFleetMarkdown renders a PR/issue-ready table 1`] = `
+"# Fleet audit
+
+3 targets · rubric 1.0.0 · canonical 1.0.0 · 2 ok · 1 error
+scored 2026-06-06T00:00:00.000Z
+
+| Target | Level | Pass | Coverage | Drift | Δ | Note |
+| --- | --- | --- | --- | --- | --- | --- |
+| \`warren\` | L4 | 78% | 90% | drift 0 · miss 0 | +1 |  |
+| \`my-swift-app\` | L3 | 55% | 80% | drift 2 · miss 1 | new |  |
+| \`external-repo\` | — | — | — | — | — | error: path not found or not a directory |
+"
+`;

@@ -21,6 +21,7 @@ targets:
           reason: "wider line width for generated migrations"
         - file: .github/workflows/ci.yml
           paths: ["jobs.test.strategy"] # structural allow-list within a file
+          reason: "matrix-tests the supported runtimes"
     skip: [dast_scanning] # optional: force-N/A specific criteria
 
   - id: my-swift-app
