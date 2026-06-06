@@ -18,6 +18,7 @@
  * the "covers all 70" contract, since resolution always yields a detector.
  */
 import * as common from "./common/index.ts";
+import * as swift from "./lang/swift/index.ts";
 import * as ts from "./lang/typescript/index.ts";
 import { type Detector, type Language, noDetector } from "./types.ts";
 
@@ -88,32 +89,69 @@ export const BINDINGS: Readonly<Record<string, Binding>> = {
 	tech_debt_tracking: commonBinding(common.techDebtTracking),
 	pre_commit_hooks: commonBinding(common.preCommitHooks),
 
-	// §5.2 Code Quality — TypeScript adapter (trellis-299e)
-	lint_config: languageBinding({ typescript: ts.lintConfig }),
-	type_check: languageBinding({ typescript: ts.typeCheck }),
-	formatter: languageBinding({ typescript: ts.formatter }),
-	strict_typing: languageBinding({ typescript: ts.strictTyping }),
-	naming_consistency: languageBinding({ typescript: ts.namingConsistency }),
-	dead_code_detection: languageBinding({ typescript: ts.deadCodeDetection }),
-	duplicate_code_detection: languageBinding({ typescript: ts.duplicateCodeDetection }),
-	unused_dependencies_detection: languageBinding({ typescript: ts.unusedDependenciesDetection }),
+	// §5.2 Code Quality — TypeScript (trellis-299e) + Swift (trellis-3d67) adapters
+	lint_config: languageBinding({ typescript: ts.lintConfig, swift: swift.lintConfig }),
+	type_check: languageBinding({ typescript: ts.typeCheck, swift: swift.typeCheck }),
+	formatter: languageBinding({ typescript: ts.formatter, swift: swift.formatter }),
+	strict_typing: languageBinding({ typescript: ts.strictTyping, swift: swift.strictTyping }),
+	naming_consistency: languageBinding({
+		typescript: ts.namingConsistency,
+		swift: swift.namingConsistency,
+	}),
+	dead_code_detection: languageBinding({
+		typescript: ts.deadCodeDetection,
+		swift: swift.deadCodeDetection,
+	}),
+	duplicate_code_detection: languageBinding({
+		typescript: ts.duplicateCodeDetection,
+		swift: swift.duplicateCodeDetection,
+	}),
+	unused_dependencies_detection: languageBinding({
+		typescript: ts.unusedDependenciesDetection,
+		swift: swift.unusedDependenciesDetection,
+	}),
 	code_modularization: languageBinding({ typescript: ts.codeModularization }),
-	cyclomatic_complexity: languageBinding({ typescript: ts.cyclomaticComplexity }),
-	// §5.3 Testing — deterministic TypeScript subset
-	unit_tests_runnable: languageBinding({ typescript: ts.unitTestsRunnable }),
-	test_coverage_thresholds: languageBinding({ typescript: ts.testCoverageThresholds }),
+	cyclomatic_complexity: languageBinding({
+		typescript: ts.cyclomaticComplexity,
+		swift: swift.cyclomaticComplexity,
+	}),
+	// §5.3 Testing — deterministic TypeScript + Swift subset
+	unit_tests_runnable: languageBinding({
+		typescript: ts.unitTestsRunnable,
+		swift: swift.unitTestsRunnable,
+	}),
+	test_coverage_thresholds: languageBinding({
+		typescript: ts.testCoverageThresholds,
+		swift: swift.testCoverageThresholds,
+	}),
 	// §5.6 Observability — deterministic TypeScript subset
 	structured_logging: languageBinding({ typescript: ts.structuredLogging }),
 	error_tracking_contextualized: languageBinding({ typescript: ts.errorTrackingContextualized }),
-	// §5.9 Locality & Contracts — TypeScript bindings (thesis category)
+	// §5.9 Locality & Contracts — TypeScript bindings (thesis category); Swift maps the
+	// stack-concept criteria to honest not-applicable (no Swift analogue, SPEC §8.3).
 	machine_checked_architecture: languageBinding({ typescript: ts.machineCheckedArchitecture }),
-	import_cycle_detection: languageBinding({ typescript: ts.importCycleDetection }),
+	import_cycle_detection: languageBinding({
+		typescript: ts.importCycleDetection,
+		swift: swift.importCycleDetection,
+	}),
 	orphan_module_detection: languageBinding({ typescript: ts.orphanModuleDetection }),
-	explicit_any_detection: languageBinding({ typescript: ts.explicitAnyDetection }),
+	explicit_any_detection: languageBinding({
+		typescript: ts.explicitAnyDetection,
+		swift: swift.explicitAnyDetection,
+	}),
 	strictest_type_checking: languageBinding({ typescript: ts.strictestTypeChecking }),
-	greppable_exports: languageBinding({ typescript: ts.greppableExports }),
-	barrel_file_reexport_detection: languageBinding({ typescript: ts.barrelFileReexportDetection }),
-	mutation_testing: languageBinding({ typescript: ts.mutationTesting }),
+	greppable_exports: languageBinding({
+		typescript: ts.greppableExports,
+		swift: swift.greppableExports,
+	}),
+	barrel_file_reexport_detection: languageBinding({
+		typescript: ts.barrelFileReexportDetection,
+		swift: swift.barrelFileReexportDetection,
+	}),
+	mutation_testing: languageBinding({
+		typescript: ts.mutationTesting,
+		swift: swift.mutationTesting,
+	}),
 };
 
 /** No-detector stub for a criterion with no binding at all. */

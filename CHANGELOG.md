@@ -11,6 +11,25 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Swift adapter detectors (SPEC §8.3, §14 milestone 4): `src/detectors/lang/swift/`
+  binds the §8.3 table's Swift column across four config-first modules
+  (`code-quality.ts`, `testing.ts`, `locality.ts`, shared `util.ts`). SwiftLint
+  (`.swiftlint.yml` with `disabled_rules`/`only_rules`-aware default-rule
+  semantics) drives `lint_config` / `naming_consistency` / `cyclomatic_complexity`;
+  swift-format/SwiftFormat → `formatter`; periphery → `dead_code_detection`;
+  jscpd → `duplicate_code_detection`; `-warnings-as-errors` in `Package.swift` →
+  `strict_typing`; muter → `mutation_testing`. `type_check` (`swift build`) and
+  `unit_tests_runnable` / `test_coverage_thresholds` (`swift test
+  --enable-code-coverage`) run the toolchain as a subprocess and degrade to
+  `no-detector` on exit 127, so CI without a Swift toolchain never false-fails
+  (tests stub the process boundary and require no `swift`). Tools are detected
+  via config files or a `gatherToolingText` sweep (manifest + Make/Mint/Brew glue
+  + CI workflows + `scripts/`). The six concepts Swift lacks
+  (`unused_dependencies_detection`, `greppable_exports`,
+  `barrel_file_reexport_detection`, `explicit_any_detection`,
+  `import_cycle_detection`, and unconfigured `mutation_testing`) resolve to
+  `not-applicable` with a rationale naming the language gap (SPEC §8.3), never a
+  silent skip. The registry adds the `swift` adapter to each language binding.
 - Report renderers + the first end-to-end audit (SPEC §6.3, §14 milestone 3):
   `src/report/` assembles and renders the per-run §6.3 document. `build.ts`'s
   `auditRepo` is the surface-agnostic core pipeline — rubric → app discovery →
