@@ -129,9 +129,79 @@ describe("trellis (program)", () => {
 	});
 
 	test("unimplemented commands exit non-zero with a stub message", async () => {
-		const { code, stderr } = await runCli(["drift", join(import.meta.dir, "..")]);
+		const { code, stderr } = await runCli(["report"]);
 		expect(code).not.toBe(0);
 		expect(stderr).toContain("not yet implemented");
+	});
+});
+
+describe("trellis standards", () => {
+	test("prints the canonical set version and a per-file table", async () => {
+		const { code, stdout } = await runCli(["standards"]);
+		expect(code).toBe(0);
+		expect(stdout).toContain("canonical set");
+		expect(stdout).toContain("biome.json");
+		expect(stdout).toContain("matcher");
+	});
+
+	test("--json emits the manifest document", async () => {
+		const { code, stdout } = await runCli(["standards", "--json"]);
+		expect(code).toBe(0);
+		const manifest = JSON.parse(stdout);
+		expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
+		expect(Array.isArray(manifest.files)).toBe(true);
+		expect(manifest.files[0]).toHaveProperty("matcher");
+	});
+
+	test("--md emits a markdown table", async () => {
+		const { code, stdout } = await runCli(["standards", "--md"]);
+		expect(code).toBe(0);
+		expect(stdout).toContain("# Canonical standards");
+		expect(stdout).toContain("| File | Version | Matcher |");
+	});
+});
+
+describe("trellis drift", () => {
+	let dir: string;
+
+	beforeEach(() => {
+		dir = mkdtempSync(join(tmpdir(), "trellis-cli-drift-"));
+		// A repo with no canonical files at all → every file reports missing.
+		writeFileSync(join(dir, "README.md"), "# fixture\n");
+	});
+
+	afterEach(() => {
+		rmSync(dir, { recursive: true, force: true });
+	});
+
+	test("prints a per-file drift table for a repo lacking canonical files", async () => {
+		const { code, stdout } = await runCli(["drift", dir]);
+		expect(code).toBe(0);
+		expect(stdout).toContain("trellis drift");
+		expect(stdout).toContain("biome.json");
+		expect(stdout).toContain("MISS");
+	});
+
+	test("--json emits a parseable drift report with a summary", async () => {
+		const { code, stdout } = await runCli(["drift", dir, "--json"]);
+		expect(code).toBe(0);
+		const report = JSON.parse(stdout);
+		expect(report.canonicalVersion).toMatch(/^\d+\.\d+\.\d+$/);
+		expect(Array.isArray(report.files)).toBe(true);
+		expect(report.summary.missing).toBe(report.files.length);
+	});
+
+	test("--md emits a markdown table", async () => {
+		const { code, stdout } = await runCli(["drift", dir, "--md"]);
+		expect(code).toBe(0);
+		expect(stdout).toContain("# Canonical drift");
+		expect(stdout).toContain("| File | State | Matcher | Note |");
+	});
+
+	test("an unbundled --canonical version errors out", async () => {
+		const { code, stderr } = await runCli(["drift", dir, "--canonical", "9.9.9"]);
+		expect(code).not.toBe(0);
+		expect(stderr).toContain("not bundled");
 	});
 });
 
@@ -214,5 +284,26 @@ describe("trellis audit", () => {
 		});
 		expect(code).toBe(0);
 		expect(existsSync(dbPath)).toBe(false);
+	});
+
+	test("omits report.drift by default", async () => {
+		const { code, stdout } = await runCli(["audit", dir, "--json"], {
+			TRELLIS_DB: dbPath,
+			...NO_PI,
+		});
+		expect(code).toBe(0);
+		expect(JSON.parse(stdout).drift).toBeUndefined();
+	});
+
+	test("--canonical folds canonical-config drift into report.drift (SPEC §10)", async () => {
+		const { code, stdout } = await runCli(["audit", dir, "--json", "--canonical", "1.0.0"], {
+			TRELLIS_DB: dbPath,
+			...NO_PI,
+		});
+		expect(code).toBe(0);
+		const report = JSON.parse(stdout);
+		expect(report.drift).toBeDefined();
+		expect(report.drift.canonicalVersion).toBe("1.0.0");
+		expect(report.drift.summary.missing).toBeGreaterThan(0);
 	});
 });

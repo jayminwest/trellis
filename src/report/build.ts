@@ -39,6 +39,7 @@ import {
 	type ScorecardEntry,
 	scoreRun,
 } from "../scoring/index.ts";
+import { type DriftOptions, driftRepo } from "../standards/index.ts";
 import type { Report } from "./types.ts";
 
 /** Rationale stamped on agent criteria when no investigation is wired into the audit. */
@@ -72,6 +73,12 @@ export interface AuditOptions {
 	 * (cache-or-run) once and its facts grade every criterion bound to it.
 	 */
 	investigation?: InvestigationDeps;
+	/**
+	 * Canonical-config drift wiring (SPEC §10). Present → the audit compares the
+	 * checkout against the bundled canonical set and folds the result into
+	 * `report.drift`; absent → no `drift` key is emitted (the §6.3 default).
+	 */
+	canonical?: DriftOptions;
 }
 
 /** Map a {@link DetectorResult} onto the aggregator's {@link Outcome} vocabulary. */
@@ -280,5 +287,8 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 		coverage: score.coverage,
 		apps: toAppMap(apps),
 		criteria,
+		// `drift` stays absent (not `undefined`) when canonical comparison is off, so
+		// the §6.3 JSON omits the key entirely and the golden shape is unperturbed.
+		...(opts.canonical ? { drift: driftRepo(root, opts.canonical) } : {}),
 	};
 }

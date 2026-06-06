@@ -9,12 +9,15 @@
  * only field not derived from repo state is `scoredAt`; everything else is a pure
  * function of the checkout, the rubric version, and the detector set.
  *
- * `drift` (§10) and `changesSinceLastRun` (§11) are deliberately absent until
- * their milestones (trellis-ffdd / trellis-dde8) land — adding them later is a
- * superset change that does not perturb existing keys.
+ * `drift` (§10) is present only when the audit was given a canonical version to
+ * compare against; `changesSinceLastRun` (§11) is deliberately absent until its
+ * milestone (trellis-dde8) lands — adding it later is a superset change that does
+ * not perturb existing keys.
  */
+
 import type { Level } from "../rubric/index.ts";
 import type { ScorecardEntry } from "../scoring/index.ts";
+import type { DriftReport } from "../standards/index.ts";
 
 /** One app's entry in the report's §6.3 `apps` map. */
 export interface AppDescriptor {
@@ -42,4 +45,6 @@ export interface Report {
 	apps: Record<string, AppDescriptor>;
 	/** Per-criterion §6.2 entries, in rubric order (the JSON key order). */
 	criteria: Record<string, ScorecardEntry>;
+	/** Canonical-config drift (SPEC §10), present only when a canonical version was compared. */
+	drift?: DriftReport;
 }

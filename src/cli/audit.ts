@@ -12,10 +12,11 @@
  * to the central SQLite history (SPEC §6.4) — which also backs the investigation
  * cache — unless `--no-persist` is given; `--db` overrides the central DB
  * location. `TRELLIS_PI_BIN` overrides the `pi` binary the provider spawns.
- * `--rubric-version` is informational for now; `--canonical` is accepted for
- * forward-compatibility and ignored until the drift layer lands (trellis-ffdd).
- * Exit is always `0` in this milestone — the `--fail-on` contract arrives with
- * the SDK exit-code step (trellis-28a5).
+ * `--rubric-version` is informational for now; `--canonical <v>` opts the run into
+ * canonical-config drift (SPEC §10), folding the per-file result into
+ * `report.drift` — standalone, so allowed deltas are empty (the fleet supplies
+ * per-repo deltas later, trellis-6eb1). Exit is always `0` in this milestone —
+ * the `--fail-on` contract arrives with the SDK exit-code step (trellis-28a5).
  */
 import type { Command } from "commander";
 import { Option } from "commander";
@@ -74,6 +75,7 @@ async function runAudit(repoPath: string, opts: AuditCliOptions): Promise<void> 
 				noCache: opts.cache === false,
 				...(piBin ? { investigateOpts: { piBin } } : {}),
 			},
+			...(opts.canonical ? { canonical: { canonicalVersion: opts.canonical } } : {}),
 		});
 		store?.insertRun(report);
 		emit(format, {

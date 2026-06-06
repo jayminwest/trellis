@@ -12,8 +12,10 @@
 import { Command } from "commander";
 import { VERSION } from "../index.ts";
 import { registerAudit } from "./audit.ts";
+import { registerDrift } from "./drift.ts";
 import { CliError, EXIT, type OutputFormat, renderError, resolveFormat } from "./output.ts";
 import { registerRubric } from "./rubric.ts";
+import { registerStandards } from "./standards.ts";
 
 const NOT_IMPLEMENTED = "not yet implemented — see SPEC §14 milestones";
 
@@ -34,12 +36,7 @@ export function buildProgram(): Command {
 		.option("--md", "emit a markdown report");
 
 	registerAudit(program);
-
-	program
-		.command("drift")
-		.argument("<repo-path>", "path to the repository to compare")
-		.description("L1 canonical-config drift only")
-		.action(stub("drift"));
+	registerDrift(program);
 
 	program
 		.command("fleet")
@@ -55,11 +52,7 @@ export function buildProgram(): Command {
 		.action(stub("report"));
 
 	registerRubric(program);
-
-	program
-		.command("standards")
-		.description("show canonical manifest + versions")
-		.action(stub("standards"));
+	registerStandards(program);
 
 	return program;
 }
