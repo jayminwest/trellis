@@ -11,6 +11,22 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Scoring engine (the v0 scorer, SPEC §3.4): `src/scoring/` is pure,
+  surface-agnostic core with no I/O. `band.ts` maps a fraction to a 20-pt
+  maturity band (L1 0–20% … L5 80–100%, lower-bound inclusive) and `clampLevel`
+  takes the monotonic coverage clamp (`min`, only ever lowers). `entry.ts`
+  defines the §6.2 `ScorecardEntry` (numerator/denominator/rationale/naKind), a
+  zod schema enforcing the numerator↔naKind biconditional and ≤500-char
+  rationale, and the `disposition`/`perCriterionScore` classifiers. `score.ts`'s
+  `scoreRun` folds a run's scorecard over the rubric universe into `passRate`
+  (mean over counted criteria, N/A excluded), `coverage`
+  (`counted / (counted + no-detector + skipped)`, `not-applicable` excluded),
+  and the clamped `level`, with a counts breakdown. `aggregate.ts` rolls raw
+  outcomes into entries: repo-scope denominator always `1`, app-scope
+  `numerator = passing apps` / `denominator = N`, collapsing all-N/A apps to the
+  right naKind. `gate`/`weight` stay reserved and unread (SPEC §3.3).
+  (`trellis-92f6`)
+
 - CLI skeleton + first end-to-end command (SPEC §12, §13.1, §14.1): `src/cli/`
   is a thin commander surface that parses args, calls the domain core, and
   shapes output only. `src/cli/main.ts` registers the SPEC §12 command set
