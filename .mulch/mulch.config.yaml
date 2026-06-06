@@ -11,6 +11,7 @@ domains:
   store: {}
   investigation: {}
   standards: {}
+  fleet: {}
 governance:
   max_entries: 100
   warn_entries: 150
