@@ -11,6 +11,29 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Pi RPC provider (SPEC §9): `src/investigation/provider/` exposes the single
+  core entrypoint `investigate(repoPath, area, opts)` through which all facts are
+  produced — both the CLI and SDK reach Pi through it, so the surfaces can never
+  disagree. `pi/argv.ts` builds the locked one-shot read-only argv (`--mode rpc
+  --no-session --no-extensions -e <findings-extension> --offline
+  --no-context-files --provider/--model --tools read,grep,find,ls,submit_findings
+  --system-prompt <per-area prompt>`) with §9.4 provider/model precedence (CLI
+  flags > `targets.yaml` defaults > a documented constant; provider lowercased).
+  `pi/env.ts` does env-passthrough only (never argv): the anthropic base triple
+  always, plus the `PI_PROVIDER_ENV_KEYS` map per provider. `pi/findings-extension.ts`
+  is the Pi extension that registers `submit_findings`, deriving the tool's
+  JSON-schema from the area's zod findings schema via zod v4's native
+  `z.toJSONSchema`. `pi/session.ts` is the §9.3 protocol state machine: write one
+  prompt and hold stdin open, watch stdout JSONL for the `submit_findings`
+  `toolCall`, zod-validate its arguments, close stdin on capture; on a
+  missing/invalid call send one corrective prompt echoing the zod errors (bounded
+  to N retries, default 2); exhaustion / `stopReason:error` / heartbeat stall /
+  process exit resolve `no-detector` with a rationale — never a fabricated pass.
+  `pi/version.ts` probes `pi --version` against a documented minimum and degrades
+  every agent criterion to `no-detector` (with a hint) when Pi is missing or
+  incompatible — it never crashes the audit. All paths (argv, env filtering,
+  retry/corrective flow, watchdog, degradation) are unit-tested against a scripted
+  fake Pi process with zero network or model access.
 - Swift adapter detectors (SPEC §8.3, §14 milestone 4): `src/detectors/lang/swift/`
   binds the §8.3 table's Swift column across four config-first modules
   (`code-quality.ts`, `testing.ts`, `locality.ts`, shared `util.ts`). SwiftLint
