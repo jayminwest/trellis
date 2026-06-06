@@ -1,0 +1,32 @@
+# trellis fleet declaration (SPEC §6.5).
+#
+# Copy to `targets.yaml` (gitignored) and edit. Because trellis keeps audit
+# state centrally, per-repo *allowed deltas* for canonical-config drift live
+# here — not inside the audited repos themselves.
+
+defaults:
+  canonicalVersion: "1.0.0" # which standards/ version to compare against
+  # investigation:            # optional default provider/model (SPEC §9.4)
+  #   provider: anthropic
+  #   model: claude-opus-4-8
+
+targets:
+  - id: warren
+    path: /Users/jaymin/Projects/os-eco/warren
+    languages: [typescript] # optional hint; auto-detected if omitted
+    canonical:
+      version: "1.0.0" # per-repo override of defaults.canonicalVersion
+      allowedDeltas: # files/keys this repo is allowed to diverge on
+        - file: biome.json
+          reason: "wider line width for generated migrations"
+        - file: .github/workflows/ci.yml
+          paths: ["jobs.test.strategy"] # structural allow-list within a file
+    skip: [dast_scanning] # optional: force-N/A specific criteria
+
+  - id: my-swift-app
+    path: /Users/jaymin/Projects/strays/my-swift-app
+    languages: [swift]
+
+  - id: external-repo
+    path: ../some-non-oseco-repo
+    osecoDetectors: false # disable os-eco-native detectors (SPEC §8.4)

@@ -1,0 +1,52 @@
+# ---- secrets & env -------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.example.template
+
+# ---- node / bun ----------------------------------------------------
+node_modules/
+.bun/
+bun.lockb.bak
+
+# ---- build / dist --------------------------------------------------
+dist/
+build/
+*.tsbuildinfo
+
+# ---- test artifacts ------------------------------------------------
+coverage/
+test-results/
+junit.xml
+*.lcov
+
+# ---- trellis local state -------------------------------------------
+# Audit history DB and any scratch output live outside version control.
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+targets.yaml
+!targets.yaml.example
+
+# ---- IDE / editor --------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ---- OS noise ------------------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ---- logs ----------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.run-plan-logs/
+
+# ---- agent-local scratch -------------------------------------------
+.factory-mission-scratch/
+.claude/settings.local.json

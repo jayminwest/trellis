@@ -1,0 +1,55 @@
+{
+	"name": "@os-eco/trellis-cli",
+	"version": "0.0.1",
+	"description": "Agentic-readiness audit & sync for code repositories — score a repo against a de-branded rubric, detect canonical-config drift, and keep a fleet in standard",
+	"type": "module",
+	"bin": {
+		"trellis": "./src/cli/main.ts"
+	},
+	"main": "src/index.ts",
+	"files": ["src"],
+	"publishConfig": {
+		"access": "public"
+	},
+	"engines": {
+		"bun": ">=1.1.0"
+	},
+	"keywords": [
+		"audit",
+		"standards",
+		"rubric",
+		"agents",
+		"ai",
+		"cli",
+		"developer-tools"
+	],
+	"author": "Jaymin West",
+	"license": "MIT",
+	"homepage": "https://github.com/jayminwest/trellis",
+	"bugs": {
+		"url": "https://github.com/jayminwest/trellis/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jayminwest/trellis.git"
+	},
+	"scripts": {
+		"test": "bun test",
+		"lint": "biome check --error-on-warnings .",
+		"lint:fix": "biome check --write --error-on-warnings .",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.14",
+		"@types/bun": "latest",
+		"@types/js-yaml": "^4.0.9",
+		"knip": "^6.14.2",
+		"typescript": "^6.0.3"
+	},
+	"dependencies": {
+		"commander": "^15.0.0",
+		"js-yaml": "^4.1.1",
+		"pino": "^10.3.1",
+		"zod": "^4.4.3"
+	}
+}

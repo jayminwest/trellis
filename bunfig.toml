@@ -1,0 +1,7 @@
+# Bun runtime configuration for trellis.
+# See https://bun.sh/docs/runtime/bunfig for available options.
+#
+# Tests are colocated as <name>.test.ts next to the unit under test inside src/.
+
+[test]
+root = "src"
