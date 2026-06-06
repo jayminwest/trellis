@@ -1,19 +1,22 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { RUBRIC_VERSION } from "../rubric/version.ts";
 
 /** Absolute path to the CLI entrypoint, resolved relative to this test file. */
 const MAIN = join(import.meta.dir, "main.ts");
 
 /** Spawn the CLI with `args` and capture exit code + streams. */
-async function runCli(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
+async function runCli(
+	args: string[],
+	env: Record<string, string> = {},
+): Promise<{ code: number; stdout: string; stderr: string }> {
 	const proc = Bun.spawn(["bun", "run", MAIN, ...args], {
 		stdout: "pipe",
 		stderr: "pipe",
 		// Keep stdout machine-clean even if a future default logs at info.
-		env: { ...process.env, TRELLIS_LOG_LEVEL: "silent" },
+		env: { ...process.env, TRELLIS_LOG_LEVEL: "silent", ...env },
 	});
 	const [stdout, stderr] = await Promise.all([
 		new Response(proc.stdout).text(),
@@ -134,6 +137,8 @@ describe("trellis (program)", () => {
 
 describe("trellis audit", () => {
 	let dir: string;
+	let dbDir: string;
+	let dbPath: string;
 
 	beforeEach(() => {
 		// A minimal single-app fixture — keeps detector subprocesses cheap/fast.
@@ -141,14 +146,18 @@ describe("trellis audit", () => {
 		writeFileSync(join(dir, "README.md"), "# fixture\n");
 		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", main: "./i.ts" }));
 		writeFileSync(join(dir, ".gitignore"), "node_modules\n");
+		// A central DB outside the audited repo, so tests never touch ~/.trellis.
+		dbDir = mkdtempSync(join(tmpdir(), "trellis-cli-db-"));
+		dbPath = join(dbDir, "trellis.db");
 	});
 
 	afterEach(() => {
 		rmSync(dir, { recursive: true, force: true });
+		rmSync(dbDir, { recursive: true, force: true });
 	});
 
 	test("prints a coherent terminal scorecard", async () => {
-		const { code, stdout } = await runCli(["audit", dir]);
+		const { code, stdout } = await runCli(["audit", dir], { TRELLIS_DB: dbPath });
 		expect(code).toBe(0);
 		expect(stdout).toContain("Level ");
 		expect(stdout).toContain("pass-rate");
@@ -157,7 +166,7 @@ describe("trellis audit", () => {
 	});
 
 	test("--json emits a parseable §6.3 report with every rubric criterion", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--json"]);
+		const { code, stdout } = await runCli(["audit", dir, "--json"], { TRELLIS_DB: dbPath });
 		expect(code).toBe(0);
 		const report = JSON.parse(stdout);
 		expect(report.rubricVersion).toBe(RUBRIC_VERSION);
@@ -168,9 +177,34 @@ describe("trellis audit", () => {
 	});
 
 	test("--md emits a markdown scorecard", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--md"]);
+		const { code, stdout } = await runCli(["audit", dir, "--md"], { TRELLIS_DB: dbPath });
 		expect(code).toBe(0);
 		expect(stdout).toContain("# Agentic-readiness scorecard");
 		expect(stdout).toContain("| Category | Measured |");
+	});
+
+	test("persists each run to the central history (SPEC §6.4)", async () => {
+		const first = await runCli(["audit", dir, "--db", dbPath], { TRELLIS_DB: "" });
+		const second = await runCli(["audit", dir, "--db", dbPath], { TRELLIS_DB: "" });
+		expect(first.code).toBe(0);
+		expect(second.code).toBe(0);
+
+		const { openStore } = await import("../store/index.ts");
+		const store = openStore(dbPath);
+		try {
+			const repo = basename(dir);
+			const runs = store.runsSince(repo, "2000-01-01T00:00:00.000Z");
+			expect(runs).toHaveLength(2);
+		} finally {
+			store.close();
+		}
+	});
+
+	test("--no-persist skips writing to the history", async () => {
+		const { code } = await runCli(["audit", dir, "--db", dbPath, "--no-persist"], {
+			TRELLIS_DB: "",
+		});
+		expect(code).toBe(0);
+		expect(existsSync(dbPath)).toBe(false);
 	});
 });

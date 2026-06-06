@@ -7,9 +7,11 @@
  *
  * Agent-discovery criteria resolve to `no-detector` inside the pipeline (the
  * investigation layer is not wired yet, trellis-4222), so coverage honestly
- * reflects the gap. `--rubric-version` is informational for now; the `--no-cache`
- * / `--canonical` flags are accepted for forward-compatibility and ignored until
- * the investigation (trellis-4222) and drift (trellis-ffdd) layers land. Exit is
+ * reflects the gap. Each run persists to the central SQLite history (SPEC §6.4)
+ * unless `--no-persist` is given; `--db` overrides the central DB location.
+ * `--rubric-version` is informational for now; the `--no-cache` / `--canonical`
+ * flags are accepted for forward-compatibility and ignored until the
+ * investigation (trellis-4222) and drift (trellis-ffdd) layers land. Exit is
  * always `0` in this milestone — the `--fail-on` contract arrives with the SDK
  * exit-code step (trellis-28a5).
  */
@@ -17,6 +19,7 @@ import type { Command } from "commander";
 import { Option } from "commander";
 import { auditRepo, renderMarkdown, renderTerminal } from "../report/index.ts";
 import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
+import { openStore } from "../store/index.ts";
 import { CliError, EXIT, emit, type Rendered, resolveFormat } from "./output.ts";
 
 /** Local options for the audit command, merged with the global format flags. */
@@ -26,6 +29,10 @@ interface AuditCliOptions {
 	cache?: boolean;
 	rubricVersion?: string;
 	canonical?: string;
+	/** SQLite history path; defaults to `TRELLIS_DB` env or `~/.trellis/trellis.db`. */
+	db?: string;
+	/** Skip persisting this run to the central history. */
+	persist?: boolean;
 	/** Hidden: load an alternate rubric directory (used by tests/fixtures). */
 	rubricDir?: string;
 }
@@ -39,6 +46,8 @@ export function registerAudit(program: Command): void {
 		.option("--no-cache", "force re-investigation (ignore cached findings)")
 		.option("--rubric-version <v>", "pin the rubric version (informational)")
 		.option("--canonical <v>", "pin the canonical standards version")
+		.option("--db <path>", "SQLite history path (default: $TRELLIS_DB or ~/.trellis/trellis.db)")
+		.option("--no-persist", "do not write this run to the central history")
 		.addOption(new Option("--rubric-dir <path>", "load an alternate rubric directory").hideHelp())
 		.action(function (this: Command, repoPath: string) {
 			return runAudit(repoPath, this.optsWithGlobals() as AuditCliOptions);
@@ -53,6 +62,14 @@ async function runAudit(repoPath: string, opts: AuditCliOptions): Promise<void> 
 		rubric,
 		...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
 	});
+	if (opts.persist !== false) {
+		const store = openStore(opts.db);
+		try {
+			store.insertRun(report);
+		} finally {
+			store.close();
+		}
+	}
 	emit(format, {
 		human: renderTerminal(report, rubric),
 		json: report,
