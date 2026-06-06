@@ -4,6 +4,7 @@ domains:
   ci: {}
   rubric: {}
   cli: {}
+  scoring: {}
 governance:
   max_entries: 100
   warn_entries: 150
