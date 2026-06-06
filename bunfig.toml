@@ -1,7 +1,6 @@
 # Bun runtime configuration for trellis.
 # See https://bun.sh/docs/runtime/bunfig for available options.
 #
-# Tests are colocated as <name>.test.ts next to the unit under test inside src/.
-
-[test]
-root = "src"
+# Tests are colocated as <name>.test.ts next to the unit under test. We rely on
+# Bun's default recursive discovery so both the domain core (src/) and the
+# quality ratchets (scripts/) are exercised by a bare `bun test`.

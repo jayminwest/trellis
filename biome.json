@@ -50,5 +50,21 @@
 		"enabled": true,
 		"indentStyle": "tab",
 		"lineWidth": 100
-	}
+	},
+	"overrides": [
+		{
+			"includes": [
+				"scripts/check-debt-markers.ts",
+				"scripts/check-file-sizes.ts",
+				"scripts/validate-agents-md.ts"
+			],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"noExcessiveCognitiveComplexity": "off"
+					}
+				}
+			}
+		}
+	]
 }

@@ -1,21 +1,11 @@
 {
 	"$schema": "https://unpkg.com/knip@6/schema.json",
-	"ignore": [
-		".bun/**",
-		"data/**",
-		"dist/**",
-		"coverage/**",
-		"test-results/**"
-	],
+	"ignore": [".bun/**", "data/**", "dist/**", "coverage/**", "test-results/**"],
+	"ignoreUnresolved": ["bun-types"],
+	"ignoreDependencies": ["js-yaml", "@types/js-yaml", "pino", "zod"],
 	"workspaces": {
 		".": {
-			"entry": [
-				"src/index.ts",
-				"src/**/main.ts",
-				"src/**/cli.ts",
-				"scripts/**/*.ts",
-				"**/*.test.ts"
-			],
+			"entry": ["src/**/main.ts", "scripts/**/*.ts", "**/*.test.ts"],
 			"project": ["src/**/*.ts", "scripts/**/*.ts"]
 		}
 	}

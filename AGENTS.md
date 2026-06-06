@@ -16,7 +16,7 @@ of criteria are deterministic file/config/command checks; the rest are decided
 by a deterministic grader consuming objective facts gathered by a bounded LLM
 investigation pass. trellis also detects **canonical-config drift** — it
 compares a repo's shared tooling files against a bundled, versioned
-`standards/` set, honoring per-repo allowed deltas.
+`src/standards/` set, honoring per-repo allowed deltas.
 
 trellis is part of [os-eco](https://github.com/jayminwest/os-eco), the AI agent
 tooling ecosystem. It is the **measurement surface**: it grades the very
@@ -78,7 +78,7 @@ budget without filing `trellis-XXXX` and noting it in the commit body.
 
 ### Filenames & directories
 
-- Source files: `kebab-case.ts`. Tests are `<name>.test.ts` next to the file
+- Source files: kebab-case `*.ts`. Tests are `<name>.test.ts` next to the file
   under test.
 - Directories: `kebab-case`.
 - Golden fixtures live under `__golden__/` (e.g. captured Pi RPC sessions,
@@ -105,9 +105,10 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 
 ### Architecture discipline (api>cli>sdk, SPEC §13.1)
 
-- All behavior lives in the **core** modules under `src/` (`rubric/`,
-  `discovery/`, `detectors/`, `investigation/`, `scoring/`, `standards/`,
-  `fleet/`, `store/`, `report/`). No business logic anywhere else.
+- All behavior lives in the **core** modules under `src/` (`src/rubric/`,
+  `src/discovery/`, `src/detectors/`, `src/investigation/`, `src/scoring/`,
+  `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`). No business
+  logic anywhere else.
 - `src/cli/` is a **thin** commander pass-through; `src/client/` is a typed
   SDK whose types **mirror the core** (annotate `// Mirrors src/<x>`). Both
   call the same core functions so a programmatic audit and a CLI audit
