@@ -41,3 +41,11 @@ export {
 	gradedCriterionIds,
 	SKIPPABLE_AGENT_CRITERIA,
 } from "./grader.ts";
+export {
+	type AreaResolution,
+	type InvestigateFn,
+	type InvestigationCache,
+	type InvestigationContext,
+	type InvestigationDeps,
+	runInvestigation,
+} from "./run.ts";

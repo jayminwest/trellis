@@ -5,15 +5,17 @@
  * nothing itself — the level, scores, and per-criterion entries all come from
  * core.
  *
- * Agent-discovery criteria resolve to `no-detector` inside the pipeline (the
- * investigation layer is not wired yet, trellis-4222), so coverage honestly
- * reflects the gap. Each run persists to the central SQLite history (SPEC §6.4)
- * unless `--no-persist` is given; `--db` overrides the central DB location.
- * `--rubric-version` is informational for now; the `--no-cache` / `--canonical`
- * flags are accepted for forward-compatibility and ignored until the
- * investigation (trellis-4222) and drift (trellis-ffdd) layers land. Exit is
- * always `0` in this milestone — the `--fail-on` contract arrives with the SDK
- * exit-code step (trellis-28a5).
+ * Agent-discovery criteria are graded by the investigation layer (SPEC §7.3):
+ * each referenced area is resolved once via the central cache (`--no-cache`
+ * forces re-investigation) backed by the Pi provider, and a missing/incompatible
+ * Pi degrades those criteria to `no-detector` without crashing. Each run persists
+ * to the central SQLite history (SPEC §6.4) — which also backs the investigation
+ * cache — unless `--no-persist` is given; `--db` overrides the central DB
+ * location. `TRELLIS_PI_BIN` overrides the `pi` binary the provider spawns.
+ * `--rubric-version` is informational for now; `--canonical` is accepted for
+ * forward-compatibility and ignored until the drift layer lands (trellis-ffdd).
+ * Exit is always `0` in this milestone — the `--fail-on` contract arrives with
+ * the SDK exit-code step (trellis-28a5).
  */
 import type { Command } from "commander";
 import { Option } from "commander";
@@ -58,23 +60,30 @@ export function registerAudit(program: Command): void {
 async function runAudit(repoPath: string, opts: AuditCliOptions): Promise<void> {
 	const format = resolveFormat(opts);
 	const rubric = loadRubricOrThrow(opts.rubricDir);
-	const report = await auditRepo(repoPath, {
-		rubric,
-		...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
-	});
-	if (opts.persist !== false) {
-		const store = openStore(opts.db);
-		try {
-			store.insertRun(report);
-		} finally {
-			store.close();
-		}
+	// The store doubles as the run history and the investigation cache; opening it
+	// also backs `--no-cache`. With `--no-persist` we touch no DB at all, so the
+	// investigation runs uncached (still degrading gracefully if Pi is absent).
+	const store = opts.persist === false ? null : openStore(opts.db);
+	const piBin = process.env.TRELLIS_PI_BIN?.trim();
+	try {
+		const report = await auditRepo(repoPath, {
+			rubric,
+			...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
+			investigation: {
+				...(store ? { cache: store } : {}),
+				noCache: opts.cache === false,
+				...(piBin ? { investigateOpts: { piBin } } : {}),
+			},
+		});
+		store?.insertRun(report);
+		emit(format, {
+			human: renderTerminal(report, rubric),
+			json: report,
+			md: renderMarkdown(report, rubric),
+		} satisfies Rendered);
+	} finally {
+		store?.close();
 	}
-	emit(format, {
-		human: renderTerminal(report, rubric),
-		json: report,
-		md: renderMarkdown(report, rubric),
-	} satisfies Rendered);
 }
 
 /** Load the rubric, converting a loader {@link RubricError} into a {@link CliError}. */
