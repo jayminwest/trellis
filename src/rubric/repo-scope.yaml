@@ -1,0 +1,393 @@
+# Repo-scope criteria (SPEC §5, §6.1) — the WHAT layer; never names a tool.
+#
+# The 44 criteria scored once for the whole repository (denominator always 1).
+# Grouped by category in §5 order. Fields per SPEC §6.1:
+#   id, category, scope, level, skippable, discoveryVia,
+#   investigation (non-null IFF discoveryVia: agent),
+#   gate (reserved; exactly one per category), weight (reserved; default 1).
+# `gate`, `weight`, and a null `investigation` rely on schema defaults when
+# omitted. Clean-room authored from SPEC §5.
+
+# --- 5.1 Documentation (10, all R, all agent) -----------------------------
+# Areas: documentation, agent-config.
+
+# README at root with setup/usage.
+- id: readme
+  category: documentation
+  scope: repo
+  level: 1
+  skippable: false
+  discoveryVia: agent
+  investigation: documentation
+
+# Non-trivial agent-instructions file.
+- id: agents_md
+  category: documentation
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: agent
+  investigation: agent-config
+
+# Build command written down.
+- id: build_cmd_doc
+  category: documentation
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: agent
+  investigation: documentation
+
+# Tool/workflow that generates docs.
+- id: automated_doc_generation
+  category: documentation
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: agent
+  investigation: documentation
+
+# Runbooks reachable.
+- id: runbooks_documented
+  category: documentation
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: agent
+  investigation: documentation
+
+# GATE: one-shot fresh-clone -> running dev env.
+- id: single_command_setup
+  category: documentation
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: agent
+  investigation: documentation
+  gate: true
+
+# >=1 valid skill.
+- id: skills
+  category: documentation
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: agent
+  investigation: agent-config
+
+# Key docs modified recently.
+- id: documentation_freshness
+  category: documentation
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: agent
+  investigation: documentation
+
+# Arch/flow diagram or dependency docs.
+- id: service_flow_documented
+  category: documentation
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: agent
+  investigation: documentation
+
+# Automation keeps agent-instructions honest (presupposes agents_md).
+- id: agents_md_validation
+  category: documentation
+  scope: repo
+  level: 4
+  skippable: false
+  discoveryVia: agent
+  investigation: agent-config
+
+# --- 5.2 Code Quality (2 R of 12) -----------------------------------------
+
+# File-size budget enforced.
+- id: large_file_detection
+  category: code_quality
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: deterministic
+
+# Debt markers inventoried/tracked.
+- id: tech_debt_tracking
+  category: code_quality
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: deterministic
+
+# --- 5.4 Environment & Setup (7, all R) -----------------------------------
+# Area: setup-runnability.
+
+# Committed .env-style example.
+- id: env_template
+  category: environment_setup
+  scope: repo
+  level: 1
+  skippable: false
+  discoveryVia: deterministic
+
+# Comprehensive .gitignore.
+- id: gitignore_comprehensive
+  category: environment_setup
+  scope: repo
+  level: 1
+  skippable: false
+  discoveryVia: deterministic
+
+# GATE: pinned versions + committed lockfile.
+- id: deps_pinned
+  category: environment_setup
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+  gate: true
+
+# Dev-container config committed (presence).
+- id: devcontainer
+  category: environment_setup
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+
+# Secrets via managed mechanism, not committed.
+- id: secrets_management
+  category: environment_setup
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: agent
+  investigation: setup-runnability
+
+# Scripted one-shot local deps.
+- id: local_services_setup
+  category: environment_setup
+  scope: repo
+  level: 2
+  skippable: true
+  discoveryVia: agent
+  investigation: setup-runnability
+
+# Dev-container would actually build (presupposes devcontainer).
+- id: devcontainer_runnable
+  category: environment_setup
+  scope: repo
+  level: 3
+  skippable: true
+  discoveryVia: agent
+  investigation: setup-runnability
+
+# --- 5.5 CI, Release & Deployment (13 R of 14) ----------------------------
+
+# GATE: authenticated VCS-platform CLI available.
+- id: vcs_cli_tools
+  category: ci_release_deployment
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+  gate: true
+
+# Workspace/monorepo config.
+- id: monorepo_tooling
+  category: ci_release_deployment
+  scope: repo
+  level: 2
+  skippable: true
+  discoveryVia: deterministic
+
+# Bot/scheduled update PRs.
+- id: dependency_update_automation
+  category: ci_release_deployment
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+
+# Changelog/release-notes generation.
+- id: release_notes_automation
+  category: ci_release_deployment
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: deterministic
+
+# Automated release/deploy pipeline.
+- id: release_automation
+  category: ci_release_deployment
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: deterministic
+
+# Version-sync across packages.
+- id: version_drift_detection
+  category: ci_release_deployment
+  scope: repo
+  level: 3
+  skippable: true
+  discoveryVia: deterministic
+
+# Stale-flag detection.
+- id: dead_feature_flag_detection
+  category: ci_release_deployment
+  scope: repo
+  level: 3
+  skippable: true
+  discoveryVia: deterministic
+
+# Feature-flag system configured.
+- id: feature_flag_infrastructure
+  category: ci_release_deployment
+  scope: repo
+  level: 4
+  skippable: false
+  discoveryVia: deterministic
+
+# CI under ~10 min.
+- id: fast_ci_feedback
+  category: ci_release_deployment
+  scope: repo
+  level: 4
+  skippable: true
+  discoveryVia: deterministic
+
+# Build timing/caching/metrics.
+- id: build_performance_tracking
+  category: ci_release_deployment
+  scope: repo
+  level: 4
+  skippable: true
+  discoveryVia: deterministic
+
+# Ships multiple times/week on an automated path.
+- id: deployment_frequency
+  category: ci_release_deployment
+  scope: repo
+  level: 4
+  skippable: true
+  discoveryVia: deterministic
+
+# Canary/percentage/ring deploys.
+- id: progressive_rollout
+  category: ci_release_deployment
+  scope: repo
+  level: 4
+  skippable: true
+  discoveryVia: deterministic
+
+# Fast documented rollback.
+- id: rollback_automation
+  category: ci_release_deployment
+  scope: repo
+  level: 4
+  skippable: true
+  discoveryVia: deterministic
+
+# --- 5.7 Security & Data (5 R of 12) --------------------------------------
+
+# Branch-protection/ruleset.
+- id: branch_protection
+  category: security_data
+  scope: repo
+  level: 2
+  skippable: true
+  discoveryVia: deterministic
+
+# SAST/dependency-audit.
+- id: automated_security_review
+  category: security_data
+  scope: repo
+  level: 2
+  skippable: true
+  discoveryVia: deterministic
+
+# Secret-scanning in CI/pre-commit.
+- id: secret_scanning
+  category: security_data
+  scope: repo
+  level: 3
+  skippable: true
+  discoveryVia: deterministic
+
+# Dependency release-age delay gate.
+- id: min_release_age
+  category: security_data
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: deterministic
+
+# Consent/retention/DSR/anonymization.
+- id: privacy_compliance
+  category: security_data
+  scope: repo
+  level: 4
+  skippable: true
+  discoveryVia: deterministic
+
+# --- 5.8 Process & Collaboration (7, all R) -------------------------------
+
+# GATE: code-ownership map.
+- id: codeowners
+  category: process_collaboration
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+  gate: true
+
+# Committed issue templates.
+- id: issue_templates
+  category: process_collaboration
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+
+# Deliberate labeling scheme.
+- id: issue_labeling_system
+  category: process_collaboration
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+
+# Committed PR/MR template.
+- id: pr_templates
+  category: process_collaboration
+  scope: repo
+  level: 2
+  skippable: false
+  discoveryVia: deterministic
+
+# Bot/workflow first-pass review.
+- id: automated_pr_review
+  category: process_collaboration
+  scope: repo
+  level: 2
+  skippable: true
+  discoveryVia: deterministic
+
+# Agents actively participate (instruction surface + co-author history).
+- id: agentic_development
+  category: process_collaboration
+  scope: repo
+  level: 3
+  skippable: false
+  discoveryVia: agent
+  investigation: agent-config
+
+# Backlog actively groomed.
+- id: backlog_health
+  category: process_collaboration
+  scope: repo
+  level: 4
+  skippable: true
+  discoveryVia: deterministic

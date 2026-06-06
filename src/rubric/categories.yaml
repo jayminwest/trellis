@@ -1,0 +1,95 @@
+# Rubric categories (SPEC §5, §6.1) — the WHAT layer; never names a tool.
+#
+# Nine categories that group the 90 criteria. A category is human framing only:
+# it carries no scoring weight and is not scored directly. Each criterion
+# references exactly one category via its `category` field; exactly one
+# criterion per category is the category gate.
+#
+# This file is clean-room authored from SPEC §5; it copies nothing verbatim from
+# any private source rubric.
+
+- id: documentation
+  title: Documentation
+  description: >-
+    Whether a newcomer — human or agent — can understand and run the project
+    from what is written down. Covers the README, agent-instruction surfaces,
+    build/setup commands, runbooks, generated documentation, skills, freshness
+    of key docs, and architecture/service-flow descriptions, up to a fresh-clone
+    single-command path to a running dev environment.
+
+- id: code_quality
+  title: Code Quality
+  description: >-
+    Whether the codebase enforces baseline hygiene through configured, clean
+    tooling rather than convention alone. Covers linting, type-checking,
+    formatting, strict typing, naming consistency, dead-code and duplicate-code
+    detection, unused-dependency flagging, module/import-direction discipline,
+    and per-function complexity caps, plus repo-wide file-size and tech-debt
+    budgets.
+
+- id: testing
+  title: Testing
+  description: >-
+    Whether automated tests exist, actually run, and are trustworthy. Covers the
+    presence of unit and integration suites, a runnable (non-no-op) test command,
+    enforced coverage thresholds, discoverable naming conventions, slow-test and
+    timing visibility, parallel-safe isolation, and flaky-test handling.
+
+- id: environment_setup
+  title: Environment & Setup
+  description: >-
+    Whether the local development environment is reproducible from the
+    repository. Covers a committed environment-variable template, a comprehensive
+    gitignore, pinned dependencies with a committed lockfile, dev-container
+    configuration (and whether it would actually build), managed secrets rather
+    than committed ones, and scripted one-shot setup of local service
+    dependencies.
+
+- id: ci_release_deployment
+  title: CI, Release & Deployment
+  description: >-
+    Whether change flows to production through automated, observable, reversible
+    pipelines. Covers an authenticated VCS-platform CLI, workspace/monorepo
+    tooling, automated dependency updates, changelog/release-notes and release
+    automation, version-drift and stale-flag detection, feature-flag
+    infrastructure, CI feedback speed and build-timing metrics, deployment
+    frequency, progressive rollout, rollback automation, and committed
+    pre-commit hooks.
+
+- id: observability
+  title: Observability
+  description: >-
+    Whether a running app can be understood and debugged in production. Covers
+    structured logging, contextual error tracking, distributed tracing, metrics
+    and product-analytics collection, alerting, health checks, deployment-impact
+    dashboards, code-quality metrics tracked over time, resilience patterns such
+    as circuit breakers, profiling instrumentation, and an error-to-issue
+    feedback pipeline.
+
+- id: security_data
+  title: Security & Data
+  description: >-
+    Whether the repository and its data handling resist common security and
+    privacy failures. Covers branch protection, automated security review and
+    dependency auditing, secret scanning, dependency release-age gating, privacy
+    compliance, schema definitions and API-schema documentation, PII handling,
+    log scrubbing, DAST scanning, N+1 / slow-query detection, and heavy-
+    dependency analysis.
+
+- id: process_collaboration
+  title: Process & Collaboration
+  description: >-
+    Whether the team's collaboration surface is deliberate and machine-assisted.
+    Covers a code-ownership map, issue and PR templates, a labeling scheme,
+    automated first-pass PR review, active agent participation in development,
+    and ongoing backlog health.
+
+- id: locality_contracts
+  title: Locality & Contracts
+  description: >-
+    The thesis category: maximize locality of reasoning and minimize invisible
+    contracts, enforced as lints rather than as documentation. Covers
+    machine-checked architecture and acyclic import graphs, orphan-module and
+    explicit-escape-hatch detection, beyond-baseline strict type checking,
+    greppable named exports, wildcard-barrel detection, and mutation testing.
+    Stack-specific concepts are honestly N/A where a language has no analogue.
