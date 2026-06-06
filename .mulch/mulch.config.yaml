@@ -5,6 +5,7 @@ domains:
   rubric: {}
   cli: {}
   scoring: {}
+  detectors: {}
 governance:
   max_entries: 100
   warn_entries: 150
