@@ -1,0 +1,207 @@
+# AGENTS.md
+
+> Template — copy to `<<REPO_NAME>>/AGENTS.md` and replace every `<<TOKEN>>`
+> placeholder with the repo-specific value before committing. Remove this
+> blockquote when done. This file is the canonical entry point for AI coding
+> agents working in `<<REPO_NAME>>`, following the
+> [agents.md](https://agents.md) convention.
+
+## Replaceable tokens
+
+| Token | Meaning | Example |
+|-------|---------|---------|
+| `<<REPO_NAME>>` | The repo's short name (matches its directory). | `canopy` |
+| `<<REPO_DESCRIPTION>>` | One-paragraph mission statement: what the repo does and who uses it. | `Git-native prompt management for AI agents.` |
+| `<<PRIMARY_CLI>>` | The user-facing CLI binary, if any. | `cn` |
+| `<<TRACKER_PREFIX>>` | The repo-local debt-marker / seeds tracker prefix (no trailing dash). | `canopy` |
+| `<<RUNTIME>>` | Runtime label. | `Bun` |
+| `<<LANG>>` | Primary language. | `TypeScript` |
+| `<<TEST_ROOT>>` | Directory the test runner discovers tests under (`src` or `test`). | `src` |
+| `<<UPSTREAM_DOCS>>` | Optional pointer to long-form docs (SPEC.md / CLAUDE.md / nothing). | `SPEC.md` |
+
+## Mission
+
+`<<REPO_NAME>>` — `<<REPO_DESCRIPTION>>`
+
+State what `<<REPO_NAME>>` does in one paragraph: what problem it solves,
+who consumes it, what its single most important guarantee is. Avoid feature
+lists; favor the unique reason this repo exists.
+
+If `<<REPO_NAME>>` is part of a larger ecosystem (e.g. os-eco), describe how
+it fits in two or three sentences. Link to the root CLAUDE.md or README if
+that context is documented elsewhere.
+
+## Commands
+
+All commands run from the repo root unless noted. `<<RUNTIME>>` must be on
+PATH.
+
+```bash
+bun install                   # install dependencies
+bun test                      # run all tests
+bun test <path/to/file>       # run a single test file
+bun run lint                  # biome check --error-on-warnings .
+bun run typecheck             # tsc --noEmit
+bun run check:all             # full quality-gate suite (see below)
+bun run check:coverage        # tests + coverage ratchet
+bun run test:ci               # bun test with junit + coverage reporters
+bun run report:test-timing    # slowest suites/tests from junit.xml
+bun run report:quality-metrics # consolidated quality summary
+```
+
+If `<<REPO_NAME>>` ships a CLI, also document the user-facing entry point:
+
+```bash
+<<PRIMARY_CLI>> --help        # CLI top-level help
+<<PRIMARY_CLI>> <subcommand>  # the most-used subcommand
+```
+
+### Quality gates
+
+`bun run check:all` chains every gate CI also enforces:
+
+- `check:size` — `scripts/check-file-sizes.ts` (line-count ratchet)
+- `check:debt` — `scripts/check-debt-markers.ts` (tracker-pinned TODOs)
+- `check:dups` — `bunx jscpd` (duplicate-code detector)
+- `check:deps` — `knip --dependencies` (unused / undeclared deps)
+- `check:agents` — `scripts/validate-agents-md.ts` (this file's references)
+- `check:coverage` — `scripts/check-coverage.ts` (per-package floors)
+
+Each script reads a JSON budget under `scripts/`. Budgets ratchet in one
+direction only (file-size and debt-markers tighten downward; coverage
+tightens upward). Do not loosen a budget without filing
+`<<TRACKER_PREFIX>>-XXXX` and noting it in the commit body.
+
+## Conventions
+
+### Filenames & directories
+
+- Source files: `kebab-case.ts`. Tests are `<name>.test.ts` next to the
+  file under test.
+- Directories: `kebab-case`.
+- React components (if any): `PascalCase.tsx`.
+- TOML / YAML config keys stay `snake_case` to match upstream schemas.
+
+Enforced by Biome's `style.useFilenamingConvention` rule (strict
+kebab-case) in `biome.json`.
+
+### Identifiers
+
+- `camelCase` for functions, variables, instance fields.
+- `PascalCase` for types, interfaces, classes, React components.
+- `SCREAMING_SNAKE_CASE` for module-level constants that are true constants.
+- Booleans read as predicates: `isOpen`, `hasPreview`.
+
+### TypeScript
+
+- Strict mode with `noUncheckedIndexedAccess` — always handle possible
+  `undefined` from indexing.
+- No `any`; use `unknown` and narrow.
+- Import with `.ts` extensions.
+- Tab indentation, 100-char line width (Biome enforces).
+
+### Test naming
+
+- `describe("<unitUnderTest>")` + `test("verb-led behaviour description")`.
+- No `should`, no `it`.
+
+### Debt markers
+
+Every `TODO` / `FIXME` / `HACK` / `XXX` on a source line must carry a
+tracker reference on the same line. Accepted prefixes:
+
+- `<<TRACKER_PREFIX>>-XXXX` — repo-local tracker
+- `mx-XXXX` — cross-repo mission tracker
+- `#NNN` — GitHub issue
+- A URL (any http link) — external reference
+
+`scripts/check-debt-markers.ts` fails CI on bare markers.
+
+### Log scrubbing
+
+Any structured logger in `<<REPO_NAME>>` must redact sensitive keys
+(`token`, `api_key`, `password`, `secret`, `authorization`,
+`set-cookie`). Add new redact paths in the same commit that introduces a
+new sensitive field.
+
+## Agent Workflow
+
+When an agent works in `<<REPO_NAME>>`, it should:
+
+1. **Prime context.** Read this file (`AGENTS.md`), `<<UPSTREAM_DOCS>>` if
+   present, and the most recent CHANGELOG entry to learn the current
+   release cadence.
+2. **Find unblocked work.** Use the repo's issue tracker (Seeds:
+   `sd ready`; GitHub: `gh issue list`).
+3. **Make focused changes.** One concern per commit. Preserve existing
+   conventions — adapt, don't overwrite.
+4. **Run gates locally.** `bun run lint && bun run typecheck && bun test &&
+   bun run check:all` must all exit 0 before commit.
+5. **Pin debt markers.** Any new `TODO` / `FIXME` must reference a tracker
+   id created in the same change.
+6. **Commit & sync.** Commit message follows
+   `<area>: <summary>` (e.g. `quality: ratchet file-size cap`).
+7. **Record insights.** If the project uses Mulch, `ml record` any
+   convention discovered or failure encountered.
+
+### Session completion protocol
+
+Before ending a session:
+
+1. File issues for remaining work.
+2. Run `bun run check:all`.
+3. Close finished issues.
+4. Record session insights (Mulch / equivalent).
+5. Push only when the user requests it; otherwise leave commits local.
+6. Verify `git status` is clean.
+
+## Testing & Validation Guidance
+
+### Per-change verification
+
+After every code change (before commit):
+
+```bash
+bun run lint
+bun run typecheck
+bun test
+bun run check:all
+```
+
+All four must exit 0. CI runs the same four — local greens are the
+contract.
+
+### Coverage discipline
+
+`bun run check:coverage` enforces `scripts/coverage-budgets.json`.
+The ratchet only goes **up**. Raising a floor when coverage improves is
+encouraged; lowering one requires a `<<TRACKER_PREFIX>>-XXXX` in the
+commit body explaining what tests were removed and why.
+
+### Tests live under `<<TEST_ROOT>>/`
+
+`bunfig.toml` sets the test root. New tests belong next to the file
+under test. If `<<TEST_ROOT>>` is `test/`, integration-style tests live
+there; co-located unit tests still use the `.test.ts` suffix.
+
+### CI parity
+
+`.github/workflows/ci.yml` runs `bun run check:all` and uploads
+`coverage/lcov.info` and `junit.xml`. Local `check:all` failures will
+break CI; do not push hoping CI will pass.
+
+### Validation reports
+
+If `<<REPO_NAME>>` is audited via the Agent-Readiness rubric, the user
+invokes `/readiness-report` manually from this repo's working directory
+inside an interactive `droid` session. Agents do not run the auditor
+themselves; they make the repo pass.
+
+## Further reading
+
+- `<<UPSTREAM_DOCS>>` — long-form design notes (if present)
+- `README.md` — user-facing pitch + install instructions
+- `CHANGELOG.md` — release history
+- `RUNBOOK.md` — release / triage / rollback procedure
+- `scripts/` — ratchet scripts and pre-commit hook
+- `.github/workflows/` — CI + sync-labels + (where applicable) publish

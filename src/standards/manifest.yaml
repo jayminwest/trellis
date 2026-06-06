@@ -1,0 +1,83 @@
+# Canonical standards manifest (SPEC §10).
+#
+# Describes the bundled canonical set under canonical/. Each file records the
+# path it occupies in a target repo, the semver of its canonical form, a
+# sha256: digest of its exact bytes on disk, and the drift matcher kind. Hashes
+# are recomputed from disk by src/standards/manifest.test.ts, so any edit to a
+# bundled file without a matching manifest bump fails CI. DO NOT hand-edit a
+# hash: change the file, then sync the digest (shasum -a 256) and bump version.
+#
+# Storage note: the bundled bytes live at canonical/<path>.canon (the .canon
+# suffix keeps tools — e.g. Biome — from auto-loading them as live config). The
+# `path` and `hash` below describe the unsuffixed target file.
+version: "1.0.0"
+files:
+  # Biome lint/format baseline. json-subset: repos may extend rules/overrides;
+  # the canonical keys must be present and equal.
+  - path: biome.json
+    version: "1.0.0"
+    hash: "sha256:47bd06b533b0e094be866e5bd1dd1cdeecb37da20083fd696f90551df22b6f68"
+    matcher: json-subset
+
+  # Strict TypeScript compiler baseline (noUncheckedIndexedAccess, no implicit
+  # any). json-subset: repos may add include/exclude or extra strict flags.
+  - path: tsconfig.base.json
+    version: "1.0.0"
+    hash: "sha256:521ac6ed213d7de65c604c3f78a724cbf2a4bcb841cd3ec0cd989bc8373e9695"
+    matcher: json-subset
+
+  # knip dead-code/unused-deps config. json-subset: workspaces/entries vary per
+  # repo layout; the ignore baseline and resolver settings are canonical.
+  - path: knip.json
+    version: "1.0.0"
+    hash: "sha256:581d15ff9f1f6b7ef6bd16af238c08db1bee183bf34690ca9aae2d384d72fe2a"
+    matcher: json-subset
+
+  # jscpd copy-paste-detection config. json-subset: thresholds/patterns are the
+  # canonical floor; repos may tighten or add ignores.
+  - path: .jscpd.json
+    version: "1.0.0"
+    hash: "sha256:511a8282fb2bd16e208341a12342adcf517cbefa7bd164295f53855ebd126c7b"
+    matcher: json-subset
+
+  # Bun runtime config (comment-only baseline). text: whitespace-normalized
+  # equality — TOML has no structural subset matcher.
+  - path: bunfig.toml
+    version: "1.0.0"
+    hash: "sha256:82536ffeb30c9c738d7569ca495b2c015ee3dfdfb30cf4b35ed7740c76720609"
+    matcher: text
+
+  # CI workflow running check:all parity. text: YAML workflow compared as
+  # normalized text (step ordering/anchors make subset matching brittle).
+  - path: .github/workflows/ci.yml
+    version: "1.0.0"
+    hash: "sha256:bd8f17f80a01f1b64f501594ad28c071cffe0249fdf31b25374978595c832bdb"
+    matcher: text
+
+  # Dependabot config with release-age cooldown. yaml-subset: repos may add
+  # ecosystems; the cooldown baseline is canonical.
+  - path: .github/dependabot.yml
+    version: "1.0.0"
+    hash: "sha256:bed3a30889b56f12c4766705cdb4ec106c2ebab5e0ab6019704e55fd1a271d24"
+    matcher: yaml-subset
+
+  # Agent entry point. template: section/heading structure is canonical, not
+  # byte content — repos fill in repo-specific tokens.
+  - path: AGENTS.md
+    version: "1.0.0"
+    hash: "sha256:7512662d2813c55f024ac52fc9b3e73e4d4174d0781310f9b177fa8bd49a7995"
+    matcher: template
+
+  # Pre-commit gate (lint + typecheck). exact: a fixed hook that must be
+  # byte-identical across repos to keep the gate uniform.
+  - path: scripts/hooks/pre-commit
+    version: "1.0.0"
+    hash: "sha256:9126fe78cb53d3988fcdcbc973f8fc1470f971b1983bb30ea6e73e4f3d3f50fc"
+    matcher: exact
+
+  # Seeds tracker config. yaml-subset: project/version are repo-specific; the
+  # presence and shape are canonical.
+  - path: .seeds/config.yaml
+    version: "1.0.0"
+    hash: "sha256:83bbc8d278fa01f74838a2826774a11d940a8a0ff0b2d3af744b4a4ea9dddef3"
+    matcher: yaml-subset
