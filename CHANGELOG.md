@@ -11,6 +11,17 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Rubric core (the WHAT layer, SPEC §6.1): `src/rubric/schema.ts` zod schemas
+  for category and criterion records (snake_case ids, `level` 1–5, `scope`
+  repo/app, `discoveryVia` deterministic/agent, the four fixed `investigation`
+  areas, reserved `gate`/`weight` with defaults), `src/rubric/version.ts`
+  exporting `RUBRIC_VERSION = "0.2.0"` plus a `comparable()` helper encoding the
+  SPEC §3.5 semver-by-comparability policy, and `src/rubric/loader.ts`
+  (`loadRubric`) which parses `categories.yaml` / `repo-scope.yaml` /
+  `app-scope.yaml` and enforces the load-time invariants — investigation
+  non-null IFF `discoveryVia: agent`, scope matches source file, ids unique,
+  category references resolve, exactly one `gate: true` per category — throwing
+  `RubricError` with the offending id and file. (`trellis-2304`)
 - `.github/` governance & CI surface: `dependabot.yml` (cooldown / delayed
   adoption), issue templates (`bug_report`, `feature_request`, `config`),
   `pull_request_template.md`, `labels.yml`, and workflows `ci.yml`

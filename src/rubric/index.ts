@@ -1,2 +1,19 @@
-/** Rubric loader + zod schema (SPEC §6.1) — placeholder module so the SPEC §4 tree typechecks. */
-export const rubric = "rubric" as const;
+/** Rubric core (SPEC §6.1): record schemas, loader + invariants, version policy. */
+export {
+	loadRubric,
+	type Rubric,
+	RubricError,
+} from "./loader.ts";
+export {
+	type CategoryRecord,
+	type CriterionRecord,
+	categoryRecordSchema,
+	criterionRecordSchema,
+	DISCOVERY_VIA,
+	type DiscoveryVia,
+	INVESTIGATION_AREAS,
+	type InvestigationArea,
+	SCOPES,
+	type Scope,
+} from "./schema.ts";
+export { comparable, RUBRIC_VERSION } from "./version.ts";
