@@ -11,6 +11,22 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- CLI skeleton + first end-to-end command (SPEC §12, §13.1, §14.1): `src/cli/`
+  is a thin commander surface that parses args, calls the domain core, and
+  shapes output only. `src/cli/main.ts` registers the SPEC §12 command set
+  (`audit`/`drift`/`fleet`/`report`/`standards` are stubs until their milestone
+  lands) with global `--json` / `--md` flags (human terminal output by default);
+  `src/cli/output.ts` carries the format resolution, `emit`, exit-code scaffold
+  (`EXIT`), and `CliError`/`renderError` for consistent failure rendering;
+  `src/cli/logger.ts` initializes a pino logger to stderr (`TRELLIS_LOG_LEVEL`,
+  default `warn`) so payloads on stdout stay machine-clean. The first real
+  command, `trellis rubric` (`src/cli/rubric.ts`), prints the loaded rubric
+  summary — per-category criterion counts, repo/app split, level histogram, gate
+  id — plus `RUBRIC_VERSION`; `trellis rubric --validate` runs the loader
+  invariants and exits non-zero with a precise `id`/`file` error on violation.
+  The summary fold lives in the core as `summarizeRubric` (`src/rubric/summary.ts`).
+  (`trellis-0b7c`)
+
 - Rubric core (the WHAT layer, SPEC §6.1): `src/rubric/schema.ts` zod schemas
   for category and criterion records (snake_case ids, `level` 1–5, `scope`
   repo/app, `discoveryVia` deterministic/agent, the four fixed `investigation`

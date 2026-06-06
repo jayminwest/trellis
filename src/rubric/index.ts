@@ -16,4 +16,12 @@ export {
 	SCOPES,
 	type Scope,
 } from "./schema.ts";
+export {
+	type CategorySummary,
+	LEVELS,
+	type Level,
+	type LevelHistogram,
+	type RubricSummary,
+	summarizeRubric,
+} from "./summary.ts";
 export { comparable, RUBRIC_VERSION } from "./version.ts";
