@@ -11,6 +11,29 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Report renderers + the first end-to-end audit (SPEC §6.3, §14 milestone 3):
+  `src/report/` assembles and renders the per-run §6.3 document. `build.ts`'s
+  `auditRepo` is the surface-agnostic core pipeline — rubric → app discovery →
+  criterion→detector resolution → per-app/-repo detector runs → §3.4 scoring →
+  the `Report`. Agent-discovery criteria resolve to `no-detector` (`investigation
+  layer not yet wired`, trellis-4222) so coverage honestly reflects the gap;
+  unmeasured deterministic criteria flow through the registry's `no-detector`
+  stub. The pipeline is deterministic given (checkout, rubric, detector set) —
+  the only wall-clock field is `scoredAt` (injectable via `opts.now`), so two
+  runs of one checkout serialize byte-identically. Three renderers project the
+  report: `json.ts` (`renderJson`, the exact §6.3 document, 2-space indent, the
+  determinism anchor), `markdown.ts` (`renderMarkdown`, a PR/issue scorecard),
+  and `terminal.ts` (`renderTerminal`, the default human view — level banner,
+  app map, fixed-width per-category table, N/A breakdown), all sharing the
+  `rollupByCategory` / `tally` folds in `rollup.ts`. `trellis audit <repo-path>`
+  (`src/cli/audit.ts`) wires the pipeline end to end behind the global
+  `--json` / `--md` flags (`--rubric-version` informational; `--no-cache` /
+  `--canonical` accepted for forward-compat; exit `0` until the `--fail-on`
+  contract lands in trellis-28a5). Golden-snapshot tests cover the JSON/MD/term
+  renderers against a synthetic scorecard, and an integration test audits a
+  fixture repo end to end and asserts byte-identical JSON across runs.
+  (`trellis-59ea`)
+
 - Scoring engine (the v0 scorer, SPEC §3.4): `src/scoring/` is pure,
   surface-agnostic core with no I/O. `band.ts` maps a fraction to a 20-pt
   maturity band (L1 0–20% … L5 80–100%, lower-bound inclusive) and `clampLevel`

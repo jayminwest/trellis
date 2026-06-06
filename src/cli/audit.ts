@@ -1,0 +1,73 @@
+/**
+ * `trellis audit <repo-path>` — the det-only end-to-end audit (SPEC §12, §14
+ * milestone 3). Thin per SPEC §13.1: it loads the rubric once, calls the core
+ * {@link auditRepo} pipeline, and shapes the three output variants. It computes
+ * nothing itself — the level, scores, and per-criterion entries all come from
+ * core.
+ *
+ * Agent-discovery criteria resolve to `no-detector` inside the pipeline (the
+ * investigation layer is not wired yet, trellis-4222), so coverage honestly
+ * reflects the gap. `--rubric-version` is informational for now; the `--no-cache`
+ * / `--canonical` flags are accepted for forward-compatibility and ignored until
+ * the investigation (trellis-4222) and drift (trellis-ffdd) layers land. Exit is
+ * always `0` in this milestone — the `--fail-on` contract arrives with the SDK
+ * exit-code step (trellis-28a5).
+ */
+import type { Command } from "commander";
+import { Option } from "commander";
+import { auditRepo, renderMarkdown, renderTerminal } from "../report/index.ts";
+import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
+import { CliError, EXIT, emit, type Rendered, resolveFormat } from "./output.ts";
+
+/** Local options for the audit command, merged with the global format flags. */
+interface AuditCliOptions {
+	json?: boolean;
+	md?: boolean;
+	cache?: boolean;
+	rubricVersion?: string;
+	canonical?: string;
+	/** Hidden: load an alternate rubric directory (used by tests/fixtures). */
+	rubricDir?: string;
+}
+
+/** Register the `audit` subcommand on `program`. */
+export function registerAudit(program: Command): void {
+	program
+		.command("audit")
+		.argument("<repo-path>", "path to the repository to score")
+		.description("score one repo; print scorecard")
+		.option("--no-cache", "force re-investigation (ignore cached findings)")
+		.option("--rubric-version <v>", "pin the rubric version (informational)")
+		.option("--canonical <v>", "pin the canonical standards version")
+		.addOption(new Option("--rubric-dir <path>", "load an alternate rubric directory").hideHelp())
+		.action(function (this: Command, repoPath: string) {
+			return runAudit(repoPath, this.optsWithGlobals() as AuditCliOptions);
+		});
+}
+
+/** Load the rubric, run the core audit, and emit the chosen output variant. */
+async function runAudit(repoPath: string, opts: AuditCliOptions): Promise<void> {
+	const format = resolveFormat(opts);
+	const rubric = loadRubricOrThrow(opts.rubricDir);
+	const report = await auditRepo(repoPath, {
+		rubric,
+		...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
+	});
+	emit(format, {
+		human: renderTerminal(report, rubric),
+		json: report,
+		md: renderMarkdown(report, rubric),
+	} satisfies Rendered);
+}
+
+/** Load the rubric, converting a loader {@link RubricError} into a {@link CliError}. */
+function loadRubricOrThrow(dir: string | undefined): Rubric {
+	try {
+		return loadRubric(dir);
+	} catch (error) {
+		if (error instanceof RubricError) {
+			throw new CliError(error.message, EXIT.ERROR, { id: error.id, file: error.file });
+		}
+		throw error;
+	}
+}

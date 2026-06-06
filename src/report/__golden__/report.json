@@ -1,0 +1,41 @@
+{
+  "repo": "sample-repo",
+  "rubricVersion": "0.2.0",
+  "scoredAt": "2026-06-06T00:00:00.000Z",
+  "commit": "abc1234def5678",
+  "level": 2,
+  "passRate": 0.5,
+  "coverage": 0.75,
+  "apps": {
+    ".": {
+      "description": "server"
+    },
+    "src/ui": {
+      "description": "sample-ui"
+    }
+  },
+  "criteria": {
+    "readme": {
+      "numerator": 1,
+      "denominator": 1,
+      "rationale": "README.md present"
+    },
+    "agents_md": {
+      "numerator": null,
+      "denominator": 1,
+      "rationale": "investigation layer not yet wired",
+      "naKind": "no-detector"
+    },
+    "lint_config": {
+      "numerator": 2,
+      "denominator": 3,
+      "rationale": "2/3 apps pass"
+    },
+    "type_check": {
+      "numerator": null,
+      "denominator": 3,
+      "rationale": "no tsconfig in any app",
+      "naKind": "not-applicable"
+    }
+  }
+}

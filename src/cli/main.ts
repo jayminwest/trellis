@@ -11,6 +11,7 @@
 
 import { Command } from "commander";
 import { VERSION } from "../index.ts";
+import { registerAudit } from "./audit.ts";
 import { CliError, EXIT, type OutputFormat, renderError, resolveFormat } from "./output.ts";
 import { registerRubric } from "./rubric.ts";
 
@@ -32,14 +33,7 @@ export function buildProgram(): Command {
 		.option("--json", "emit machine-readable JSON")
 		.option("--md", "emit a markdown report");
 
-	program
-		.command("audit")
-		.argument("<repo-path>", "path to the repository to score")
-		.description("score one repo; print scorecard")
-		.option("--no-cache", "force re-investigation (ignore cached findings)")
-		.option("--rubric-version <v>", "pin the rubric version")
-		.option("--canonical <v>", "pin the canonical standards version")
-		.action(stub("audit"));
+	registerAudit(program);
 
 	program
 		.command("drift")

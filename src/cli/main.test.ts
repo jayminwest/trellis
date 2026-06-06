@@ -126,8 +126,51 @@ describe("trellis (program)", () => {
 	});
 
 	test("unimplemented commands exit non-zero with a stub message", async () => {
-		const { code, stderr } = await runCli(["audit", join(import.meta.dir, "..")]);
+		const { code, stderr } = await runCli(["drift", join(import.meta.dir, "..")]);
 		expect(code).not.toBe(0);
 		expect(stderr).toContain("not yet implemented");
+	});
+});
+
+describe("trellis audit", () => {
+	let dir: string;
+
+	beforeEach(() => {
+		// A minimal single-app fixture — keeps detector subprocesses cheap/fast.
+		dir = mkdtempSync(join(tmpdir(), "trellis-cli-audit-"));
+		writeFileSync(join(dir, "README.md"), "# fixture\n");
+		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", main: "./i.ts" }));
+		writeFileSync(join(dir, ".gitignore"), "node_modules\n");
+	});
+
+	afterEach(() => {
+		rmSync(dir, { recursive: true, force: true });
+	});
+
+	test("prints a coherent terminal scorecard", async () => {
+		const { code, stdout } = await runCli(["audit", dir]);
+		expect(code).toBe(0);
+		expect(stdout).toContain("Level ");
+		expect(stdout).toContain("pass-rate");
+		expect(stdout).toContain("coverage");
+		expect(stdout).toContain("measured ");
+	});
+
+	test("--json emits a parseable §6.3 report with every rubric criterion", async () => {
+		const { code, stdout } = await runCli(["audit", dir, "--json"]);
+		expect(code).toBe(0);
+		const report = JSON.parse(stdout);
+		expect(report.rubricVersion).toBe(RUBRIC_VERSION);
+		expect(report.level).toBeGreaterThanOrEqual(1);
+		expect(report.level).toBeLessThanOrEqual(5);
+		expect(Object.keys(report.criteria)).toHaveLength(90);
+		expect(report.apps).toBeDefined();
+	});
+
+	test("--md emits a markdown scorecard", async () => {
+		const { code, stdout } = await runCli(["audit", dir, "--md"]);
+		expect(code).toBe(0);
+		expect(stdout).toContain("# Agentic-readiness scorecard");
+		expect(stdout).toContain("| Category | Measured |");
 	});
 });
