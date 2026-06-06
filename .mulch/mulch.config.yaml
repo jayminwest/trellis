@@ -1,6 +1,7 @@
 version: '1'
 domains:
   trellis: {}
+  ci: {}
 governance:
   max_entries: 100
   warn_entries: 150
