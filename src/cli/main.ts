@@ -2,11 +2,10 @@
 /**
  * Thin commander entrypoint (SPEC §13.1). This surface parses args and shapes
  * output only — all behavior lives in the domain core under `src/`. The command
- * set below is the SPEC §12 surface; `rubric` is the first end-to-end command,
- * the rest are stubs until their milestone lands. Global `--json` / `--md` flags
- * select machine/report output (human terminal output is the default), and every
- * handled failure routes through {@link CliError} for consistent rendering and a
- * stable exit code.
+ * set below is the full SPEC §12 surface, each registered from its own module.
+ * Global `--json` / `--md` flags select machine/report output (human terminal
+ * output is the default), and every handled failure routes through
+ * {@link CliError} for consistent rendering and a stable exit code.
  */
 
 import { Command } from "commander";
@@ -15,16 +14,9 @@ import { registerAudit } from "./audit.ts";
 import { registerDrift } from "./drift.ts";
 import { registerFleet } from "./fleet.ts";
 import { CliError, EXIT, type OutputFormat, renderError, resolveFormat } from "./output.ts";
+import { registerReport } from "./report.ts";
 import { registerRubric } from "./rubric.ts";
 import { registerStandards } from "./standards.ts";
-
-const NOT_IMPLEMENTED = "not yet implemented — see SPEC §14 milestones";
-
-function stub(command: string): () => never {
-	return () => {
-		throw new CliError(`${command}: ${NOT_IMPLEMENTED}`, EXIT.ERROR);
-	};
-}
 
 export function buildProgram(): Command {
 	const program = new Command();
@@ -39,14 +31,7 @@ export function buildProgram(): Command {
 	registerAudit(program);
 	registerDrift(program);
 	registerFleet(program);
-
-	program
-		.command("report")
-		.description("render history/dashboard from SQLite")
-		.option("--repo <id>", "limit to one target")
-		.option("--since <date>", "only runs since this date")
-		.action(stub("report"));
-
+	registerReport(program);
 	registerRubric(program);
 	registerStandards(program);
 

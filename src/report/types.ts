@@ -10,14 +10,15 @@
  * function of the checkout, the rubric version, and the detector set.
  *
  * `drift` (§10) is present only when the audit was given a canonical version to
- * compare against; `changesSinceLastRun` (§11) is deliberately absent until its
- * milestone (trellis-dde8) lands — adding it later is a superset change that does
- * not perturb existing keys.
+ * compare against; `changesSinceLastRun` (§11) is present only when the audit was
+ * given the repo's prior run to compare against — both are superset keys appended
+ * last, so a run without them serializes exactly as before.
  */
 
 import type { Level } from "../rubric/index.ts";
 import type { ScorecardEntry } from "../scoring/index.ts";
 import type { DriftReport } from "../standards/index.ts";
+import type { ChangesSinceLastRun } from "./changes.ts";
 
 /** One app's entry in the report's §6.3 `apps` map. */
 export interface AppDescriptor {
@@ -47,4 +48,6 @@ export interface Report {
 	criteria: Record<string, ScorecardEntry>;
 	/** Canonical-config drift (SPEC §10), present only when a canonical version was compared. */
 	drift?: DriftReport;
+	/** Per-criterion delta vs the repo's prior run (SPEC §11), present only when a prior run was compared. */
+	changesSinceLastRun?: ChangesSinceLastRun;
 }

@@ -6,6 +6,16 @@
  * {@link renderMarkdown} / {@link renderTerminal}.
  */
 export { AGENT_NOT_WIRED, type AuditOptions, auditRepo, SKIPPED_VIA_TARGETS } from "./build.ts";
+export {
+	type ChangesSinceLastRun,
+	type CriterionSnapshot,
+	type CriterionStatus,
+	type CriterionTransition,
+	changesSinceLastRun,
+	criterionStatus,
+	snapshot,
+	type TransitionKind,
+} from "./changes.ts";
 export { renderJson } from "./json.ts";
 export { renderMarkdown } from "./markdown.ts";
 export { type CategoryRollup, pct, rollupByCategory, type Tally, tally } from "./rollup.ts";

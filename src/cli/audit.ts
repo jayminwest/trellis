@@ -18,11 +18,12 @@
  * per-repo deltas later, trellis-6eb1). Exit is always `0` in this milestone —
  * the `--fail-on` contract arrives with the SDK exit-code step (trellis-28a5).
  */
+import { basename, resolve } from "node:path";
 import type { Command } from "commander";
 import { Option } from "commander";
 import { auditRepo, renderMarkdown, renderTerminal } from "../report/index.ts";
 import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
-import { openStore } from "../store/index.ts";
+import { openStore, storedReport } from "../store/index.ts";
 import { CliError, EXIT, emit, type Rendered, resolveFormat } from "./output.ts";
 
 /** Local options for the audit command, merged with the global format flags. */
@@ -67,9 +68,13 @@ async function runAudit(repoPath: string, opts: AuditCliOptions): Promise<void> 
 	const store = opts.persist === false ? null : openStore(opts.db);
 	const piBin = process.env.TRELLIS_PI_BIN?.trim();
 	try {
+		// Read this repo's prior run before persisting the new one so the embedded
+		// §11 delta reflects it (repo id is the path basename, as auditRepo defaults).
+		const previous = store?.latestRun(basename(resolve(repoPath))) ?? null;
 		const report = await auditRepo(repoPath, {
 			rubric,
 			...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
+			previousRun: previous ? storedReport(previous) : null,
 			investigation: {
 				...(store ? { cache: store } : {}),
 				noCache: opts.cache === false,

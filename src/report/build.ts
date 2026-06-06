@@ -14,8 +14,7 @@
  *
  * The pipeline is deterministic given (checkout, rubric, detector set, cached
  * findings): the only wall-clock input is `scoredAt`, injectable via `opts.now`.
- * Agent findings are frozen per commit in the investigation cache, so a same-
- * commit re-run reuses them and serializes byte-identically.
+ * Agent findings are frozen per commit, so a same-commit re-run is byte-identical.
  */
 import { basename, resolve } from "node:path";
 import type { DetectorResult, Language } from "../detectors/index.ts";
@@ -40,6 +39,7 @@ import {
 	scoreRun,
 } from "../scoring/index.ts";
 import { type DriftOptions, type DriftReport, driftRepo } from "../standards/index.ts";
+import { changesSinceLastRun } from "./changes.ts";
 import type { Report } from "./types.ts";
 
 /** Rationale stamped on agent criteria when no investigation is wired into the audit. */
@@ -97,6 +97,11 @@ export interface AuditOptions {
 	 * external repo out of seeds/mulch/canopy evidence.
 	 */
 	osecoDetectors?: boolean;
+	/**
+	 * The repo's most recent prior run (SPEC §11): present → fold a
+	 * `changesSinceLastRun` delta into the report; absent → no delta (a first run).
+	 */
+	previousRun?: Report | null;
 }
 
 /** Rationale stamped on a criterion forced not-applicable by `targets.yaml` `skip` (SPEC §6.5). */
@@ -377,8 +382,7 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 	);
 
 	const drift = foldDrift(root, opts);
-
-	return {
+	const report: Report = {
 		repo,
 		rubricVersion: opts.rubricVersion ?? RUBRIC_VERSION,
 		scoredAt,
@@ -390,4 +394,7 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 		criteria,
 		...(drift ? { drift } : {}),
 	};
+	// Fold the §11 delta last (after drift) so key order stays byte-stable; a first run omits the key.
+	if (!opts.previousRun) return report;
+	return { ...report, changesSinceLastRun: changesSinceLastRun(report, opts.previousRun) };
 }

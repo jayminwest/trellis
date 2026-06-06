@@ -11,4 +11,6 @@ export {
 	resolveDbPath,
 	type Store,
 	type StoredRun,
+	storedReport,
+	type TrendRow,
 } from "./store.ts";

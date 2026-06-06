@@ -1,0 +1,81 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`renderHistoryTerminal renders the full dashboard 1`] = `
+"trellis report · rubric 0.2.0
+scope: all repos · all time
+
+fleet snapshot (2)
+  repo    level   pass    cov  Δ     runs  scored
+  burrow  L3       60%    80%  new      1  2026-06-02T00:00:00.000Z
+  warren  L4       75%    90%  +2       2  2026-06-02T00:00:00.000Z
+
+warren · 2 runs
+  scored                    level   pass    cov  rubric
+  2026-06-01T00:00:00.000Z  L2       50%    85%  0.2.0
+  2026-06-02T00:00:00.000Z  L4       75%    90%  0.2.0
+
+  changes since 2026-06-01T00:00:00.000Z (code change)
+    net level +2
+    [fail-to-pass] ci_present: 0/1 → 1/1
+    [pass-to-fail] tests_pass: 2/2 → 1/2
+    [na-kind] lint_clean: no-detector → 1/1
+    [added] fresh: — → 1/1
+
+  trends (1 moved)
+    tests_pass: 2/2 → 1/2"
+`;
+
+exports[`renderHistoryTerminal renders an empty store 1`] = `
+"trellis report · rubric 0.2.0
+scope: warren · since 2026-01-01T00:00:00.000Z
+
+fleet snapshot (0)
+  (no runs recorded)"
+`;
+
+exports[`renderHistoryMarkdown renders the full dashboard 1`] = `
+"# Trellis history
+
+rubric 0.2.0 · scope: all repos · all time
+
+## Fleet snapshot (2)
+
+| Repo | Level | Pass | Coverage | Δ | Runs | Scored |
+| --- | --- | --- | --- | --- | --- | --- |
+| \`burrow\` | L3 | 60% | 80% | new | 1 | 2026-06-02T00:00:00.000Z |
+| \`warren\` | L4 | 75% | 90% | +2 | 2 | 2026-06-02T00:00:00.000Z |
+
+## \`warren\` · 2 runs
+
+| Scored | Level | Pass | Coverage | Rubric |
+| --- | --- | --- | --- | --- |
+| 2026-06-01T00:00:00.000Z | L2 | 50% | 85% | 0.2.0 |
+| 2026-06-02T00:00:00.000Z | L4 | 75% | 90% | 0.2.0 |
+
+### Changes since 2026-06-01T00:00:00.000Z
+
+Net level **+2** · code change
+
+| Criterion | Kind | Before | After |
+| --- | --- | --- | --- |
+| \`ci_present\` | fail-to-pass | 0/1 | 1/1 |
+| \`tests_pass\` | pass-to-fail | 2/2 | 1/2 |
+| \`lint_clean\` | na-kind | no-detector | 1/1 |
+| \`fresh\` | added | — | 1/1 |
+
+### Trends (1 moved)
+
+- \`tests_pass\`: 2/2 → 1/2
+"
+`;
+
+exports[`renderHistoryMarkdown renders an empty store 1`] = `
+"# Trellis history
+
+rubric 0.2.0 · scope: all repos · all time
+
+## Fleet snapshot (0)
+
+_no runs recorded_
+"
+`;

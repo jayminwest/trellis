@@ -128,10 +128,9 @@ describe("trellis (program)", () => {
 		expect(stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
 	});
 
-	test("unimplemented commands exit non-zero with a stub message", async () => {
-		const { code, stderr } = await runCli(["report"]);
+	test("an unknown command exits non-zero", async () => {
+		const { code } = await runCli(["does-not-exist"]);
 		expect(code).not.toBe(0);
-		expect(stderr).toContain("not yet implemented");
 	});
 });
 

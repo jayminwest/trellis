@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { renderJson } from "../report/json.ts";
 import type { Report } from "../report/types.ts";
 import { migrate } from "./migrate.ts";
-import { openStore, resolveDbPath, type Store } from "./store.ts";
+import { openStore, resolveDbPath, type Store, storedReport } from "./store.ts";
 
 /** A minimal but §6.3-valid report fixture; `now`-style fields are pinned for determinism. */
 function makeReport(overrides: Partial<Report> = {}): Report {
@@ -158,6 +158,62 @@ describe("openStore", () => {
 		const ci = rows.find((r) => r.criterion === "ci_present");
 		expect(ci?.numerator).toBe(0);
 		expect(ci?.na_kind).toBeNull();
+	});
+
+	test("repos lists distinct repos with runs, sorted ascending", () => {
+		expect(store.repos()).toEqual([]);
+		store.insertRun(makeReport({ repo: "warren" }));
+		store.insertRun(makeReport({ repo: "burrow" }));
+		store.insertRun(makeReport({ repo: "warren", scoredAt: "2026-06-07T00:00:00.000Z" }));
+		expect(store.repos()).toEqual(["burrow", "warren"]);
+	});
+
+	test("runs returns the full series oldest-first, and honors an optional since floor", () => {
+		store.insertRun(makeReport({ scoredAt: "2026-01-01T00:00:00.000Z", commit: "a" }));
+		store.insertRun(makeReport({ scoredAt: "2026-03-01T00:00:00.000Z", commit: "b" }));
+		store.insertRun(makeReport({ scoredAt: "2026-05-01T00:00:00.000Z", commit: "c" }));
+
+		expect(store.runs("fixture").map((r) => r.commit)).toEqual(["a", "b", "c"]);
+		expect(store.runs("fixture", "2026-02-01T00:00:00.000Z").map((r) => r.commit)).toEqual([
+			"b",
+			"c",
+		]);
+	});
+
+	test("criterionTrend joins criterion rows across runs, ordered by run then criterion", () => {
+		store.insertRun(makeReport({ scoredAt: "2026-01-01T00:00:00.000Z" }));
+		store.insertRun(makeReport({ scoredAt: "2026-05-01T00:00:00.000Z" }));
+
+		const trend = store.criterionTrend("fixture");
+		// 3 criteria × 2 runs, oldest run's three criteria (alpha) first.
+		expect(trend).toHaveLength(6);
+		expect(trend.slice(0, 3).map((r) => r.criterion)).toEqual([
+			"agents_md",
+			"ci_present",
+			"swift_only",
+		]);
+		expect(trend.map((r) => r.scoredAt)).toEqual([
+			"2026-01-01T00:00:00.000Z",
+			"2026-01-01T00:00:00.000Z",
+			"2026-01-01T00:00:00.000Z",
+			"2026-05-01T00:00:00.000Z",
+			"2026-05-01T00:00:00.000Z",
+			"2026-05-01T00:00:00.000Z",
+		]);
+		const swift = trend.find((r) => r.criterion === "swift_only");
+		expect(swift?.numerator).toBeNull();
+		expect(swift?.naKind).toBe("not-applicable");
+
+		// `since` floors the join just like `runs`.
+		expect(store.criterionTrend("fixture", "2026-03-01T00:00:00.000Z")).toHaveLength(3);
+	});
+
+	test("storedReport round-trips a persisted run back into its §6.3 report", () => {
+		const report = makeReport({ level: 4 });
+		store.insertRun(report);
+		const latest = store.latestRun("fixture");
+		expect(latest).not.toBeNull();
+		if (latest) expect(storedReport(latest)).toEqual(report);
 	});
 
 	test("getCache misses before a put, hits after, and upserts on conflict", () => {

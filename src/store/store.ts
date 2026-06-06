@@ -46,6 +46,15 @@ export interface CachedFindings {
 	createdAt: string;
 }
 
+/** One `criterion_results` row joined to its run's `scored_at` — a point on a §11 trend. */
+export interface TrendRow {
+	criterion: string;
+	scoredAt: string;
+	numerator: number | null;
+	denominator: number;
+	naKind: NaKind | null;
+}
+
 /** The typed store surface over the central SQLite history. */
 export interface Store {
 	/** Persist a report: one `runs` row + its exploded `criterion_results`, in one transaction. Returns the new run id. */
@@ -54,6 +63,12 @@ export interface Store {
 	latestRun(repo: string): StoredRun | null;
 	/** Runs for `repo` scored at or after `since` (ISO-8601), oldest first. */
 	runsSince(repo: string, since: string): StoredRun[];
+	/** Distinct repo ids with at least one recorded run, sorted ascending (the fleet snapshot universe). */
+	repos(): string[];
+	/** All runs for `repo` (or those scored at or after `since`), oldest first — the §11 history series. */
+	runs(repo: string, since?: string): StoredRun[];
+	/** Per-criterion trend points for `repo` (optionally since `since`), ordered oldest run first then criterion id. */
+	criterionTrend(repo: string, since?: string): TrendRow[];
 	/** Cached findings for an investigation area at a commit, or `null` on a miss. */
 	getCache(repo: string, commitSha: string, area: string): CachedFindings | null;
 	/** Upsert cached findings for an investigation area at a commit. */
@@ -81,9 +96,38 @@ interface RunRow {
 	scored_at: string;
 }
 
+/** Shape of a joined criterion-trend row as `bun:sqlite` returns it (snake_case columns). */
+interface TrendRowRaw {
+	criterion: string;
+	scored_at: string;
+	numerator: number | null;
+	denominator: number;
+	na_kind: string | null;
+}
+
 /** The `runs` columns, in a fixed order, for every SELECT that maps to {@link StoredRun}. */
 const RUN_COLUMNS =
 	"id, repo, commit_sha, rubric_version, level, pass_rate, coverage, report_json, scored_at";
+
+/** Map a raw joined {@link TrendRowRaw} to the camelCase {@link TrendRow} surface. */
+function toTrendRow(row: TrendRowRaw): TrendRow {
+	return {
+		criterion: row.criterion,
+		scoredAt: row.scored_at,
+		numerator: row.numerator,
+		denominator: row.denominator,
+		naKind: (row.na_kind as NaKind | null) ?? null,
+	};
+}
+
+/**
+ * Parse a {@link StoredRun}'s `report_json` back into the §6.3 {@link Report} it
+ * was rendered from. The column is always {@link renderJson} output trellis wrote
+ * itself, so this is an internal round-trip, not an external boundary — no zod.
+ */
+export function storedReport(run: StoredRun): Report {
+	return JSON.parse(run.reportJson) as Report;
+}
 
 /** Map a raw {@link RunRow} to the camelCase {@link StoredRun} surface. */
 function toStoredRun(row: RunRow): StoredRun {
@@ -138,6 +182,21 @@ export function openStore(dbPath?: string): Store {
 	const runsSinceStmt = db.query<RunRow, [string, string]>(
 		`SELECT ${RUN_COLUMNS} FROM runs WHERE repo = ? AND scored_at >= ? ORDER BY scored_at ASC, id ASC`,
 	);
+	const runsAllStmt = db.query<RunRow, [string]>(
+		`SELECT ${RUN_COLUMNS} FROM runs WHERE repo = ? ORDER BY scored_at ASC, id ASC`,
+	);
+	const reposStmt = db.query<{ repo: string }, []>(
+		"SELECT DISTINCT repo FROM runs ORDER BY repo ASC",
+	);
+	const trendColumns =
+		"cr.criterion AS criterion, r.scored_at AS scored_at, cr.numerator AS numerator, cr.denominator AS denominator, cr.na_kind AS na_kind";
+	const trendOrder = "ORDER BY r.scored_at ASC, r.id ASC, cr.criterion ASC";
+	const trendAllStmt = db.query<TrendRowRaw, [string]>(
+		`SELECT ${trendColumns} FROM criterion_results cr JOIN runs r ON r.id = cr.run_id WHERE r.repo = ? ${trendOrder}`,
+	);
+	const trendSinceStmt = db.query<TrendRowRaw, [string, string]>(
+		`SELECT ${trendColumns} FROM criterion_results cr JOIN runs r ON r.id = cr.run_id WHERE r.repo = ? AND r.scored_at >= ? ${trendOrder}`,
+	);
 	const getCacheStmt = db.query<
 		{ findings_json: string; created_at: string },
 		[string, string, string]
@@ -187,6 +246,17 @@ export function openStore(dbPath?: string): Store {
 		},
 		runsSince(repo, since) {
 			return runsSinceStmt.all(repo, since).map(toStoredRun);
+		},
+		repos() {
+			return reposStmt.all().map((row) => row.repo);
+		},
+		runs(repo, since) {
+			const rows = since === undefined ? runsAllStmt.all(repo) : runsSinceStmt.all(repo, since);
+			return rows.map(toStoredRun);
+		},
+		criterionTrend(repo, since) {
+			const rows = since === undefined ? trendAllStmt.all(repo) : trendSinceStmt.all(repo, since);
+			return rows.map(toTrendRow);
 		},
 		getCache(repo, commitSha, area) {
 			const row = getCacheStmt.get(repo, commitSha, area);

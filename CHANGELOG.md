@@ -11,6 +11,26 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- History reporting & changes-since-last-run (SPEC §11, §6.3): a new `trellis
+  report [--repo <id>] [--since <date>] [--json|--md]` renders the run-history
+  dashboard from the central SQLite store — a fleet snapshot of each repo's
+  latest run (level, pass-rate, coverage, net level move), per-repo run series
+  over time, and per-criterion trends powered by `criterion_results` (only
+  criteria that actually moved). `src/report/changes.ts` computes the §11 delta
+  between a run and the repo's most recent prior run: per-criterion transitions
+  (`pass-to-fail` / `fail-to-pass` / `na-kind` / `denominator` / `score` /
+  `added` / `removed`) plus the net level move, attributed by rubric version —
+  identical versions mark a real code regression/improvement (`"code"`),
+  differing versions flag the delta as `"possibly-rubric"`. `auditRepo` folds
+  this delta into `report.changesSinceLastRun` at audit time when given the prior
+  run (`opts.previousRun`); the fleet and single-repo `audit` CLI both read it
+  from the history before persisting, so a re-run records its own diff. The store
+  gains `repos()` / `runs(repo, since?)` / `criterionTrend(repo, since?)` queries
+  and a `storedReport` round-trip. Delta computation, the new store queries, the
+  dashboard projection, `--since` filtering, and the terminal/markdown renderers
+  are unit-tested; an end-to-end test asserts that after two fleet runs of a
+  changed fixture, `trellis report` shows the criterion-level diff with `"code"`
+  attribution.
 - Pi RPC provider (SPEC §9): `src/investigation/provider/` exposes the single
   core entrypoint `investigate(repoPath, area, opts)` through which all facts are
   produced — both the CLI and SDK reach Pi through it, so the surfaces can never

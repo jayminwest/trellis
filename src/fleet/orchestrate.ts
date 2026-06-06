@@ -23,7 +23,7 @@ import type { InvestigationDeps } from "../investigation/index.ts";
 import { type AuditOptions, auditRepo, type Report } from "../report/index.ts";
 import { type Level, RUBRIC_VERSION, type Rubric } from "../rubric/index.ts";
 import type { DriftState } from "../standards/index.ts";
-import type { Store } from "../store/index.ts";
+import { type Store, type StoredRun, storedReport } from "../store/index.ts";
 import {
 	type Fleet,
 	type FleetDefaults,
@@ -101,12 +101,13 @@ function realPathExists(absPath: string): boolean {
 	}
 }
 
-/** Assemble the per-target {@link AuditOptions}: spec mapping + investigation wiring. */
+/** Assemble the per-target {@link AuditOptions}: spec mapping + investigation wiring + the §11 prior run. */
 function buildOptions(
 	target: ResolvedTarget,
 	defaults: FleetDefaults,
 	deps: FleetRunDeps,
 	now: Date,
+	previous: StoredRun | null,
 ): AuditOptions {
 	const investigation: InvestigationDeps = {
 		cache: deps.store,
@@ -122,6 +123,8 @@ function buildOptions(
 		...(deps.rubricVersion ? { rubricVersion: deps.rubricVersion } : {}),
 		now,
 		investigation,
+		// Embed the §11 delta against this repo's prior run (null on its first run).
+		previousRun: previous ? storedReport(previous) : null,
 	};
 }
 
@@ -143,7 +146,7 @@ async function runTarget(
 	const previous = deps.store.latestRun(id);
 	const previousLevel = previous ? previous.level : null;
 	try {
-		const report = await audit(path, buildOptions(target, defaults, deps, now));
+		const report = await audit(path, buildOptions(target, defaults, deps, now, previous));
 		deps.store.insertRun(report);
 		return {
 			id,
