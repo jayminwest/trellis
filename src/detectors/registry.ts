@@ -18,6 +18,7 @@
  * the "covers all 70" contract, since resolution always yields a detector.
  */
 import * as common from "./common/index.ts";
+import * as ts from "./lang/typescript/index.ts";
 import { type Detector, type Language, noDetector } from "./types.ts";
 
 /** A criterion binding: one common detector, or a per-language adapter map. */
@@ -86,6 +87,33 @@ export const BINDINGS: Readonly<Record<string, Binding>> = {
 	large_file_detection: commonBinding(common.largeFileDetection),
 	tech_debt_tracking: commonBinding(common.techDebtTracking),
 	pre_commit_hooks: commonBinding(common.preCommitHooks),
+
+	// §5.2 Code Quality — TypeScript adapter (trellis-299e)
+	lint_config: languageBinding({ typescript: ts.lintConfig }),
+	type_check: languageBinding({ typescript: ts.typeCheck }),
+	formatter: languageBinding({ typescript: ts.formatter }),
+	strict_typing: languageBinding({ typescript: ts.strictTyping }),
+	naming_consistency: languageBinding({ typescript: ts.namingConsistency }),
+	dead_code_detection: languageBinding({ typescript: ts.deadCodeDetection }),
+	duplicate_code_detection: languageBinding({ typescript: ts.duplicateCodeDetection }),
+	unused_dependencies_detection: languageBinding({ typescript: ts.unusedDependenciesDetection }),
+	code_modularization: languageBinding({ typescript: ts.codeModularization }),
+	cyclomatic_complexity: languageBinding({ typescript: ts.cyclomaticComplexity }),
+	// §5.3 Testing — deterministic TypeScript subset
+	unit_tests_runnable: languageBinding({ typescript: ts.unitTestsRunnable }),
+	test_coverage_thresholds: languageBinding({ typescript: ts.testCoverageThresholds }),
+	// §5.6 Observability — deterministic TypeScript subset
+	structured_logging: languageBinding({ typescript: ts.structuredLogging }),
+	error_tracking_contextualized: languageBinding({ typescript: ts.errorTrackingContextualized }),
+	// §5.9 Locality & Contracts — TypeScript bindings (thesis category)
+	machine_checked_architecture: languageBinding({ typescript: ts.machineCheckedArchitecture }),
+	import_cycle_detection: languageBinding({ typescript: ts.importCycleDetection }),
+	orphan_module_detection: languageBinding({ typescript: ts.orphanModuleDetection }),
+	explicit_any_detection: languageBinding({ typescript: ts.explicitAnyDetection }),
+	strictest_type_checking: languageBinding({ typescript: ts.strictestTypeChecking }),
+	greppable_exports: languageBinding({ typescript: ts.greppableExports }),
+	barrel_file_reexport_detection: languageBinding({ typescript: ts.barrelFileReexportDetection }),
+	mutation_testing: languageBinding({ typescript: ts.mutationTesting }),
 };
 
 /** No-detector stub for a criterion with no binding at all. */
