@@ -1,0 +1,56 @@
+%% architecture.mmd
+%%
+%% trellis module graph (SPEC §4). The rubric (WHAT) never names a tool;
+%% detectors (HOW) are tool-specific and live in per-language adapters. That
+%% seam lets one rubric retarget TS, Swift, Python, and arbitrary repos.
+%%
+%% Render locally with `bunx @mermaid-js/mermaid-cli -i docs/architecture.mmd
+%% -o docs/architecture.png` or view inline on GitHub (mermaid renders
+%% natively in fenced code blocks). Referenced from AGENTS.md and README.md.
+
+flowchart LR
+    user["operator / CI"]
+    cli["src/cli/ (commander)"]
+    sdk["src/client/ (typed SDK)"]
+
+    rubric["rubric/ — WHAT\ncategories + criteria + version"]
+    discovery["discovery/ — apps"]
+    detectors["detectors/ — HOW (deterministic)\ncommon + lang/{ts,swift,python} + oseco"]
+    investigation["investigation/ — HOW (agent)\nareas → findings → grader"]
+    scoring["scoring/ — pass-rate, clamp, bands"]
+    standards["standards/ — canonical drift (L1)"]
+    fleet["fleet/ — targets.yaml orchestration"]
+    report["report/ — terminal / JSON / MD"]
+    store["store/ — bun:sqlite history"]
+    pi["pi --mode rpc (LLM provider, §9)"]
+
+    user -->|"invokes"| cli
+    user -->|"imports"| sdk
+    cli --> rubric
+    sdk --> rubric
+
+    rubric --> detectors
+    rubric --> investigation
+    discovery --> detectors
+    detectors --> scoring
+    investigation --> scoring
+    investigation -->|"spawns"| pi
+    rubric --> standards
+    fleet --> rubric
+    scoring --> report
+    standards --> report
+    scoring -->|"persists"| store
+    store --> report
+
+    classDef component fill:#f8fafc,stroke:#0f172a,stroke-width:1px,color:#0f172a;
+    classDef edge fill:#e2e8f0,stroke:#334155,stroke-width:1px,color:#0f172a;
+    class user,pi edge;
+    class cli,sdk,rubric,discovery,detectors,investigation,scoring,standards,fleet,report,store component;
+
+%% --- Notes ----------------------------------------------------------------
+%% 1. Core (the "api") is every module under src/ except cli/ and client/.
+%%    cli/ and client/ are thin pass-throughs (SPEC §13.1) — no logic.
+%% 2. The investigation layer's grader is DETERMINISTIC; only fact-gathering
+%%    is agentic, executed by Pi in RPC mode (§9), tested against goldens.
+%% 3. store/ is the single source of run history; report/ reads it for the
+%%    dashboard and changes-since-last-run deltas (§11).

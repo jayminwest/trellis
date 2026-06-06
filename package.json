@@ -37,7 +37,16 @@
 		"test": "bun test",
 		"lint": "biome check --error-on-warnings .",
 		"lint:fix": "biome check --write --error-on-warnings .",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"check:size": "bun run scripts/check-file-sizes.ts",
+		"check:debt": "bun run scripts/check-debt-markers.ts",
+		"check:dups": "bunx jscpd",
+		"check:deps": "knip --dependencies",
+		"check:agents": "bun run scripts/validate-agents-md.ts",
+		"check:coverage": "bun run scripts/check-coverage.ts",
+		"check:all": "bun run lint && bun run typecheck && bun run check:size && bun run check:debt && bun run check:dups && bun run check:deps && bun run check:agents && bun run check:coverage",
+		"test:ci": "mkdir -p test-results && bun test --coverage --coverage-reporter=lcov --coverage-dir=coverage --reporter=junit --reporter-outfile=test-results/junit.xml",
+		"prepare": "[ -e .git ] && git config core.hooksPath scripts/hooks || true"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.14",
