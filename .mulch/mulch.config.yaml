@@ -2,6 +2,7 @@ version: '1'
 domains:
   trellis: {}
   ci: {}
+  rubric: {}
 governance:
   max_entries: 100
   warn_entries: 150
