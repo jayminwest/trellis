@@ -104,7 +104,11 @@ describe("auditRepo end-to-end", () => {
 		await put("README.md", "# poly\n");
 		await put("package.json", JSON.stringify({ name: "poly", main: "./i.ts" }));
 		const report = await auditRepo(repo, { now: FIXED_NOW, languages: ["python"] });
-		// A python-only app leaves the TS-bound criteria with no adapter → no-detector.
-		expect(report.criteria.lint_config?.naKind).toBe("no-detector");
+		// The hint selects the Python adapter despite the TS package.json: lint_config
+		// is graded by it (no ruff/flake8/pylint here → fail, not no-detector)…
+		expect(report.criteria.lint_config?.numerator).toBe(0);
+		expect(report.criteria.lint_config?.naKind).toBeUndefined();
+		// …while a TS-only criterion with no Python adapter falls back to no-detector.
+		expect(report.criteria.code_modularization?.naKind).toBe("no-detector");
 	});
 });

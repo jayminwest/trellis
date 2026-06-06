@@ -111,6 +111,33 @@ describe("registry covers the rubric (acceptance)", () => {
 		}
 	});
 
+	test("every deterministic app criterion resolves to a valid result for a Python app", async () => {
+		const appCriteria = deterministic.filter((c) => c.scope === "app");
+		for (const c of appCriteria) {
+			const result = await REGISTRY.resolve(c.id, ["python"])(emptyCtx);
+			expect(detectorResultSchema.safeParse(result).success).toBe(true);
+		}
+	});
+
+	test("Python honest N/A accounting: TS-only concepts are N/A, deptry is gradable", async () => {
+		const naFor = async (id: string) => (await REGISTRY.resolve(id, ["python"])(emptyCtx)).naKind;
+		// TS stack-concepts with no Python analogue resolve to not-applicable (excluded
+		// from coverage), never no-detector and never a fail.
+		for (const id of [
+			"explicit_any_detection",
+			"greppable_exports",
+			"barrel_file_reexport_detection",
+			"strictest_type_checking",
+		]) {
+			expect(await naFor(id)).toBe("not-applicable");
+		}
+		// Unlike Swift, Python HAS an unused-dependency analogue (deptry), so an empty
+		// repo fails the criterion rather than excusing it as not-applicable.
+		const deptry = await REGISTRY.resolve("unused_dependencies_detection", ["python"])(emptyCtx);
+		expect(deptry.numerator).toBe(0);
+		expect(deptry.naKind).toBeUndefined();
+	});
+
 	test("no agent criterion is ever bound to a detector", () => {
 		const agentIds = new Set(
 			rubric.criteria.filter((c) => c.discoveryVia === "agent").map((c) => c.id),

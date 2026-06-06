@@ -18,6 +18,7 @@
  * the "covers all 70" contract, since resolution always yields a detector.
  */
 import * as common from "./common/index.ts";
+import * as python from "./lang/python/index.ts";
 import * as swift from "./lang/swift/index.ts";
 import * as ts from "./lang/typescript/index.ts";
 import { type Detector, type Language, noDetector } from "./types.ts";
@@ -89,40 +90,63 @@ export const BINDINGS: Readonly<Record<string, Binding>> = {
 	tech_debt_tracking: commonBinding(common.techDebtTracking),
 	pre_commit_hooks: commonBinding(common.preCommitHooks),
 
-	// §5.2 Code Quality — TypeScript (trellis-299e) + Swift (trellis-3d67) adapters
-	lint_config: languageBinding({ typescript: ts.lintConfig, swift: swift.lintConfig }),
-	type_check: languageBinding({ typescript: ts.typeCheck, swift: swift.typeCheck }),
-	formatter: languageBinding({ typescript: ts.formatter, swift: swift.formatter }),
-	strict_typing: languageBinding({ typescript: ts.strictTyping, swift: swift.strictTyping }),
+	// §5.2 Code Quality — TypeScript (trellis-299e) + Swift (trellis-3d67) + Python (trellis-89b4)
+	lint_config: languageBinding({
+		typescript: ts.lintConfig,
+		swift: swift.lintConfig,
+		python: python.lintConfig,
+	}),
+	type_check: languageBinding({
+		typescript: ts.typeCheck,
+		swift: swift.typeCheck,
+		python: python.typeCheck,
+	}),
+	formatter: languageBinding({
+		typescript: ts.formatter,
+		swift: swift.formatter,
+		python: python.formatter,
+	}),
+	strict_typing: languageBinding({
+		typescript: ts.strictTyping,
+		swift: swift.strictTyping,
+		python: python.strictTyping,
+	}),
 	naming_consistency: languageBinding({
 		typescript: ts.namingConsistency,
 		swift: swift.namingConsistency,
+		python: python.namingConsistency,
 	}),
 	dead_code_detection: languageBinding({
 		typescript: ts.deadCodeDetection,
 		swift: swift.deadCodeDetection,
+		python: python.deadCodeDetection,
 	}),
 	duplicate_code_detection: languageBinding({
 		typescript: ts.duplicateCodeDetection,
 		swift: swift.duplicateCodeDetection,
+		python: python.duplicateCodeDetection,
 	}),
 	unused_dependencies_detection: languageBinding({
 		typescript: ts.unusedDependenciesDetection,
 		swift: swift.unusedDependenciesDetection,
+		python: python.unusedDependenciesDetection,
 	}),
 	code_modularization: languageBinding({ typescript: ts.codeModularization }),
 	cyclomatic_complexity: languageBinding({
 		typescript: ts.cyclomaticComplexity,
 		swift: swift.cyclomaticComplexity,
+		python: python.cyclomaticComplexity,
 	}),
-	// §5.3 Testing — deterministic TypeScript + Swift subset
+	// §5.3 Testing — deterministic TypeScript + Swift + Python subset
 	unit_tests_runnable: languageBinding({
 		typescript: ts.unitTestsRunnable,
 		swift: swift.unitTestsRunnable,
+		python: python.unitTestsRunnable,
 	}),
 	test_coverage_thresholds: languageBinding({
 		typescript: ts.testCoverageThresholds,
 		swift: swift.testCoverageThresholds,
+		python: python.testCoverageThresholds,
 	}),
 	// §5.6 Observability — deterministic TypeScript subset
 	structured_logging: languageBinding({ typescript: ts.structuredLogging }),
@@ -133,24 +157,35 @@ export const BINDINGS: Readonly<Record<string, Binding>> = {
 	import_cycle_detection: languageBinding({
 		typescript: ts.importCycleDetection,
 		swift: swift.importCycleDetection,
+		python: python.importCycleDetection,
 	}),
-	orphan_module_detection: languageBinding({ typescript: ts.orphanModuleDetection }),
+	orphan_module_detection: languageBinding({
+		typescript: ts.orphanModuleDetection,
+		python: python.orphanModuleDetection,
+	}),
 	explicit_any_detection: languageBinding({
 		typescript: ts.explicitAnyDetection,
 		swift: swift.explicitAnyDetection,
+		python: python.explicitAnyDetection,
 	}),
-	strictest_type_checking: languageBinding({ typescript: ts.strictestTypeChecking }),
+	strictest_type_checking: languageBinding({
+		typescript: ts.strictestTypeChecking,
+		python: python.strictestTypeChecking,
+	}),
 	greppable_exports: languageBinding({
 		typescript: ts.greppableExports,
 		swift: swift.greppableExports,
+		python: python.greppableExports,
 	}),
 	barrel_file_reexport_detection: languageBinding({
 		typescript: ts.barrelFileReexportDetection,
 		swift: swift.barrelFileReexportDetection,
+		python: python.barrelFileReexportDetection,
 	}),
 	mutation_testing: languageBinding({
 		typescript: ts.mutationTesting,
 		swift: swift.mutationTesting,
+		python: python.mutationTesting,
 	}),
 };
 
