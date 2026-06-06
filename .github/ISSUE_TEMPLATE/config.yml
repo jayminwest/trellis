@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/jayminwest/os-eco/discussions
+    about: Have a question, idea, or want to chat? Start a discussion instead of filing an issue.

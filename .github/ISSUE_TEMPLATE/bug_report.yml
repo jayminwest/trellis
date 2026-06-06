@@ -1,0 +1,91 @@
+name: Bug Report
+description: Report a bug
+labels: ["kind/bug", "status/needs-triage"]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do?
+      placeholder: |
+        1. Run `trellis ...`
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: |
+        How urgent is this for you? Maintainers may re-triage, but a starting
+        point helps.
+      options:
+        - "P0 -- critical / production-impacting"
+        - "P1 -- high / blocks my workflow"
+        - "P2 -- medium / annoying but workable"
+        - "P3 -- low / nice-to-have"
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: |
+        Which part of the project does this touch? Pick the closest match;
+        leave as "unsure" if you don't know and a maintainer will label it
+        during triage.
+      multiple: true
+      options:
+        - "area/cli -- CLI commands and entry points"
+        - "area/docs -- documentation"
+        - "area/test -- test coverage / fixtures"
+        - "area/ci -- CI / build / tooling"
+        - "area/deps -- dependencies / dependabot"
+        - "unsure -- maintainer will triage"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Project version
+      description: Output of `trellis --version`
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: bun-version
+    attributes:
+      label: Bun version
+      description: Output of `bun --version`
+      placeholder: "1.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 15, Ubuntu 22.04, etc."
+    validations:
+      required: true

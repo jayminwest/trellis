@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      # Run the exact aggregate gate the pre-commit hook and `bun run
+      # check:all` run locally. Verbatim invocation is the contract: CI must
+      # not drift from the local gate. `check:all` already covers coverage,
+      # lint, typecheck, AGENTS.md, file-size, debt, dups, and deps.
+      - name: Aggregate quality checks (check:all parity)
+        run: bun run check:all
+
+      # Re-run the suite with the CI reporters to emit the JUnit + lcov
+      # artifacts the report steps and uploads below consume.
+      - name: Run tests (CI reporters)
+        run: bun run test:ci
+
+      - name: Test timing summary
+        if: always()
+        run: bun run report:test-timing
+
+      - name: Code-quality metrics summary
+        if: always()
+        run: bun run report:quality-metrics
+
+      - name: Upload test timing artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bun-test-junit
+          path: test-results/junit.xml
+          if-no-files-found: warn
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bun-test-coverage
+          path: coverage/lcov.info
+          if-no-files-found: warn

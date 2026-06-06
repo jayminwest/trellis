@@ -11,6 +11,15 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- `.github/` governance & CI surface: `dependabot.yml` (cooldown / delayed
+  adoption), issue templates (`bug_report`, `feature_request`, `config`),
+  `pull_request_template.md`, `labels.yml`, and workflows `ci.yml`
+  (verbatim `check:all` parity with the local gate + `test:ci`, report
+  summaries, and JUnit/lcov artifact uploads), `sync-labels.yml`,
+  `publish.yml` (version-gated `@os-eco/trellis-cli` publish with provenance
+  and `package.json` ↔ `src/index.ts` VERSION-sync assertion), and
+  `auto-merge.yml`. Adds `report:test-timing` / `report:quality-metrics`
+  package scripts the CI report steps invoke. (`trellis-7baf`)
 - Governance & agent-instruction surface: `README.md`, `AGENTS.md`,
   `CLAUDE.md`, `CHANGELOG.md`, `CODEOWNERS`, `CONTRIBUTING.md`, `SECURITY.md`,
   `RUNBOOK.md`, `docs/architecture.mmd`, and `.claude/commands/`

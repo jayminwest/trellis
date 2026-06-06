@@ -1,0 +1,60 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["kind/feature", "status/needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should this work?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: |
+        How important is this to you? Maintainers may re-triage.
+      options:
+        - "P0 -- critical / blocks a release"
+        - "P1 -- high / needed for next milestone"
+        - "P2 -- medium / normal feature work"
+        - "P3 -- low / nice-to-have"
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: |
+        Which part of the project would this touch? Pick the closest
+        match(es); select "unsure" if you don't know.
+      multiple: true
+      options:
+        - "area/cli -- CLI commands and entry points"
+        - "area/docs -- documentation"
+        - "area/test -- test coverage / fixtures"
+        - "area/ci -- CI / build / tooling"
+        - "area/deps -- dependencies / dependabot"
+        - "unsure -- maintainer will triage"
+    validations:
+      required: true
