@@ -19,6 +19,7 @@
 import { basename, resolve } from "node:path";
 import type { DetectorResult, Language } from "../detectors/index.ts";
 import { createDetectionContext, type DetectorRegistry, REGISTRY } from "../detectors/index.ts";
+import { applyOsecoOverlay } from "../detectors/oseco/overlay.ts";
 import type { App } from "../discovery/index.ts";
 import { discoverApps, toAppMap } from "../discovery/index.ts";
 import {
@@ -86,21 +87,16 @@ export interface AuditOptions {
 	 */
 	repoId?: string;
 	/**
-	 * Criterion ids to force not-applicable (SPEC §6.5 `targets.yaml` `skip`).
-	 * Each listed criterion is graded `not-applicable` with the rationale {@link
-	 * SKIPPED_VIA_TARGETS}, skipping its detector/area entirely.
+	 * Criterion ids forced not-applicable with {@link SKIPPED_VIA_TARGETS} (SPEC
+	 * §6.5 `targets.yaml` `skip`); skips their detector/area entirely.
 	 */
 	skip?: readonly string[];
 	/**
 	 * os-eco-native detector toggle (SPEC §6.5/§8.4), surfaced on every detection
-	 * context for the os-eco adapter (trellis-7f70). Default on; `false` opts an
-	 * external repo out of seeds/mulch/canopy evidence.
+	 * context. Default on; `false` opts a repo out of seeds/mulch/canopy evidence.
 	 */
 	osecoDetectors?: boolean;
-	/**
-	 * The repo's most recent prior run (SPEC §11): present → fold a
-	 * `changesSinceLastRun` delta into the report; absent → no delta (a first run).
-	 */
+	/** The repo's most recent prior run (SPEC §11): present → fold a `changesSinceLastRun` delta; absent → first run. */
 	previousRun?: Report | null;
 }
 
@@ -253,10 +249,12 @@ async function deterministicEntry(
 }
 
 /**
- * Score every rubric criterion into its §6.2 entry, in rubric order. Three
- * disciplines coexist: a `skip`-listed criterion is forced not-applicable; an
- * agent criterion is graded from its area's findings; everything else runs its
- * deterministic detector(s).
+ * Score every rubric criterion into its §6.2 entry, in rubric order. A `skip`ped
+ * criterion is forced not-applicable (and the overlay never overrides that
+ * intentional exclusion); an agent criterion is graded from its area's findings;
+ * everything else runs its deterministic detector(s). os-eco-native evidence
+ * (SPEC §8.4) is then folded over every non-skipped verdict (pass if either
+ * passes), gated by the repo context's `osecoDetectors` toggle.
  */
 async function scoreAllCriteria(
 	rubric: Rubric,
@@ -271,11 +269,13 @@ async function scoreAllCriteria(
 	for (const criterion of rubric.criteria) {
 		if (skip.has(criterion.id)) {
 			criteria[criterion.id] = skippedEntry(criterion.scope, appCount);
-		} else if (criterion.discoveryVia === "agent") {
-			criteria[criterion.id] = agentEntry(criterion, appCount, resolutions);
-		} else {
-			criteria[criterion.id] = await deterministicEntry(criterion, registry, repoCtx, appCtxs);
+			continue;
 		}
+		const base =
+			criterion.discoveryVia === "agent"
+				? agentEntry(criterion, appCount, resolutions)
+				: await deterministicEntry(criterion, registry, repoCtx, appCtxs);
+		criteria[criterion.id] = await applyOsecoOverlay(criterion, base, repoCtx, appCount);
 	}
 	return criteria;
 }
