@@ -16,9 +16,8 @@
  */
 
 import type { Level } from "../rubric/index.ts";
-import type { ScorecardEntry } from "../scoring/index.ts";
+import type { NaKind, ScorecardEntry } from "../scoring/index.ts";
 import type { DriftReport } from "../standards/index.ts";
-import type { ChangesSinceLastRun } from "./changes.ts";
 
 /** One app's entry in the report's §6.3 `apps` map. */
 export interface AppDescriptor {
@@ -50,4 +49,76 @@ export interface Report {
 	drift?: DriftReport;
 	/** Per-criterion delta vs the repo's prior run (SPEC §11), present only when a prior run was compared. */
 	changesSinceLastRun?: ChangesSinceLastRun;
+}
+
+/**
+ * The §11 changes-since-last-run delta types live here (the canonical types
+ * module) rather than beside their logic in `changes.ts`, so that `types.ts` can
+ * reference {@link ChangesSinceLastRun} from {@link Report} without forming an
+ * import cycle with `changes.ts` (which depends on {@link Report}).
+ */
+
+/** A criterion's coarse standing in one run, folding the §6.2 entry to one label. */
+export type CriterionStatus = "pass" | "fail" | "partial" | "not-applicable" | "no-detector";
+
+/** The kind of move a criterion made between the two runs (one per transition). */
+export type TransitionKind =
+	/** Left full-pass (`N/N` → anything counted-but-lower). */
+	| "pass-to-fail"
+	/** Reached full-pass (anything counted-but-lower → `N/N`). */
+	| "fail-to-pass"
+	/** An N/A-kind shift: counted↔N/A, or not-applicable↔no-detector. */
+	| "na-kind"
+	/** The denominator (app count) changed while the status held. */
+	| "denominator"
+	/** The numerator moved within a partial state (same denominator, no boundary cross). */
+	| "score"
+	/** Present this run, absent in the prior one (only possible across rubric versions). */
+	| "added"
+	/** Present in the prior run, absent this one (only possible across rubric versions). */
+	| "removed";
+
+/** A criterion's measurable state in one run — the before/after of a transition. */
+export interface CriterionSnapshot {
+	status: CriterionStatus;
+	numerator: number | null;
+	denominator: number;
+	naKind: NaKind | null;
+}
+
+/** One criterion's move between the prior run and this one. */
+export interface CriterionTransition {
+	/** Criterion id (§6.1). */
+	criterion: string;
+	/** The nature of the move. */
+	kind: TransitionKind;
+	/** Prior-run state, or `null` when the criterion is newly `added`. */
+	before: CriterionSnapshot | null;
+	/** This-run state, or `null` when the criterion was `removed`. */
+	after: CriterionSnapshot | null;
+}
+
+/** The §11 delta of a run against the most recent prior run for the same repo. */
+export interface ChangesSinceLastRun {
+	/** `scoredAt` of the run compared against (the most recent prior run for this repo). */
+	previousScoredAt: string;
+	/** The prior run's resolved commit. */
+	previousCommit: string;
+	/** The prior run's rubric version. */
+	previousRubricVersion: string;
+	/** The prior run's coverage-clamped level. */
+	previousLevel: Level;
+	/** This run's coverage-clamped level. */
+	level: Level;
+	/** `level − previousLevel` — the net maturity move. */
+	netLevelMove: number;
+	/** True when the two runs scored against different rubric versions. */
+	rubricVersionChanged: boolean;
+	/**
+	 * `"code"` when both runs share a rubric version (a real regression/improvement);
+	 * `"possibly-rubric"` when they differ (the delta may be rubric-driven, SPEC §11).
+	 */
+	attribution: "code" | "possibly-rubric";
+	/** Per-criterion moves, in this run's rubric order (removed criteria appended last). */
+	transitions: CriterionTransition[];
 }

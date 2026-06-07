@@ -16,19 +16,18 @@ export {
 	failingGateIds,
 } from "./assess.ts";
 export { AGENT_NOT_WIRED, type AuditOptions, auditRepo, SKIPPED_VIA_TARGETS } from "./build.ts";
-export {
-	type ChangesSinceLastRun,
-	type CriterionSnapshot,
-	type CriterionStatus,
-	type CriterionTransition,
-	changesSinceLastRun,
-	criterionStatus,
-	snapshot,
-	type TransitionKind,
-} from "./changes.ts";
+export { changesSinceLastRun, criterionStatus, snapshot } from "./changes.ts";
 export { renderJson } from "./json.ts";
 export { renderMarkdown } from "./markdown.ts";
 export { type CategoryRollup, pct, rollupByCategory, type Tally, tally } from "./rollup.ts";
 export { type AuditRunOptions, runAudit } from "./run.ts";
 export { renderTerminal } from "./terminal.ts";
-export type { AppDescriptor, Report } from "./types.ts";
+export type {
+	AppDescriptor,
+	ChangesSinceLastRun,
+	CriterionSnapshot,
+	CriterionStatus,
+	CriterionTransition,
+	Report,
+	TransitionKind,
+} from "./types.ts";

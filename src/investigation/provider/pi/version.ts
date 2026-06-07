@@ -52,19 +52,25 @@ export function semverGte(a: [number, number, number], b: [number, number, numbe
 	return true;
 }
 
-/** Spawn `pi --version` and capture its trimmed stdout (injectable for tests). */
+/**
+ * Spawn `pi --version` and capture both streams (injectable for tests). Pi
+ * prints its version to **stderr** (verified against 0.78.1), while other builds
+ * may use stdout — so the probe parses the union of both rather than trusting
+ * one stream.
+ */
 export type VersionSpawn = (
 	bin: string,
-) => Promise<{ readonly exitCode: number; readonly stdout: string }>;
+) => Promise<{ readonly exitCode: number; readonly stdout: string; readonly stderr?: string }>;
 
 const defaultVersionSpawn: VersionSpawn = async (bin) => {
 	try {
-		const proc = Bun.spawn([bin, "--version"], { stdout: "pipe", stderr: "ignore" });
+		const proc = Bun.spawn([bin, "--version"], { stdout: "pipe", stderr: "pipe" });
 		const stdout = await new Response(proc.stdout).text();
+		const stderr = await new Response(proc.stderr).text();
 		const exitCode = await proc.exited;
-		return { exitCode, stdout };
+		return { exitCode, stdout, stderr };
 	} catch {
-		return { exitCode: 127, stdout: "" };
+		return { exitCode: 127, stdout: "", stderr: "" };
 	}
 };
 
@@ -86,11 +92,11 @@ export interface ProbePiVersionOptions {
 export async function probePiVersion(opts: ProbePiVersionOptions = {}): Promise<PiVersionProbe> {
 	const bin = opts.piBin?.trim() || "pi";
 	const spawn = opts.spawn ?? defaultVersionSpawn;
-	const { exitCode, stdout } = await spawn(bin);
+	const { exitCode, stdout, stderr } = await spawn(bin);
 	if (exitCode !== 0) {
 		return { ok: false, reason: `\`${bin} --version\` exited ${exitCode}`, hint: PI_INSTALL_HINT };
 	}
-	const parsed = parseSemver(stdout);
+	const parsed = parseSemver(`${stdout}\n${stderr ?? ""}`);
 	if (!parsed) {
 		return {
 			ok: false,

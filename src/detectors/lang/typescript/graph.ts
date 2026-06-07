@@ -22,8 +22,81 @@ const DYNAMIC_RE = /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
 /** Resolution suffixes tried, in order, when a relative specifier omits one. */
 const SUFFIXES = ["", ".ts", ".tsx", ".d.ts", "/index.ts", "/index.tsx"] as const;
 
+/**
+ * Blank out line (`//`) and block (`/* … *​/`) comments so the specifier regexes
+ * never match a *non-import*: a JSDoc `@link` doc-link written as `import(<path>)`
+ * or a commented-out import would otherwise forge a phantom edge and a false
+ * cycle (a doc-link to a sibling module is exactly the trap that bit `registry.ts`
+ * <-> `common/index.ts` here). A small char scanner — not a regex — because we
+ * must skip `//`/`/*` sequences that live *inside* string/template literals (e.g.
+ * a URL or a glob), which a regex can't track. String literals are preserved
+ * verbatim so the real import specifier strings still match; blanked spans become
+ * spaces (newlines kept) so length and line structure are stable.
+ */
+/** Blank a `//` line comment from `i` (a non-newline run); returns the next index. */
+function blankLineComment(text: string, i: number, out: string[]): number {
+	while (i < text.length && text[i] !== "\n") {
+		out.push(" ");
+		i++;
+	}
+	return i;
+}
+
+/** Blank a `/* … *​/` block comment from `i` (newlines kept); returns the next index. */
+function blankBlockComment(text: string, i: number, out: string[]): number {
+	out.push("  ");
+	i += 2;
+	while (i < text.length && !(text[i] === "*" && text[i + 1] === "/")) {
+		out.push(text[i] === "\n" ? "\n" : " ");
+		i++;
+	}
+	if (i < text.length) {
+		out.push("  ");
+		i += 2;
+	}
+	return i;
+}
+
+/** Copy a string/template literal from `i` verbatim (honoring `\` escapes); returns the next index. */
+function copyStringLiteral(text: string, i: number, out: string[]): number {
+	const quote = text[i];
+	out.push(quote ?? "");
+	i++;
+	while (i < text.length) {
+		const ch = text[i];
+		out.push(ch ?? "");
+		if (ch === "\\") {
+			out.push(text[i + 1] ?? "");
+			i += 2;
+			continue;
+		}
+		i++;
+		if (ch === quote) break;
+	}
+	return i;
+}
+
+export function stripComments(text: string): string {
+	const out: string[] = [];
+	let i = 0;
+	const n = text.length;
+	while (i < n) {
+		const c = text[i];
+		const next = text[i + 1];
+		if (c === "/" && next === "/") i = blankLineComment(text, i, out);
+		else if (c === "/" && next === "*") i = blankBlockComment(text, i, out);
+		else if (c === '"' || c === "'" || c === "`") i = copyStringLiteral(text, i, out);
+		else {
+			out.push(c ?? "");
+			i++;
+		}
+	}
+	return out.join("");
+}
+
 /** Extract every relative import specifier from one file's text. */
-export function relativeSpecifiers(text: string): string[] {
+export function relativeSpecifiers(rawText: string): string[] {
+	const text = stripComments(rawText);
 	const out: string[] = [];
 	for (const re of [SPEC_RE, DYNAMIC_RE]) {
 		re.lastIndex = 0;

@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import type { DetectionContext } from "../../types.ts";
-import { buildImportGraph, findCycle, relativeSpecifiers, resolveRelative } from "./graph.ts";
+import {
+	buildImportGraph,
+	findCycle,
+	relativeSpecifiers,
+	resolveRelative,
+	stripComments,
+} from "./graph.ts";
 
 /** In-memory context over a `{ path: contents }` map — no temp fs needed for graph logic. */
 function memCtx(files: Record<string, string>): DetectionContext {
@@ -28,6 +34,31 @@ describe("relativeSpecifiers", () => {
 			'import pkg from "some-package";',
 		].join("\n");
 		expect(relativeSpecifiers(text)).toEqual(["./a.ts", "../b.ts", "./side-effect.ts", "./dyn.ts"]);
+	});
+
+	test("ignores import()-shaped doc-links and commented-out imports", () => {
+		const text = [
+			'/** See {@link import("../registry.ts")} for the bindings. */',
+			'// import { stale } from "./old.ts";',
+			'import { real } from "./real.ts";',
+		].join("\n");
+		expect(relativeSpecifiers(text)).toEqual(["./real.ts"]);
+	});
+});
+
+describe("stripComments", () => {
+	test("blanks line and block comments while preserving string literals", () => {
+		const text = 'const u = "https://x/a"; // import("./c.ts")\n/* import("./d.ts") */';
+		const stripped = stripComments(text);
+		expect(stripped).toContain('"https://x/a"');
+		expect(stripped).not.toContain("./c.ts");
+		expect(stripped).not.toContain("./d.ts");
+	});
+
+	test("does not treat // inside a string literal as a comment", () => {
+		const text = 'import { real } from "./real.ts"; const g = "a//b";';
+		expect(relativeSpecifiers(text)).toEqual(["./real.ts"]);
+		expect(stripComments(text)).toContain('"a//b"');
 	});
 });
 

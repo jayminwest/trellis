@@ -11,6 +11,10 @@ const fakeSpawn = (exitCode: number, stdout: string): VersionSpawn => {
 	return async () => ({ exitCode, stdout });
 };
 
+const fakeSpawnStreams = (exitCode: number, stdout: string, stderr: string): VersionSpawn => {
+	return async () => ({ exitCode, stdout, stderr });
+};
+
 describe("parseSemver", () => {
 	test("extracts a triple from noisy --version output", () => {
 		expect(parseSemver("pi version 0.74.0 (build abc)")).toEqual([0, 74, 0]);
@@ -34,6 +38,11 @@ describe("semverGte", () => {
 describe("probePiVersion", () => {
 	test("accepts a Pi at or above the supported minimum", async () => {
 		const probe = await probePiVersion({ spawn: fakeSpawn(0, "0.78.1") });
+		expect(probe).toEqual({ ok: true, version: "0.78.1" });
+	});
+
+	test("parses a version that Pi prints to stderr (0.78.x behavior)", async () => {
+		const probe = await probePiVersion({ spawn: fakeSpawnStreams(0, "", "0.78.1\n") });
 		expect(probe).toEqual({ ok: true, version: "0.78.1" });
 	});
 
