@@ -11,6 +11,20 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Audit progress is now a **single status line that rewrites in place** on an
+  interactive (TTY) run (trellis-9b72 second pass): instead of scrolling a line
+  per event, one stderr line tracks the current phase plus live progress —
+  apps discovered, investigation area `i/total` with the in-flight agent message
+  count, and detector `i/total` — cleared by a new `finish()` step before the
+  report prints. A non-TTY/CI run stays silent unless `--verbose`, which keeps
+  the durable line-per-event log (`src/cli/progress.ts`). `trellis audit` also
+  now writes a report file **by default**: a timestamped markdown report under
+  `./.trellis/audit-<ts>.md` (run history accrues), with `--output <path>` to
+  override path/format and `--no-output` to skip it. stdout always honours
+  `--json`/`--md` (default human) so the piping contract is unchanged; a
+  `report written to …` note goes to stderr (suppressed by `--quiet`). Enriching
+  the default scorecard to a full per-criterion breakdown is tracked separately
+  (trellis-89d6).
 - Audit run observability + report file export (SPEC §7.3, §12): the audit core
   now emits structured progress events the CLI renders to **stderr**, so a long
   run (the investigation pass can take minutes) is no longer a black box. The

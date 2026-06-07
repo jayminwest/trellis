@@ -25,6 +25,8 @@ junit.xml
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+# Default `trellis audit` report output (timestamped markdown per run).
+.trellis/
 targets.yaml
 !targets.yaml.example
 

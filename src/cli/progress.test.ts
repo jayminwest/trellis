@@ -1,21 +1,21 @@
 import { describe, expect, test } from "bun:test";
-import type { AuditEvent } from "../report/index.ts";
 import { createProgressReporter } from "./progress.ts";
 
 /**
- * The CLI progress reporter (SPEC §7.3) renders core {@link AuditEvent}s to
- * plain stderr lines. Defaults are TTY-aware (`--quiet` always silent, a
- * non-TTY run silent unless `--verbose`); verbose mode adds per-detector and
- * per-session detail. A captured `write` sink keeps these tests stream-free.
+ * The CLI progress reporter (SPEC §7.3). A non-verbose TTY rewrites a single
+ * status line in place (`\r`) tracking the current phase + progress; `--verbose`
+ * switches to a durable line-per-event log (any stream) with per-detector and
+ * per-session detail; `--quiet` (and a non-verbose non-TTY) stays silent. A
+ * captured `write` sink keeps these tests stream-free.
  */
 
 function capture(opts: { verbose?: boolean; quiet?: boolean; isTTY?: boolean }): {
 	lines: string[];
-	report: ((event: AuditEvent) => void) | undefined;
+	reporter: ReturnType<typeof createProgressReporter>;
 } {
 	const lines: string[] = [];
-	const report = createProgressReporter({ ...opts, write: (line) => lines.push(line) });
-	return { lines, report };
+	const reporter = createProgressReporter({ ...opts, write: (line) => lines.push(line) });
+	return { lines, reporter };
 }
 
 describe("createProgressReporter", () => {
@@ -27,36 +27,56 @@ describe("createProgressReporter", () => {
 		expect(createProgressReporter({ isTTY: false })).toBeUndefined();
 	});
 
-	test("renders phase + app + investigation lines on a TTY", () => {
-		const { lines, report } = capture({ isTTY: true });
-		report?.({ type: "phase", phase: "discovery" });
-		report?.({ type: "apps-discovered", count: 3 });
-		report?.({ type: "investigation", event: { type: "cache-hit", area: "documentation" } });
-		report?.({
+	test("rewrites one in-place status line tracking phase + progress on a TTY", () => {
+		const { lines, reporter } = capture({ isTTY: true });
+		reporter?.onProgress({ type: "phase", phase: "discovery" });
+		reporter?.onProgress({ type: "apps-discovered", count: 3 });
+		reporter?.onProgress({ type: "phase", phase: "investigation" });
+		reporter?.onProgress({
 			type: "investigation",
-			event: { type: "probe", ok: false, detail: "pi missing" },
+			event: { type: "area-start", area: "documentation", index: 1, total: 4 },
 		});
-		const text = lines.join("");
-		expect(text).toContain("discovering apps");
-		expect(text).toContain("discovered 3 app(s)");
-		expect(text).toContain("documentation: cache hit");
-		expect(text).toContain("pi unavailable: pi missing");
+		reporter?.onProgress({
+			type: "investigation",
+			event: { type: "session", area: "documentation", event: { type: "message" } },
+		});
+		// Every line rewrites in place (\r) and clears to EOL, never a newline.
+		for (const line of lines) {
+			expect(line.startsWith("\r")).toBe(true);
+			expect(line).not.toContain("\n");
+		}
+		expect(lines[1]).toContain("discovered 3 apps");
+		const last = lines.at(-1) ?? "";
+		expect(last).toContain("documentation (2/4)");
+		expect(last).toContain("1 msg");
 	});
 
-	test("suppresses per-detector lines unless --verbose", () => {
-		const quiet = capture({ isTTY: true });
-		quiet.report?.({ type: "detector", id: "L2-foo", index: 0, total: 90 });
-		expect(quiet.lines).toHaveLength(0);
+	test("finish clears the status line so the report prints clean", () => {
+		const { lines, reporter } = capture({ isTTY: true });
+		reporter?.onProgress({ type: "phase", phase: "scoring" });
+		reporter?.finish();
+		expect(lines.at(-1)).toBe("\r\x1b[K");
+	});
 
-		const loud = capture({ verbose: true });
-		loud.report?.({ type: "detector", id: "L2-foo", index: 0, total: 90 });
-		expect(loud.lines.join("")).toContain("[1/90] L2-foo");
+	test("finish is a no-op before any event is rendered", () => {
+		const { lines, reporter } = capture({ isTTY: true });
+		reporter?.finish();
+		expect(lines).toHaveLength(0);
+	});
+
+	test("--verbose logs durable per-detector lines and finish does not clear", () => {
+		const { lines, reporter } = capture({ verbose: true, isTTY: true });
+		reporter?.onProgress({ type: "detector", id: "L2-foo", index: 0, total: 90 });
+		reporter?.finish();
+		const text = lines.join("");
+		expect(text).toContain("[1/90] L2-foo");
+		expect(text).not.toContain("\r");
 	});
 
 	test("--verbose forces rendering even on a non-TTY run and shows session detail", () => {
-		const { lines, report } = capture({ verbose: true, isTTY: false });
-		expect(report).toBeDefined();
-		report?.({
+		const { lines, reporter } = capture({ verbose: true, isTTY: false });
+		expect(reporter).toBeDefined();
+		reporter?.onProgress({
 			type: "investigation",
 			event: { type: "session", area: "test-layout", event: { type: "retry", attempt: 2 } },
 		});

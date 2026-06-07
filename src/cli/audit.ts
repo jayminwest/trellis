@@ -18,6 +18,8 @@
  * criterion fails OR drift is detected); `1` on an operational error. `--fail-on
  * level` compares `report.level` against `--min-level` (default 3).
  */
+import { accessSync, constants, existsSync, mkdirSync, statSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type { Command } from "commander";
 import { Option } from "commander";
 import { assessReport, renderMarkdown, renderTerminal, runAudit } from "../report/index.ts";
@@ -29,6 +31,7 @@ import {
 	emit,
 	FailOnExit,
 	formatForPath,
+	type OutputFormat,
 	type Rendered,
 	resolveFormat,
 	writeReportFile,
@@ -49,8 +52,13 @@ interface AuditCliOptions {
 	/** Exit-code policy (SPEC §12). */
 	failOn?: string;
 	minLevel?: string;
-	/** Write the report to this file (format inferred from extension, overridable by --json/--md). */
-	output?: string;
+	/**
+	 * Report file target: a `string` path (`--output <path>`), `false`
+	 * (`--no-output`, skip writing), or `undefined` (default — write a timestamped
+	 * markdown report under `.trellis/`). Format is inferred from an explicit
+	 * path's extension, overridable by `--json`/`--md`.
+	 */
+	output?: string | false;
 	/** Suppress progress lines on stderr. */
 	quiet?: boolean;
 	/** Per-detector / per-session-message progress detail on stderr. */
@@ -79,8 +87,9 @@ export function registerAudit(program: Command): void {
 		.option("--min-level <n>", "minimum level for --fail-on level (1–5, default 3)")
 		.option(
 			"--output <path>",
-			"write the report to a file (.json/.md inferred; --json/--md override)",
+			"write the report to this file (.json/.md inferred; --json/--md override)",
 		)
+		.option("--no-output", "do not write a report file (default writes .trellis/audit-<ts>.md)")
 		.option("--quiet", "suppress progress output on stderr")
 		.option("--verbose", "show per-detector and per-message progress on stderr")
 		.addOption(new Option("--rubric-dir <path>", "load an alternate rubric directory").hideHelp())
@@ -94,9 +103,13 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 	const format = resolveFormat(opts);
 	const policy = failPolicy(opts);
 	const rubric = loadRubricOrThrow(opts.rubricDir);
+	// Validate the report target up front so a bad `--output` fails immediately,
+	// before the (minutes-long) investigation pass burns time and tokens.
+	const reportPlan = planReportTarget(opts.output, format);
 	const piBin = process.env.TRELLIS_PI_BIN?.trim();
-	const onProgress = createProgressReporter({
-		quiet: opts.quiet === true,
+	const quiet = opts.quiet === true;
+	const reporter = createProgressReporter({
+		quiet,
 		verbose: opts.verbose === true,
 		isTTY: Boolean(process.stderr.isTTY),
 	});
@@ -108,23 +121,100 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 		...(opts.db ? { db: opts.db } : {}),
 		...(opts.persist === false ? { persist: false } : {}),
 		...(piBin ? { piBin } : {}),
-		...(onProgress ? { onProgress } : {}),
+		...(reporter ? { onProgress: reporter.onProgress } : {}),
 	});
+	reporter?.finish();
 	const rendered = {
 		human: renderTerminal(report, rubric),
 		json: report,
 		md: renderMarkdown(report, rubric),
 	} satisfies Rendered;
-	// With --output the file gets the (inferred/overridden) format and stdout
-	// keeps the readable terminal summary; otherwise stdout gets the chosen format.
-	if (opts.output) {
-		writeReportFile(opts.output, formatForPath(opts.output, format), rendered);
-		emit("human", rendered);
-	} else {
-		emit(format, rendered);
+	// stdout always honours --json/--md (default human) so piping stays stable;
+	// the report file is a separate artifact. `--no-output` (plan === null) skips
+	// it; an explicit file path uses its extension/override; a directory target
+	// (incl. the default `.trellis/`) gets a timestamped report so history is kept.
+	if (reportPlan) {
+		const path = finalizeReportPath(reportPlan, report.scoredAt);
+		writeReportFile(path, reportPlan.format, rendered);
+		if (!quiet) process.stderr.write(`trellis: report written to ${path}\n`);
 	}
+	emit(format, rendered);
 	const assessment = assessReport(report, rubric, policy);
 	if (assessment.failed) throw new FailOnExit(assessment.reasons);
+}
+
+/**
+ * A validated report destination resolved *before* the audit runs: either a
+ * fixed file `path`, or a `dir` to drop a timestamped report into (an explicit
+ * directory target, or the default `.trellis/`). The concrete filename for a
+ * `dir` plan is finalized later (it needs the run's `scoredAt`).
+ */
+type ReportPlan =
+	| { kind: "file"; path: string; format: OutputFormat }
+	| { kind: "dir"; dir: string; format: OutputFormat };
+
+/**
+ * Resolve and validate where the report file will be written, *before* the
+ * expensive audit pass. `--no-output` ({@link output} `=== false`) returns
+ * `null`. An explicit path that names an existing directory becomes a directory
+ * target (so `--output .` drops a timestamped report there instead of failing
+ * with `EISDIR`); otherwise it is a file path whose parent directory must
+ * already exist and be writable. With no flag, a timestamped markdown report
+ * lands under `.trellis/`. Throws {@link CliError} up front on an unwritable
+ * target so the failure costs no investigation time.
+ */
+function planReportTarget(
+	output: string | false | undefined,
+	format: OutputFormat,
+): ReportPlan | null {
+	if (output === false) return null;
+	if (typeof output === "string") {
+		if (isDirectory(output)) {
+			assertWritableDir(output, output);
+			return { kind: "dir", dir: output, format: format === "json" ? "json" : "md" };
+		}
+		assertWritableDir(dirname(output) || ".", output);
+		return { kind: "file", path: output, format: formatForPath(output, format) };
+	}
+	const dir = join(process.cwd(), ".trellis");
+	mkdirSync(dir, { recursive: true });
+	return { kind: "dir", dir, format: "md" };
+}
+
+/** Turn a validated {@link ReportPlan} into the concrete file path to write. */
+function finalizeReportPath(plan: ReportPlan, scoredAt: string): string {
+	if (plan.kind === "file") return plan.path;
+	const ext = plan.format === "json" ? "json" : "md";
+	return join(plan.dir, `audit-${fileStamp(scoredAt)}.${ext}`);
+}
+
+/** Whether `path` exists and is a directory (an `EISDIR` write target). */
+function isDirectory(path: string): boolean {
+	try {
+		return statSync(path).isDirectory();
+	} catch {
+		return false;
+	}
+}
+
+/** Assert `dir` exists and is writable, else raise a {@link CliError} naming `target`. */
+function assertWritableDir(dir: string, target: string): void {
+	if (!existsSync(dir)) {
+		throw new CliError(`could not write report to ${target}: directory ${dir} does not exist`);
+	}
+	try {
+		accessSync(dir, constants.W_OK);
+	} catch {
+		throw new CliError(`could not write report to ${target}: ${dir} is not writable`);
+	}
+}
+
+/** Turn an ISO timestamp into a filesystem-safe stamp (`2026-06-07T16-30-59`). */
+function fileStamp(scoredAt: string): string {
+	return scoredAt
+		.replace(/:/g, "-")
+		.replace(/\.\d+Z$/, "")
+		.replace(/Z$/, "");
 }
 
 /** Load the rubric, converting a loader {@link RubricError} into a {@link CliError}. */
