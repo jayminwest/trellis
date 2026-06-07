@@ -1,29 +1,33 @@
 /**
  * `trellis fleet` — audit every target in a `targets.yaml` (SPEC §6.5, §12).
  *
- * Thin per SPEC §13.1: load + validate the fleet declaration, call the core
- * {@link runFleet} (which audits + drifts each target, persists every run to the
- * central history, and computes per-repo level deltas), then shape the three
- * output variants. Each target's audit honors its `allowedDeltas`, `skip`, and
- * `osecoDetectors`; a missing path or a per-target audit failure is isolated into
- * an error row without aborting the fleet. `--no-cache` forces re-investigation;
- * `--db` overrides the central DB; `TRELLIS_PI_BIN` overrides the `pi` binary.
- * Exit is always `0` here — the `--fail-on` contract lands with the SDK exit-code
- * step (trellis-28a5).
+ * Thin per SPEC §13.1: load the rubric once, call the core {@link runFleetTargets}
+ * service (load + validate the fleet, audit + drift each target, persist every
+ * run, compute per-repo level deltas), shape the three output variants, then
+ * apply the {@link assessFleet} exit-code policy. Each target's audit honors its
+ * `allowedDeltas`, `skip`, and `osecoDetectors`; a missing path or a per-target
+ * failure is isolated into an error row without aborting the fleet. `--no-cache`
+ * forces re-investigation; `--db` overrides the central DB; `TRELLIS_PI_BIN`
+ * overrides the `pi` binary.
+ *
+ * Exit codes (SPEC §12): `0` clean; `2` when `--fail-on` trips for any target
+ * (default: a gate criterion fails OR drift is detected; an unauditable target
+ * always trips); `1` on an operational error. `--fail-on level` compares each
+ * target's level against `--min-level` (default 3).
  */
 import type { Command } from "commander";
 import { Option } from "commander";
 import {
-	loadFleet,
+	assessFleet,
 	renderFleetMarkdown,
 	renderFleetTerminal,
-	runFleet,
+	runFleetTargets,
 	TARGETS_FILE,
 	TargetsError,
 } from "../fleet/index.ts";
 import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
-import { openStore } from "../store/index.ts";
-import { CliError, EXIT, emit, type Rendered, resolveFormat } from "./output.ts";
+import { failPolicy } from "./fail-on.ts";
+import { CliError, EXIT, emit, FailOnExit, type Rendered, resolveFormat } from "./output.ts";
 
 /** Local options for the fleet command, merged with the global format flags. */
 interface FleetCliOptions {
@@ -33,6 +37,9 @@ interface FleetCliOptions {
 	cache?: boolean;
 	/** SQLite history path; defaults to `TRELLIS_DB` env or `~/.trellis/trellis.db`. */
 	db?: string;
+	/** Exit-code policy (SPEC §12). */
+	failOn?: string;
+	minLevel?: string;
 }
 
 /** Register the `fleet` subcommand on `program`. */
@@ -42,40 +49,48 @@ export function registerFleet(program: Command): void {
 		.description("audit every target in targets.yaml")
 		.option("--targets <file>", "fleet declaration", TARGETS_FILE)
 		.option("--no-cache", "force re-investigation (ignore cached findings)")
+		.addOption(
+			new Option(
+				"--fail-on <mode>",
+				"exit non-zero on: gate|drift|level|none (default: gate or drift)",
+			).choices(["gate", "drift", "level", "none"]),
+		)
+		.option("--min-level <n>", "minimum level for --fail-on level (1–5, default 3)")
 		.addOption(new Option("--db <path>", "SQLite history path").hideHelp())
 		.action(function (this: Command) {
 			return runFleetCommand(this.optsWithGlobals() as FleetCliOptions);
 		});
 }
 
-/** Load the fleet, run every target through core, and emit the chosen output variant. */
+/** Load the fleet + rubric, run every target through core, emit, then apply the exit policy. */
 async function runFleetCommand(opts: FleetCliOptions): Promise<void> {
 	const format = resolveFormat(opts);
-	const fleet = loadFleetOrThrow(opts.targets ?? TARGETS_FILE);
+	const policy = failPolicy(opts);
+	const targets = opts.targets ?? TARGETS_FILE;
 	const rubric = loadRubricOrThrow();
 	const piBin = process.env.TRELLIS_PI_BIN?.trim();
-	const store = openStore(opts.db);
-	try {
-		const report = await runFleet(fleet, {
-			store,
-			rubric,
-			...(opts.cache === false ? { noCache: true } : {}),
-			...(piBin ? { piBin } : {}),
-		});
-		emit(format, {
-			human: renderFleetTerminal(report),
-			json: report,
-			md: renderFleetMarkdown(report),
-		} satisfies Rendered);
-	} finally {
-		store.close();
-	}
+	const report = await runFleetOrThrow(targets, {
+		rubric,
+		...(opts.cache === false ? { noCache: true } : {}),
+		...(opts.db ? { db: opts.db } : {}),
+		...(piBin ? { piBin } : {}),
+	});
+	emit(format, {
+		human: renderFleetTerminal(report),
+		json: report,
+		md: renderFleetMarkdown(report),
+	} satisfies Rendered);
+	const assessment = assessFleet(report, policy);
+	if (assessment.failed) throw new FailOnExit(assessment.reasons);
 }
 
-/** Load the fleet, converting a {@link TargetsError} into a {@link CliError}. */
-function loadFleetOrThrow(file: string): ReturnType<typeof loadFleet> {
+/** Run the fleet, converting a fleet-declaration {@link TargetsError} into a {@link CliError}. */
+async function runFleetOrThrow(
+	targets: string,
+	opts: Parameters<typeof runFleetTargets>[1],
+): ReturnType<typeof runFleetTargets> {
 	try {
-		return loadFleet(file);
+		return await runFleetTargets(targets, opts);
 	} catch (error) {
 		if (error instanceof TargetsError) throw new CliError(error.message, EXIT.ERROR);
 		throw error;

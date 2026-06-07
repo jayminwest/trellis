@@ -11,6 +11,26 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Typed SDK + CI-usable exit-code contract (SPEC §12, §13.1): `src/client/`
+  now exposes a typed, in-process SDK — `audit(repoPath, opts)` /
+  `drift(repoPath, opts)` / `fleet(targetsPath, opts)` / `report(query)` /
+  `rubric()`, plus the `assessReport` / `assessFleet` exit-code rule and the
+  `loadRubric` it needs. Each function is a direct call to the same core service
+  the CLI folds (the new `runAudit`/`runFleetTargets`/`buildReport` store-lifecycle
+  wrappers, `driftRepo`, `summarizeRubric`) with **no logic beyond type shaping**;
+  request types mirror the core option types and responses are the core report
+  shapes, so a CLI audit and an SDK audit exercise one code path (proven by a
+  deep-equal test). Every CLI command now honors an exit-code contract: `0`
+  clean, `2` when a `--fail-on` policy trips (the report is still emitted; the
+  reason goes to stderr), `1` on an operational error. `--fail-on
+  gate|drift|level|none` tunes the gate — the default (flag omitted) fails on a
+  gate criterion failing **or** canonical drift; `level` compares the audited
+  level against `--min-level` (default `3`). The assessment is surface-agnostic
+  core (`src/report/assess.ts`, `src/fleet/assess.ts`) reading the previously
+  reserved per-category `gate` flag (a gate fails only when measured and not
+  passing); `FleetTargetOk` gains a `gateFailures` count. Golden snapshots of the
+  report-JSON and drift-JSON shapes guard surface drift. `EXIT.FAIL = 2` and a
+  `FailOnExit` signal land in `src/cli/output.ts`.
 - History reporting & changes-since-last-run (SPEC §11, §6.3): a new `trellis
   report [--repo <id>] [--since <date>] [--json|--md]` renders the run-history
   dashboard from the central SQLite store — a fleet snapshot of each repo's

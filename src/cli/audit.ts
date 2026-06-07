@@ -1,30 +1,29 @@
 /**
- * `trellis audit <repo-path>` — the det-only end-to-end audit (SPEC §12, §14
- * milestone 3). Thin per SPEC §13.1: it loads the rubric once, calls the core
- * {@link auditRepo} pipeline, and shapes the three output variants. It computes
- * nothing itself — the level, scores, and per-criterion entries all come from
- * core.
+ * `trellis audit <repo-path>` — the end-to-end audit (SPEC §12, §13.1). Thin per
+ * SPEC §13.1: it loads the rubric once, calls the core {@link runAudit} service
+ * (store lifecycle + the audit pipeline + persistence), shapes the three output
+ * variants, then applies the {@link assessReport} exit-code policy. It computes
+ * nothing itself — the level, scores, per-criterion entries, and the pass/fail
+ * verdict all come from core.
  *
- * Agent-discovery criteria are graded by the investigation layer (SPEC §7.3):
- * each referenced area is resolved once via the central cache (`--no-cache`
- * forces re-investigation) backed by the Pi provider, and a missing/incompatible
- * Pi degrades those criteria to `no-detector` without crashing. Each run persists
- * to the central SQLite history (SPEC §6.4) — which also backs the investigation
- * cache — unless `--no-persist` is given; `--db` overrides the central DB
+ * Agent-discovery criteria are graded by the investigation layer (SPEC §7.3);
+ * `--no-cache` forces re-investigation and a missing/incompatible Pi degrades
+ * those criteria to `no-detector`. Each run persists to the central SQLite
+ * history (SPEC §6.4) unless `--no-persist` is given; `--db` overrides the DB
  * location. `TRELLIS_PI_BIN` overrides the `pi` binary the provider spawns.
- * `--rubric-version` is informational for now; `--canonical <v>` opts the run into
- * canonical-config drift (SPEC §10), folding the per-file result into
- * `report.drift` — standalone, so allowed deltas are empty (the fleet supplies
- * per-repo deltas later, trellis-6eb1). Exit is always `0` in this milestone —
- * the `--fail-on` contract arrives with the SDK exit-code step (trellis-28a5).
+ * `--canonical <v>` opts the run into canonical-config drift (SPEC §10), folded
+ * into `report.drift`.
+ *
+ * Exit codes (SPEC §12): `0` clean; `2` when `--fail-on` trips (default: a gate
+ * criterion fails OR drift is detected); `1` on an operational error. `--fail-on
+ * level` compares `report.level` against `--min-level` (default 3).
  */
-import { basename, resolve } from "node:path";
 import type { Command } from "commander";
 import { Option } from "commander";
-import { auditRepo, renderMarkdown, renderTerminal } from "../report/index.ts";
+import { assessReport, renderMarkdown, renderTerminal, runAudit } from "../report/index.ts";
 import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
-import { openStore, storedReport } from "../store/index.ts";
-import { CliError, EXIT, emit, type Rendered, resolveFormat } from "./output.ts";
+import { failPolicy } from "./fail-on.ts";
+import { CliError, EXIT, emit, FailOnExit, type Rendered, resolveFormat } from "./output.ts";
 
 /** Local options for the audit command, merged with the global format flags. */
 interface AuditCliOptions {
@@ -37,6 +36,9 @@ interface AuditCliOptions {
 	db?: string;
 	/** Skip persisting this run to the central history. */
 	persist?: boolean;
+	/** Exit-code policy (SPEC §12). */
+	failOn?: string;
+	minLevel?: string;
 	/** Hidden: load an alternate rubric directory (used by tests/fixtures). */
 	rubricDir?: string;
 }
@@ -52,45 +54,41 @@ export function registerAudit(program: Command): void {
 		.option("--canonical <v>", "pin the canonical standards version")
 		.option("--db <path>", "SQLite history path (default: $TRELLIS_DB or ~/.trellis/trellis.db)")
 		.option("--no-persist", "do not write this run to the central history")
+		.addOption(
+			new Option(
+				"--fail-on <mode>",
+				"exit non-zero on: gate|drift|level|none (default: gate or drift)",
+			).choices(["gate", "drift", "level", "none"]),
+		)
+		.option("--min-level <n>", "minimum level for --fail-on level (1–5, default 3)")
 		.addOption(new Option("--rubric-dir <path>", "load an alternate rubric directory").hideHelp())
 		.action(function (this: Command, repoPath: string) {
-			return runAudit(repoPath, this.optsWithGlobals() as AuditCliOptions);
+			return runAuditCommand(repoPath, this.optsWithGlobals() as AuditCliOptions);
 		});
 }
 
-/** Load the rubric, run the core audit, and emit the chosen output variant. */
-async function runAudit(repoPath: string, opts: AuditCliOptions): Promise<void> {
+/** Load the rubric, run the core audit, emit the report, then apply the exit-code policy. */
+async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise<void> {
 	const format = resolveFormat(opts);
+	const policy = failPolicy(opts);
 	const rubric = loadRubricOrThrow(opts.rubricDir);
-	// The store doubles as the run history and the investigation cache; opening it
-	// also backs `--no-cache`. With `--no-persist` we touch no DB at all, so the
-	// investigation runs uncached (still degrading gracefully if Pi is absent).
-	const store = opts.persist === false ? null : openStore(opts.db);
 	const piBin = process.env.TRELLIS_PI_BIN?.trim();
-	try {
-		// Read this repo's prior run before persisting the new one so the embedded
-		// §11 delta reflects it (repo id is the path basename, as auditRepo defaults).
-		const previous = store?.latestRun(basename(resolve(repoPath))) ?? null;
-		const report = await auditRepo(repoPath, {
-			rubric,
-			...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
-			previousRun: previous ? storedReport(previous) : null,
-			investigation: {
-				...(store ? { cache: store } : {}),
-				noCache: opts.cache === false,
-				...(piBin ? { investigateOpts: { piBin } } : {}),
-			},
-			...(opts.canonical ? { canonical: { canonicalVersion: opts.canonical } } : {}),
-		});
-		store?.insertRun(report);
-		emit(format, {
-			human: renderTerminal(report, rubric),
-			json: report,
-			md: renderMarkdown(report, rubric),
-		} satisfies Rendered);
-	} finally {
-		store?.close();
-	}
+	const report = await runAudit(repoPath, {
+		rubric,
+		...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
+		...(opts.canonical ? { canonical: opts.canonical } : {}),
+		...(opts.cache === false ? { noCache: true } : {}),
+		...(opts.db ? { db: opts.db } : {}),
+		...(opts.persist === false ? { persist: false } : {}),
+		...(piBin ? { piBin } : {}),
+	});
+	emit(format, {
+		human: renderTerminal(report, rubric),
+		json: report,
+		md: renderMarkdown(report, rubric),
+	} satisfies Rendered);
+	const assessment = assessReport(report, rubric, policy);
+	if (assessment.failed) throw new FailOnExit(assessment.reasons);
 }
 
 /** Load the rubric, converting a loader {@link RubricError} into a {@link CliError}. */

@@ -62,18 +62,60 @@ for machine/report output. Six subcommands (SPEC §12):
 ```bash
 trellis audit <repo-path>            # score one repo; print scorecard
   [--json|--md] [--no-cache] [--rubric-version <v>] [--canonical <v>]
+  [--fail-on gate|drift|level|none] [--min-level <n>]
 trellis drift <repo-path>            # L1 canonical-config drift only
+  [--canonical <v>] [--fail-on drift|none]
 trellis fleet                        # audit every target in targets.yaml
-  [--targets targets.yaml] [--json|--md]
+  [--targets targets.yaml] [--json|--md] [--fail-on gate|drift|level|none] [--min-level <n>]
 trellis report [--repo <id>]         # render history/dashboard from SQLite
   [--since <date>] [--json|--md]
 trellis rubric [--validate]          # print the loaded rubric (+ validate invariants)
 trellis standards                    # show canonical manifest + versions
 ```
 
-Exit codes are CI-tunable: `0` clean, non-zero when a gate criterion fails or
-drift is detected (`--fail-on level|gate|drift|none`), so trellis drops into a
-CI step per repo.
+### Exit codes (CI gate, SPEC §12)
+
+trellis drops into a CI step per repo. Every command exits:
+
+- **`0`** — clean.
+- **`2`** — a `--fail-on` policy tripped. The report is still printed to stdout
+  (the reason goes to stderr), so you keep the scorecard *and* the red build.
+- **`1`** — an operational error (bad flags, unreadable rubric, missing repo) —
+  trellis could not run. Distinct from `2` so CI can tell "trellis broke" from
+  "the repo failed the bar."
+
+`--fail-on` tunes which dimension gates the build:
+
+| value          | exits non-zero when…                                              |
+| -------------- | ---------------------------------------------------------------- |
+| *(default)*    | a **gate** criterion fails **or** canonical **drift** is detected |
+| `gate`         | a gate criterion (a category's floor) is measured and not passing |
+| `drift`        | any canonical file is in a `drift`/`missing` state                |
+| `level`        | the audited level is below `--min-level` (default `3`)            |
+| `none`         | never — always exit `0` (report only)                            |
+
+`trellis drift` only knows the `drift` dimension (default: fail on drift;
+`--fail-on none` disables). `trellis fleet` applies the policy per target, and
+any target that cannot be audited trips the gate unless `--fail-on none`.
+
+### Programmatic SDK (`@os-eco/trellis-cli`)
+
+The same domain core is exposed as a typed, in-process SDK — a CLI audit and an
+SDK audit run **one code path**, so their reports are deep-equal. Request types
+mirror the core option types; responses are the core report shapes.
+
+```ts
+import { audit, drift, fleet, report, rubric, assessReport, loadRubric } from "@os-eco/trellis-cli/client";
+
+const result = await audit("/path/to/repo", { persist: false });   // → Report (SPEC §6.3)
+const verdict = assessReport(result, loadRubric());                // → { failed, reasons } (the --fail-on rule)
+if (verdict.failed) process.exit(2);
+
+const d = drift("/path/to/repo", { canonicalVersion: "1.0.0" });   // → DriftReport (SPEC §10)
+const f = await fleet("targets.yaml");                             // → FleetReport (SPEC §6.5)
+const history = report({ repo: "warren" });                        // → HistoryReport (SPEC §11)
+const r = rubric();                                                // → RubricSummary (SPEC §6.1)
+```
 
 ### Fleet declaration (`targets.yaml`)
 

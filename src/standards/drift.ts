@@ -29,6 +29,7 @@
 import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import yaml from "js-yaml";
+import type { DriftState } from "./drift-states.ts";
 import {
 	loadManifest,
 	type Manifest,
@@ -36,13 +37,6 @@ import {
 	type MatcherKind,
 	readCanonical,
 } from "./manifest.ts";
-
-/** Per-file drift outcome (SPEC §10). `drift`/`missing` fail; the rest are clean. */
-export const DRIFT_STATES = ["match", "allowed-delta", "drift", "missing", "extra"] as const;
-export type DriftState = (typeof DRIFT_STATES)[number];
-
-/** The drift states that mean the target has fallen out of canonical sync. */
-export const FAILING_DRIFT_STATES = ["drift", "missing"] as const;
 
 /** How a single point in a file diverges from canonical. */
 export type DivergenceKind =

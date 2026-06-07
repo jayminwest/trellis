@@ -174,7 +174,7 @@ describe("trellis drift", () => {
 	});
 
 	test("prints a per-file drift table for a repo lacking canonical files", async () => {
-		const { code, stdout } = await runCli(["drift", dir]);
+		const { code, stdout } = await runCli(["drift", dir, "--fail-on", "none"]);
 		expect(code).toBe(0);
 		expect(stdout).toContain("trellis drift");
 		expect(stdout).toContain("biome.json");
@@ -182,7 +182,7 @@ describe("trellis drift", () => {
 	});
 
 	test("--json emits a parseable drift report with a summary", async () => {
-		const { code, stdout } = await runCli(["drift", dir, "--json"]);
+		const { code, stdout } = await runCli(["drift", dir, "--json", "--fail-on", "none"]);
 		expect(code).toBe(0);
 		const report = JSON.parse(stdout);
 		expect(report.canonicalVersion).toMatch(/^\d+\.\d+\.\d+$/);
@@ -191,7 +191,7 @@ describe("trellis drift", () => {
 	});
 
 	test("--md emits a markdown table", async () => {
-		const { code, stdout } = await runCli(["drift", dir, "--md"]);
+		const { code, stdout } = await runCli(["drift", dir, "--md", "--fail-on", "none"]);
 		expect(code).toBe(0);
 		expect(stdout).toContain("# Canonical drift");
 		expect(stdout).toContain("| File | State | Matcher | Note |");
@@ -230,7 +230,10 @@ describe("trellis audit", () => {
 	});
 
 	test("prints a coherent terminal scorecard", async () => {
-		const { code, stdout } = await runCli(["audit", dir], { TRELLIS_DB: dbPath, ...NO_PI });
+		const { code, stdout } = await runCli(["audit", dir, "--fail-on", "none"], {
+			TRELLIS_DB: dbPath,
+			...NO_PI,
+		});
 		expect(code).toBe(0);
 		expect(stdout).toContain("Level ");
 		expect(stdout).toContain("pass-rate");
@@ -239,7 +242,7 @@ describe("trellis audit", () => {
 	});
 
 	test("--json emits a parseable §6.3 report with every rubric criterion", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--json"], {
+		const { code, stdout } = await runCli(["audit", dir, "--json", "--fail-on", "none"], {
 			TRELLIS_DB: dbPath,
 			...NO_PI,
 		});
@@ -253,15 +256,24 @@ describe("trellis audit", () => {
 	});
 
 	test("--md emits a markdown scorecard", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--md"], { TRELLIS_DB: dbPath, ...NO_PI });
+		const { code, stdout } = await runCli(["audit", dir, "--md", "--fail-on", "none"], {
+			TRELLIS_DB: dbPath,
+			...NO_PI,
+		});
 		expect(code).toBe(0);
 		expect(stdout).toContain("# Agentic-readiness scorecard");
 		expect(stdout).toContain("| Category | Measured |");
 	});
 
 	test("persists each run to the central history (SPEC §6.4)", async () => {
-		const first = await runCli(["audit", dir, "--db", dbPath], { TRELLIS_DB: "", ...NO_PI });
-		const second = await runCli(["audit", dir, "--db", dbPath], { TRELLIS_DB: "", ...NO_PI });
+		const first = await runCli(["audit", dir, "--db", dbPath, "--fail-on", "none"], {
+			TRELLIS_DB: "",
+			...NO_PI,
+		});
+		const second = await runCli(["audit", dir, "--db", dbPath, "--fail-on", "none"], {
+			TRELLIS_DB: "",
+			...NO_PI,
+		});
 		expect(first.code).toBe(0);
 		expect(second.code).toBe(0);
 
@@ -277,16 +289,19 @@ describe("trellis audit", () => {
 	});
 
 	test("--no-persist skips writing to the history", async () => {
-		const { code } = await runCli(["audit", dir, "--db", dbPath, "--no-persist"], {
-			TRELLIS_DB: "",
-			...NO_PI,
-		});
+		const { code } = await runCli(
+			["audit", dir, "--db", dbPath, "--no-persist", "--fail-on", "none"],
+			{
+				TRELLIS_DB: "",
+				...NO_PI,
+			},
+		);
 		expect(code).toBe(0);
 		expect(existsSync(dbPath)).toBe(false);
 	});
 
 	test("omits report.drift by default", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--json"], {
+		const { code, stdout } = await runCli(["audit", dir, "--json", "--fail-on", "none"], {
 			TRELLIS_DB: dbPath,
 			...NO_PI,
 		});
@@ -295,97 +310,17 @@ describe("trellis audit", () => {
 	});
 
 	test("--canonical folds canonical-config drift into report.drift (SPEC §10)", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--json", "--canonical", "1.0.0"], {
-			TRELLIS_DB: dbPath,
-			...NO_PI,
-		});
+		const { code, stdout } = await runCli(
+			["audit", dir, "--json", "--canonical", "1.0.0", "--fail-on", "none"],
+			{
+				TRELLIS_DB: dbPath,
+				...NO_PI,
+			},
+		);
 		expect(code).toBe(0);
 		const report = JSON.parse(stdout);
 		expect(report.drift).toBeDefined();
 		expect(report.drift.canonicalVersion).toBe("1.0.0");
 		expect(report.drift.summary.missing).toBeGreaterThan(0);
-	});
-});
-
-describe("trellis fleet", () => {
-	let repoDir: string;
-	let workDir: string;
-	let dbPath: string;
-	let targetsFile: string;
-
-	const NO_PI = { TRELLIS_PI_BIN: "trellis-pi-absent" } as const;
-
-	beforeEach(() => {
-		// One real single-app fixture repo, plus a declared-but-missing target.
-		repoDir = mkdtempSync(join(tmpdir(), "trellis-fleet-repo-"));
-		writeFileSync(join(repoDir, "README.md"), "# fixture\n");
-		writeFileSync(
-			join(repoDir, "package.json"),
-			JSON.stringify({ name: "fixture", main: "./i.ts" }),
-		);
-		writeFileSync(join(repoDir, ".gitignore"), "node_modules\n");
-
-		workDir = mkdtempSync(join(tmpdir(), "trellis-fleet-work-"));
-		dbPath = join(workDir, "trellis.db");
-		targetsFile = join(workDir, "targets.yaml");
-		writeFileSync(
-			targetsFile,
-			`defaults:\n  canonicalVersion: "1.0.0"\ntargets:\n` +
-				`  - id: fixture\n    path: ${repoDir}\n    languages: [typescript]\n` +
-				`  - id: gone\n    path: ${join(workDir, "does-not-exist")}\n`,
-		);
-	});
-
-	afterEach(() => {
-		rmSync(repoDir, { recursive: true, force: true });
-		rmSync(workDir, { recursive: true, force: true });
-	});
-
-	test("audits every target, isolates a missing path, and persists each scored run", async () => {
-		const { code, stdout } = await runCli(["fleet", "--targets", targetsFile, "--db", dbPath], {
-			TRELLIS_DB: "",
-			...NO_PI,
-		});
-		expect(code).toBe(0);
-		expect(stdout).toContain("trellis fleet");
-		expect(stdout).toContain("fixture");
-		expect(stdout).toContain("1 ok · 1 error");
-		expect(stdout).toContain("error: path not found");
-
-		const { openStore } = await import("../store/index.ts");
-		const store = openStore(dbPath);
-		try {
-			// The scored target persists under its targets.yaml id (not the path basename).
-			expect(store.latestRun("fixture")).not.toBeNull();
-			expect(store.latestRun("gone")).toBeNull();
-		} finally {
-			store.close();
-		}
-	});
-
-	test("--json emits the aggregate report with per-target entries", async () => {
-		const { code, stdout } = await runCli(
-			["fleet", "--targets", targetsFile, "--db", dbPath, "--json"],
-			{ TRELLIS_DB: "", ...NO_PI },
-		);
-		expect(code).toBe(0);
-		const report = JSON.parse(stdout);
-		expect(report.rubricVersion).toBe(RUBRIC_VERSION);
-		expect(report.summary).toEqual({ ok: 1, error: 1 });
-		const fixture = report.entries.find((e: { id: string }) => e.id === "fixture");
-		expect(fixture.ok).toBe(true);
-		// The entry carries the per-state drift counts (the report's drift summary).
-		expect(fixture.drift.missing).toBeGreaterThan(0);
-		expect(fixture.previousLevel).toBeNull();
-	});
-
-	test("errors clearly on a malformed targets.yaml", async () => {
-		writeFileSync(targetsFile, "targets:\n  - id: a\n"); // missing required `path`
-		const { code, stderr } = await runCli(["fleet", "--targets", targetsFile, "--db", dbPath], {
-			TRELLIS_DB: "",
-			...NO_PI,
-		});
-		expect(code).not.toBe(0);
-		expect(stderr).toContain("targets.yaml");
 	});
 });

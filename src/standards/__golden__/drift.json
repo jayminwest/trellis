@@ -1,0 +1,79 @@
+{
+  "repo": "warren",
+  "canonicalVersion": "1.0.0",
+  "files": [
+    {
+      "path": "biome.json",
+      "matcher": "json-subset",
+      "version": "1.0.0",
+      "state": "match",
+      "divergences": [],
+      "allowedBy": []
+    },
+    {
+      "path": "tsconfig.base.json",
+      "matcher": "json-subset",
+      "version": "1.0.0",
+      "state": "extra",
+      "divergences": [
+        {
+          "path": "include",
+          "kind": "added",
+          "detail": "target-only key"
+        }
+      ],
+      "allowedBy": []
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "matcher": "text",
+      "version": "1.0.0",
+      "state": "drift",
+      "divergences": [
+        {
+          "path": "",
+          "kind": "changed",
+          "detail": "normalized text differs from canonical"
+        }
+      ],
+      "allowedBy": []
+    },
+    {
+      "path": "scripts/hooks/pre-commit",
+      "matcher": "exact",
+      "version": "1.0.0",
+      "state": "missing",
+      "divergences": [],
+      "allowedBy": []
+    },
+    {
+      "path": "AGENTS.md",
+      "matcher": "template",
+      "version": "1.0.0",
+      "state": "allowed-delta",
+      "divergences": [
+        {
+          "path": "section:conventions",
+          "kind": "missing",
+          "detail": "required section absent"
+        }
+      ],
+      "allowedBy": [
+        {
+          "file": "AGENTS.md",
+          "paths": [
+            "section:conventions"
+          ],
+          "reason": "merged into README"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "match": 1,
+    "allowed-delta": 1,
+    "drift": 1,
+    "missing": 1,
+    "extra": 1
+  }
+}

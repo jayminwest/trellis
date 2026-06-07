@@ -5,6 +5,16 @@
  * {@link rollupByCategory}/{@link tally} folds, and {@link renderJson} /
  * {@link renderMarkdown} / {@link renderTerminal}.
  */
+export {
+	type Assessment,
+	activeChecks,
+	assessReport,
+	DEFAULT_MIN_LEVEL,
+	FAIL_ON_MODES,
+	type FailOnMode,
+	type FailPolicy,
+	failingGateIds,
+} from "./assess.ts";
 export { AGENT_NOT_WIRED, type AuditOptions, auditRepo, SKIPPED_VIA_TARGETS } from "./build.ts";
 export {
 	type ChangesSinceLastRun,
@@ -19,5 +29,6 @@ export {
 export { renderJson } from "./json.ts";
 export { renderMarkdown } from "./markdown.ts";
 export { type CategoryRollup, pct, rollupByCategory, type Tally, tally } from "./rollup.ts";
+export { type AuditRunOptions, runAudit } from "./run.ts";
 export { renderTerminal } from "./terminal.ts";
 export type { AppDescriptor, Report } from "./types.ts";

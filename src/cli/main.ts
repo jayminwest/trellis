@@ -13,7 +13,14 @@ import { VERSION } from "../index.ts";
 import { registerAudit } from "./audit.ts";
 import { registerDrift } from "./drift.ts";
 import { registerFleet } from "./fleet.ts";
-import { CliError, EXIT, type OutputFormat, renderError, resolveFormat } from "./output.ts";
+import {
+	CliError,
+	EXIT,
+	FailOnExit,
+	type OutputFormat,
+	renderError,
+	resolveFormat,
+} from "./output.ts";
 import { registerReport } from "./report.ts";
 import { registerRubric } from "./rubric.ts";
 import { registerStandards } from "./standards.ts";
@@ -58,6 +65,12 @@ export async function run(argv: string[]): Promise<number> {
 		await program.parseAsync(argv);
 		return EXIT.OK;
 	} catch (error) {
+		// A tripped --fail-on policy: the report is already on stdout, so just note
+		// the reasons on stderr and surface the non-zero code (SPEC §12).
+		if (error instanceof FailOnExit) {
+			for (const reason of error.reasons) process.stderr.write(`trellis: ${reason}\n`);
+			return error.code;
+		}
 		if (error instanceof CliError) {
 			return renderError(error, formatFromArgv(argv));
 		}

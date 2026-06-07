@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type { DriftReport } from "./drift.ts";
 import { renderDriftMarkdown, renderDriftTerminal } from "./drift-report.ts";
 
@@ -56,6 +58,27 @@ const REPORT: DriftReport = {
 	],
 	summary: { match: 1, "allowed-delta": 1, drift: 1, missing: 1, extra: 1 },
 };
+
+/**
+ * Golden-snapshot the drift JSON shape (SPEC §10, §12 sync enforcement) — the
+ * machine contract the `trellis drift --json` CLI and the SDK's `drift()` both
+ * emit, so a surface change turns CI red. Set `TRELLIS_UPDATE_DRIFT_GOLDEN=1` to
+ * regenerate after an intentional shape change.
+ */
+describe("drift JSON shape", () => {
+	const GOLDEN = join(import.meta.dir, "__golden__", "drift.json");
+	const UPDATE = process.env.TRELLIS_UPDATE_DRIFT_GOLDEN === "1";
+
+	test("matches the golden §10 document", () => {
+		const actual = JSON.stringify(REPORT, null, 2);
+		if (UPDATE) writeFileSync(GOLDEN, actual);
+		expect(actual).toBe(readFileSync(GOLDEN, "utf8"));
+	});
+
+	test("is byte-identical across repeated serializations (determinism)", () => {
+		expect(JSON.stringify(REPORT, null, 2)).toBe(JSON.stringify(REPORT, null, 2));
+	});
+});
 
 describe("renderDriftTerminal", () => {
 	const out = renderDriftTerminal(REPORT);

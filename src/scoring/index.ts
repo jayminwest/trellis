@@ -23,4 +23,5 @@ export {
 	type ScorecardEntry,
 	scorecardEntrySchema,
 } from "./entry.ts";
+export { gateFails } from "./gate.ts";
 export { type ScoreCounts, type Scorecard, scoreRun } from "./score.ts";

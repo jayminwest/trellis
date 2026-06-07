@@ -1,16 +1,15 @@
 /**
  * `trellis report` — render the run-history dashboard from the central SQLite
  * store (SPEC §11, §12). Thin per SPEC §13.1: open the store, call the core
- * {@link buildHistory} (fleet snapshot + per-repo series, the latest §11 delta,
+ * {@link buildReport} (fleet snapshot + per-repo series, the latest §11 delta,
  * and per-criterion trends), then shape the three output variants. `--repo`
  * narrows to one target; `--since` floors the run window; `--db` overrides the
- * central DB location. Exit is always `0` here — the `--fail-on` contract lands
- * with the SDK exit-code step (trellis-28a5).
+ * central DB location. Exit is always `0` here (read-only history has no
+ * `--fail-on` gate) — only a usage error exits non-zero.
  */
 import type { Command } from "commander";
 import { Option } from "commander";
-import { buildHistory, renderHistoryMarkdown, renderHistoryTerminal } from "../history/index.ts";
-import { openStore } from "../store/index.ts";
+import { buildReport, renderHistoryMarkdown, renderHistoryTerminal } from "../history/index.ts";
 import { emit, type Rendered, resolveFormat } from "./output.ts";
 
 /** Local options for the report command, merged with the global format flags. */
@@ -36,21 +35,17 @@ export function registerReport(program: Command): void {
 		});
 }
 
-/** Open the store, build the dashboard, and emit the chosen output variant. */
+/** Build the dashboard via core and emit the chosen output variant. */
 function runReportCommand(opts: ReportCliOptions): void {
 	const format = resolveFormat(opts);
-	const store = openStore(opts.db);
-	try {
-		const report = buildHistory(store, {
-			...(opts.repo ? { repo: opts.repo } : {}),
-			...(opts.since ? { since: opts.since } : {}),
-		});
-		emit(format, {
-			human: renderHistoryTerminal(report),
-			json: report,
-			md: renderHistoryMarkdown(report),
-		} satisfies Rendered);
-	} finally {
-		store.close();
-	}
+	const report = buildReport({
+		...(opts.db ? { db: opts.db } : {}),
+		...(opts.repo ? { repo: opts.repo } : {}),
+		...(opts.since ? { since: opts.since } : {}),
+	});
+	emit(format, {
+		human: renderHistoryTerminal(report),
+		json: report,
+		md: renderHistoryMarkdown(report),
+	} satisfies Rendered);
 }

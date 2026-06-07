@@ -5,7 +5,8 @@
  * terminal, a PR/issue-ready markdown table, and the canonical JSON document.
  * They compute nothing — every count comes from {@link DriftReport.summary}.
  */
-import type { DriftReport, DriftState, FileDrift } from "./drift.ts";
+import type { DriftReport, FileDrift } from "./drift.ts";
+import type { DriftState } from "./drift-states.ts";
 
 /** Glyph per state for the human table — pure ASCII so it composes with pipes/CI. */
 const STATE_GLYPH: Record<DriftState, string> = {

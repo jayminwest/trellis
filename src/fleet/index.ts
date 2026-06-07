@@ -6,6 +6,7 @@
  * mapping), {@link runFleet} (the orchestration entrypoint and its {@link FleetReport}
  * shape), and the {@link renderFleetTerminal}/{@link renderFleetMarkdown} dashboards.
  */
+export { assessFleet } from "./assess.ts";
 export {
 	type FleetEntry,
 	type FleetReport,
@@ -15,6 +16,7 @@ export {
 	runFleet,
 } from "./orchestrate.ts";
 export { renderFleetMarkdown, renderFleetTerminal } from "./report.ts";
+export { type FleetRunOptions, runFleetTargets } from "./run.ts";
 export {
 	type Fleet,
 	type FleetDefaults,

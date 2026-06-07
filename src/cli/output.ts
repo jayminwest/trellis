@@ -12,12 +12,19 @@
 /** Human-readable terminal text (default), machine JSON, or a markdown report. */
 export type OutputFormat = "human" | "json" | "md";
 
-/** Stable process exit codes (SPEC §12; `--fail-on` tuning lands in trellis-28a5). */
+/**
+ * Stable process exit codes (SPEC §12). `0` clean, `1` an operational/usage
+ * error (the command could not run), `2` a tripped `--fail-on` policy (the
+ * command ran and emitted its report, but the audit failed the gate). CI scripts
+ * can tell "trellis broke" (`1`) from "the repo failed the bar" (`2`).
+ */
 export const EXIT = {
 	/** Clean run. */
 	OK: 0,
 	/** A handled failure: bad usage, invalid data, or a surfaced core error. */
 	ERROR: 1,
+	/** A `--fail-on` policy tripped — the report was emitted, but it failed the bar. */
+	FAIL: 2,
 } as const;
 
 /** A handled CLI failure carrying the exit code to use and an optional id/file. */
@@ -34,6 +41,25 @@ export class CliError extends Error {
 		super(message);
 		this.code = code;
 		this.detail = detail;
+	}
+}
+
+/**
+ * Signals a clean run whose `--fail-on` policy tripped (SPEC §12). Thrown by a
+ * command *after* it has already emitted its report to stdout, so the top-level
+ * handler must not re-render it — it only writes the reasons to stderr and exits
+ * with {@link code}. Distinct from {@link CliError} (which means the command
+ * could not run and never produced output).
+ */
+export class FailOnExit extends Error {
+	override readonly name = "FailOnExit";
+	readonly code: number;
+	readonly reasons: readonly string[];
+
+	constructor(reasons: readonly string[], code: number = EXIT.FAIL) {
+		super(reasons.join("; "));
+		this.code = code;
+		this.reasons = reasons;
 	}
 }
 

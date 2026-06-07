@@ -58,10 +58,13 @@ describe("trellis report", () => {
 
 	/** Run the fleet once against the current fixture state. */
 	async function fleetRun(): Promise<void> {
-		const { code } = await runCli(["fleet", "--targets", targetsFile, "--db", dbPath], {
-			TRELLIS_DB: "",
-			...NO_PI,
-		});
+		const { code } = await runCli(
+			["fleet", "--targets", targetsFile, "--db", dbPath, "--fail-on", "none"],
+			{
+				TRELLIS_DB: "",
+				...NO_PI,
+			},
+		);
 		expect(code).toBe(0);
 	}
 

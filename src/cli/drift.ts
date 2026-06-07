@@ -5,23 +5,30 @@
  * output variants. Run standalone (no fleet context), allowed deltas default to
  * empty — every non-whitelisted divergence reads as `drift`. `--canonical <v>`
  * pins the canonical set version; an unbundled version surfaces as a
- * {@link CliError}. Exit is always `0` here — the `--fail-on drift` contract
- * lands with the SDK exit-code step (trellis-28a5).
+ * {@link CliError}.
+ *
+ * Exit codes (SPEC §12): `0` clean; `2` when drift is detected (the default;
+ * `--fail-on none` disables it); `1` on an operational error. Only the `drift`
+ * dimension applies here — there is no scorecard to gate on.
  */
 import type { Command } from "commander";
+import { Option } from "commander";
 import {
 	DriftError,
 	driftRepo,
+	failingDriftCount,
+	hasFailingDrift,
 	renderDriftMarkdown,
 	renderDriftTerminal,
 } from "../standards/index.ts";
-import { CliError, EXIT, emit, type Rendered, resolveFormat } from "./output.ts";
+import { CliError, EXIT, emit, FailOnExit, type Rendered, resolveFormat } from "./output.ts";
 
 /** Local options for the drift command, merged with the global format flags. */
 interface DriftCliOptions {
 	json?: boolean;
 	md?: boolean;
 	canonical?: string;
+	failOn?: string;
 }
 
 /** Register the `drift` subcommand on `program`. */
@@ -31,12 +38,18 @@ export function registerDrift(program: Command): void {
 		.argument("<repo-path>", "path to the repository to compare")
 		.description("L1 canonical-config drift only")
 		.option("--canonical <v>", "pin the canonical standards version")
+		.addOption(
+			new Option("--fail-on <mode>", "exit non-zero on: drift|none (default: drift)").choices([
+				"drift",
+				"none",
+			]),
+		)
 		.action(function (this: Command, repoPath: string) {
 			runDrift(repoPath, this.optsWithGlobals() as DriftCliOptions);
 		});
 }
 
-/** Run the core drift comparison and emit the chosen output variant. */
+/** Run the core drift comparison, emit it, then apply the exit-code policy. */
 function runDrift(repoPath: string, opts: DriftCliOptions): void {
 	const format = resolveFormat(opts);
 	let report: ReturnType<typeof driftRepo>;
@@ -51,4 +64,7 @@ function runDrift(repoPath: string, opts: DriftCliOptions): void {
 		json: report,
 		md: renderDriftMarkdown(report),
 	} satisfies Rendered);
+	if (opts.failOn !== "none" && hasFailingDrift(report.summary)) {
+		throw new FailOnExit([`canonical drift detected (${failingDriftCount(report.summary)} files)`]);
+	}
 }

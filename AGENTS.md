@@ -53,8 +53,29 @@ trellis rubric [--validate]   # print the loaded rubric (and validate its invari
 trellis standards             # show canonical manifest + versions
 ```
 
-`--json` / `--md` switch terminal output to machine/report shapes;
-`--fail-on level|gate|drift|none` tunes the exit code so trellis is CI-usable.
+`--json` / `--md` switch terminal output to machine/report shapes.
+
+### Exit codes (SPEC §12)
+
+Every command exits `0` clean, `2` when a `--fail-on` policy trips (the report
+is still emitted to stdout; the reason goes to stderr), or `1` on an operational
+error (the command could not run). The default policy (flag omitted) fails on a
+**gate** criterion failing **or** canonical **drift**; `--fail-on
+gate|drift|level|none` narrows it to one dimension (or disables it), and
+`--fail-on level` compares the audited level against `--min-level` (default
+`3`). `EXIT` lives in `src/cli/output.ts`; the assessment is core
+(`assessReport` in `src/report/assess.ts`, `assessFleet` in
+`src/fleet/assess.ts`), so the CLI and SDK gate identically.
+
+### Programmatic SDK (`src/client/`)
+
+`src/client/index.ts` exposes `audit` / `drift` / `fleet` / `report` / `rubric`
+plus the `assessReport` / `assessFleet` exit-code rule. Each is a direct call to
+the same core service the CLI folds (`runAudit`, `driftRepo`, `runFleetTargets`,
+`buildReport`, `summarizeRubric`) — **no logic beyond type shaping**. Request
+types mirror the core option types (`// Mirrors src/<x>`); responses are the core
+report shapes. The deep-equal test in `src/client/index.test.ts` proves a CLI
+audit and an SDK audit are one code path.
 
 ### Quality gates
 

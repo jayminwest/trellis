@@ -21,7 +21,8 @@
 import { statSync } from "node:fs";
 import type { InvestigationDeps } from "../investigation/index.ts";
 import { type AuditOptions, auditRepo, type Report } from "../report/index.ts";
-import { type Level, RUBRIC_VERSION, type Rubric } from "../rubric/index.ts";
+import { type Level, loadRubric, RUBRIC_VERSION, type Rubric } from "../rubric/index.ts";
+import { gateFails } from "../scoring/index.ts";
 import type { DriftState } from "../standards/index.ts";
 import { type Store, type StoredRun, storedReport } from "../store/index.ts";
 import {
@@ -41,6 +42,8 @@ export interface FleetTargetOk {
 	readonly coverage: number;
 	/** Per-state canonical-drift counts, or `null` when no canonical comparison ran. */
 	readonly drift: Record<DriftState, number> | null;
+	/** Count of gate criteria measured and not fully passing (SPEC §3.3), for `--fail-on gate`. */
+	readonly gateFailures: number;
 	/** This repo's previous run's level, or `null` when this is its first run. */
 	readonly previousLevel: Level | null;
 	/** `level − previousLevel`, or `null` when there is no prior run (SPEC §11). */
@@ -128,6 +131,15 @@ function buildOptions(
 	};
 }
 
+/** Count of gate criteria in `report` that were measured and did not fully pass (SPEC §3.3). */
+function countFailingGates(report: Report, gateIds: readonly string[]): number {
+	let count = 0;
+	for (const id of gateIds) {
+		if (gateFails(report.criteria[id])) count += 1;
+	}
+	return count;
+}
+
 /** Audit one target, persist its run, and shape its dashboard entry (failures isolated). */
 async function runTarget(
 	target: ResolvedTarget,
@@ -136,6 +148,7 @@ async function runTarget(
 	audit: (repoPath: string, opts: AuditOptions) => Promise<Report>,
 	pathExists: (absPath: string) => boolean,
 	now: Date,
+	gateIds: readonly string[],
 ): Promise<FleetEntry> {
 	const { id } = target.spec;
 	const path = target.absPath;
@@ -156,6 +169,7 @@ async function runTarget(
 			passRate: report.passRate,
 			coverage: report.coverage,
 			drift: report.drift ? report.drift.summary : null,
+			gateFailures: countFailingGates(report, gateIds),
 			previousLevel,
 			levelDelta: previousLevel === null ? null : report.level - previousLevel,
 		};
@@ -175,10 +189,13 @@ export async function runFleet(fleet: Fleet, deps: FleetRunDeps): Promise<FleetR
 	const audit = deps.audit ?? auditRepo;
 	const pathExists = deps.pathExists ?? realPathExists;
 	const now = deps.now ?? new Date();
+	// Gate ids come from the run's rubric (or the bundled one) so `--fail-on gate`
+	// counts failing floors per target (SPEC §3.3).
+	const gateIds = (deps.rubric ?? loadRubric()).criteria.filter((c) => c.gate).map((c) => c.id);
 
 	const entries: FleetEntry[] = [];
 	for (const target of fleet.targets) {
-		entries.push(await runTarget(target, fleet.defaults, deps, audit, pathExists, now));
+		entries.push(await runTarget(target, fleet.defaults, deps, audit, pathExists, now, gateIds));
 	}
 
 	const ok = entries.filter((e) => e.ok).length;

@@ -16,3 +16,4 @@ export {
 	type TrendPoint,
 } from "./dashboard.ts";
 export { renderHistoryMarkdown, renderHistoryTerminal } from "./render.ts";
+export { buildReport, type ReportRunOptions } from "./run.ts";

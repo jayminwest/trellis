@@ -3,17 +3,21 @@ export {
 	type AllowedDelta,
 	type Divergence,
 	type DivergenceKind,
-	DRIFT_STATES,
 	DriftError,
 	type DriftOptions,
 	type DriftReport,
-	type DriftState,
 	driftRepo,
-	FAILING_DRIFT_STATES,
 	type FileDrift,
 	resolveCanonicalVersion,
 } from "./drift.ts";
 export { renderDriftMarkdown, renderDriftTerminal } from "./drift-report.ts";
+export {
+	DRIFT_STATES,
+	type DriftState,
+	FAILING_DRIFT_STATES,
+	failingDriftCount,
+	hasFailingDrift,
+} from "./drift-states.ts";
 export {
 	CANONICAL_DIR,
 	CANONICAL_SUFFIX,
