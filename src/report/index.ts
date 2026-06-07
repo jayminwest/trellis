@@ -19,6 +19,7 @@ export { AGENT_NOT_WIRED, type AuditOptions, auditRepo, SKIPPED_VIA_TARGETS } fr
 export { changesSinceLastRun, criterionStatus, snapshot } from "./changes.ts";
 export { renderJson } from "./json.ts";
 export { renderMarkdown } from "./markdown.ts";
+export type { AuditEvent, AuditPhase, AuditProgress } from "./progress.ts";
 export { type CategoryRollup, pct, rollupByCategory, type Tally, tally } from "./rollup.ts";
 export { type AuditRunOptions, runAudit } from "./run.ts";
 export { renderTerminal } from "./terminal.ts";

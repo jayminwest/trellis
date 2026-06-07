@@ -12,6 +12,7 @@ import { basename, resolve } from "node:path";
 import type { Rubric } from "../rubric/index.ts";
 import { openStore, storedReport } from "../store/index.ts";
 import { type AuditOptions, auditRepo } from "./build.ts";
+import type { AuditProgress } from "./progress.ts";
 import type { Report } from "./types.ts";
 
 /** Options for {@link runAudit} — the user-facing audit surface (mirrors the CLI flags). */
@@ -36,6 +37,12 @@ export interface AuditRunOptions {
 	rubricDir?: string;
 	/** Repo id for the report + central state; defaults to the audited path's basename. */
 	repoId?: string;
+	/**
+	 * Optional progress sink (SPEC §7.3 observability). Mirrored by the SDK's
+	 * {@link import("../client/index.ts").AuditRequest}; the CLI renders these
+	 * events to stderr. Absent → a silent run.
+	 */
+	onProgress?: AuditProgress;
 }
 
 /**
@@ -56,6 +63,7 @@ export async function runAudit(repoPath: string, opts: AuditRunOptions = {}): Pr
 			...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
 			...(opts.now ? { now: opts.now } : {}),
 			...(opts.repoId ? { repoId: opts.repoId } : {}),
+			...(opts.onProgress ? { onProgress: opts.onProgress } : {}),
 			previousRun: previous ? storedReport(previous) : null,
 			investigation: {
 				...(store ? { cache: store } : {}),

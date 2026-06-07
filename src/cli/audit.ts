@@ -23,7 +23,17 @@ import { Option } from "commander";
 import { assessReport, renderMarkdown, renderTerminal, runAudit } from "../report/index.ts";
 import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
 import { failPolicy } from "./fail-on.ts";
-import { CliError, EXIT, emit, FailOnExit, type Rendered, resolveFormat } from "./output.ts";
+import {
+	CliError,
+	EXIT,
+	emit,
+	FailOnExit,
+	formatForPath,
+	type Rendered,
+	resolveFormat,
+	writeReportFile,
+} from "./output.ts";
+import { createProgressReporter } from "./progress.ts";
 
 /** Local options for the audit command, merged with the global format flags. */
 interface AuditCliOptions {
@@ -39,6 +49,12 @@ interface AuditCliOptions {
 	/** Exit-code policy (SPEC §12). */
 	failOn?: string;
 	minLevel?: string;
+	/** Write the report to this file (format inferred from extension, overridable by --json/--md). */
+	output?: string;
+	/** Suppress progress lines on stderr. */
+	quiet?: boolean;
+	/** Per-detector / per-session-message progress detail on stderr. */
+	verbose?: boolean;
 	/** Hidden: load an alternate rubric directory (used by tests/fixtures). */
 	rubricDir?: string;
 }
@@ -61,6 +77,12 @@ export function registerAudit(program: Command): void {
 			).choices(["gate", "drift", "level", "none"]),
 		)
 		.option("--min-level <n>", "minimum level for --fail-on level (1–5, default 3)")
+		.option(
+			"--output <path>",
+			"write the report to a file (.json/.md inferred; --json/--md override)",
+		)
+		.option("--quiet", "suppress progress output on stderr")
+		.option("--verbose", "show per-detector and per-message progress on stderr")
 		.addOption(new Option("--rubric-dir <path>", "load an alternate rubric directory").hideHelp())
 		.action(function (this: Command, repoPath: string) {
 			return runAuditCommand(repoPath, this.optsWithGlobals() as AuditCliOptions);
@@ -73,6 +95,11 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 	const policy = failPolicy(opts);
 	const rubric = loadRubricOrThrow(opts.rubricDir);
 	const piBin = process.env.TRELLIS_PI_BIN?.trim();
+	const onProgress = createProgressReporter({
+		quiet: opts.quiet === true,
+		verbose: opts.verbose === true,
+		isTTY: Boolean(process.stderr.isTTY),
+	});
 	const report = await runAudit(repoPath, {
 		rubric,
 		...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
@@ -81,12 +108,21 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 		...(opts.db ? { db: opts.db } : {}),
 		...(opts.persist === false ? { persist: false } : {}),
 		...(piBin ? { piBin } : {}),
+		...(onProgress ? { onProgress } : {}),
 	});
-	emit(format, {
+	const rendered = {
 		human: renderTerminal(report, rubric),
 		json: report,
 		md: renderMarkdown(report, rubric),
-	} satisfies Rendered);
+	} satisfies Rendered;
+	// With --output the file gets the (inferred/overridden) format and stdout
+	// keeps the readable terminal summary; otherwise stdout gets the chosen format.
+	if (opts.output) {
+		writeReportFile(opts.output, formatForPath(opts.output, format), rendered);
+		emit("human", rendered);
+	} else {
+		emit(format, rendered);
+	}
 	const assessment = assessReport(report, rubric, policy);
 	if (assessment.failed) throw new FailOnExit(assessment.reasons);
 }

@@ -8,7 +8,13 @@ import {
 	noSubmissionTurn,
 	submitFindingsTurn,
 } from "./fake-pi.ts";
-import { formatZodIssues, type PiSessionConfig, promptCommand, runPiSession } from "./session.ts";
+import {
+	formatZodIssues,
+	type PiSessionConfig,
+	promptCommand,
+	runPiSession,
+	type SessionEvent,
+} from "./session.ts";
 
 const schema = z.strictObject({ value: z.number() });
 
@@ -117,5 +123,18 @@ describe("runPiSession", () => {
 		expect(outcome.ok).toBe(false);
 		if (!outcome.ok) expect(outcome.reason).toContain("after 0 retries");
 		expect(fake.writes).toHaveLength(1);
+	});
+
+	test("onEvent surfaces message and retry session events without altering control flow", async () => {
+		const events: SessionEvent[] = [];
+		const fake = makeFakePi([
+			invalidThenEndTurn({ value: "nan" }),
+			submitFindingsTurn({ value: 7 }),
+		]);
+		const outcome = await runPiSession(config(fake, { onEvent: (e) => events.push(e) }));
+		expect(outcome).toEqual({ ok: true, findings: { value: 7 } });
+		expect(events).toContainEqual({ type: "message" });
+		expect(events).toContainEqual({ type: "agent-end" });
+		expect(events).toContainEqual({ type: "retry", attempt: 1 });
 	});
 });

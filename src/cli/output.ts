@@ -9,6 +9,8 @@
  * logic — they parse args, call core, and shape these three strings.
  */
 
+import { writeFileSync } from "node:fs";
+
 /** Human-readable terminal text (default), machine JSON, or a markdown report. */
 export type OutputFormat = "human" | "json" | "md";
 
@@ -80,15 +82,42 @@ export interface Rendered {
 	md: string;
 }
 
+/** Render the variant matching `format` to its serialized string (no trailing-newline guarantee). */
+function renderFor(format: OutputFormat, rendered: Rendered): string {
+	return format === "json"
+		? JSON.stringify(rendered.json, null, 2)
+		: format === "md"
+			? rendered.md
+			: rendered.human;
+}
+
 /** Write the variant matching `format` to stdout, with a single trailing newline. */
 export function emit(format: OutputFormat, rendered: Rendered): void {
-	const text =
-		format === "json"
-			? JSON.stringify(rendered.json, null, 2)
-			: format === "md"
-				? rendered.md
-				: rendered.human;
+	const text = renderFor(format, rendered);
 	process.stdout.write(text.endsWith("\n") ? text : `${text}\n`);
+}
+
+/**
+ * Resolve the file format for `--output <path>`: an explicit `--json` / `--md`
+ * (`override`) wins, else the extension decides (`.json` → JSON, `.md` →
+ * markdown), else the human terminal text is written verbatim.
+ */
+export function formatForPath(path: string, override: OutputFormat): OutputFormat {
+	if (override === "json" || override === "md") return override;
+	if (path.endsWith(".json")) return "json";
+	if (path.endsWith(".md")) return "md";
+	return "human";
+}
+
+/** Write the `format` variant to `path` (one trailing newline); throws {@link CliError} on an I/O failure. */
+export function writeReportFile(path: string, format: OutputFormat, rendered: Rendered): void {
+	const text = renderFor(format, rendered);
+	try {
+		writeFileSync(path, text.endsWith("\n") ? text : `${text}\n`);
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		throw new CliError(`could not write report to ${path}: ${reason}`, EXIT.ERROR);
+	}
 }
 
 /**

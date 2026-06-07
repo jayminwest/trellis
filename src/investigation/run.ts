@@ -32,7 +32,34 @@ import {
 	type InvestigationResult,
 	type PiVersionProbe,
 	probePiVersion,
+	type SessionEvent,
 } from "./provider/index.ts";
+
+/**
+ * Observability events surfaced by {@link runInvestigation} for the slow agent
+ * pass (SPEC §7.3). They never alter control flow — a run with no sink wired is
+ * byte-identical (api>cli>sdk: core emits, the CLI renders). Session events are
+ * lifted from the Pi RPC loop and tagged with their area.
+ */
+export type InvestigationEvent =
+	| {
+			readonly type: "area-start";
+			readonly area: AreaId;
+			readonly index: number;
+			readonly total: number;
+	  }
+	| { readonly type: "cache-hit"; readonly area: AreaId }
+	| { readonly type: "probe"; readonly ok: boolean; readonly detail: string }
+	| { readonly type: "session"; readonly area: AreaId; readonly event: SessionEvent }
+	| {
+			readonly type: "area-end";
+			readonly area: AreaId;
+			readonly ok: boolean;
+			readonly reason?: string;
+	  };
+
+/** Optional sink for {@link InvestigationEvent}s; never affects the resolved findings. */
+export type InvestigationProgress = (event: InvestigationEvent) => void;
 
 /**
  * The cache surface {@link runInvestigation} needs — exactly the
@@ -92,6 +119,8 @@ export interface InvestigationDeps {
 	readonly investigate?: InvestigateFn;
 	/** Injectable version probe (default: a real `pi --version` probe). */
 	readonly probe?: () => Promise<PiVersionProbe>;
+	/** Optional observability sink for {@link InvestigationEvent}s (SPEC §7.3 progress). */
+	readonly onProgress?: InvestigationProgress;
 }
 
 /** Parse cached findings JSON back through the area schema; `null` if corrupt/stale. */
@@ -124,7 +153,13 @@ async function fillMiss(
 	deps: InvestigationDeps,
 ): Promise<AreaResolution> {
 	const investigate = deps.investigate ?? defaultInvestigate;
-	const result = await investigate(ctx.repoPath, area, deps.investigateOpts ?? {});
+	const onSession = deps.onProgress
+		? (event: SessionEvent) => deps.onProgress?.({ type: "session", area, event })
+		: undefined;
+	const result = await investigate(ctx.repoPath, area, {
+		...(deps.investigateOpts ?? {}),
+		...(onSession ? { onSession } : {}),
+	});
 	if (!result.ok) return { ok: false, area, reason: result.reason };
 	deps.cache?.putCache(
 		ctx.repo,
@@ -149,27 +184,50 @@ export async function runInvestigation(
 ): Promise<Map<AreaId, AreaResolution>> {
 	const out = new Map<AreaId, AreaResolution>();
 	const misses: AreaId[] = [];
+	const emit = (event: InvestigationEvent): void => deps.onProgress?.(event);
 
 	// Cache pass: a hit (that still validates) resolves immediately; each area
 	// runs at most once (SPEC §7.1), so de-dupe before considering it a miss.
-	for (const area of new Set(areas)) {
+	const unique = [...new Set(areas)];
+	unique.forEach((area, index) => {
+		emit({ type: "area-start", area, index, total: unique.length });
 		const cached = cacheHit(area, ctx, deps);
-		if (cached !== null) out.set(area, { ok: true, area, findings: cached });
-		else misses.push(area);
-	}
+		if (cached !== null) {
+			out.set(area, { ok: true, area, findings: cached });
+			emit({ type: "cache-hit", area });
+			emit({ type: "area-end", area, ok: true });
+		} else misses.push(area);
+	});
 
 	if (misses.length === 0) return out;
 
 	// Probe Pi exactly once, and only because there is a miss to fill (SPEC §9.6).
 	const probe = deps.probe ?? (() => probePiVersion(probeOpts(deps)));
 	const probed = await probe();
+	emit({
+		type: "probe",
+		ok: probed.ok,
+		detail: probed.ok ? probed.version : probed.reason,
+	});
 	if (!probed.ok) {
 		const reason = `Pi unavailable: ${probed.reason} (${probed.hint})`;
-		for (const area of misses) out.set(area, { ok: false, area, reason });
+		for (const area of misses) {
+			out.set(area, { ok: false, area, reason });
+			emit({ type: "area-end", area, ok: false, reason });
+		}
 		return out;
 	}
 
-	for (const area of misses) out.set(area, await fillMiss(area, ctx, deps));
+	for (const area of misses) {
+		const resolution = await fillMiss(area, ctx, deps);
+		out.set(area, resolution);
+		emit({
+			type: "area-end",
+			area,
+			ok: resolution.ok,
+			...(resolution.ok ? {} : { reason: resolution.reason }),
+		});
+	}
 	return out;
 }
 

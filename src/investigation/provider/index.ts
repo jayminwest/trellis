@@ -27,6 +27,7 @@ import {
 	DEFAULT_MAX_RETRIES,
 	type PiSpawn,
 	runPiSession,
+	type SessionEvent,
 } from "./pi/session.ts";
 
 export * from "./pi/index.ts";
@@ -61,6 +62,8 @@ export interface InvestigateOpts {
 	readonly spawn?: PiSpawn;
 	/** Override the findings-extension path (tests/packaging; default {@link FINDINGS_EXTENSION_PATH}). */
 	readonly extensionPath?: string;
+	/** Optional observability sink for {@link SessionEvent}s; never affects control flow. */
+	readonly onSession?: (event: SessionEvent) => void;
 }
 
 /** The kickoff user prompt that starts a run (the area system prompt is on argv). */
@@ -107,6 +110,7 @@ export async function investigate<A extends AreaId>(
 		maxRetries: Math.max(0, Math.trunc(opts.maxRetries ?? DEFAULT_MAX_RETRIES)),
 		heartbeatMs: opts.heartbeatMs ?? DEFAULT_HEARTBEAT_MS,
 		spawn: opts.spawn,
+		...(opts.onSession ? { onEvent: opts.onSession } : {}),
 	});
 	if (outcome.ok) {
 		return { ok: true, area: areaId, findings: outcome.findings as AreaFindings[A] };

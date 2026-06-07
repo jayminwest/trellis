@@ -50,6 +50,17 @@ export type SessionOutcome =
 	| { readonly ok: true; readonly findings: unknown }
 	| { readonly ok: false; readonly reason: string };
 
+/**
+ * Session-level progress events the §9.3 loop surfaces for observability only.
+ * They never alter control flow — the protocol state machine is unchanged
+ * whether or not a sink is wired (api>cli>sdk: core emits, the CLI renders).
+ */
+export type SessionEvent =
+	| { readonly type: "message" }
+	| { readonly type: "agent-end" }
+	| { readonly type: "retry"; readonly attempt: number }
+	| { readonly type: "heartbeat-stall" };
+
 /** Inputs to {@link runPiSession}. */
 export interface PiSessionConfig {
 	readonly argv: string[];
@@ -65,6 +76,8 @@ export interface PiSessionConfig {
 	readonly heartbeatMs: number;
 	/** Process-boundary injection (default {@link defaultPiSpawn}). */
 	readonly spawn?: PiSpawn;
+	/** Optional observability sink for {@link SessionEvent}s; never affects control flow. */
+	readonly onEvent?: (event: SessionEvent) => void;
 }
 
 /** Default corrective re-prompt budget (SPEC §9.3). */
@@ -158,6 +171,11 @@ interface Session {
 	heartbeat?: ReturnType<typeof setTimeout>;
 }
 
+/** Forward a {@link SessionEvent} to the optional sink (observability only). */
+function emitEvent(st: Session, event: SessionEvent): void {
+	st.cfg.onEvent?.(event);
+}
+
 /** Resolve the session exactly once, tearing down the process and watchdog. */
 function settle(st: Session, outcome: SessionOutcome): void {
 	if (st.settled) return;
@@ -171,10 +189,10 @@ function settle(st: Session, outcome: SessionOutcome): void {
 /** (Re)arm the heartbeat watchdog: a silent run past the window is force-killed. */
 function bumpHeartbeat(st: Session): void {
 	if (st.heartbeat) clearTimeout(st.heartbeat);
-	st.heartbeat = setTimeout(
-		() => settle(st, { ok: false, reason: `heartbeat: no Pi output for ${st.cfg.heartbeatMs}ms` }),
-		st.cfg.heartbeatMs,
-	);
+	st.heartbeat = setTimeout(() => {
+		emitEvent(st, { type: "heartbeat-stall" });
+		settle(st, { ok: false, reason: `heartbeat: no Pi output for ${st.cfg.heartbeatMs}ms` });
+	}, st.cfg.heartbeatMs);
 }
 
 /** Write a prompt line, holding stdin open; a write failure settles no-detector. */
@@ -192,6 +210,7 @@ const retriesWord = (n: number): string => (n === 1 ? "retry" : "retries");
 function handleMessageEnd(st: Session, envelope: PiEnvelope): void {
 	const msg = envelope.message;
 	if (msg?.role !== "assistant" || !Array.isArray(msg.content)) return;
+	emitEvent(st, { type: "message" });
 	if (msg.stopReason === "error") {
 		settle(st, { ok: false, reason: "Pi assistant turn reported stopReason:error" });
 		return;
@@ -210,6 +229,7 @@ function handleMessageEnd(st: Session, envelope: PiEnvelope): void {
 
 /** A run finished with no valid capture: send a corrective prompt or give up. */
 function handleAgentEnd(st: Session): void {
+	emitEvent(st, { type: "agent-end" });
 	if (st.retries <= 0) {
 		const word = retriesWord(st.cfg.maxRetries);
 		const reason = st.lastInvalidReason
@@ -219,6 +239,7 @@ function handleAgentEnd(st: Session): void {
 		return;
 	}
 	st.retries--;
+	emitEvent(st, { type: "retry", attempt: st.cfg.maxRetries - st.retries });
 	const corrective =
 		st.sawInvalidThisRun && st.lastInvalidReason
 			? `Your submit_findings call did not match the schema: ${st.lastInvalidReason}. Call submit_findings again with corrected facts.`

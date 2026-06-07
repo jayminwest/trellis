@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { openStore, type Store } from "../store/index.ts";
 import type { AreaId } from "./areas.ts";
 import type { DocumentationFindings } from "./findings.ts";
-import type { InvestigateFn, InvestigationContext } from "./run.ts";
+import type { InvestigateFn, InvestigationContext, InvestigationEvent } from "./run.ts";
 import { runInvestigation } from "./run.ts";
 
 /**
@@ -211,5 +211,75 @@ describe("runInvestigation Pi-unavailable degradation", () => {
 		const res = out.get("documentation");
 		expect(res?.ok).toBe(false);
 		if (res && !res.ok) expect(res.reason).toContain("submit_findings");
+	});
+});
+
+describe("runInvestigation progress events", () => {
+	test("a miss emits area-start, probe, and area-end (no cache-hit)", async () => {
+		const events: InvestigationEvent[] = [];
+		await runInvestigation(["documentation"], CTX, {
+			investigate: countingInvestigate().fn,
+			probe: okProbe,
+			onProgress: (event) => events.push(event),
+		});
+		expect(events).toContainEqual({
+			type: "area-start",
+			area: "documentation",
+			index: 0,
+			total: 1,
+		});
+		expect(events).toContainEqual({ type: "probe", ok: true, detail: "0.74.0" });
+		expect(events).toContainEqual({ type: "area-end", area: "documentation", ok: true });
+		expect(events.some((e) => e.type === "cache-hit")).toBe(false);
+	});
+
+	test("a cache hit emits cache-hit + area-end and never probes", async () => {
+		const dbDir = mkdtempSync(join(tmpdir(), "trellis-run-db-"));
+		const store = openStore(join(dbDir, "trellis.db"));
+		try {
+			store.putCache("fixture", "abc123", "documentation", JSON.stringify(DOC_FACTS), "t0");
+			const events: InvestigationEvent[] = [];
+			await runInvestigation(["documentation"], CTX, {
+				cache: store,
+				probe: async () => ({ ok: false as const, reason: "must not run", hint: "" }),
+				onProgress: (event) => events.push(event),
+			});
+			expect(events).toContainEqual({ type: "cache-hit", area: "documentation" });
+			expect(events.some((e) => e.type === "probe")).toBe(false);
+		} finally {
+			store.close();
+			rmSync(dbDir, { recursive: true, force: true });
+		}
+	});
+
+	test("a failed probe emits probe(ok:false) and a reasoned area-end per miss", async () => {
+		const events: InvestigationEvent[] = [];
+		await runInvestigation(["documentation"], CTX, {
+			investigate: countingInvestigate().fn,
+			probe: async () => ({ ok: false as const, reason: "pi missing", hint: "install pi" }),
+			onProgress: (event) => events.push(event),
+		});
+		expect(events).toContainEqual({ type: "probe", ok: false, detail: "pi missing" });
+		const end = events.find((e) => e.type === "area-end");
+		expect(end?.type === "area-end" && end.ok).toBe(false);
+	});
+
+	test("session events from the provider are lifted and tagged with their area", async () => {
+		const sessioned = (async (_repo, area, opts) => {
+			opts?.onSession?.({ type: "message" });
+			opts?.onSession?.({ type: "agent-end" });
+			return { ok: true as const, area, findings: DOC_FACTS };
+		}) as InvestigateFn;
+		const events: InvestigationEvent[] = [];
+		await runInvestigation(["documentation"], CTX, {
+			investigate: sessioned,
+			probe: okProbe,
+			onProgress: (event) => events.push(event),
+		});
+		expect(events).toContainEqual({
+			type: "session",
+			area: "documentation",
+			event: { type: "message" },
+		});
 	});
 });

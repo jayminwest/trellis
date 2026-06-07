@@ -40,6 +40,7 @@ export {
 	type PiSpawn,
 	promptCommand,
 	runPiSession,
+	type SessionEvent,
 	type SessionOutcome,
 } from "./session.ts";
 export {

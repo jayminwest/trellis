@@ -11,6 +11,22 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- Audit run observability + report file export (SPEC §7.3, §12): the audit core
+  now emits structured progress events the CLI renders to **stderr**, so a long
+  run (the investigation pass can take minutes) is no longer a black box. The
+  surface-agnostic core emits the events (`AuditEvent` in `src/report/progress.ts`:
+  phase transitions, app/detector counts, and investigation events lifted from
+  the Pi RPC loop's `message_end`/`agent_end`/heartbeat/retry signals) and the
+  CLI owns rendering them (`src/cli/progress.ts`) — core never logs, keeping the
+  api>cli>sdk seam intact. Progress is TTY-aware by default; `--quiet` suppresses
+  it and `--verbose` adds per-criterion and per-message detail. `trellis audit`
+  also gains `--output <path>`, writing the report to a file (format inferred
+  from the `.json`/`.md` extension, overridable by `--json`/`--md`) while stdout
+  keeps the readable terminal summary, so the stdout-piping contract is unchanged
+  (progress only ever goes to stderr). The `onProgress` sink is a core option on
+  `runAudit`, so the SDK's `audit()` mirrors it for free. The agent-criterion →
+  scorecard projection helpers moved to `src/report/agent-scope.ts` to keep
+  `build.ts` focused on wiring stages together.
 - Typed SDK + CI-usable exit-code contract (SPEC §12, §13.1): `src/client/`
   now exposes a typed, in-process SDK — `audit(repoPath, opts)` /
   `drift(repoPath, opts)` / `fleet(targetsPath, opts)` / `report(query)` /
