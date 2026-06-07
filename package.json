@@ -1,6 +1,6 @@
 {
 	"name": "@os-eco/trellis-cli",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Agentic-readiness audit & sync for code repositories — score a repo against a de-branded rubric, detect canonical-config drift, and keep a fleet in standard",
 	"type": "module",
 	"bin": {

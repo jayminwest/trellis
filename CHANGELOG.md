@@ -9,6 +9,8 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+## [0.0.2] — 2026-06-07
+
 ### Added
 
 - Audit progress is now a **single status line that rewrites in place** on an
