@@ -57,9 +57,10 @@ describe("client SDK", () => {
 
 	test("audit() and the CLI produce deep-equal reports (one code path)", async () => {
 		const sdk = await client.audit(dir, { persist: false, piBin: NO_PI });
-		const cli = await runCli(["audit", dir, "--json", "--no-persist", "--fail-on", "none"], {
-			TRELLIS_DB: "",
-		});
+		const cli = await runCli(
+			["audit", dir, "--json", "--no-persist", "--no-output", "--fail-on", "none"],
+			{ TRELLIS_DB: "" },
+		);
 		expect(cli.code).toBe(0);
 		expect(withoutClock(sdk)).toEqual(withoutClock(JSON.parse(cli.stdout)));
 	});

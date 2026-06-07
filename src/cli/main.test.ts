@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { RUBRIC_VERSION } from "../rubric/version.ts";
@@ -230,7 +230,7 @@ describe("trellis audit", () => {
 	});
 
 	test("prints a coherent terminal scorecard", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--fail-on", "none"], {
+		const { code, stdout } = await runCli(["audit", dir, "--no-output", "--fail-on", "none"], {
 			TRELLIS_DB: dbPath,
 			...NO_PI,
 		});
@@ -242,10 +242,10 @@ describe("trellis audit", () => {
 	});
 
 	test("--json emits a parseable §6.3 report with every rubric criterion", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--json", "--fail-on", "none"], {
-			TRELLIS_DB: dbPath,
-			...NO_PI,
-		});
+		const { code, stdout } = await runCli(
+			["audit", dir, "--json", "--no-output", "--fail-on", "none"],
+			{ TRELLIS_DB: dbPath, ...NO_PI },
+		);
 		expect(code).toBe(0);
 		const report = JSON.parse(stdout);
 		expect(report.rubricVersion).toBe(RUBRIC_VERSION);
@@ -256,24 +256,24 @@ describe("trellis audit", () => {
 	});
 
 	test("--md emits a markdown scorecard", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--md", "--fail-on", "none"], {
-			TRELLIS_DB: dbPath,
-			...NO_PI,
-		});
+		const { code, stdout } = await runCli(
+			["audit", dir, "--md", "--no-output", "--fail-on", "none"],
+			{ TRELLIS_DB: dbPath, ...NO_PI },
+		);
 		expect(code).toBe(0);
 		expect(stdout).toContain("# Agentic-readiness scorecard");
 		expect(stdout).toContain("| Category | Measured |");
 	});
 
 	test("persists each run to the central history (SPEC §6.4)", async () => {
-		const first = await runCli(["audit", dir, "--db", dbPath, "--fail-on", "none"], {
+		const first = await runCli(["audit", dir, "--db", dbPath, "--no-output", "--fail-on", "none"], {
 			TRELLIS_DB: "",
 			...NO_PI,
 		});
-		const second = await runCli(["audit", dir, "--db", dbPath, "--fail-on", "none"], {
-			TRELLIS_DB: "",
-			...NO_PI,
-		});
+		const second = await runCli(
+			["audit", dir, "--db", dbPath, "--no-output", "--fail-on", "none"],
+			{ TRELLIS_DB: "", ...NO_PI },
+		);
 		expect(first.code).toBe(0);
 		expect(second.code).toBe(0);
 
@@ -290,7 +290,7 @@ describe("trellis audit", () => {
 
 	test("--no-persist skips writing to the history", async () => {
 		const { code } = await runCli(
-			["audit", dir, "--db", dbPath, "--no-persist", "--fail-on", "none"],
+			["audit", dir, "--db", dbPath, "--no-persist", "--no-output", "--fail-on", "none"],
 			{
 				TRELLIS_DB: "",
 				...NO_PI,
@@ -301,17 +301,17 @@ describe("trellis audit", () => {
 	});
 
 	test("omits report.drift by default", async () => {
-		const { code, stdout } = await runCli(["audit", dir, "--json", "--fail-on", "none"], {
-			TRELLIS_DB: dbPath,
-			...NO_PI,
-		});
+		const { code, stdout } = await runCli(
+			["audit", dir, "--json", "--no-output", "--fail-on", "none"],
+			{ TRELLIS_DB: dbPath, ...NO_PI },
+		);
 		expect(code).toBe(0);
 		expect(JSON.parse(stdout).drift).toBeUndefined();
 	});
 
 	test("--canonical folds canonical-config drift into report.drift (SPEC §10)", async () => {
 		const { code, stdout } = await runCli(
-			["audit", dir, "--json", "--canonical", "1.0.0", "--fail-on", "none"],
+			["audit", dir, "--json", "--canonical", "1.0.0", "--no-output", "--fail-on", "none"],
 			{
 				TRELLIS_DB: dbPath,
 				...NO_PI,
@@ -322,5 +322,18 @@ describe("trellis audit", () => {
 		expect(report.drift).toBeDefined();
 		expect(report.drift.canonicalVersion).toBe("1.0.0");
 		expect(report.drift.summary.missing).toBeGreaterThan(0);
+	});
+
+	test("the default report file anchors to the audited repo, not the process cwd", async () => {
+		// No --output: the default report must land under the AUDITED repo's
+		// `.trellis/` (here the temp `dir`), never the CLI's cwd (the real repo).
+		const { code, stderr } = await runCli(["audit", dir, "--db", dbPath, "--fail-on", "none"], {
+			TRELLIS_DB: "",
+			...NO_PI,
+		});
+		expect(code).toBe(0);
+		const reports = readdirSync(join(dir, ".trellis")).filter((f) => /^audit-.*\.md$/.test(f));
+		expect(reports).toHaveLength(1);
+		expect(stderr).toContain(join(dir, ".trellis"));
 	});
 });

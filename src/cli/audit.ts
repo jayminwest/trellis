@@ -105,7 +105,7 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 	const rubric = loadRubricOrThrow(opts.rubricDir);
 	// Validate the report target up front so a bad `--output` fails immediately,
 	// before the (minutes-long) investigation pass burns time and tokens.
-	const reportPlan = planReportTarget(opts.output, format);
+	const reportPlan = planReportTarget(repoPath, opts.output, format);
 	const piBin = process.env.TRELLIS_PI_BIN?.trim();
 	const quiet = opts.quiet === true;
 	const reporter = createProgressReporter({
@@ -160,10 +160,13 @@ type ReportPlan =
  * target (so `--output .` drops a timestamped report there instead of failing
  * with `EISDIR`); otherwise it is a file path whose parent directory must
  * already exist and be writable. With no flag, a timestamped markdown report
- * lands under `.trellis/`. Throws {@link CliError} up front on an unwritable
- * target so the failure costs no investigation time.
+ * lands under the **audited repo's** `.trellis/` (anchored to `repoPath`, never
+ * the process cwd — a report about repo X belongs with repo X). Throws
+ * {@link CliError} up front on an unwritable target so the failure costs no
+ * investigation time.
  */
 function planReportTarget(
+	repoPath: string,
 	output: string | false | undefined,
 	format: OutputFormat,
 ): ReportPlan | null {
@@ -176,7 +179,7 @@ function planReportTarget(
 		assertWritableDir(dirname(output) || ".", output);
 		return { kind: "file", path: output, format: formatForPath(output, format) };
 	}
-	const dir = join(process.cwd(), ".trellis");
+	const dir = join(repoPath, ".trellis");
 	mkdirSync(dir, { recursive: true });
 	return { kind: "dir", dir, format: "md" };
 }

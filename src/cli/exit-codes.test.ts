@@ -54,7 +54,8 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 
 	/** Run `trellis audit` with the shared env + extra args. */
 	function auditCli(extra: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
-		return runCli(["audit", dir, "--db", dbPath, "--no-persist", ...extra], {
+		// `--no-output`: these assert exit codes, not artifacts — never write a report file.
+		return runCli(["audit", dir, "--db", dbPath, "--no-persist", "--no-output", ...extra], {
 			TRELLIS_DB: "",
 			...NO_PI,
 		});
