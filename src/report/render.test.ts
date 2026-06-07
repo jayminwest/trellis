@@ -52,6 +52,17 @@ const SYNTHETIC_RUBRIC: Rubric = {
 	],
 };
 
+/** A two-category rubric with a gate criterion, for the detailed report. */
+const GATED_RUBRIC: Rubric = {
+	categories: SYNTHETIC_RUBRIC.categories,
+	criteria: [
+		criterion("readme", "documentation", "repo", "deterministic"),
+		criterion("agents_md", "documentation", "repo", "agent"),
+		{ ...criterion("lint_config", "code_quality", "app", "deterministic"), gate: true },
+		criterion("type_check", "code_quality", "app", "deterministic"),
+	],
+};
+
 /** A synthetic §6.3 report with fixed `scoredAt`/`commit` for byte-stable goldens. */
 const SYNTHETIC_REPORT: Report = {
 	repo: "sample-repo",
@@ -73,13 +84,59 @@ const SYNTHETIC_REPORT: Report = {
 			rationale: "investigation layer not yet wired",
 			naKind: "no-detector",
 		},
-		lint_config: { numerator: 2, denominator: 3, rationale: "2/3 apps pass" },
+		lint_config: { numerator: 2, denominator: 3, rationale: "2/3 apps pass | piped" },
 		type_check: {
 			numerator: null,
 			denominator: 3,
 			rationale: "no tsconfig in any app",
 			naKind: "not-applicable",
 		},
+	},
+};
+
+/** A report carrying drift + changes-since-last-run, to exercise those sections. */
+const RICH_REPORT: Report = {
+	...SYNTHETIC_REPORT,
+	drift: {
+		repo: "sample-repo",
+		canonicalVersion: "1.0.0",
+		files: [
+			{
+				path: "biome.json",
+				matcher: "json-subset",
+				version: "1.0.0",
+				state: "drift",
+				divergences: [{ path: "linter.rules.style", kind: "changed", detail: "values differ" }],
+				allowedBy: [],
+			},
+			{
+				path: "tsconfig.json",
+				matcher: "json-subset",
+				version: "1.0.0",
+				state: "match",
+				divergences: [],
+				allowedBy: [],
+			},
+		],
+		summary: { match: 1, "allowed-delta": 0, drift: 1, missing: 0, extra: 0 },
+	},
+	changesSinceLastRun: {
+		previousScoredAt: "2026-06-05T00:00:00.000Z",
+		previousCommit: "0000000prev",
+		previousRubricVersion: "0.2.0",
+		previousLevel: 1,
+		level: 2,
+		netLevelMove: 1,
+		rubricVersionChanged: false,
+		attribution: "code",
+		transitions: [
+			{
+				criterion: "readme",
+				kind: "fail-to-pass",
+				before: { status: "fail", numerator: 0, denominator: 1, naKind: null },
+				after: { status: "pass", numerator: 1, denominator: 1, naKind: null },
+			},
+		],
 	},
 };
 
@@ -107,11 +164,18 @@ describe("renderJson", () => {
 		);
 		expect(order).toEqual([...order].sort((a, b) => a - b));
 	});
+
+	test("carries the full report including drift and changes-since-last-run", () => {
+		const parsed = JSON.parse(renderJson(RICH_REPORT)) as Report;
+		expect(parsed.criteria).toBeDefined();
+		expect(parsed.drift).toEqual(RICH_REPORT.drift);
+		expect(parsed.changesSinceLastRun).toEqual(RICH_REPORT.changesSinceLastRun);
+	});
 });
 
 describe("renderMarkdown", () => {
 	test("matches the golden scorecard", () => {
-		const actual = renderMarkdown(SYNTHETIC_REPORT, SYNTHETIC_RUBRIC);
+		const actual = renderMarkdown(RICH_REPORT, GATED_RUBRIC);
 		expect(actual).toBe(golden("report.md", actual));
 	});
 
@@ -120,6 +184,58 @@ describe("renderMarkdown", () => {
 		expect(md).toContain("Level 2 / 5");
 		expect(md).toContain("`.`");
 		expect(md).toContain("`src/ui`");
+	});
+
+	test("renders every criterion with verdict, score, and rationale", () => {
+		const md = renderMarkdown(SYNTHETIC_REPORT, SYNTHETIC_RUBRIC);
+		expect(md).toContain("## Criteria");
+		expect(md).toContain("| `readme` | pass | 1/1 |");
+		expect(md).toContain("| `lint_config` | partial | 2/3 |");
+		expect(md).toContain("| `agents_md` | no-detector | n/a |");
+		expect(md).toContain("| `type_check` | not-applicable | n/a |");
+		expect(md).toContain("README.md present");
+	});
+
+	test("escapes pipe characters in rationale cells", () => {
+		const md = renderMarkdown(SYNTHETIC_REPORT, SYNTHETIC_RUBRIC);
+		expect(md).toContain("2/3 apps pass \\| piped");
+	});
+
+	test("surfaces failing criteria before passing ones within a category", () => {
+		const md = renderMarkdown(SYNTHETIC_REPORT, SYNTHETIC_RUBRIC);
+		// code_quality: lint_config (partial) must precede type_check (not-applicable).
+		expect(md.indexOf("`lint_config`")).toBeLessThan(md.indexOf("`type_check`"));
+	});
+
+	test("flags and lists failing gate criteria", () => {
+		const md = renderMarkdown(RICH_REPORT, GATED_RUBRIC);
+		expect(md).toContain("## Gate criteria failing");
+		expect(md).toContain("| `lint_config` | partial (gate) | 2/3 |");
+	});
+
+	test("omits the gate section when no gate fails", () => {
+		const md = renderMarkdown(SYNTHETIC_REPORT, SYNTHETIC_RUBRIC);
+		expect(md).not.toContain("## Gate criteria failing");
+	});
+
+	test("renders canonical-config drift when present", () => {
+		const md = renderMarkdown(RICH_REPORT, GATED_RUBRIC);
+		expect(md).toContain("## Canonical-config drift — `1.0.0`");
+		expect(md).toContain("| `biome.json` | drift | 1.0.0 |");
+		expect(md).toContain("`linter.rules.style` (changed): values differ");
+	});
+
+	test("renders changes-since-last-run when present", () => {
+		const md = renderMarkdown(RICH_REPORT, GATED_RUBRIC);
+		expect(md).toContain("## Changes since last run");
+		expect(md).toContain("Net level move: +1 (attribution: code)");
+		expect(md).toContain("| `readme` | fail-to-pass |");
+	});
+
+	test("omits drift and changes sections when absent", () => {
+		const md = renderMarkdown(SYNTHETIC_REPORT, SYNTHETIC_RUBRIC);
+		expect(md).not.toContain("## Canonical-config drift");
+		expect(md).not.toContain("## Changes since last run");
 	});
 });
 

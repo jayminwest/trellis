@@ -9,8 +9,15 @@
  * {@link Rubric} for membership — the same rubric the audit scored against.
  */
 import type { Rubric } from "../rubric/index.ts";
-import { disposition, perCriterionScore, type ScorecardEntry } from "../scoring/index.ts";
-import type { Report } from "./types.ts";
+import {
+	disposition,
+	gateFails,
+	type NaKind,
+	perCriterionScore,
+	type ScorecardEntry,
+} from "../scoring/index.ts";
+import { criterionStatus } from "./changes.ts";
+import type { CriterionStatus, Report } from "./types.ts";
 
 /** Per-category scoring rollup, in `categories.yaml` order. */
 export interface CategoryRollup {
@@ -92,6 +99,82 @@ export function rollupByCategory(report: Report, rubric: Rubric): CategoryRollup
 			skipped,
 			passRate: acc.counted === 0 ? 0 : acc.passSum / acc.counted,
 		};
+	});
+}
+
+/**
+ * One criterion's fully-projected line for the detailed (file) report — the
+ * §6.2 entry joined to its rubric metadata (category, gate flag) and folded to a
+ * single {@link CriterionStatus} verdict. The markdown FILE renderer lists these
+ * grouped by category; the brief terminal view never uses them.
+ */
+export interface CriterionLine {
+	id: string;
+	category: string;
+	status: CriterionStatus;
+	numerator: number | null;
+	denominator: number;
+	rationale: string;
+	naKind: NaKind | null;
+	/** Whether this criterion is its category's gate (SPEC §3.3). */
+	gate: boolean;
+	/** Whether this gate criterion was measured and did not fully pass. */
+	gateFailed: boolean;
+}
+
+/** A category's criteria lines, ordered with the most actionable verdicts first. */
+export interface CategoryCriteria {
+	id: string;
+	title: string;
+	lines: CriterionLine[];
+}
+
+/** Surface priority within a category — actionable (failing/gap) verdicts first. */
+const STATUS_ORDER: Record<CriterionStatus, number> = {
+	fail: 0,
+	partial: 1,
+	"no-detector": 2,
+	pass: 3,
+	"not-applicable": 4,
+};
+
+/**
+ * Project every measured criterion into a per-category, failing-first list for
+ * the detailed report. Walks the rubric (for category membership + gate flags),
+ * folds each §6.2 entry to a {@link CriterionLine}, then stable-sorts each
+ * category by {@link STATUS_ORDER} so failing criteria surface first while
+ * equal-verdict criteria keep rubric order.
+ */
+export function projectCriteria(report: Report, rubric: Rubric): CategoryCriteria[] {
+	const byCategory = new Map<string, CriterionLine[]>();
+	for (const criterion of rubric.criteria) {
+		const entry = report.criteria[criterion.id];
+		if (entry === undefined) continue;
+		const line: CriterionLine = {
+			id: criterion.id,
+			category: criterion.category,
+			status: criterionStatus(entry),
+			numerator: entry.numerator,
+			denominator: entry.denominator,
+			rationale: entry.rationale,
+			naKind: entry.naKind ?? null,
+			gate: criterion.gate,
+			gateFailed: criterion.gate && gateFails(entry),
+		};
+		const bucket = byCategory.get(criterion.category) ?? [];
+		bucket.push(line);
+		byCategory.set(criterion.category, bucket);
+	}
+
+	return rubric.categories.map((category): CategoryCriteria => {
+		const lines = byCategory.get(category.id) ?? [];
+		const sorted = lines
+			.map((line, index) => ({ line, index }))
+			.sort(
+				(a, b) => STATUS_ORDER[a.line.status] - STATUS_ORDER[b.line.status] || a.index - b.index,
+			)
+			.map((x) => x.line);
+		return { id: category.id, title: category.title, lines: sorted };
 	});
 }
 

@@ -29,7 +29,7 @@
     "lint_config": {
       "numerator": 2,
       "denominator": 3,
-      "rationale": "2/3 apps pass"
+      "rationale": "2/3 apps pass | piped"
     },
     "type_check": {
       "numerator": null,
