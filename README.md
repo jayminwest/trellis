@@ -35,9 +35,9 @@ TypeScript, Swift, Python, and arbitrary external repos. trellis is
 stack-agnostic by design but stack-first in practice: it mirrors the warren /
 burrow Bun + TypeScript-strict + Biome + SQLite stack.
 
-> **Status:** pre-release (`0.0.1`), tracking the [`SPEC.md`](SPEC.md) MVP. The
-> CLI surface and module layout below are the target shape; see the milestones
-> in SPEC §14 for what has landed.
+> **Status:** `0.1.0` — the [`SPEC.md`](SPEC.md) MVP is complete: all SPEC §14
+> milestones have landed, and the CLI surface and module layout below are
+> implemented as shown.
 
 ## Install
 

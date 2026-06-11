@@ -9,6 +9,25 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+## [0.1.0] — 2026-06-10
+
+The MVP-complete release — every SPEC §14 milestone has landed — and the first
+version published to npm as `@os-eco/trellis-cli` via the version-gated
+workflow. No code changes since 0.0.2; this release promotes the finished MVP
+surface:
+
+- Six CLI commands (`audit` / `drift` / `fleet` / `report` / `rubric` /
+  `standards`) over a single surface-agnostic domain core, mirrored by the
+  typed in-process SDK and a CI-usable exit-code contract (`--fail-on`).
+- The versioned 9-category / 90-criterion rubric with deterministic detectors
+  across three language adapters (TypeScript, Swift, Python) plus os-eco-native
+  detectors, app discovery, and §3.4 scoring with the coverage clamp.
+- The bounded Pi RPC investigation layer (4 fixed areas, zod-validated
+  findings, deterministic grader, offline golden-fixture harness).
+- Canonical-config drift against the bundled versioned `standards/` set with
+  per-repo allowed deltas, fleet orchestration from `targets.yaml`, and SQLite
+  run history with changes-since-last-run reporting.
+
 ## [0.0.2] — 2026-06-07
 
 ### Added
