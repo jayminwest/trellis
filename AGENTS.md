@@ -37,6 +37,7 @@ bun run lint                  # biome check --error-on-warnings .
 bun run lint:fix              # biome check --write --error-on-warnings .
 bun run typecheck             # tsc --noEmit
 bun run check:all             # full quality-gate suite (see below)
+bun run verify                # alias for check:all (agent-facing entry point)
 bun run check:coverage        # tests + coverage ratchet
 bun run test:ci               # bun test with junit + coverage reporters
 ```
@@ -79,16 +80,22 @@ audit and an SDK audit are one code path.
 
 ### Quality gates
 
-`bun run check:all` chains every gate CI also enforces:
+`bun run check:all` (alias `bun run verify`) is the canonical quiet runner
+`scripts/check-all.ts` — byte-identical across the os-eco fleet (see the
+os-eco meta-repo's `docs/check-all-standard.md`, the same standard trellis's
+own rubric audits for). Never edit it in place; per-repo variation lives in
+`package.json` script bodies. It runs the nine core gates in canonical order:
 
 - `lint` — `biome check --error-on-warnings .`
 - `typecheck` — `tsc --noEmit` (strict, `noUncheckedIndexedAccess`, no `any`)
-- `check:size` — `scripts/check-file-sizes.ts` (line-count ratchet)
-- `check:debt` — `scripts/check-debt-markers.ts` (tracker-pinned TODOs)
+- `check:agents` — `scripts/validate-agents-md.ts` (this file's references)
 - `check:dups` — `bunx jscpd` (duplicate-code detector)
 - `check:deps` — `knip --dependencies` (unused / undeclared deps)
-- `check:agents` — `scripts/validate-agents-md.ts` (this file's references)
+- `check:size` — `scripts/check-file-sizes.ts` (line-count ratchet)
+- `check:debt` — `scripts/check-debt-markers.ts` (tracker-pinned TODOs)
 - `check:coverage` — `scripts/check-coverage.ts` (per-package floors)
+- `check:ci-parity` — `scripts/check-ci-parity.ts` (CI ⇄ check:all parity;
+  escape hatches in `scripts/ci-parity-config.json`)
 
 The ratchet scripts and their JSON budgets land with the L5 quality toolkit
 (seeds `trellis-4ec4`). Budgets ratchet in one direction only (file-size and
@@ -234,7 +241,11 @@ under test as `<name>.test.ts`. Offline golden-fixture suites (Pi RPC, SPEC
 
 `.github/workflows/ci.yml` runs `bun run check:all` and uploads
 `coverage/lcov.info` and `junit.xml`. Local `check:all` failures will break CI;
-do not push hoping CI will pass.
+do not push hoping CI will pass. The `check:ci-parity` gate enforces this
+mechanically: every `bun run <x>` in `ci*.yml` must be reachable from the
+`check:all` manifest, or carry a justified entry in
+`scripts/ci-parity-config.json` (`test:ci` aliases to `check:coverage`; the
+`report:*` summaries are CI-only).
 
 ### Dogfood
 

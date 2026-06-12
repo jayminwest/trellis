@@ -65,6 +65,12 @@
 					}
 				}
 			}
+		},
+		{
+			"includes": ["scripts/check-all.ts", "scripts/check-ci-parity.ts"],
+			"formatter": {
+				"enabled": false
+			}
 		}
 	]
 }

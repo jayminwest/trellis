@@ -84,13 +84,17 @@ bun test                      # run all tests
 bun test src/scoring/index.test.ts   # single file
 bun run lint                  # biome check --error-on-warnings .
 bun run typecheck             # tsc --noEmit
-bun run check:all             # full quality-gate suite (lint, typecheck, ratchets)
+bun run check:all             # canonical quiet runner: 9 core gates in fleet order
+bun run verify                # alias for check:all
 bun run check:coverage        # tests + coverage ratchet
 ```
 
-The `check:*` ratchet scripts and budgets land with the L5 quality toolkit
-(seeds `trellis-4ec4`). Run `bun run lint && bun run typecheck && bun test &&
-bun run check:all` before every commit.
+`check:all` is `scripts/check-all.ts`, byte-identical to the fleet template
+(os-eco meta-repo `docs/check-all-standard.md`) — never edit it in place. It
+runs lint, typecheck, check:agents, check:dups, check:deps, check:size,
+check:debt, check:coverage, then check:ci-parity (CI ⇄ local parity; escape
+hatches in `scripts/ci-parity-config.json`). Run `bun run check:all` before
+every commit.
 
 ## Session Bootstrap (os-eco tooling)
 
