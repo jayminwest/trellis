@@ -19,13 +19,17 @@ jobs:
 
       # Run the exact aggregate gate the pre-commit hook and `bun run
       # check:all` run locally. Verbatim invocation is the contract: CI must
-      # not drift from the local gate. `check:all` already covers coverage,
-      # lint, typecheck, AGENTS.md, file-size, debt, dups, and deps.
+      # not drift from the local gate. The canonical runner covers lint,
+      # typecheck, AGENTS.md, dups, deps, file-size, debt, coverage, and
+      # CI parity (which checks this very file against the gate manifest;
+      # escape hatches live in scripts/ci-parity-config.json).
       - name: Aggregate quality checks (check:all parity)
         run: bun run check:all
 
       # Re-run the suite with the CI reporters to emit the JUnit + lcov
-      # artifacts the report steps and uploads below consume.
+      # artifacts the report steps and uploads below consume (aliased to
+      # check:coverage in scripts/ci-parity-config.json — same suite,
+      # different reporters).
       - name: Run tests (CI reporters)
         run: bun run test:ci
 

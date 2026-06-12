@@ -1,0 +1,7 @@
+{
+	"$comment": "Per-repo CI-parity escape hatches (docs/check-all-standard.md §6). aliases.test:ci: CI re-runs the same bun test suite as check:coverage but with junit/lcov reporters to produce uploadable artifacts — same gate, different reporter. ciOnly report:* steps: post-run summaries rendered from the test:ci artifacts; they enforce nothing and have no local-gate equivalent.",
+	"aliases": {
+		"test:ci": "check:coverage"
+	},
+	"ciOnly": ["report:test-timing", "report:quality-metrics"]
+}
