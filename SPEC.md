@@ -1,1021 +1,663 @@
-# trellis — agentic-readiness audit & sync
+# trellis — deterministic TypeScript sloppiness audit
 
-> Spec draft. Greenfield os-eco project. Codename **trellis** — the structure
-> that keeps growth aligned. Created 2026-06-06 in conversation with KOTA;
-> expanded from the original brainstorm + the `../notes` material (the
-> 82-criterion `readiness-report-prompt.md`, the 8-principle
-> `ai-readiness-principles.md`, and a de-branded read of the day-job
-> `PRIVATE-rubric` v0.2.0). This document is the design record; it is moving
-> toward "ready to implement."
+> Product contract for the approved breaking pivot (mission `trellis-253e`,
+> plan `pl-b2ea`). This document **replaces** the agent-readiness
+> specification (rubric `0.2.0`, 9 categories / 90 criteria, LLM
+> investigation). The readiness product is retired; its design record lives in
+> git history (last shipped as trellis 0.1.0) and its stored history is
+> preserved under the separation rules in §17.
+>
+> **Status discipline.** This spec describes the *target* product.
+> Implementation is staged across the 23 issues of plan `pl-b2ea`; §17.3
+> records what is built versus merely specified. Nothing in this document
+> claims unbuilt behavior — where the tree and this spec disagree during the
+> transition, the Seeds issue queue is the source of truth for what is done.
 
 ---
 
 ## 1. What trellis is
 
-trellis is a **mostly-deterministic, partly-agentic audit tool** that keeps a
-fleet of repositories in sync on *agent-readiness*: how legible and verifiable
-a repo is to a non-human collaborator. A repo is scored 0–100% across a
-versioned rubric of weighted criteria, mapped to a maturity Level 1–5, and the
-score history is tracked centrally so drift surfaces over time.
+trellis is a **deterministic, offline, read-only audit tool** that measures
+*sloppiness* in TypeScript codebases: structural debt that accumulates when
+code grows faster than its shape — complex functions, eroding hotspots,
+copy-paste duplication, and import cycles — plus a separate, non-scoring
+inspection of the safeguard configuration (hooks and checks) that is supposed
+to keep that debt out.
 
-It does two complementary things:
+A run produces a **sloppiness index: 0–100, lower is better**, a set of
+located findings, an explicit account of what was and was not analyzed, and a
+separate safeguard evidence report. The same core runs locally, across a
+fleet, and in CI, emitting one report artifact everywhere.
 
-1. **Readiness audit (the rubric)** — scores a repo's *intrinsic*
-   agent-readiness against a 9-category, 90-criterion rubric. ~78% of criteria
-   are deterministic file/config/command checks; the rest are decided by a
-   deterministic grader consuming objective facts gathered by a bounded LLM
-   investigation pass.
-2. **Canonical config drift (L1)** — compares a repo's shared tooling files
-   (Biome config, tsconfig base, CI workflow, `AGENTS.md` template, pre-commit
-   hook, `.seeds/` skeleton, …) against trellis's bundled canonical `standards/`
-   set, honoring per-repo allowed deltas.
-
-trellis is **stack-agnostic by design** (tool-agnostic rubric + per-language
-detector adapters) but **stack-first in practice**: the operator runs a Bun /
-TypeScript-strict / Biome / SQLite / React-Vite stack (the "warren stack"),
-plus one Swift project and soon one Python project, and points trellis at
-non-os-eco repos as well.
-
-### The frame (from the notes)
-
-> An AI-ready codebase is one where (a) any change is verifiable in under 60
-> seconds, (b) the repo answers its own onboarding questions, (c) every standard
-> is enforced by a machine, (d) every action is reversible, and (e) the team
-> treats agents as users they're designing for.
-> — `ai-readiness-principles.md`
-
-"Agents are not a hiring problem. They're an environment problem." trellis
-measures the environment.
+trellis executes **no model, no target code, and no project tooling**. It
+parses source with a pinned TypeScript compiler API and inspects configuration
+as data. The first audit of a repository requires neither Git nor credentials,
+a database, network access, or installed project dependencies.
 
 ---
 
-## 2. Goals & non-goals
+## 2. The pivot
 
-### MVP goals
+The readiness product scored repositories 0–100% (higher-is-better) across a
+90-criterion rubric, with ~22% of criteria graded from facts gathered by a
+bounded LLM investigation pass (Pi in RPC mode). That product is retired
+because its headline number mixed unlike signals, its agent pass made runs
+nondeterministic per commit and unusable offline, and most of its value
+collapsed into a small set of structural measurements that need no model at
+all.
 
-- Score a single repo against the full v0.2.0 rubric (90 criteria) and emit a
-  scorecard (terminal + JSON + markdown).
-- Run the deterministic detector layer for **TypeScript, Swift, and Python**
-  apps.
-- Run the bounded **agent investigation** layer for the fuzzy criteria, with a
-  deterministic grader on top (LLM *execution* layer specified in §9: **Pi in
-  RPC mode**).
-- Score a fleet of repos declared in a central `targets.yaml`; persist every
-  run in a central SQLite history; render an aggregate dashboard.
-- Detect **canonical-config drift (L1)** against the bundled `standards/` set,
-  honoring per-repo allowed deltas.
-- Version the rubric (semver by comparability impact) so a level change is
-  attributable to code vs rubric.
+The pivot keeps the parts of the old design that were sound — one core behind
+thin CLI/SDK surfaces, zod at every boundary, versioned scoring, honest
+incompleteness, optional central history, canonical-config drift as a separate
+capability — and replaces the measurement surface entirely:
 
-### Non-goals (deferred)
+| retired | replacement |
+|---|---|
+| 90-criterion readiness rubric, maturity levels 1–5 | versioned metric catalog + provisional sloppiness formula (§6, §8) |
+| LLM investigation (Pi RPC) + deterministic grader | nothing — no-model execution is an invariant (§4) |
+| per-language detector adapters (TS/Swift/Python) | one TypeScript/TSX analyzer; other languages reported as unsupported coverage (§5.4) |
+| os-eco-native scoring overlays | removed; tooling presence grants no structural credit (§7.4) |
+| mandatory SQLite run history | stateless by default; opt-in history (§13) |
+| canonical-config drift (standards) | **kept**, as an independent capability that never feeds the index (§14) |
 
-- **L3 auto-fix via Warren fan-out** — dispatching N parallel Warren runs to
-  remediate drift. Designed-for, not built. See §15.
-- **A new memory / spec-first / cost / workflow-eval category** — the four
-  dimensions both source rubrics omit. Deferred; we instead add **os-eco-native
-  detectors** (§8.4) so warren-stack repos score honestly against existing
-  criteria.
-- **Per-repo committed scorecards** — state is central (SQLite), not committed
-  into each audited repo.
-- **A web UI** — CLI-only for MVP. A warren-style React dashboard is a later
-  surface.
-- **README score badges, kota-sense briefings, auto-filing seeds on drift** —
-  adjacent ideas, not now.
+This is a **breaking change**: report shapes, CLI flags, configuration keys,
+exit-policy dimensions, and stored run types all change. There is no numeric
+bridge between readiness percentages and the sloppiness index (§17.1).
 
 ---
 
-## 3. Core concepts
+## 3. Goals & non-goals
 
-### 3.1 Criteria, scopes, levels
+### 3.1 Release scope
 
-- A **criterion** is one machine-checkable signal of readiness. Each carries a
-  maturity `level` (1–5) — an attribute of the criterion, not a section. A
-  category therefore mixes L1–L5 criteria.
-- **Scope** is per-criterion data, not per-category:
-  - **repo-scope** — scored once for the whole repo; denominator always `1`.
-  - **app-scope** — scored once per declared *app*; denominator `N` = number of
-    discovered apps (else `N = 1`); numerator = count of apps that pass.
-- **Discovery** is tagged per criterion: `discoveryVia: deterministic | agent`.
-  Agent criteria name one of four fixed **investigation areas** (§7).
+1. **Complexity** — per-function cyclomatic complexity, maximum nesting, and
+   source size, with distributions and ranked hotspots (§6.1).
+2. **Structural erosion** — a weighted mass model that concentrates on the
+   functions where complexity and size compound (§6.2).
+3. **Duplication** — deterministic clone detection producing stable clone
+   groups, unique affected-line totals, and density (§6.3).
+4. **Import cycles** — a workspace-aware dependency graph and complete
+   strongly-connected-component cycle groups (§6.4).
+5. **Basic hook/check inspection** — safeguard configuration (Git pre-commit
+   hooks, supported agent hooks, lint/typecheck/test scripts, coverage/size/
+   duplication budgets, CI references to checks) inspected as data, reported
+   separately from the score (§7).
 
-### 3.2 Skippable & `naKind`
+Supporting scope: TypeScript source discovery and classification, a shared
+parse/function inventory, the versioned provisional scoring formula, report
+rendering (terminal/JSON/Markdown), saved-report baseline comparison and
+failure policies, opt-in SQLite history, and fleet aggregation.
 
-- `skippable: true` criteria may be **N/A** when the target surface is genuinely
-  absent. N/A is **not one bucket** — it splits:
-  - `not-applicable` — the surface is honestly absent (no DB, no declared apps).
-    **Excluded** from the coverage base; a narrow repo is not penalized for what
-    it correctly lacks.
-  - `no-detector` — trellis *should* have measured it but couldn't (missing
-    adapter, tool not installed, ambiguous evidence). **Counted** against
-    coverage so it drags the score down.
-- Non-skippable criteria can never be N/A; if evidence is ambiguous, they
-  **FAIL** (determinism mandate: identical repo → identical output).
+### 3.2 Explicitly deferred (non-goals for this release)
 
-### 3.3 Gates & weights (reserved)
-
-- Each category has exactly one **gate** criterion (9 total): the lowest
-  non-skippable "floor," below which every higher signal in that category is
-  untrustworthy. Authored as a `gate: true` field; **reserved, not read by the
-  v0 scorer.**
-- Every criterion carries `weight` (default `1`); **reserved, not read by the v0
-  scorer.** Authoring it now lets weighted pooling land later without a
-  comparability-breaking schema migration.
-
-### 3.4 Scoring
-
-**v0 scorer (equal-weighted):**
-
-```
-perCriterionScore_i = numerator_i / denominator_i        # null (N/A) excluded
-passRate            = mean(perCriterionScore_i over counted criteria)
-passRateLevel       = band(passRate)                      # 20-pt bands
-```
-
-**Coverage-aware leveling (the clamp):**
-
-```
-coverage      = counted / (counted + no-detector + skipped)
-coverageLevel = band(coverage)
-level         = min(passRateLevel, coverageLevel)         # can only move DOWN
-```
-
-A repo whose passing criteria are a thin slice of its measurable ones cannot
-band high; a full-coverage repo is unaffected (clamp is a no-op). The clamp is
-**monotonic — it only ever lowers a level.**
-
-**Bands** (identical to both source rubrics): L1 0–20%, L2 20–40%, L3 40–60%,
-L4 60–80%, L5 80–100%.
-
-### 3.5 Rubric versioning (drift attribution)
-
-The rubric is a **versioned artifact** (`rubric@X.Y.Z`), semver'd by
-*comparability impact*, not code semantics:
-
-- **major** — can move an existing repo's score for unchanged code (criterion
-  removed / re-leveled, gate flipped, threshold or leveling math changed).
-  Breaks historical comparability.
-- **minor** — purely additive (new criterion/category). Old criteria score
-  identically; only app-scope `N` denominators grow.
-- **patch** — wording only, no scoring impact.
-
-Pre-1.0, comparability-affecting changes ride in the **minor** slot. Every
-scorecard records "Level X **against rubric vN**" so a repo dropping a level is
-provably a real regression, never a silently-tightened rubric.
+- **Unused-code analysis** (dead exports, unreachable modules, unused
+  dependencies).
+- **Broader architecture rules** — layering/boundary enforcement, module
+  ownership constraints, anything beyond cycle detection.
+- **Project verification execution** — running builds, tests, linters, or
+  hooks against the target. trellis inspects that checks are *wired*; it never
+  executes them and never infers that they pass.
+- **AI features** — any model use anywhere: no investigation, no
+  LLM-assisted grading, no auto-remediation, no review summaries.
+- **New language adapters** — Swift, Python, and every non-TypeScript
+  language. Unsupported languages are *reported as coverage*, never silently
+  scored (§5.4).
+- Also deferred: web UI, hosted service, scheduling, automatic issue filing,
+  standards-set expansion, per-repo committed scorecards, a Rust rewrite.
 
 ---
 
-## 4. Architecture
+## 4. Invariants
 
-```
-trellis/
-├─ src/
-│  ├─ cli/                 # THIN commander entrypoints; delegate to core (§13.1)
-│  ├─ client/              # typed SDK over the domain core (§13.1); mirrors core types
-│  ├─ rubric/              # the WHAT: loads + validates rubric data, schema
-│  │  ├─ schema.ts         # zod schemas for criterion / category records
-│  │  ├─ categories.yaml   # 9 categories
-│  │  ├─ repo-scope.yaml   # 44 repo-scope criteria
-│  │  ├─ app-scope.yaml    # 46 app-scope criteria
-│  │  └─ version.ts        # RUBRIC_VERSION + comparability policy notes
-│  ├─ discovery/           # app discovery (independently-deployable dirs -> apps)
-│  ├─ detectors/           # the HOW (deterministic): per-criterion checks
-│  │  ├─ registry.ts       # criterion id -> detector binding
-│  │  ├─ common/           # language-agnostic detectors (gitignore, env, CI, ...)
-│  │  ├─ lang/
-│  │  │  ├─ typescript/    # TS adapter (Biome, tsc, knip, jscpd, bun test, ...)
-│  │  │  ├─ swift/         # Swift adapter (SwiftLint, swift build/test, ...)
-│  │  │  └─ python/        # Python adapter (ruff, mypy, pytest, coverage, ...)
-│  │  └─ oseco/            # os-eco-native detectors (seeds/mulch/canopy/plot/...)
-│  ├─ investigation/       # the HOW (agent): 4 areas -> structured facts
-│  │  ├─ areas.ts          # the 4 fixed investigation-area definitions
-│  │  ├─ findings.ts       # zod schemas for facts each area must return
-│  │  ├─ grader.ts         # DETERMINISTIC grader: facts -> pass/fail/N-A
-│  │  └─ provider/         # Pi RPC execution layer (§9): spawn `pi --mode rpc`
-│  │     └─ pi/            #   findings-extension.ts — registers `submit_findings` tool
-│  ├─ scoring/             # pass-rate, coverage clamp, repo/app aggregation
-│  ├─ standards/           # canonical config drift (L1)
-│  │  ├─ canonical/        # the bundled canonical files (semver'd, see §10)
-│  │  ├─ manifest.yaml     # canonical file set + per-file version + hash
-│  │  └─ drift.ts          # compare target repo vs canonical w/ allowed deltas
-│  ├─ fleet/               # targets.yaml loader + multi-repo orchestration
-│  ├─ store/               # bun:sqlite history + drift queries
-│  │  ├─ schema.sql
-│  │  └─ migrations/
-│  └─ report/              # terminal / JSON / markdown renderers
-├─ standards/              # (alias note) canonical lives under src/standards/canonical
-├─ targets.yaml.example
-└─ ...
-```
+These hold for every audit path — local, fleet, CI, CLI, or SDK. A change
+that violates one is a bug regardless of test outcomes.
 
-The **rubric (WHAT)** never names a tool. **Detectors (HOW)** are tool-specific
-and live in per-language adapters. This is the seam that lets the same rubric
-retarget TS, Swift, Python, and arbitrary external repos.
+1. **No-model execution.** No audit path spawns or calls a model. There is no
+   provider, model, or investigation configuration surface; legacy
+   configuration that names one is rejected with an actionable error.
+2. **Offline default.** The first audit of a repository requires neither Git
+   nor credentials, a database, network access, or installed project
+   dependencies. Uncommitted files and non-Git directories are analyzed as
+   they exist; a dirty worktree is measured as-is.
+3. **Determinism.** Same files + same audit configuration + same analyzer and
+   scoring versions ⇒ equal measurement payload. Timestamps and timings are
+   report metadata only — never equality or fingerprint inputs.
+4. **Read-only.** An audit never mutates the target repository and never
+   executes target code: no hooks, no scripts, no executable-config imports,
+   no package installation.
+5. **Honest incompleteness.** Unsupported languages, parse failures, and
+   resource exhaustion surface as coverage and incompleteness — never as a
+   silently clean result, and never as a fabricated pass.
 
 ---
 
-## 5. The rubric catalog (90 criteria, 9 categories)
+## 5. Core concepts
 
-De-branded from the v0.2.0 source. Legend: **R**=repo-scope / **A**=app-scope ·
-**L**=level · **S**=skippable · **det**=deterministic / **agent[area]** ·
-**⛳**=category gate (reserved).
+### 5.1 Source sets and classification
 
-### 5.1 Documentation — 10, all R, all agent
-Areas: `documentation`, `agent-config`.
+Discovery classifies every file in the target tree into exactly one bucket:
+**production**, **test**, **generated**, **vendored**, **declaration-only**,
+**excluded**, or **unsupported** (a language trellis does not analyze).
+Classification defaults are documented and overridable in the audit
+configuration (§9.5). Rules that keep the inventory honest:
 
-| id | scope/level | discovery | note |
-|---|---|---|---|
-| `readme` | R/L1 | agent[documentation] | README at root with setup/usage |
-| `agents_md` | R/L2 | agent[agent-config] | non-trivial agent-instructions file |
-| `build_cmd_doc` | R/L2 | agent[documentation] | build command written down |
-| `automated_doc_generation` | R/L2 | agent[documentation] | tool/workflow that generates docs |
-| `runbooks_documented` | R/L2 | agent[documentation] | runbooks reachable |
-| `single_command_setup` ⛳ | R/L3 | agent[documentation] | one-shot fresh-clone → running dev env |
-| `skills` | R/L3 | agent[agent-config] | ≥1 valid skill (`{skill}/SKILL.md`) |
-| `documentation_freshness` | R/L3 | agent[documentation] | key docs modified recently |
-| `service_flow_documented` | R/L3 | agent[documentation] | arch/flow diagram or dependency docs |
-| `agents_md_validation` | R/L4 | agent[agent-config] | automation keeps agent-instructions honest (presupposes `agents_md`) |
+- Each included file belongs to exactly one scoring source set; nested
+  packages are never double-counted.
+- Package/source-set ownership comes from package manifests and workspace
+  declarations — not from Git.
+- Excluded, generated, vendored, and unsupported scopes are **reported**, not
+  dropped: the report's coverage section shows what fraction of the tree the
+  metrics actually describe.
 
-### 5.2 Code Quality — 12 (2 R + 10 A), all det
+### 5.2 Metrics, findings, and safeguards
 
-| id | scope/level | flags | note |
-|---|---|---|---|
-| `large_file_detection` | R/L3 | det | file-size budget enforced |
-| `tech_debt_tracking` | R/L3 | det | debt markers inventoried/tracked |
-| `lint_config` | A/L1 | det | linter configured with real rules |
-| `type_check` ⛳ | A/L1 | det | type-checker configured and clean |
-| `formatter` | A/L1 | det | autoformatter configured |
-| `strict_typing` | A/L2 | det, S | strict mode, no implicit-any |
-| `naming_consistency` | A/L3 | det | naming conventions enforced |
-| `dead_code_detection` | A/L3 | det | unused-export/unreachable analyzer clean |
-| `duplicate_code_detection` | A/L3 | det | copy-paste detector under threshold |
-| `unused_dependencies_detection` | A/L3 | det | unused declared deps flagged |
-| `code_modularization` | A/L4 | det, S | import-direction analyzer |
-| `cyclomatic_complexity` | A/L5 | det | per-function complexity capped |
+- A **metric** is a versioned numeric measurement with a unit and, where
+  meaningful, a numerator/denominator pair (e.g. duplicated lines / eligible
+  lines). Metrics are raw facts; scoring (§8) is a separate, replaceable
+  interpretation layer.
+- A **finding** is a located observation: relative path, line range, kind,
+  and message. Hotspots, clone groups, and cycle groups are findings as well
+  as metric inputs, so a better aggregate number can never erase them.
+- A **safeguard result** is configuration evidence (§7), reported alongside
+  but **never inside** the sloppiness index.
 
-### 5.3 Testing — 8, all A
-Area: `test-layout`.
+### 5.3 Analysis states
 
-| id | scope/level | discovery | note |
-|---|---|---|---|
-| `unit_tests_exist` | A/L1 | agent[test-layout] | unit-test suite present |
-| `unit_tests_runnable` ⛳ | A/L2 | det | test command runs *real* tests (not a no-op) |
-| `test_coverage_thresholds` | A/L2 | det | coverage threshold configured AND enforced |
-| `integration_tests_exist` | A/L3 | agent[test-layout] | tests across a real boundary |
-| `test_naming_conventions` | A/L3 | agent[test-layout] | consistent discoverable naming |
-| `test_performance_tracking` | A/L4 | agent[test-layout] | slow-test/timing surface |
-| `test_isolation` | A/L4 | agent[test-layout] | parallel-safe, no shared mutable state |
-| `flaky_test_detection` | A/L4 | agent[test-layout], S | retry/quarantine/flaky reporting |
+Every analyzer, and the audit as a whole, resolves to one of:
 
-### 5.4 Environment & Setup — 7, all R
-Area: `setup-runnability`.
+- `complete` — the surface was fully analyzed.
+- `incomplete` — part of the surface could not be analyzed (parse errors,
+  resource exhaustion, unresolved imports); carries located diagnostics.
+- `unsupported` — the surface is a language/form trellis does not analyze.
+- `not-applicable` — the surface is genuinely absent (e.g. no functions in
+  scope); produces documented finite values, not fake zeros presented as
+  health.
 
-| id | scope/level | discovery | note |
-|---|---|---|---|
-| `env_template` | R/L1 | det | committed `.env`-style example |
-| `gitignore_comprehensive` | R/L1 | det | comprehensive `.gitignore` |
-| `deps_pinned` ⛳ | R/L2 | det | pinned versions + committed lockfile |
-| `devcontainer` | R/L2 | det | dev-container config committed (presence) |
-| `secrets_management` | R/L2 | agent[setup-runnability] | secrets via managed mechanism, not committed |
-| `local_services_setup` | R/L2 | agent[setup-runnability], S | scripted one-shot local deps |
-| `devcontainer_runnable` | R/L3 | agent[setup-runnability], S | dev-container would actually build (presupposes `devcontainer`) |
+### 5.4 Coverage: test coverage ≠ analysis completeness
 
-### 5.5 CI, Release & Deployment — 14 (13 R + 1 A), all det
+The report keeps two coverage notions visibly separate:
 
-| id | scope/level | flags | note |
-|---|---|---|---|
-| `vcs_cli_tools` ⛳ | R/L2 | det | authenticated VCS-platform CLI available |
-| `monorepo_tooling` | R/L2 | det, S | workspace/monorepo config |
-| `dependency_update_automation` | R/L2 | det | bot/scheduled update PRs |
-| `release_notes_automation` | R/L3 | det | changelog/release-notes generation |
-| `release_automation` | R/L3 | det | automated release/deploy pipeline |
-| `version_drift_detection` | R/L3 | det, S | version-sync across packages |
-| `dead_feature_flag_detection` | R/L3 | det, S | stale-flag detection |
-| `feature_flag_infrastructure` | R/L4 | det | feature-flag system configured |
-| `fast_ci_feedback` | R/L4 | det, S | CI under ~10 min |
-| `build_performance_tracking` | R/L4 | det, S | build timing/caching/metrics |
-| `deployment_frequency` | R/L4 | det, S | ships multiple times/week on an automated path |
-| `progressive_rollout` | R/L4 | det, S | canary/percentage/ring deploys |
-| `rollback_automation` | R/L4 | det, S | fast documented rollback |
-| `pre_commit_hooks` | A/L2 | det | committed pre-commit hook setup |
+- **Source coverage** — how the tree classified (§5.1): how much production
+  vs test code exists, and how much was excluded, generated, or
+  **unsupported**. Unsupported-language files appear here as unanalyzed
+  surface; they are never counted as clean and never counted as sloppy.
+- **Analysis completeness** — how much of the *analyzable* surface the
+  analyzers actually processed. An incomplete audit publishes its partial
+  findings with the incomplete state attached; it must not present an
+  apparently complete headline score (§8.4).
 
-### 5.6 Observability — 12, all A, all det
+### 5.5 Versions
 
-| id | scope/level | flags | note |
-|---|---|---|---|
-| `structured_logging` ⛳ | A/L2 | det | structured logging library/module |
-| `error_tracking_contextualized` | A/L2 | det | error tracker w/ stack/context |
-| `distributed_tracing` | A/L3 | det | trace/request-id propagation |
-| `metrics_collection` | A/L3 | det | metrics/telemetry pipeline |
-| `alerting_configured` | A/L3 | det | alerting rules notify on-call |
-| `product_analytics_instrumentation` | A/L3 | det | product-analytics SDK |
-| `health_checks` | A/L3 | det, S | liveness/readiness |
-| `deployment_observability` | A/L4 | det | deploy-impact dashboards |
-| `code_quality_metrics` | A/L4 | det, S | coverage/complexity tracked over time |
-| `circuit_breakers` | A/L4 | det, S | resilience for external calls |
-| `profiling_instrumentation` | A/L4 | det, S | APM/continuous profiler |
-| `error_to_insight_pipeline` | A/L5 | det | error tracker ↔ issue tracker |
+Every report records three independent versions:
 
-### 5.7 Security & Data — 12 (5 R + 7 A), all det
+- **schema version** — the report/finding/measurement wire shape (§9).
+- **analyzer version** — the measurement code + its pinned parser dependency.
+- **scoring version** — the provisional formula (§8), semver'd by
+  comparability impact: any change that can move an unchanged repo's index is
+  at least a minor bump and is recorded in the calibration log.
 
-| id | scope/level | flags | note |
-|---|---|---|---|
-| `branch_protection` | R/L2 | det, S | branch-protection/ruleset |
-| `automated_security_review` | R/L2 | det, S | SAST/dependency-audit |
-| `secret_scanning` | R/L3 | det, S | secret-scanning in CI/pre-commit |
-| `min_release_age` | R/L3 | det | dependency release-age delay gate |
-| `privacy_compliance` | R/L4 | det, S | consent/retention/DSR/anonymization |
-| `database_schema` | A/L2 | det, S | schema-definition files |
-| `api_schema_docs` | A/L3 | det, S | OpenAPI/typed/GraphQL schema doc |
-| `pii_handling` | A/L3 | det, S | PII detection/masking |
-| `log_scrubbing` ⛳ | A/L3 | det | log redaction/sanitization |
-| `dast_scanning` | A/L4 | det, S | DAST against running app |
-| `n_plus_one_detection` | A/L4 | det, S | N+1 / slow-query analysis |
-| `heavy_dependency_detection` | A/L4 | det, S | bundle/size analysis |
-
-### 5.8 Process & Collaboration — 7, all R
-
-| id | scope/level | discovery | note |
-|---|---|---|---|
-| `codeowners` ⛳ | R/L2 | det | code-ownership map |
-| `issue_templates` | R/L2 | det | committed issue templates |
-| `issue_labeling_system` | R/L2 | det | deliberate labeling scheme |
-| `pr_templates` | R/L2 | det | committed PR/MR template |
-| `automated_pr_review` | R/L2 | det, S | bot/workflow first-pass review |
-| `agentic_development` | R/L3 | agent[agent-config] | agents actively participate (instruction surface + co-author history) |
-| `backlog_health` | R/L4 | det, S | backlog actively groomed |
-
-### 5.9 Locality & Contracts — 8, all A, all det *(thesis category)*
-"Maximize locality of reasoning, minimize invisible contracts," as enforced
-lints. Stack-specific concepts (default export, `export *`, `any`) are **N/A**
-where a language has no analogue.
-
-| id | scope/level | flags | note |
-|---|---|---|---|
-| `machine_checked_architecture` | A/L4 | det, S | architecture as enforced import/layering constraints |
-| `import_cycle_detection` ⛳ | A/L4 | det | acyclic import graph |
-| `orphan_module_detection` | A/L3 | det | no whole unreachable files |
-| `explicit_any_detection` | A/L3 | det, S | `any`-style escape hatch is a hard error |
-| `strictest_type_checking` | A/L4 | det, S | beyond-baseline strict flags |
-| `greppable_exports` | A/L3 | det, S | named exports only, no default exports |
-| `barrel_file_reexport_detection` | A/L4 | det, S | no `export *` wildcard barrels |
-| `mutation_testing` | A/L5 | det, S | mutation-score threshold |
-
-**The 9 gates:** `single_command_setup`, `type_check`, `unit_tests_runnable`,
-`deps_pinned`, `vcs_cli_tools`, `structured_logging`, `log_scrubbing`,
-`codeowners`, `import_cycle_detection`.
-
-**Counts:** 44 repo-scope + 46 app-scope = 90. Deterministic 70, agent 20.
+Baseline comparison (§12) requires compatible versions and says so explicitly
+when they are not.
 
 ---
 
-## 6. Data shapes
+## 6. Metric catalog (release scope)
 
-### 6.1 Rubric records (authored data)
+The catalog is the versioned WHAT. Each metric lists its unit and source-set
+scope. Production and test source sets are always measured and reported
+**separately**; only production metrics feed the index (§8.3).
 
-```yaml
-# categories.yaml
-- id: documentation            # snake_case
-  title: Documentation         # Title Case
-  description: >- one-paragraph scope statement
+### 6.1 Complexity
 
-# repo-scope.yaml / app-scope.yaml entry
-- id: agents_md
-  category: documentation
-  scope: repo | app
-  level: 1..5
-  skippable: false
-  discoveryVia: deterministic | agent
-  investigation: documentation | agent-config | setup-runnability | test-layout | null
-  gate: false                  # reserved — not read by v0 scorer
-  weight: 1                    # reserved — default 1, not read by v0 scorer
+Per function (declarations, expressions, arrows, methods, constructors,
+accessors), from the shared parse inventory:
+
+- `complexity.cyclomatic` — decision-point count per function. The branch
+  rules are part of the analyzer contract: `if`/`else if`, loops, `case`
+  clauses, `catch`, ternaries, `&&` / `||` / `??`, and optional chaining each
+  count; **nested function bodies are attributed to themselves** and never
+  double-counted in an enclosing function's total; overload signatures add no
+  branches.
+- `complexity.nesting.max` — maximum control-flow nesting depth per function.
+- `size.sloc` — source lines excluding blank and comment-only lines, with a
+  documented rule for multiline literals.
+- Distributions (max, p90, mean) per source set, plus a ranked **hotspot**
+  list: functions by erosion mass with exact relative paths and ranges.
+
+Empty or function-free scopes yield documented finite values or an explicit
+`not-applicable` state — never a divide-by-zero dressed up as zero.
+
+### 6.2 Structural erosion
+
+Erosion weights complexity by size so that long *and* branchy functions
+dominate the index instead of averaging away:
+
+```
+mass(function)  = cyclomatic × sqrt(sloc)
+erosion.mass    = Σ mass over the source set        # sums, never averages of averages
+erosion.share   = mass from functions with CC > 10 / erosion.mass
 ```
 
-Validated by `src/rubric/schema.ts` (zod). Invariants enforced at load:
-`investigation` non-null **iff** `discoveryVia: agent`; exactly one `gate: true`
-per category; `weight > 0`; app-scope/repo-scope file matches each entry's
-`scope`.
+Repository and package aggregation **sum masses**; averaging per-package
+percentages is explicitly wrong because it lets small clean packages dilute a
+concentrated hotspot. Size and nesting remain explanatory signals unless a
+scoring version explicitly includes them.
 
-### 6.2 Scorecard entry (per criterion, per run)
+### 6.3 Duplication
 
-```jsonc
-{
-  "<criterion_id>": {
-    "numerator": 1,            // repo: 1|0 ; app: count of passing apps ; null = N/A
-    "denominator": 1,          // repo: 1 ; app: N
-    "rationale": "<= 500 chars, why it passed/failed/was N/A",
-    "naKind": "not-applicable" // present only when numerator is null
-                               //   | "no-detector"
-  }
-}
-```
+Deterministic, offline clone detection over the shared inventory. The exact
+method — token-based implementation vs an embeddable analyzer, normalization
+semantics, minimum clone size, overlap union, and the production/test
+boundary rule — is fixed by a bounded feasibility decision (plan issue
+`trellis-5a91`) and **recorded in this section** when it lands. The contract
+the decision must satisfy:
 
-### 6.3 Report (per run)
+- `duplication.groups` — stable clone groups with member ranges; ordering and
+  group identifiers do not depend on filesystem enumeration order.
+- `duplication.lines` — the **union** of affected source lines, counted once
+  (overlapping clones never double-count).
+- `duplication.density` — affected lines / eligible lines, with the
+  denominator documented.
+- No clones cross excluded or generated scopes; test-to-production matches
+  follow the recorded boundary rule.
+- Runtime and memory are bounded; exhaustion resolves to `incomplete` with
+  diagnostics — never a silently clean result.
 
-```jsonc
-{
-  "repo": "warren",
-  "rubricVersion": "0.2.0",
-  "scoredAt": "2026-06-06T...Z",
-  "commit": "bab5473b...",
-  "level": 3,
-  "passRate": 0.57,
-  "coverage": 0.81,
-  "apps": { "src/ui": { "description": "warren-ui" }, ".": { "description": "server" } },
-  "criteria": { /* §6.2 entries */ },
-  "drift": { /* §10 canonical-config drift, optional */ },
-  "changesSinceLastRun": [ /* per-criterion deltas vs prior run, §11 */ ]
-}
-```
+### 6.4 Import cycles
 
-### 6.4 SQLite history (central state)
+A dependency graph built from AST imports (comments and string contents
+cannot forge edges) with TypeScript-aware resolution: tsconfig aliases,
+extension mapping, package exports for supported resolution, and local
+workspace packages. Edges are typed **runtime** vs **type-only**; re-exports
+and literal dynamic imports are recorded; external packages are
+distinguishable from unresolved local edges, and unresolved edges are
+reported as graph-coverage incompleteness.
 
-`bun:sqlite`. Minimal schema (migrations under `src/store/migrations/`):
+- `cycles.groups` — **complete** strongly connected components (size ≥ 2,
+  plus self-imports per a documented rule), each with a stable identifier, a
+  representative path, and member modules. First-cycle-only reporting is
+  explicitly insufficient.
+- `cycles.affected-density` — share of modules participating in any cycle.
+- Package and repository views preserve cross-package cycles without
+  double-counting. Whether runtime and type-only cycles score separately is a
+  scoring-version decision, recorded with the formula (§8).
 
-```sql
--- one row per audit run
-CREATE TABLE runs (
-  id            INTEGER PRIMARY KEY,
-  repo          TEXT NOT NULL,          -- matches targets.yaml id
-  commit_sha    TEXT NOT NULL,
-  rubric_version TEXT NOT NULL,
-  level         INTEGER NOT NULL,
-  pass_rate     REAL NOT NULL,
-  coverage      REAL NOT NULL,
-  report_json   TEXT NOT NULL,         -- full §6.3 report
-  scored_at     TEXT NOT NULL
-);
-CREATE INDEX runs_repo_time ON runs (repo, scored_at);
+Cycle detection is the *only* graph policy in release scope — no layering or
+boundary rules (§3.2).
 
--- per-criterion rows for cheap drift/trend queries
-CREATE TABLE criterion_results (
-  run_id      INTEGER NOT NULL REFERENCES runs(id),
-  criterion   TEXT NOT NULL,
-  numerator   INTEGER,                 -- nullable (N/A)
-  denominator INTEGER NOT NULL,
-  na_kind     TEXT,                    -- not-applicable | no-detector | NULL
-  rationale   TEXT NOT NULL
-);
-CREATE INDEX cr_run ON criterion_results (run_id);
+### 6.5 What is deliberately not measured
 
--- cached agent-investigation findings, keyed by content so re-runs are
--- deterministic unless code changed (see §7.3)
-CREATE TABLE investigation_cache (
-  repo        TEXT NOT NULL,
-  commit_sha  TEXT NOT NULL,
-  area        TEXT NOT NULL,           -- one of the 4 investigation areas
-  findings_json TEXT NOT NULL,         -- zod-validated facts (§7.2)
-  created_at  TEXT NOT NULL,
-  PRIMARY KEY (repo, commit_sha, area)
-);
-```
-
-### 6.5 `targets.yaml` (fleet + per-repo overrides)
-
-The single declaration of the fleet. Because state is central, per-repo
-**allowed deltas** for canonical drift live here too (not in the audited repos):
-
-```yaml
-defaults:
-  canonicalVersion: "1.0.0"        # which standards/ version to compare against
-targets:
-  - id: warren
-    path: /Users/jaymin/Projects/os-eco/warren
-    languages: [typescript]         # optional hint; auto-detected if omitted
-    canonical:
-      version: "1.0.0"              # per-repo override of defaults.canonicalVersion
-      allowedDeltas:                # files/keys this repo is allowed to diverge on
-        - file: biome.json
-          reason: "wider line width for generated migrations"
-        - file: .github/workflows/ci.yml
-          paths: ["jobs.test.strategy"]   # structural allow-list within a file
-    skip: [dast_scanning]            # optional: force-N/A specific criteria
-  - id: my-swift-app
-    path: /Users/jaymin/Projects/strays/my-swift-app
-    languages: [swift]
-  - id: external-repo
-    path: ../some-non-oseco-repo
-    osecoDetectors: false            # disable os-eco-native detectors (§8.4)
-```
+Unused code, dependency freshness, test quality, runtime behavior,
+performance, security posture, documentation quality, and anything requiring
+execution or a model. Some were readiness-rubric criteria; they are out of
+scope here, not re-scored elsewhere in the report.
 
 ---
 
-## 7. Investigation layer (agent → facts → deterministic grade)
+## 7. Safeguard inspection (separate from the score)
 
-20 of 90 criteria are decided by judgment that "resists a glob" (what counts as
-a test, does setup actually run, is the architecture documented). The discipline
-that keeps the audit reproducible:
+Safeguards are the mechanisms supposed to keep sloppiness out: Git pre-commit
+hooks, supported agent hooks, lint/typecheck/test scripts, coverage, file-size
+and duplication budgets, and CI references to those checks. trellis inspects
+them **as configuration** and reports the evidence **separately** from the
+sloppiness index.
 
-> The investigation step returns **objective findings**; a **deterministic
-> grader** decides pass/fail from those facts.
+### 7.1 Evidence levels
 
-### 7.1 The four fixed investigation areas
+Each safeguard resolves to one of four levels:
 
-1. `documentation` — prose/docs layout, freshness, build-command presence,
-   runbooks, architecture/flow docs.
-2. `agent-config` — the agent-instruction surface (`AGENTS.md`/`CLAUDE.md`),
-   skills (`*/SKILL.md`), agents-md validation automation, agent co-authorship.
-3. `setup-runnability` — secrets handling, scripted local services, whether the
-   devcontainer would actually build/start.
-4. `test-layout` — where tests live, integration vs unit, naming, isolation,
-   timing/flaky surfaces.
+- `absent` — no configuration found.
+- `configured` — configuration exists (a hook file, a script, a budget).
+- `wired` — the configuration is structurally connected: the hook invokes the
+  script, CI invokes the check, the budget is referenced by the command that
+  enforces it.
+- `unknown` — the construct is outside the small documented set of supported
+  formats (unsupported shell constructs, executable configuration). Explicitly
+  unverified, never guessed.
 
-Each area runs **once per repo** (its findings feed every criterion bound to
-it), keeping LLM calls bounded and cacheable.
+### 7.2 Rules
 
-### 7.2 Findings contract (`src/investigation/findings.ts`)
+- **Execution is never inferred.** A `wired` check is evidence of wiring, not
+  of passing. trellis never runs hooks or scripts to find out.
+- Broken local references (a hook pointing at a missing script, CI invoking an
+  absent command) produce **located findings**.
+- Custom-named scripts are recognized through supported wiring, not by
+  tool-name presence alone.
+- Inspection covers a small, documented set of formats; everything else is
+  `unknown`, not `absent`.
 
-Each area returns a **zod-validated** facts object — *facts, never verdicts*.
-Example shape (illustrative, finalized at implementation):
+### 7.3 No offset
 
-```ts
-// agent-config area
-const AgentConfigFindings = z.object({
-  agentInstructionFiles: z.array(z.object({
-    path: z.string(),
-    hasScripts: z.boolean(),
-    hasBuildTestCmds: z.boolean(),
-    hasConventions: z.boolean(),
-    hasWorkflow: z.boolean(),
-  })),
-  skills: z.array(z.object({ dir: z.string(), hasName: z.boolean(),
-    hasDescription: z.boolean(), promptNonEmpty: z.boolean() })),
-  validationAutomation: z.array(z.enum(
-    ["ci-runs-commands","generator","pre-commit","doc-cmd-test","link-checker"])),
-  agentCoAuthorshipCommits: z.number().int(),
-});
-```
+Safeguard evidence **cannot offset the index**. A repo with perfect hooks and
+terrible code has a terrible index and a good safeguard report. Infrastructure
+is context for the number, never an input to it (§8.3).
 
-The grader (`src/investigation/grader.ts`) is pure and deterministic: e.g.
-`agents_md` passes iff some `agentInstructionFiles[i]` has all four booleans
-true; `skills` passes iff ≥1 skill has name+description+non-empty prompt; etc.
-**Same facts → same grade.**
+### 7.4 No tooling-presence credit
 
-### 7.3 Reproducibility & caching
-
-Findings are cached in `investigation_cache` keyed by `(repo, commit_sha,
-area)`. A re-run at the same commit reuses cached facts → byte-identical grade.
-`--no-cache` forces re-investigation. (This makes the LLM nondeterminism a
-one-time cost per commit, not a per-run coin flip.)
-
-### 7.4 LLM execution — **Pi in RPC mode, see §9**
-
-Findings are produced by a bounded **Pi** run per area (`pi --mode rpc`,
-read-only tools, a `submit_findings` tool call carrying the facts) — fully
-specified in §9. Everything downstream (grader, scoring, caching) depends only
-on the **contract**: "given a repo checkout and an investigation area, return
-facts that validate against that area's zod schema," so it stays
-provider-agnostic and is exercised against golden fixtures with no live calls.
+The presence of agent-instruction files (`AGENTS.md`, `CLAUDE.md`) or os-eco
+tooling (seeds, mulch, canopy, plot) grants **no structural score credit and
+no safeguard level**. The retired os-eco scoring overlays are not carried
+over.
 
 ---
 
-## 8. Detector layer (deterministic) & language adapters
+## 8. Scoring — the provisional sloppiness index
 
-### 8.1 Detector contract
+### 8.1 The number
 
-```ts
-interface DetectionContext {
-  repoPath: string;
-  app: { path: string; languages: Language[] };  // app-scope; repo-scope app = "."
-  run: (argv: string[], opts?: { cwd?: string }) => Promise<ExecResult>;
-  readFile: (rel: string) => Promise<string | null>;
-  glob: (pattern: string) => Promise<string[]>;
-}
-interface DetectorResult {
-  numerator: number | null;   // pass=1 / fail=0 ; null = N/A
-  denominator: 1;             // per-app unit; aggregator rolls up to N
-  naKind?: "not-applicable" | "no-detector";
-  rationale: string;          // <= 500 chars
-}
-type Detector = (ctx: DetectionContext) => Promise<DetectorResult>;
-```
+The headline is a **sloppiness index from 0 to 100, lower is better**. It is
+a weighted, normalized composite of the §6 production metrics — **not a
+percentage of bad code**. An index of 40 does not mean 40% of the code is
+bad; it means the weighted contributions sum to 40 on this formula's scale.
+Every rendered score carries its direction ("lower is better") and the scoring
+version, and no output may present the index as a percentage of anything.
 
-`src/detectors/registry.ts` binds each criterion id to a detector. Language
-adapters provide the language-specific implementations; `common/` holds
-language-agnostic ones (gitignore, env template, CI workflow presence,
-CODEOWNERS, branch protection via VCS CLI, …).
+### 8.2 Provisional and versioned
 
-### 8.2 App discovery (`src/discovery/`)
+The initial formula is **provisional** pending calibration against a fixed
+corpus (plan issue `trellis-e924`). It is pure over the raw metrics, fully
+explicit — normalization thresholds, weights, and grouping are data in the
+versioned scoring module, not lore — and recalibration bumps the scoring
+version and its test expectations together. Default weights are identical
+across repositories; policy budgets (§12.2) never mutate scoring weights.
 
-Before app-scope scoring: find **independently-deployable directories** as apps
-(package manifests, build files, service dirs). If **0 found**, the repo root is
-**1 app**. `monorepo_tooling` / `version_drift_detection` are skippable and
-no-op for single-app repos. The app map is recorded in the report (§6.3).
+### 8.3 Composition rules
 
-### 8.3 Language adapters (all three in MVP)
+- **Grouped signals.** Overlapping complexity/erosion/size signals are grouped
+  so one defect is not accidentally penalized multiple times.
+- **Production only.** Test-code metrics and safeguard results never offset
+  production debt; they are reported in their own sections.
+- **Counts and densities both retained.** Large clean additions can dilute a
+  density but cannot erase hotspot findings or absolute masses — the report
+  keeps both views so growth cannot launder debt.
+- **Traceability.** Every score contribution decomposes to raw metrics and
+  findings; the report renders that decomposition (§11).
 
-The rubric is the tool-agnostic WHAT; adapters supply tools. A criterion with no
-analogue in a language resolves to `not-applicable`. Representative bindings
-(finalized at implementation):
+### 8.4 Missing dimensions
 
-| criterion | TypeScript | Swift | Python |
-|---|---|---|---|
-| `lint_config` | Biome | SwiftLint | ruff |
-| `type_check` / `strict_typing` | tsc / `strict` | `swift build` (warnings-as-errors) | mypy / `--strict` |
-| `formatter` | Biome | swift-format | ruff format / black |
-| `unit_tests_runnable` | `bun test` | `swift test` | pytest |
-| `test_coverage_thresholds` | coverage ratchet | `swift test --enable-code-coverage` | coverage.py |
-| `dead_code_detection` | knip | periphery | vulture |
-| `duplicate_code_detection` | jscpd | jscpd | jscpd / pylint dup |
-| `unused_dependencies_detection` | knip | — (N/A) | deptry |
-| `cyclomatic_complexity` | Biome complexity | SwiftLint complexity | radon / ruff |
-| `greppable_exports` / `barrel_file_reexport_detection` / `explicit_any_detection` | TS-specific | N/A | N/A |
-| `import_cycle_detection` | madge / knip | — | grimp / pydeps |
-| `mutation_testing` | StrykerJS | muter | mutmut |
-
-(Exact tool choices are an adapter implementation detail; the table records
-intent, not a hard contract. Detectors must degrade to `no-detector` if a tool
-is configured-for-but-unavailable, and `not-applicable` if the concept doesn't
-exist for the language.)
-
-### 8.4 os-eco-native detectors (`src/detectors/oseco/`)
-
-So warren-stack repos score honestly, trellis recognizes os-eco conventions as
-evidence for **existing** criteria (no new category). Active by default; per
-target, `osecoDetectors: false` disables them. Mappings:
-
-- `AGENTS.md` + `CLAUDE.md` → `agents_md` (rich agent instructions).
-- `*/SKILL.md` (Factory/Droid skills) → `skills`.
-- `.seeds/` present + labeling config → `issue_templates`,
-  `issue_labeling_system`, `backlog_health` (via `sd` data).
-- `check:all` script + CI invoking it (full-gate parity) → strong evidence for
-  `unit_tests_runnable`, `pre_commit_hooks`, `fast_ci_feedback` inputs.
-- Ratchet scripts (file-size / debt-marker / coverage / complexity / bundle /
-  jscpd / knip) → `large_file_detection`, `tech_debt_tracking`,
-  `code_quality_metrics`, `dead_code_detection`, `duplicate_code_detection`,
-  `unused_dependencies_detection`, `heavy_dependency_detection`.
-- `gen:openapi` / `docs/openapi.yaml` → `api_schema_docs`;
-  `gen:docs` → `automated_doc_generation`.
-- `canopy` (versioned prompt libraries) → `automated_doc_generation` /
-  agent-config signal.
-- `mulch` (`.mulch/`) → `documentation_freshness` / `agentic_development`
-  evidence (cross-session expertise capture).
-- `plot` (`.plot/`) → `agentic_development` / process coordination evidence.
-- Agent co-authorship in git history (`factory-droid[bot]`, etc.) →
-  `agentic_development`.
-
-> Note: os-eco's memory (mulch), spec-first (SPEC.md), and prompt-library
-> (canopy) strengths exceed what the current 90 criteria grade. We surface them
-> as evidence today; a dedicated category for memory / spec-first / cost / evals
-> is a deliberate post-MVP extension (§15).
+If a required dimension is `incomplete`, the audit publishes its partial
+results **without an apparently complete headline score**: the headline is
+marked incomplete, the available contributions are shown, and the coverage
+section explains what is missing. A clean-looking number over a
+half-analyzed tree is the failure mode this rule exists to prevent.
 
 ---
 
-## 9. LLM provider infra — **Pi in RPC mode**
+## 9. Data contracts
 
-The investigation layer's execution is a **bounded Pi run per `(repo, area)`**.
-trellis mirrors the way warren and burrow drive Pi — spawn the `pi` CLI in RPC
-mode and speak its newline-delimited-JSON protocol — but specializes it for a
-one-shot, **read-only**, structured-fact extraction rather than an interactive
-agent loop. The rest of trellis depends only on the contract from §7.4: *given a
-repo checkout + an investigation area, return facts that validate against that
-area's zod schema.* This section makes that contract concrete.
+Boundary schemas (zod) are versioned artifacts; the full contract lands with
+plan issue `trellis-58a6`. The load-bearing shapes:
 
-### 9.0 Where it sits (the api>cli>sdk core discipline)
+- **Measurement** — metric id, value, unit, optional numerator/denominator,
+  source-set scope, analyzer version. Non-finite numbers and invalid ranges
+  are rejected at the boundary.
+- **Finding** — kind, relative path, line range, message. Paths are always
+  repo-relative so reports are portable across checkouts.
+- **Safeguard result** — safeguard id, evidence level (§7.1), evidence
+  locations, findings.
+- **Coverage** — per-classification file/line totals (§5.1) and per-analyzer
+  completeness (§5.3), kept separate (§5.4).
+- **Report** — schema/analyzer/scoring versions (§5.5), metrics, findings,
+  safeguards, coverage, score contributions, and metadata. **The
+  deterministic measurement payload excludes timestamps and timings**; those
+  live in metadata and never participate in equality or fingerprinting.
+- **Audit configuration** — declarative only: source exclusions and
+  classification overrides, analysis policy (budgets, tolerances), output and
+  persistence choices. **No executable hooks**: configuration is data, never
+  code trellis runs.
 
-Per §13.1, the provider is a **domain-core module** (`src/investigation/provider/`).
-Nothing above core spawns Pi: both the CLI (`trellis audit`) and the typed SDK
-reach investigation through the single core entrypoint
-
-```ts
-investigate(repoPath: string, area: InvestigationArea, opts?: InvestigateOpts)
-  : Promise<Findings>   // facts only; zod-validated against the area schema
-```
-
-There is exactly one implementation of the Pi transport, so the CLI and SDK can
-never disagree about how facts are produced. trellis has **no HTTP server** in
-MVP — "api" here is the programmatic core surface (§13.1), not a network API.
-
-### 9.1 Transport — `pi --mode rpc`
-
-Mirror burrow's `buildPiArgv`. For each area, trellis spawns (cwd = the target
-repo checkout, so read tools operate on the live files):
-
-```
-pi --mode rpc \
-   --no-session \
-   --no-extensions -e <trellis>/src/investigation/provider/pi/findings-extension.ts \
-   --offline \
-   --no-context-files \
-   --provider <provider> --model <model> \
-   --tools <read-only builtins>,submit_findings \
-   --system-prompt <per-area investigation prompt>
-```
-
-Flag rationale (the load-bearing ones, mirroring burrow's documented findings):
-
-- `--mode rpc` — the JSONL command/event protocol (identical to warren/burrow):
-  one JSON command per `\n` on stdin, one JSON event per `\n` on stdout.
-- `--no-session` — investigation is one-shot and ephemeral; trellis owns
-  reproducibility through its own findings cache (§9.5), so Pi sessions/resume
-  are unused.
-- `--no-extensions -e <findings-extension>` — disable auto-discovery of the
-  host's Pi extensions (hermetic; no surprise tools, no interactive
-  `extension_ui_request` that would hang an unattended run) **while explicitly
-  loading trellis's own extension** that registers the `submit_findings` tool.
-  (Pi: explicit `-e` paths still load under `--no-extensions`.)
-- `--offline` — skip startup network ops (telemetry/update polling); without it
-  Pi stalls for minutes before reading stdin (burrow-029d). Deterministic start.
-- `--no-context-files` — do **not** auto-load the target repo's
-  `AGENTS.md`/`CLAUDE.md` into Pi's own system prompt: those files are *evidence
-  trellis grades*, never instructions trellis obeys. trellis owns the prompt.
-- `--tools <read-only builtins>,submit_findings` — an **allowlist**: Pi's
-  read/search/list builtins plus the submission tool, and nothing that mutates
-  (no bash/edit/write). This is the read-only mandate — an audit can never alter
-  the repo it scores. Exact builtin tool names are pinned against the supported
-  Pi version at implementation.
-- `--provider/--model` — always pinned explicitly (Pi's own CLI default provider
-  is `google`); values are fully configurable (§9.4).
-
-### 9.2 The findings tool (`submit_findings`)
-
-Pi has **no JSON-schema-constrained generation**, so structured facts are
-obtained via a **tool call**, not by parsing free text. trellis ships a tiny Pi
-extension (`findings-extension.ts`) that registers one tool:
-
-- `submit_findings(findings)` — the `findings` parameter's JSON-schema is
-  derived from the area's zod findings schema (§7.2) via `zod-to-json-schema`,
-  so Pi is shown exactly the fact shape it must return. The tool handler merely
-  acknowledges receipt; the **authoritative capture** is trellis reading the
-  tool-call arguments off the RPC event stream.
-
-The per-area system prompt instructs Pi to investigate the area with read-only
-tools and then call `submit_findings` exactly once with the gathered facts —
-**facts, never verdicts** (the pass/fail decision is the deterministic grader's,
-§7.2).
-
-### 9.3 Request / response flow
-
-1. trellis writes one stdin line — `{"type":"prompt","message":"<area task>"}\n`
-   — and **holds stdin open** (Pi exits the instant stdin closes, even
-   mid-inference; burrow's load-bearing invariant).
-2. trellis reads stdout JSONL events, watching assistant `message_end` content
-   blocks for a `toolCall` whose `name === "submit_findings"`; its `arguments`
-   is the candidate facts object.
-3. On capture, trellis **zod-validates** the arguments against the area schema.
-   Valid → those are the `Findings`; trellis closes stdin (Pi exits) and caches
-   them (§9.5).
-4. trellis otherwise stops at the terminal `agent_end` envelope.
-5. **No tool call / validation failure:** trellis writes one corrective `prompt`
-   echoing the zod errors and awaits a second `submit_findings`, bounded to `N`
-   retries (default 2). Exhausting retries (or a timeout/error/`stopReason:error`)
-   resolves that area to **`no-detector`** — counted against coverage (§3.2)
-   with the failure rationale, **never a fabricated pass**.
-
-Each area run is bounded by a heartbeat watchdog (mirroring warren's pattern);
-a stalled or timed-out run is force-terminated by closing stdin and resolves to
-`no-detector`.
-
-### 9.4 Provider / model / env (configurable)
-
-Mirror burrow's env conventions exactly, but keep provider/model fully
-configurable (no hardcoded model in logic):
-
-- **Selection precedence:** `--provider` / `--model` CLI flags > `targets.yaml`
-  (`defaults.investigation.{provider,model}`, with per-target override) > one
-  documented built-in default constant. Provider names are lowercased before
-  lookup (case-insensitive, like burrow/warren).
-- **Env passthrough (never argv):** API keys reach the Pi subprocess only via
-  its environment. Base keys forwarded always:
-  `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`. A
-  provider-conditional `PI_PROVIDER_ENV_KEYS` map adds extras when a non-default
-  provider is selected:
-
-  ```ts
-  const PI_PROVIDER_ENV_KEYS = {
-    openai:   ["OPENAI_API_KEY", "OPENAI_BASE_URL"],
-    google:   ["GEMINI_API_KEY"],   // pi reaches Gemini via provider "google"
-    groq:     ["GROQ_API_KEY"],
-    mistral:  ["MISTRAL_API_KEY"],
-    deepseek: ["DEEPSEEK_API_KEY"],
-  } as const;
-  ```
-
-  No key is ever passed on argv (no `--api-key`); argv carries only
-  `--provider` / `--model`.
-
-### 9.5 Reproducibility & caching
-
-Pi is nondeterministic; trellis freezes it per commit. Captured + zod-validated
-findings are written to `investigation_cache` keyed by `(repo, commit_sha,
-area)` (§7.3). A re-run at the same commit reuses cached facts → byte-identical
-grade. `--no-cache` forces re-investigation. The LLM nondeterminism is thus a
-one-time cost per commit, not a per-run coin flip.
-
-### 9.6 Pi version & discovery
-
-`pi` is discovered as a bare binary on `PATH` (operator-installed;
-`@earendil-works/pi-coding-agent`). The RPC wire shape and the `toolCall`
-envelope are version-sensitive (burrow pins v0.74.0), so trellis documents a
-supported Pi version and probes it at startup via `pi --version` (mirroring
-burrow's `installCheck`). A missing or incompatible Pi degrades **every** agent
-criterion to `no-detector` with a clear hint — it never crashes the audit.
-
-### 9.7 Testing — golden fixtures
-
-Mirror burrow's golden methodology. For each area, capture one real
-`pi --mode rpc` session (the full JSONL event stream, including the
-`submit_findings` `toolCall`) into `src/investigation/__golden__/`, canonicalize
-volatile fields (timestamps, `responseId`, session/tool-call ids, usage), and
-freeze it. Unit tests then run the RPC parser → zod validation → the
-deterministic grader against the frozen fixtures **entirely offline**: the
-grader, scoring, drift, and CLI are fully buildable and testable with no live
-provider. Live capture/regeneration is gated behind an env flag
-(`TRELLIS_UPDATE_PI_GOLDEN=1`) plus an explicit live-call flag; **CI never makes
-model calls.**
+Analysis states (§5.3) are part of every schema that can be partial; a
+`complete` claim over partial data is a schema violation, not a rendering
+choice.
 
 ---
 
-## 10. Canonical config drift (L1)
+## 10. Audit pipeline & architecture
 
-trellis bundles a canonical set of shared tooling files under
-`src/standards/canonical/`, described by `src/standards/manifest.yaml`:
+One core pipeline, surface-agnostic, with persistence and policy evaluation
+**outside** the measurement pass:
 
-```yaml
-version: "1.0.0"                 # semver of the canonical set as a whole
-files:
-  - path: biome.json
-    version: "1.0.0"
-    hash: "sha256:..."
-    matcher: json-subset         # exact | json-subset | text | template
-  - path: tsconfig.base.json
-    version: "1.0.0"
-    hash: "sha256:..."
-    matcher: json-subset
-  - path: .github/workflows/ci.yml
-    version: "1.0.0"
-    matcher: text
-  - path: AGENTS.md
-    version: "1.0.0"
-    matcher: template            # template/section-aware, not byte-exact
-  - path: scripts/hooks/pre-commit
-    version: "1.0.0"
-    matcher: text
-  - path: .seeds/config.yaml
-    version: "1.0.0"
-    matcher: yaml-subset
+```
+discover ──► parse ──► measure ──► inspect ──► score ──► report
+(files →     (one shared   (§6 metrics   (§7        (§8 pure   (§9 artifact;
+ classified   parse per     + findings    safeguard  formula)   rendering is
+ inventory)   file, reused  per source    evidence)             a separate
+              across all                          ↑             concern)
+              analyzers)                          │
+                       policy evaluation & history writes happen
+                       after, over the finished artifact
 ```
 
-`src/standards/drift.ts` compares each target file against canonical:
-
-- The target declares which canonical `version` it tracks (per-repo override in
-  `targets.yaml`, default `defaults.canonicalVersion`).
-- **Allowed deltas** (`targets.yaml` → `canonical.allowedDeltas`) whitelist
-  specific files or structural paths within a file; whitelisted divergences are
-  reported as `allowed`, not `drift`.
-- Output per file: `match | allowed-delta | drift | missing | extra`, folded
-  into the report under `report.drift` and surfaced in the dashboard.
-
-Canonical files are **semver'd** so a repo can declare "on canonical v1.0.0" and
-roll forward deliberately. `standards/` lives **inside trellis** (single source
-of truth, versioned with the tool).
+- **Discovery** — TS/TSX inventory, package ownership via manifests and
+  workspace declarations, classification (§5.1). No package installation, no
+  repository script execution, no network lookup.
+- **Parse** — a pinned `typescript` compiler-API dependency produces one
+  syntax/function inventory per file, reused by every analyzer in the run.
+  Parse errors become located `incomplete` diagnostics.
+- **Measure / inspect / score** — §6, §7, §8 respectively.
+- **Module discipline (api>cli>sdk, unchanged).** All behavior lives in the
+  core modules under `src/`; `src/cli/` is a thin commander pass-through and
+  `src/client/` a typed SDK whose types mirror the core. CLI and SDK audits
+  exercise one code path, proven by deep-equal tests. There is no HTTP
+  server.
 
 ---
 
-## 11. Re-runs, drift & "changes since last run"
+## 11. Reports & rendering
 
-- Each `audit` writes a `runs` row + `criterion_results` rows.
-- A re-run compares against the most recent prior run **for the same repo**:
-  - Recompute every criterion; only emit deltas where the *code* changed
-    (cached findings make agent criteria stable across runs at one commit).
-  - `report.changesSinceLastRun` lists per-criterion transitions
-    (pass→fail, N/A-kind changes, app-count changes) and the net level move.
-- Because every run records `rubric_version`, a level change is attributable: if
-  `rubric_version` differs, a level move may be a rubric change, flagged
-  explicitly; if it's identical, the move is a real code regression/improvement.
+One report artifact (§9), three renderings:
 
----
+- **Terminal** — bounded and concise: headline index with direction and
+  scoring version, completeness, top hotspots, cycle summary, safeguard
+  levels, coverage.
+- **JSON** — the full structured artifact: every metric, finding,
+  contribution, and diagnostic. This is the baseline-comparison input (§12).
+- **Markdown** — a useful bounded summary for pasting into issues/PRs.
 
-## 12. CLI surface (CLI-only MVP)
-
-`commander`-based. Human-readable terminal output by default; `--json` / `--md`
-for machine/report output.
-
-```
-trellis audit <repo-path>            # score one repo; print scorecard
-  [--json|--md] [--no-cache] [--rubric-version <v>] [--canonical <v>]
-trellis drift <repo-path>            # L1 canonical-config drift only
-trellis fleet                        # audit every target in targets.yaml
-  [--targets targets.yaml] [--json|--md]
-trellis report [--repo <id>]         # render history/dashboard from SQLite
-  [--since <date>] [--json|--md]
-trellis rubric                       # print the loaded rubric + version
-  [--validate]                       # validate rubric data invariants (§6.1)
-trellis standards                    # show canonical manifest + versions
-```
-
-Exit codes: `0` clean; non-zero when a gate criterion fails or drift is detected
-(tunable via `--fail-on level|gate|drift|none`) so trellis is CI-usable per
-repo.
+Rendering rules: hotspots point to usable relative paths and line locations;
+every score shows its direction and scoring version; no readiness levels,
+maturity bands, legacy category labels, or agent-progress output appear; and
+no rendering may frame the index as a percentage of bad code (§8.1).
 
 ---
 
-## 13. Tech stack & conventions
+## 12. Baseline comparison & failure policies
 
-Mirrors the warren/burrow stack so the operator's muscle memory transfers:
+### 12.1 Comparing reports
+
+Any two saved JSON reports can be compared — **no Git, no SQLite required**.
+Comparison requires compatible schema/analyzer/scoring versions and
+compatible source-scope semantics (same exclusions/classification); an
+incompatible comparison is reported explicitly rather than silently computed.
+Findings match conservatively across line shifts (a moved hotspot is the same
+hotspot); metric deltas support documented absolute and relative tolerances.
+The output classifies findings as new / resolved / persistent and metrics as
+improved / regressed / unchanged.
+
+### 12.2 Policies
+
+Failure policies are independent, declarative checks over a report (or a
+comparison): **metric budgets** (e.g. duplication density ≤ N), **score
+regression** (index may not rise more than T vs baseline), and **new
+findings** (no new cycle groups, no new hotspots above a mass threshold).
+Policies return structured reasons. A better aggregate score can never
+suppress an independently configured cycle or hotspot policy failure —
+policies evaluate findings, not just the index.
+
+### 12.3 Exit codes
+
+Unchanged convention: `0` clean, `1` operational error (the audit could not
+run), `2` policy failure (the report is still emitted; reasons go to stderr).
+CI can therefore distinguish "trellis broke" from "the code broke the budget".
+
+---
+
+## 13. History (optional)
+
+Audits are **stateless by default**: an audit with no persistence requested
+creates no database and no hidden report files. Opt-in history uses
+`bun:sqlite`:
+
+- An append-only migration adds new-version run records **without touching
+  legacy readiness runs** (§17.2).
+- Legacy and new runs are visibly distinct record types and **never form a
+  mixed score trend** — no query, view, or dashboard may chart readiness
+  percentages and sloppiness indices on one axis.
+- Trend queries select only version-compatible runs.
+- Repository identity is robust to accidents: two unrelated directories with
+  the same basename must not collide into one history.
+- The retired investigation cache leaves no live coupling; new audits never
+  require persistence to function.
+
+---
+
+## 14. Fleet & standards (optional consumers)
+
+- **Fleet** — a targets file declares repositories; the fleet runner executes
+  the same core audit per target and aggregates per-repository reports and
+  policy results. Fleet results match independent core audits exactly; a
+  failed target does not sink the run. Legacy targets configuration keys
+  (readiness skips, investigation defaults, maturity thresholds) fail
+  validation with actionable migration messages.
+- **Standards / canonical-config drift** — the bundled canonical file set and
+  drift comparison are **retained as an independent capability**. Drift
+  results never contribute to the sloppiness index and never appear as score
+  contributions; they render in their own section, exactly as safeguard
+  evidence does. The standards set is not expanded in this release.
+
+---
+
+## 15. CLI & SDK surface
+
+Target surface (transitional state in §17.3):
+
+```
+trellis audit <path> [--json|--md] [--out <file>] [--config <file>]
+                     [--baseline <report.json>] [--fail-on ...] [--history <db>]
+trellis compare <report-a.json> <report-b.json>   # artifact comparison, §12
+trellis report [--repo <id>] [--history <db>]     # opt-in history views, §13
+trellis fleet [--targets <file>]                  # §14
+trellis standards                                 # canonical manifest + versions
+trellis drift <path>                              # canonical drift only, §14
+```
+
+- Terminal output by default; `--json` / `--md` switch shape; `--out` writes
+  the artifact. Exit codes per §12.3.
+- Retired flags (`--rubric-version`, `--min-level`, provider/model and
+  investigation-cache controls, readiness `--fail-on` dimensions) fail fast
+  with an actionable message naming the replacement.
+- The SDK (`src/client/`) exposes the same operations over the same core;
+  request/response types mirror core types, and deep-equal tests prove one
+  code path.
+
+---
+
+## 16. Local / fleet / CI parity
+
+One core, one artifact, three contexts — identical results everywhere:
+
+- **Local** — `trellis audit .` during refactoring; stateless unless history
+  is requested.
+- **Fleet** — the same audits orchestrated over a targets file (§14).
+- **CI** — the same CLI in a workflow: pin the trellis version (which pins
+  analyzer and scoring versions), archive the JSON report as a build
+  artifact, and gate on exit codes — `2` is a policy failure to act on, `1`
+  is an operational problem with the job itself. Scheduled and pre-release
+  runs use the same commands; there is no hosted service and no CI-only code
+  path.
+
+Parity is enforced the way the old product enforced surface parity: one
+implementation, deep-equal CLI/SDK tests, and fleet results that match
+independent audits.
+
+---
+
+## 17. Legacy separation & transition
+
+### 17.1 No numeric bridge
+
+Readiness percentages/levels and the sloppiness index measure different
+things on opposite scales. They are never converted, compared, averaged, or
+trended together — in code, in storage, or in documentation. Migration
+guidance is "start a new baseline", not "your L3 is now a 42".
+
+### 17.2 Legacy artifacts
+
+- **History** — existing SQLite readiness runs are preserved verbatim by an
+  append-only migration and remain queryable as *legacy readiness history*
+  (§13).
+- **Rubric data** — the `0.2.0` rubric, detector bindings, and investigation
+  subsystem are removed from execution and then from the tree by the early
+  plan issues; the design record remains in git history (trellis 0.1.0).
+- **Backlog** — open readiness-era issues are reconciled against this scope
+  (keep / superseded / deferred) by plan issue `trellis-b12d`; nothing is
+  silently reopened or deleted.
+
+### 17.3 Staged implementation status
+
+This spec is the contract; plan `pl-b2ea` (23 forward-chained issues under
+mission `trellis-253e`) is the build order. As of this revision:
+
+- **Built and current:** the legacy readiness implementation described by the
+  previous revision of this document — it is being disconnected and removed
+  first (agent execution off every public path, then subsystem deletion).
+- **Specified, not yet built:** everything in §5–§16. Each section names (or
+  is named by) the plan issue that lands it; the issue queue, not this
+  document, is the live record of done-ness.
+
+Sections of this spec that describe unbuilt behavior are written as contract
+("must", "is") because they govern implementation review — not because the
+behavior exists today.
+
+---
+
+## 18. Tech stack & conventions
+
+Unchanged from the fleet standard, minus the model infrastructure:
 
 - **Runtime:** Bun (runs TS directly, no build step for the CLI).
 - **Language:** TypeScript strict (`noUncheckedIndexedAccess`, no `any`).
-- **Validation:** zod (rubric schema, findings schemas) — already the os-eco
-  default.
+- **Parsing:** a **pinned `typescript` compiler-API dependency** — the single
+  parse layer for all analyzers (§10).
+- **Validation:** zod at every external boundary (§9).
 - **Lint/format:** Biome, `--error-on-warnings`.
-- **Storage:** `bun:sqlite`.
-- **CLI:** commander; **logging:** pino.
+- **Storage:** `bun:sqlite`, opt-in history only (§13).
+- **CLI:** commander; **logging:** pino (sensitive-key redaction retained).
+- **No LLM provider, no Pi, no network calls** anywhere in the tree (§4.1).
 - **Conventions:** kebab-case filenames, tab indent / 100-col, `.ts` import
   extensions, tests as `<name>.test.ts` beside the unit, golden fixtures under
-  `__golden__/`. trellis should adopt the same quality-gate ratchets it audits
-  for (eat-its-own-dogfood: it should score L4+ against itself).
-
-### 13.1 api>cli>sdk core discipline
-
-trellis follows the same anti-drift layering as warren, adapted to a CLI-only
-tool: **all behavior lives in one surface-agnostic domain core, and every other
-surface is a thin pass-through to it.** Because there is exactly one
-implementation of each operation, the surfaces cannot drift out of sync.
-
-- **Core (the "api").** The functional modules under `src/` —
-  `rubric/`, `discovery/`, `detectors/`, `investigation/` (incl. the §9 Pi
-  provider), `scoring/`, `standards/`, `fleet/`, `store/`, `report/` — hold *all*
-  validation, scoring, drift, and investigation logic. No business logic lives
-  anywhere else. This is the programmatic API surface; there is **no HTTP server**
-  in MVP (a network API is a deferred surface over this same core, §15).
-- **CLI (`src/cli/`).** Thin commander entrypoints that parse args, call core
-  functions, and shape terminal/JSON/MD output. They never reimplement logic.
-- **SDK (`src/client/`).** A typed programmatic client for driving trellis from
-  scripts/other tools, whose request/response types **mirror the core's** exported
-  types (annotated `// Mirrors src/<x>`). It calls the same core functions the CLI
-  does (in-process), so a programmatic audit and a CLI audit exercise one code path.
-- **Sync enforcement.** Single core implementation + strict `tsc` (no `any`,
-  `noUncheckedIndexedAccess`) over the mirrored SDK types + golden snapshots of
-  any stable output shapes, all wired into one `check:all` that CI runs verbatim.
-  Drift becomes a red build, not a review judgment call. (If the deferred HTTP
-  surface lands, it adopts warren's canonical `ROUTE_TABLE` → generated +
-  CI-checked OpenAPI/docs pattern over the same core.)
+  `__golden__/` for analyzer outputs, real temp dirs and real SQLite in tests
+  (stub only true external boundaries).
+- **Dogfood:** trellis audits itself under the new metrics, and the
+  calibration corpus record (plan issue `trellis-e924`) explains its score.
+  The retired "bands L4+ against itself" readiness acceptance is gone with
+  the rubric.
 
 ---
 
-## 14. MVP cut / milestones
+## 19. Deferred / open
 
-1. **Rubric data + schema + validator.** `categories.yaml`, `repo-scope.yaml`,
-   `app-scope.yaml`, zod schema, invariant checks, `RUBRIC_VERSION`. (`trellis
-   rubric --validate` green.)
-2. **Scoring engine.** Pass-rate, coverage clamp, `naKind` handling, repo/app
-   aggregation, band → level. Pure + unit-tested against worked examples (§3.4).
-3. **Deterministic detectors — TypeScript adapter + common.** Bind every
-   deterministic, TS-applicable criterion; `not-applicable`/`no-detector`
-   discipline. Run `trellis audit` on warren end-to-end (det-only).
-4. **App discovery + Swift + Python adapters.** Multi-app scoring; Swift &
-   Python deterministic detectors; N/A mapping for cross-language gaps.
-5. **Investigation layer (against goldens).** 4 areas, findings zod schemas,
-   deterministic grader, caching tables — all exercised on frozen fixtures.
-   *(The §9 Pi-RPC execution layer plugs in behind the same contract; built and
-   tested against frozen fixtures first, no live calls.)*
-6. **Canonical standards + L1 drift.** `standards/canonical/` set, manifest with
-   versions/hashes, `drift.ts`, allowed-deltas via `targets.yaml`.
-7. **Fleet + SQLite history + report.** `targets.yaml` loader, `runs` /
-   `criterion_results` / `investigation_cache`, `trellis fleet`, `trellis
-   report` dashboard, changes-since-last-run.
-8. **os-eco-native detectors.** §8.4 mappings, toggle per target.
-
-Dogfood gate: trellis audits itself and the warren stack repos; iterate the
-detector bindings on what actually mattered.
-
----
-
-## 15. Deferred / open
-
-- **L3 auto-fix via Warren fan-out.** The audit already produces a perfect
-  Warren plan: `trellis fix --repo X` dispatches a Warren run per drifted repo
-  ("bring this repo to canonical; here is the drift report; here are the
-  canonical files"), each opening its own PR. Build after the read-only signal
-  is trusted.
-- **The four missing dimensions as a real category.** Cross-session memory
-  (ADRs/decision logs/mulch), spec-first culture (specs before code),
-  cost/token observability, and workflow-eval suites (testing prompts/skills).
-  os-eco embodies these; a 10th category would let trellis grade them rather
-  than only surface them as evidence (§8.4).
-- **Weighted scoring & gate enforcement.** `weight`/`gate` fields are authored
-  but unread; turning them on is comparability-affecting (major-ish), so it's a
-  deliberate later rubric version.
-- **Web dashboard.** A warren-style React surface over the SQLite history.
-- **Adjacent ideas:** README score badges (`agentic-readiness: A`), kota-sense
-  weekly drift briefings, auto-filing a seed when drift is detected,
-  `.env.example` completeness / secrets-rotation freshness as criteria.
+Everything in §3.2, plus: weighted per-metric tuning beyond the provisional
+formula, a web dashboard over history, README score badges, scheduled drift
+briefings, automatic remediation (fan-out fixes), and hosted/scheduled
+execution. Each requires its own mission; none is implied by this contract.
 
 ---
 
 ## Appendix A — provenance
 
-- `../notes/readiness-report-prompt.md` — the original 82-criterion auditor
-  (scoring formula, repo/app split, bands, re-run/baseline machinery).
-- `../notes/ai-readiness-principles.md` — the 8 principles, ratcheting
-  philosophy, failure-mode vocabulary (context starvation/poisoning,
-  verification gap, tool poverty, spec drift, lossy handoff).
-- `../notes/agent-readiness-business-brainstorm.md` — the
-  "deterministic-core + LLM-only-for-fuzzy" split.
-- `../notes/PRIVATE-rubric/` (day-job, de-branded) — v0.2.0: 9 categories / 90
-  criteria, the Locality & Contracts category, versioned rubric, coverage-aware
-  leveling, `naKind` split, reserved `gate`/`weight`, deterministic + 4
-  investigation-area split, tool-agnostic WHAT + per-language adapters. Adopted
-  here as a clean-room reimplementation (no verbatim code/data copied).
-- burrow `pi` (`../burrow/src/runtime/pi.ts`, `provider/types.ts`) — reference
-  for the LLM provider infra to be specified in §9.
+- **Superseded:** the agent-readiness specification (previous revision of
+  this document; rubric `0.2.0`, 9 categories / 90 criteria, Pi-RPC
+  investigation, canonical drift). Last shipped as trellis 0.1.0; retrievable
+  from git history. Its own provenance (the `../notes` material and the
+  de-branded day-job rubric) is recorded there.
+- **Pivot decision:** mission `trellis-253e` and plan `pl-b2ea` — replace
+  agent-readiness auditing with deterministic TypeScript sloppiness
+  measurement: no model execution, offline Bun/TypeScript analysis, a
+  versioned 0–100 lower-is-better index, separate safeguard results, and
+  local/fleet/CI use through one core, with legacy history preserved
+  separately.
+- **Kept from the old design:** the api>cli>sdk core discipline, zod
+  boundaries, versioned scoring with comparability rules, honest
+  incompleteness (now §5.3/§5.4), central-but-optional state, and
+  canonical-config drift as a separate capability.
