@@ -391,9 +391,24 @@ Evaluation record (evidence; directional measurements, not benchmarks):
   coverage accompanies the results. Resolution uses local files and
   configuration only — absent `node_modules` degrades to documented
   unresolved edges, never to a network fetch.
+  *(Landed, trellis-d214: `src/metrics/graph-*.ts` + `analyze-graph.ts`.
+  The governing tsconfig is the nearest `tsconfig.json` walking up from the
+  importing file; undeclared `moduleResolution` defaults to `bundler`, and
+  `paths` without `baseUrl` resolve against the config's directory.
+  Workspace packages resolve by manifest name through `exports` (string or
+  one condition level, `import`→`require`→`default`→`types`, single `*`
+  wildcard; an `exports`-bearing package encapsulates unlisted subpaths),
+  then `main`, `types`, `index`. Externals are recorded by name and never
+  resolved into — `node_modules` is never consulted, so absent dependencies
+  change nothing; workspace entries pointing at absent build outputs surface
+  as documented `unresolved` edges. Resolution targets outside the
+  classified scope are `out-of-scope` edges, not nodes.)*
 - **Edges are typed**: runtime vs. type-only edges retain their identity;
   whether they are scored separately is fixed by the (versioned) graph
-  policy.
+  policy. *(Landed, trellis-d214: `GRAPH_POLICY` version `1.0.0` in
+  `src/metrics/graph-types.ts` — type-only edges retained-distinct,
+  literal-only dynamic imports, self-edges retained, externals
+  recorded-never-resolved.)*
 - **Cycle measurement**: strongly connected components expose **complete
   cyclic module groups** (not first-cycle-only), with affected-module
   density and representative paths. Group identifiers and representative
