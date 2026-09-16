@@ -4,11 +4,12 @@
  * rubric → app discovery → criterion→detector resolution → per-app/-repo detector
  * runs → §3.4 scoring → the §6.3 {@link Report}.
  *
- * Transitional (SPEC §14 stage 2): the agent investigation pass is disconnected
- * — there is no route to Pi or any model from this pipeline, and the transitional
- * catalog carries only deterministic criteria. A criterion with no binding (or
- * no adapter for the app's languages) flows through the registry's `no-detector`
- * stub (SPEC §3.2), keeping the score honest about what trellis can measure.
+ * Transitional (SPEC §14 stages 2–3): the agent investigation pass is gone —
+ * disconnected from every audit path, then deleted outright. There is no route
+ * to Pi or any model from this pipeline, and the transitional catalog carries
+ * only deterministic criteria. A criterion with no binding (or no adapter for
+ * the app's languages) flows through the registry's `no-detector` stub
+ * (SPEC §3.2), keeping the score honest about what trellis can measure.
  *
  * The pipeline is deterministic given (checkout, rubric, detector set): the only
  * wall-clock input is `scoredAt`, injectable via `opts.now`.
@@ -69,11 +70,6 @@ export interface AuditOptions {
 	 * §6.5 `targets.yaml` `skip`); skips their detector entirely.
 	 */
 	skip?: readonly string[];
-	/**
-	 * os-eco-native detector toggle (SPEC §6.5/§8.4), surfaced on every detection
-	 * context. Default on; `false` opts a repo out of seeds/mulch/canopy evidence.
-	 */
-	osecoDetectors?: boolean;
 	/** The repo's most recent prior run (SPEC §11): present → fold a `changesSinceLastRun` delta; absent → first run. */
 	previousRun?: Report | null;
 	/**
@@ -215,7 +211,6 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 	const registry = opts.registry ?? REGISTRY;
 	const ctxOpts = {
 		...(opts.timeoutMs === undefined ? {} : { timeoutMs: opts.timeoutMs }),
-		...(opts.osecoDetectors === undefined ? {} : { osecoDetectors: opts.osecoDetectors }),
 	};
 	const repo = opts.repoId ?? basename(root);
 	const skip = new Set(opts.skip ?? []);

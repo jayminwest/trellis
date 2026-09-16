@@ -4,9 +4,8 @@
  * Because trellis state is central (SPEC §2), the per-repo knobs that would
  * otherwise live in each audited repo live here instead: which canonical version
  * a repo compares against, the **allowed deltas** that whitelist its sanctioned
- * divergences, the criteria it forces not-applicable, its language hint, and
- * whether os-eco-native detectors apply. `defaults` carries the fleet-wide
- * canonical version. Transitional (SPEC §14 stage 2): the retired
+ * divergences, the criteria it forces not-applicable, and its language hint.
+ * `defaults` carries the fleet-wide canonical version. Transitional (SPEC §14 stage 2): the retired
  * `defaults.investigation` provider/model keys are rejected with an actionable
  * error rather than silently ignored.
  *
@@ -20,9 +19,9 @@
  *
  * {@link targetAuditOptions} is the WHAT→audit seam: it maps a resolved target
  * (+ fleet defaults) onto the surface-agnostic {@link AuditOptions} the core
- * audit consumes — plumbing `skip`, `osecoDetectors`, `allowedDeltas`,
- * `languages`, and the resolved canonical version through without the orchestrator
- * reaching into target internals.
+ * audit consumes — plumbing `skip`, `allowedDeltas`, `languages`, and the
+ * resolved canonical version through without the orchestrator reaching into
+ * target internals.
  */
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
@@ -59,7 +58,6 @@ const targetSchema = z.strictObject({
 	languages: z.array(z.enum(LANGUAGES)).min(1).optional(),
 	canonical: canonicalSchema.optional(),
 	skip: z.array(z.string().min(1)).optional(),
-	osecoDetectors: z.boolean().optional(),
 });
 
 /**
@@ -158,8 +156,8 @@ export function loadFleet(file: string = TARGETS_FILE): Fleet {
  * audit consumes (SPEC §6.5). The fleet always runs canonical drift, so a
  * {@link DriftOptions} is always present, carrying the resolved canonical version
  * (per-repo override > fleet default > the bundled set) and the repo's allowed
- * deltas. `skip`, `osecoDetectors`, and the language hint pass through only when
- * the target sets them.
+ * deltas. `skip` and the language hint pass through only when the target sets
+ * them.
  */
 export function targetAuditOptions(target: ResolvedTarget, defaults: FleetDefaults): AuditOptions {
 	const { spec } = target;
@@ -175,6 +173,5 @@ export function targetAuditOptions(target: ResolvedTarget, defaults: FleetDefaul
 		canonical,
 		...(spec.languages === undefined ? {} : { languages: spec.languages }),
 		...(spec.skip === undefined ? {} : { skip: spec.skip }),
-		...(spec.osecoDetectors === undefined ? {} : { osecoDetectors: spec.osecoDetectors }),
 	};
 }

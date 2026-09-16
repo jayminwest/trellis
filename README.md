@@ -15,15 +15,14 @@ measures the environment.**
 
 ## What trellis is
 
-trellis is a **mostly-deterministic, partly-agentic** audit tool that keeps a
+trellis is a **deterministic, offline** audit tool that keeps a
 fleet of repositories in sync on *agent-readiness*: how legible and verifiable a
 repo is to a non-human collaborator. It does two complementary things:
 
 1. **Readiness audit (the rubric).** Scores a repo's intrinsic agent-readiness
-   against a versioned, 9-category / 90-criterion rubric and maps the 0–100%
-   score to a maturity Level 1–5. ~78% of criteria are deterministic
-   file/config/command checks; the rest are decided by a deterministic grader
-   consuming objective facts gathered by a bounded LLM investigation pass.
+   against a versioned, 8-category / 70-criterion rubric and maps the 0–100%
+   score to a maturity Level 1–5. Every criterion is a deterministic
+   file/config/command check — no audit path spawns an agent or calls a model.
 2. **Canonical config drift (L1).** Compares a repo's shared tooling files
    (Biome config, `tsconfig` base, CI workflow, `AGENTS.md` template,
    pre-commit hook, `.seeds/` skeleton, …) against trellis's bundled, versioned
@@ -145,7 +144,7 @@ targets:
 
   - id: external-repo
     path: ../some-non-oseco-repo
-    osecoDetectors: false            # disable os-eco-native detectors (SPEC §8.4)
+    languages: [python]              # hint a non-TypeScript fleet member
 ```
 
 ## Architecture
@@ -156,12 +155,11 @@ src/
 ├─ client/         # typed SDK over the domain core; mirrors core types
 ├─ rubric/         # the WHAT: loads + validates rubric data (categories + 90 criteria)
 ├─ discovery/      # app discovery (independently-deployable dirs → apps)
-├─ detectors/      # the HOW (deterministic): common + lang/{ts,swift,python} + oseco
-├─ investigation/  # the HOW (agent): 4 areas → structured facts → deterministic grader
+├─ detectors/      # the HOW (deterministic): common + lang/{ts,swift,python}
 ├─ scoring/        # pass-rate, coverage clamp, repo/app aggregation, bands → level
 ├─ standards/      # canonical config drift (L1): canonical/ + manifest.yaml + drift.ts
 ├─ fleet/          # targets.yaml loader + multi-repo orchestration
-├─ store/          # bun:sqlite history (runs / criterion_results / investigation_cache)
+├─ store/          # bun:sqlite history (runs / criterion_results)
 └─ report/         # terminal / JSON / markdown renderers
 ```
 

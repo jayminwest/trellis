@@ -8,8 +8,9 @@
  * and returns a {@link Store} of typed functions: {@link Store.insertRun}
  * writes a `runs` row plus its exploded `criterion_results` in one transaction;
  * {@link Store.latestRun} / {@link Store.runsSince} drive the §11 history
- * queries; {@link Store.getCache} / {@link Store.putCache} back the
- * §7.3 investigation cache.
+ * queries. The transitional investigation-cache API is gone (SPEC §14 stage 3);
+ * the historical `investigation_cache` table stays in the append-only
+ * migrations, untouched, but nothing reads or writes it.
  *
  * `report_json` is the byte-stable §6.3 document ({@link renderJson}), so two
  * audits of the same checkout at a pinned `scoredAt` persist identical JSON.
@@ -40,12 +41,6 @@ export interface StoredRun {
 	scoredAt: string;
 }
 
-/** A cached investigation entry read back from `investigation_cache`. */
-export interface CachedFindings {
-	findingsJson: string;
-	createdAt: string;
-}
-
 /** One `criterion_results` row joined to its run's `scored_at` — a point on a §11 trend. */
 export interface TrendRow {
 	criterion: string;
@@ -69,16 +64,6 @@ export interface Store {
 	runs(repo: string, since?: string): StoredRun[];
 	/** Per-criterion trend points for `repo` (optionally since `since`), ordered oldest run first then criterion id. */
 	criterionTrend(repo: string, since?: string): TrendRow[];
-	/** Cached findings for an investigation area at a commit, or `null` on a miss. */
-	getCache(repo: string, commitSha: string, area: string): CachedFindings | null;
-	/** Upsert cached findings for an investigation area at a commit. */
-	putCache(
-		repo: string,
-		commitSha: string,
-		area: string,
-		findingsJson: string,
-		createdAt: string,
-	): void;
 	/** Close the underlying database handle. */
 	close(): void;
 }
@@ -197,20 +182,6 @@ export function openStore(dbPath?: string): Store {
 	const trendSinceStmt = db.query<TrendRowRaw, [string, string]>(
 		`SELECT ${trendColumns} FROM criterion_results cr JOIN runs r ON r.id = cr.run_id WHERE r.repo = ? AND r.scored_at >= ? ${trendOrder}`,
 	);
-	const getCacheStmt = db.query<
-		{ findings_json: string; created_at: string },
-		[string, string, string]
-	>(
-		"SELECT findings_json, created_at FROM investigation_cache WHERE repo = ? AND commit_sha = ? AND area = ?",
-	);
-	const putCacheStmt = db.query(
-		`INSERT INTO investigation_cache (repo, commit_sha, area, findings_json, created_at)
-		 VALUES (?, ?, ?, ?, ?)
-		 ON CONFLICT(repo, commit_sha, area) DO UPDATE SET
-		   findings_json = excluded.findings_json,
-		   created_at = excluded.created_at`,
-	);
-
 	const insertRunTxn = db.transaction((report: Report): number => {
 		const result = insertRunStmt.run(
 			report.repo,
@@ -257,13 +228,6 @@ export function openStore(dbPath?: string): Store {
 		criterionTrend(repo, since) {
 			const rows = since === undefined ? trendAllStmt.all(repo) : trendSinceStmt.all(repo, since);
 			return rows.map(toTrendRow);
-		},
-		getCache(repo, commitSha, area) {
-			const row = getCacheStmt.get(repo, commitSha, area);
-			return row ? { findingsJson: row.findings_json, createdAt: row.created_at } : null;
-		},
-		putCache(repo, commitSha, area, findingsJson, createdAt) {
-			putCacheStmt.run(repo, commitSha, area, findingsJson, createdAt);
 		},
 		close() {
 			db.close();

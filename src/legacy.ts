@@ -1,11 +1,11 @@
 /**
- * Legacy investigation configuration (SPEC §14 stage 2) — the agent
- * investigation pass is disconnected from every public audit path, so the
- * provider/model, `piBin`, and investigation-cache knobs no longer exist.
- * Passing one is a configuration error, never a silent no-op: every public
- * entry point (CLI flags/env, SDK option bags, `targets.yaml` defaults)
- * rejects it with an actionable message naming what to remove. Deletion of
- * the investigation subsystem itself is the next stage (trellis-4abc).
+ * Legacy investigation configuration (SPEC §14 stages 2–3) — the agent
+ * investigation pass is disconnected from every public audit path and the
+ * subsystem itself is deleted, so the provider/model, `piBin`, and
+ * investigation-cache knobs no longer exist. Passing one is a configuration
+ * error, never a silent no-op: every public entry point (CLI flags/env, SDK
+ * option bags, `targets.yaml` defaults) rejects it with an actionable message
+ * naming what to remove.
  */
 
 /** A caller passed retired investigation configuration. */

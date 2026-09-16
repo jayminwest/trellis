@@ -53,7 +53,6 @@ src/
   discovery/      # app discovery today; becomes TS/TSX source-set inventory
   detectors/      # LEGACY per-language adapters; safeguard inspection (§5.5)
                   #   is the carried-forward subset
-  investigation/  # LEGACY (removed in transition stage 3): agent findings layer
   scoring/        # today: readiness pass-rate; target: pure sloppiness formula
   standards/      # canonical/ (bundled files), manifest.yaml, drift.ts
                   #   (separate capability; never feeds the sloppiness index)

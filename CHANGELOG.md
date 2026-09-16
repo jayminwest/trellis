@@ -11,6 +11,19 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Removed
 
+- **The investigation subsystem is deleted** (trellis-4abc, SPEC §14 stage 3 of
+  the deterministic-pivot plan `pl-b2ea`). `src/investigation/` (areas, findings
+  contracts, grader, Pi RPC provider, frozen goldens) and the live golden
+  capture tooling (`scripts/update-pi-golden.ts`) are gone: no executable
+  model/provider/agent-grader implementation, prompt, or capture gate remains
+  in shipped source or scripts. The store's investigation-cache API
+  (`getCache`/`putCache`/`CachedFindings`) is removed; historical migrations
+  stay append-only, so the `investigation_cache` table still lands on fresh
+  databases and existing user data is untouched — nothing reads or writes it.
+- **The os-eco scoring overlay is removed** (SPEC §14 stage 3): the
+  `src/detectors/oseco/` evidence pack (dead since the stage-2 disconnect) and
+  the `osecoDetectors` toggle on `targets.yaml` targets, `AuditOptions`, and
+  the detection context. Strict `targets.yaml` validation now rejects the key.
 - **Agent execution is disconnected from every public audit path** (trellis-ba72,
   SPEC §14 stage 2 of the deterministic-pivot plan `pl-b2ea`). The audit
   pipeline, fleet orchestration, CLI, and SDK no longer wire the investigation
@@ -31,8 +44,6 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   `TRELLIS_PI_BIN` environment variable, `targets.yaml`
   `defaults.investigation`, and retired SDK option keys (`noCache`, `piBin`,
   `investigation`, `provider`, `model`) all fail fast naming what to remove.
-  The investigation subsystem itself is deleted in the next stage
-  (trellis-4abc).
 
 ## [0.1.0] — 2026-06-10
 
