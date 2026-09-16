@@ -1,6 +1,6 @@
 {
-	"_comment": "Coverage floors enforced by scripts/check-coverage.ts against the `All files` row of Bun's text coverage reporter. Optionally, `packages` keys (path prefixes) declare per-package floors checked against matching file rows. The ratchet only goes UP — raise floors as coverage improves; lowering requires deleting tests, which should be a conscious decision with a tracker reference. The script never auto-edits this file: loosening requires an explicit commit by a human. Baselined per templates/l5-toolkit/README.md §(b): observed functions 78.60% / lines 74.58% → floor(observed).",
-	"functions": 78,
-	"lines": 74,
+	"_comment": "Coverage floors enforced by scripts/check-coverage.ts against the `All files` row of Bun's text coverage reporter. Optionally, `packages` keys (path prefixes) declare per-package floors checked against matching file rows. The ratchet only goes UP — raise floors as coverage improves; lowering requires deleting tests, which should be a conscious decision with a tracker reference. The script never auto-edits this file: loosening requires an explicit commit by a human. Baselined per templates/l5-toolkit/README.md §(b): observed functions 78.60% / lines 74.58% → floor(observed). Ratcheted with trellis-fbc5 (complexity & erosion metrics): observed functions 96.71% / lines 96.18% → floor(observed).",
+	"functions": 96,
+	"lines": 96,
 	"packages": {}
 }

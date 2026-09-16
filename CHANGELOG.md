@@ -11,6 +11,27 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Complexity and structural erosion measurements are reproducible**
+  (trellis-fbc5, SPEC §14 stage 7 of the deterministic-pivot plan `pl-b2ea`):
+  new `src/metrics/` holds the first deterministic analyzers over the shared
+  syntax inventory (SPEC §5.1–5.2). `analyzeComplexity` measures per-function
+  cyclomatic complexity (an exact, documented decision table: `if`/`else if`,
+  every loop kind, `case` clauses but not `default`, `catch`, ternaries,
+  `&&`/`||`/`??` and their logical-assignment forms, and each `?.` token;
+  nested functions attributed to themselves via the opaque-leaf walk),
+  maximum control-structure nesting, and per-function SLOC (scanner-classified
+  code lines over the whole-node range; `src/syntax/sloc.ts` now exposes the
+  per-line classification as `classifyLines` so ranges are counted without
+  re-scanning). Erosion weights complexity by size (`mass = CC × √SLOC`,
+  eroded share = mass of functions with `CC > 10` over total mass);
+  aggregation from functions → packages → repo sums masses, never averages
+  package shares. Production and test are always measured separately; empty
+  scopes yield finite zeros for counts/mass and `not-applicable` for
+  distributions and the 0/0 share; scopes with parse diagnostics are
+  `incomplete` with partial values. Emits contract `MetricValue`s (ids
+  suffixed per source set) and ranked `complexity.hotspot` findings with
+  exact paths and line ranges. Hand-calculated fixtures pin branch counts,
+  nesting, and weighted erosion.
 - **A shared TypeScript syntax and function inventory is available**
   (trellis-d81d, SPEC §14 stage 6 of the deterministic-pivot plan `pl-b2ea`):
   new `src/syntax/` is the one parse layer every metric reuses within an
