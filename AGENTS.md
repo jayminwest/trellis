@@ -152,9 +152,13 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 ### Architecture discipline (api>cli>sdk, SPEC §13.1)
 
 - All behavior lives in the **core** modules under `src/` (transitional set:
-  `src/rubric/`, `src/discovery/`, `src/syntax/`, `src/detectors/`, `src/scoring/`,
-  `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`; the target
-  layout is SPEC §4). No business logic anywhere else.
+  `src/audit/`, `src/rubric/`, `src/discovery/`, `src/syntax/`, `src/detectors/`,
+  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`;
+  the target layout is SPEC §4). No business logic anywhere else.
+  `src/audit/` is the deterministic audit core (trellis-ef85):
+  `auditWorkspace(root)` runs discover → parse → measure → safeguards →
+  score → assemble and returns the versioned §6.4 `AuditReport`, with no
+  model, network, project-command, Git, or database access.
 - `src/cli/` is a **thin** commander pass-through; `src/client/` is a typed
   SDK whose types **mirror the core** (annotate `// Mirrors src/<x>`). Both
   call the same core functions so a programmatic audit and a CLI audit

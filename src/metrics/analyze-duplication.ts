@@ -196,7 +196,7 @@ function scopeMetrics(scope: DuplicationScope): MetricValue[] {
 			"lines",
 			unmeasured ? null : scope.duplicatedLines,
 			reason,
-			unmeasured
+			unmeasured || scope.codeLines === 0
 				? undefined
 				: {
 						numerator: scope.duplicatedLines,

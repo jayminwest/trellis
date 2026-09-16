@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { MetricValue } from "../contract/index.ts";
+import { type MetricValue, metricValueSchema } from "../contract/index.ts";
 import { discoverSourceInventory } from "../discovery/index.ts";
 import { buildSyntaxInventory, type SyntaxInventory } from "../syntax/index.ts";
 import { analyzeDuplication, type DuplicationBudget } from "./index.ts";
@@ -67,6 +67,10 @@ describe("analyzeDuplication metric emission", () => {
 	test("a scope with no code lines has a not-applicable density and finite counts", async () => {
 		await put("src/a.ts", "// only a comment\n");
 		const { metrics } = analyzeDuplication(await inventory());
+		// Every emitted metric satisfies the §6.1 contract — in particular no
+		// numerator/denominator pair may carry a zero denominator (the contract
+		// requires a positive denominator; trellis-ef85 surfaces this).
+		for (const metric of metrics) metricValueSchema.parse(metric);
 		const byIdMap = byId(metrics);
 		expect(byIdMap.get("duplication.density.production")).toMatchObject({
 			state: "not-applicable",
@@ -80,6 +84,9 @@ describe("analyzeDuplication metric emission", () => {
 			state: "complete",
 			value: 0,
 		});
+		// No code lines → no compatible denominator → the pair is omitted entirely.
+		expect(byIdMap.get("duplication.duplicated-lines.production")?.denominator).toBeUndefined();
+		expect(byIdMap.get("duplication.duplicated-lines.test")?.denominator).toBeUndefined();
 	});
 
 	test("parse diagnostics make the scope incomplete with partial values", async () => {
