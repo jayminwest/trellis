@@ -11,6 +11,36 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Workspace-aware import resolution produces a documented dependency graph**
+  (trellis-d214, SPEC §14 stage 10 of the deterministic-pivot plan `pl-b2ea`):
+  `analyzeDependencyGraph` in `src/metrics/` replaces the regex/relative-only
+  graph foundation with AST extraction over the one shared parse (comments,
+  string contents, and JSDoc import types cannot forge edges) plus the pinned
+  compiler's own module resolution over **local files and configuration
+  only** — `node_modules` is never consulted and nothing is ever fetched, so
+  absent dependencies change nothing. Edges are typed (`import` /
+  `re-export` / `dynamic`; type-only edges — `import type`, `export type …
+  from`, type-position `import("…")` — keep their identity) under the
+  versioned `GRAPH_POLICY` (`1.0.0`: type-only retained-distinct,
+  literal-only dynamic imports, self-edges retained, externals
+  recorded-never-resolved). Resolution order: relative (extension
+  substitution `.js`→`.ts`, `.mts`/`.cts` mapping, `/index` barrels), then
+  the nearest governing `tsconfig.json`'s `paths`/`baseUrl` (undeclared
+  `moduleResolution` defaults to `bundler`), then workspace packages by
+  manifest name through `exports` (one condition level, single `*` wildcard,
+  encapsulation for unlisted subpaths) → `main` → `types` → `index`; anything
+  else is an `external` edge recorded by package name. Resolved targets
+  outside the classified scope are `out-of-scope` edges; failed local intent
+  is `unresolved` with a machine-checkable reason (`no-target`,
+  `outside-root`, `exports-encapsulation`, `unsupported-exports`,
+  `non-literal-dynamic`) and a located `graph.unresolved-import` finding.
+  Emits `graph.files` / `graph.edges.local` / `graph.edges.external` /
+  `graph.edges.unresolved` metrics; unresolved edges and parse diagnostics
+  roll up `incomplete` (SPEC §3.3) while externals stay `complete` and
+  distinguishable. Hand-built fixtures pin aliases, package exports,
+  extension mapping, barrels, workspace boundaries, dynamic imports, and
+  forgery resistance; two runs over the same tree are byte-equal.
+
 - **Duplication metrics identify clone groups and unique affected lines**
   (trellis-6e4c, SPEC §14 stage 9 of the deterministic-pivot plan `pl-b2ea`):
   `analyzeDuplication` in `src/metrics/` implements the trellis-5a91

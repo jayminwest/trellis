@@ -3,10 +3,11 @@
  * (SPEC §4 `metrics/`, §5).
  *
  * Currently: complexity & structural erosion (§5.1–5.2, trellis-fbc5) via
- * {@link analyzeComplexity}, and duplication (§5.3, trellis-6e4c) via
- * {@link analyzeDuplication}. Import cycles (trellis-d214/cbde) land as a
- * sibling analyzer over the same inventory; scoring (trellis-00d5) consumes
- * the raw metrics.
+ * {@link analyzeComplexity}, duplication (§5.3, trellis-6e4c) via
+ * {@link analyzeDuplication}, and the workspace-aware dependency graph (§5.4,
+ * trellis-d214) via {@link analyzeDependencyGraph}. Cycle measurement
+ * (trellis-cbde) consumes the graph; scoring (trellis-00d5) consumes the
+ * raw metrics.
  */
 export { analyzeComplexity } from "./analyze.ts";
 export {
@@ -15,6 +16,7 @@ export {
 	type DuplicationOptions,
 	type DuplicationScope,
 } from "./analyze-duplication.ts";
+export { analyzeDependencyGraph } from "./analyze-graph.ts";
 export { type FunctionComplexity, measureFunctionComplexity } from "./complexity.ts";
 export {
 	type BudgetExhaustion,
@@ -39,6 +41,22 @@ export {
 	packageAggregate,
 	roundTo,
 } from "./erosion.ts";
+export { collectImportSites, type ImportSite } from "./graph-imports.ts";
+export { createGraphResolver, type GraphResolver } from "./graph-resolve.ts";
+export {
+	type DependencyGraph,
+	type DependencyGraphAnalysis,
+	type EdgeKind,
+	type EdgeResolution,
+	type ExternalPackage,
+	GRAPH_POLICY,
+	GRAPH_POLICY_VERSION,
+	type GraphConfig,
+	type GraphEdge,
+	type GraphNode,
+	type GraphPolicy,
+	type UnresolvedReason,
+} from "./graph-types.ts";
 export {
 	type CcDistribution,
 	type ComplexityAnalysis,
