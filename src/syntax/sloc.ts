@@ -30,6 +30,9 @@ const PLAIN_TRIVIA = new Set<ts.SyntaxKind>([
 	ts.SyntaxKind.ConflictMarkerTrivia,
 ]);
 
+/** The classification of one physical line (see the module docblock). */
+export type LineKind = "code" | "commentOnly" | "blank";
+
 /** Mutable per-line flags, folded into {@link LineCounts} at the end. */
 interface LineFlags {
 	code: boolean;
@@ -65,11 +68,15 @@ function markLines(
 }
 
 /**
- * Classify the lines of `sourceFile` (see the module docblock for the
+ * Classify every line of `sourceFile` (see the module docblock for the
  * rules). The scan reuses the shared parse's own line map and language
- * variant, so positions always agree with the parse layer's ranges.
+ * variant, so positions always agree with the parse layer's ranges. The
+ * result is indexed by 0-based line number, so contract (1-based) line `n`
+ * is `classifyLines(sf)[n - 1]`. Analyzers that need a line-range
+ * classification (e.g. per-function SLOC, trellis-fbc5) scan once per file
+ * through this function instead of re-running the scanner per range.
  */
-export function countLines(sourceFile: ts.SourceFile): LineCounts {
+export function classifyLines(sourceFile: ts.SourceFile): readonly LineKind[] {
 	const lineStarts = sourceFile.getLineStarts();
 	const flags: LineFlags[] = [...lineStarts].map(() => ({ code: false, comment: false }));
 	const scanner = ts.createScanner(
@@ -87,10 +94,16 @@ export function countLines(sourceFile: ts.SourceFile): LineCounts {
 		}
 		token = scanner.scan();
 	}
-	const counts: LineCounts = { total: flags.length, code: 0, commentOnly: 0, blank: 0 };
-	for (const flag of flags) {
-		if (flag.code) counts.code += 1;
-		else if (flag.comment) counts.commentOnly += 1;
+	return flags.map((flag) => (flag.code ? "code" : flag.comment ? "commentOnly" : "blank"));
+}
+
+/** Fold a per-line classification into {@link LineCounts} totals. */
+export function countLines(sourceFile: ts.SourceFile): LineCounts {
+	const kinds = classifyLines(sourceFile);
+	const counts: LineCounts = { total: kinds.length, code: 0, commentOnly: 0, blank: 0 };
+	for (const kind of kinds) {
+		if (kind === "code") counts.code += 1;
+		else if (kind === "commentOnly") counts.commentOnly += 1;
 		else counts.blank += 1;
 	}
 	return counts;

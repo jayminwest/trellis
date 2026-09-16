@@ -21,7 +21,7 @@ export {
 	rangeAt,
 	scriptVariantForPath,
 } from "./parse.ts";
-export { countLines } from "./sloc.ts";
+export { classifyLines, countLines, type LineKind } from "./sloc.ts";
 export {
 	type FileSyntax,
 	FUNCTION_KINDS,
