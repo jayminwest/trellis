@@ -415,6 +415,21 @@ Evaluation record (evidence; directional measurements, not benchmarks):
   paths are stable across enumeration order. Package and repo views preserve
   cross-package cycles without double-counting. Disjoint, overlapping,
   acyclic, and self-import cases have specified, tested outcomes.
+  *(Landed, trellis-cbde: `src/metrics/cycles.ts` + `analyze-cycles.ts`
+  under `CYCLE_POLICY` version `1.0.0`. Runtime and type-only edges form
+  two separate subgraphs — a pair linked runtime one way and type-only the
+  other is not a cycle in either — and the two classes are **scored
+  separately**; a group cyclic in both appears once per class. A retained
+  self-edge is a size-1 group with representative path `[p, p]`. Ids
+  `cycle-<n>` follow (smallest member, class) order; the representative
+  path is the shortest cycle from the smallest member over sorted
+  adjacency. Cross-package groups keep one id across per-package views
+  while module counts stay per-package, so the repo-level affected-module
+  union never double-counts. Emits `import-cycle.groups` /
+  `import-cycle.modules` / `import-cycle.density` and one located
+  `import-cycle` finding per group; incomplete graph coverage (unresolved
+  edges, parse diagnostics) rolls every cycle metric up `incomplete` with
+  the graph's reasons and a machine-readable `unresolvedEdges` count.)*
 
 ### 5.5 Safeguards (hook/check inspection — separate from the score)
 
