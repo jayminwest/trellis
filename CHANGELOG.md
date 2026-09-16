@@ -11,6 +11,33 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **The provisional sloppiness formula is explicit and versioned**
+  (trellis-00d5, SPEC §7.1, stage 13 of the deterministic-pivot plan
+  `pl-b2ea`): `scoreSloppiness(metrics)` in `src/scoring/sloppiness.ts` is
+  a pure function of the raw contract metrics — no filesystem, no
+  configuration, no safeguard results. Every constant (dimension weights
+  0.50/0.30/0.20; per-term saturation thresholds; even in-dimension blends)
+  is pinned in `SCORING_FORMULA` (`src/scoring/formula.ts`) under
+  `SCORING_VERSION` `0.1.0-provisional`, and the strict audit-config schema
+  rejects scoring keys, so policy budgets can never mutate weights. The
+  overlapping complexity/erosion/size signals are grouped into one
+  `complexity-erosion` dimension (no multiple penalties for the same
+  tangle); each dimension blends an absolute-count term beside its density
+  term so large clean additions can never dilute hotspot counts (counts
+  and densities are both retained, SPEC §3.4). Only the production source
+  set is scored — test code never offsets production debt. Missing
+  analysis is never zero debt: a dimension whose required metrics are
+  `incomplete` or absent scores at full weight and the headline is flagged
+  `partial`, while a `not-applicable` ratio with complete zero counts is a
+  genuinely empty scope. The index is `clamp(round-half-up(Σ weight ×
+  dimension), 0, 100)` over IEEE-754 doubles; reported contributions are
+  largest-remainder integer apportionments (ties by dimension id) so they
+  sum exactly to the index, and every point traces to raw metric ids,
+  values, and thresholds in a deterministic explanation plus the §6.4
+  contract `score` view. Fixtures pin the bounds (0 clean / 100
+  saturated), lower-is-better monotonicity per raw metric, stable
+  rounding, exact contribution totals, the missing-analysis policy, and
+  summed-mass (never averaged-ratio) aggregation.
 - **Import-cycle measurements expose complete cycle groups** (trellis-cbde,
   SPEC §14 stage 11 of the deterministic-pivot plan `pl-b2ea`):
   `analyzeCycles` in `src/metrics/` consumes the trellis-d214 dependency

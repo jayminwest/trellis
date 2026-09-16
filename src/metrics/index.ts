@@ -7,7 +7,8 @@
  * {@link analyzeDuplication}, the workspace-aware dependency graph (§5.4,
  * trellis-d214) via {@link analyzeDependencyGraph}, and import-cycle
  * measurement (§5.4, trellis-cbde) via {@link analyzeCycles} over that
- * graph. Scoring (trellis-00d5) consumes the raw metrics.
+ * graph. The provisional sloppiness formula (`src/scoring/sloppiness.ts`,
+ * trellis-00d5) consumes the raw metrics.
  */
 export { analyzeComplexity } from "./analyze.ts";
 export {

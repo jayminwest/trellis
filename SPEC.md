@@ -566,8 +566,8 @@ computed (§7).
 Scoring is a **pure function** of structural raw metrics. The initial formula
 is **provisional** (`scoringVersion: 0.1.0-provisional`) pending calibration
 against the fixed corpus (§14); normalization thresholds and weights are
-documented here when the formula lands (`trellis-00d5`) and recalibrated only
-with a scoring-version bump.
+documented in §7.1 (landed with `trellis-00d5`) and recalibrated only with a
+scoring-version bump.
 
 Formula rules (fixed now):
 
@@ -590,6 +590,48 @@ Formula rules (fixed now):
 - **No offsets**: safeguards, test code, and infrastructure contribute
   nothing (§3.4). Policy budgets (§6.5) gate pass/fail; they do not mutate
   weights.
+
+### 7.1 The provisional constants
+
+*(Landed, trellis-00d5: `src/scoring/formula.ts` pins every constant below
+in `SCORING_FORMULA` under `SCORING_VERSION`; `src/scoring/sloppiness.ts`
+implements `scoreSloppiness(metrics)` over the contract `MetricValue`s. The
+function takes **no configuration input**, so policy budgets can never
+mutate the weights — the strict audit-config schema rejects scoring keys
+outright.)*
+
+The index scores the **production** source set only; test-set metrics are
+reported raw (§3.1) and never offset production debt. Import cycles are
+repo-level by construction.
+
+| dimension | weight | terms (raw value ⇒ saturation ⇒ 100) |
+|---|---|---|
+| `complexity-erosion` | 0.50 | `erosion.eroded-share.production` @ 0.25; `erosion.eroded-count.production` @ 20 |
+| `duplication` | 0.30 | `duplication.density.production` @ 0.15; `duplication.groups.production` @ 15 |
+| `import-cycle` | 0.20 | `import-cycle.density` @ 0.10; `import-cycle.groups` @ 5 |
+
+- Each term normalizes linearly: `100 × min(1, value / saturation)`. Every
+  dimension blends an **absolute-count term** beside its **density term**
+  (even 50/50), so large clean additions can never dilute counts or erase
+  hotspot weight — counts and densities are both retained (§3.4).
+- Grouping complexity, erosion, and size into one `complexity-erosion`
+  dimension keeps the same underlying tangle from being penalized multiple
+  times.
+- `index = clamp(⌊Σ weight × dimension + 0.5⌋, 0, 100)` — round-half-up
+  over IEEE-754 doubles, stable across runs and platforms. Each reported
+  contribution is the **largest-remainder integer apportionment** of its
+  exact weighted points (ties by dimension id), so contributions always sum
+  exactly to the index. Every point traces to the raw metric ids, values,
+  and thresholds in the dimension's explanation.
+- **Missing analysis is never zero debt**: a dimension whose required
+  metrics are `incomplete` (or absent) scores at its full weight and the
+  headline is flagged `partial` (§3.4) — an apparently complete score is
+  never published from partial analysis. A `not-applicable` ratio with
+  complete zero counts is a genuinely empty scope and scores 0; the
+  companion count metric independently confirms zero debt.
+- **Aggregation**: the formula consumes only summed-mass repo metrics
+  (§5.2 numerator/denominator sums). Per-package ratios in metric `detail`
+  are explanatory and are never averaged into the index.
 
 ---
 
