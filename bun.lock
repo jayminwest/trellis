@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 1,
   "workspaces": {
     "": {
       "name": "@os-eco/trellis-cli",
@@ -8,6 +7,7 @@
         "commander": "^15.0.0",
         "js-yaml": "^4.1.1",
         "pino": "^10.3.1",
+        "typescript": "6.0.3",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -15,7 +15,6 @@
         "@types/bun": "latest",
         "@types/js-yaml": "^4.0.9",
         "knip": "^6.14.2",
-        "typescript": "^6.0.3",
         "yaml": "^2.8.2",
       },
     },

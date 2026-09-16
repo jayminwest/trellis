@@ -152,7 +152,7 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 ### Architecture discipline (api>cli>sdk, SPEC §13.1)
 
 - All behavior lives in the **core** modules under `src/` (transitional set:
-  `src/rubric/`, `src/discovery/`, `src/detectors/`, `src/scoring/`,
+  `src/rubric/`, `src/discovery/`, `src/syntax/`, `src/detectors/`, `src/scoring/`,
   `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`; the target
   layout is SPEC §4). No business logic anywhere else.
 - `src/cli/` is a **thin** commander pass-through; `src/client/` is a typed
