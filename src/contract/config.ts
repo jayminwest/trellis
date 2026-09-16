@@ -8,8 +8,8 @@
  * attempt to smuggle in hook commands or to override scoring weights. Policy
  * budgets gate the run (§9); they never mutate how the index is computed (§7).
  *
- * Loading/discovery of the config file itself lands with the consumers
- * (trellis-6003, trellis-ef85); this module defines only the contract.
+ * Loading/discovery of the config file itself lives in `src/config/load.ts`
+ * (trellis-6003); this module defines only the contract.
  */
 import { z } from "zod";
 import { SOURCE_SETS } from "./coverage.ts";
