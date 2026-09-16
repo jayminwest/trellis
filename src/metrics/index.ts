@@ -4,12 +4,18 @@
  *
  * Currently: complexity & structural erosion (§5.1–5.2, trellis-fbc5) via
  * {@link analyzeComplexity}, duplication (§5.3, trellis-6e4c) via
- * {@link analyzeDuplication}, and the workspace-aware dependency graph (§5.4,
- * trellis-d214) via {@link analyzeDependencyGraph}. Cycle measurement
- * (trellis-cbde) consumes the graph; scoring (trellis-00d5) consumes the
- * raw metrics.
+ * {@link analyzeDuplication}, the workspace-aware dependency graph (§5.4,
+ * trellis-d214) via {@link analyzeDependencyGraph}, and import-cycle
+ * measurement (§5.4, trellis-cbde) via {@link analyzeCycles} over that
+ * graph. Scoring (trellis-00d5) consumes the raw metrics.
  */
 export { analyzeComplexity } from "./analyze.ts";
+export {
+	analyzeCycles,
+	type CycleAnalysis,
+	type CycleGroup,
+	type PackageCycleView,
+} from "./analyze-cycles.ts";
 export {
 	analyzeDuplication,
 	type DuplicationAnalysis,
@@ -18,6 +24,18 @@ export {
 } from "./analyze-duplication.ts";
 export { analyzeDependencyGraph } from "./analyze-graph.ts";
 export { type FunctionComplexity, measureFunctionComplexity } from "./complexity.ts";
+export {
+	buildAdjacency,
+	CYCLE_POLICY,
+	CYCLE_POLICY_VERSION,
+	type CyclePolicy,
+	compareStrings,
+	detectClassGroups,
+	type EdgeClass,
+	type RawCycleGroup,
+	representativeCycle,
+	stronglyConnectedComponents,
+} from "./cycles.ts";
 export {
 	type BudgetExhaustion,
 	type CloneDetection,

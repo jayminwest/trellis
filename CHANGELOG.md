@@ -11,6 +11,25 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Import-cycle measurements expose complete cycle groups** (trellis-cbde,
+  SPEC §14 stage 11 of the deterministic-pivot plan `pl-b2ea`):
+  `analyzeCycles` in `src/metrics/` consumes the trellis-d214 dependency
+  graph and reports **complete cyclic module groups** via strongly
+  connected components (iterative Tarjan — never first-cycle-only), under
+  the versioned `CYCLE_POLICY` (`1.0.0`). Runtime and type-only edges form
+  separate subgraphs and are **scored separately** (a pair linked runtime
+  one way and type-only the other is no cycle in either class); self-imports
+  are size-1 groups with representative path `[p, p]`. Group ids
+  (`cycle-<n>`, assigned in (smallest member, class) order) and
+  representative paths (shortest cycle from the smallest member over sorted
+  adjacency) are byte-stable across filesystem enumeration order. Package
+  views list cross-package groups by shared id while module counts stay
+  per-package, so the repo-level affected-module union never
+  double-counts. Emits `import-cycle.groups` / `import-cycle.modules` /
+  `import-cycle.density` metrics and one located `import-cycle` finding per
+  group; unresolved graph coverage accompanies the results — an incomplete
+  graph rolls every cycle metric up `incomplete` (SPEC §3.3) with the
+  graph's reasons and a machine-readable `unresolvedEdges` count.
 - **Workspace-aware import resolution produces a documented dependency graph**
   (trellis-d214, SPEC §14 stage 10 of the deterministic-pivot plan `pl-b2ea`):
   `analyzeDependencyGraph` in `src/metrics/` replaces the regex/relative-only
