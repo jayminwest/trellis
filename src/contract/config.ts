@@ -34,12 +34,34 @@ export const metricBudgetSchema = z.strictObject({
 export type MetricBudget = z.infer<typeof metricBudgetSchema>;
 
 /**
+ * Score-regression tolerance against a baseline report (SPEC §9). The two
+ * knobs are independent bounds, documented by kind:
+ *
+ * - `maxIncrease` — **absolute** tolerance in index points (0–100 scale):
+ *   the run fails when `current.index - baseline.index` exceeds it.
+ * - `maxIncreasePercent` — **relative** tolerance as a percentage of the
+ *   baseline index: the run fails when the increase exceeds
+ *   `baseline.index × maxIncreasePercent / 100`.
+ *
+ * When both are set, exceeding either bound fails. A `regression` block with
+ * neither knob tolerates zero increase. Evaluation lives in
+ * `src/compare/policy.ts` (trellis-942c).
+ */
+export const regressionPolicySchema = z.strictObject({
+	maxIncrease: finiteNumberSchema.min(0).max(100).optional(),
+	maxIncreasePercent: finiteNumberSchema.min(0).optional(),
+});
+
+export type RegressionPolicy = z.infer<typeof regressionPolicySchema>;
+
+/**
  * Failure policy only — never mutates scoring weights (SPEC §6.5, §7).
  * `failOnNew` lists finding kinds whose appearance relative to a baseline
  * fails the run (§9).
  */
 export const policyConfigSchema = z.strictObject({
 	maxIndex: finiteNumberSchema.min(0).max(100).optional(),
+	regression: regressionPolicySchema.optional(),
 	budgets: z.record(dottedIdSchema, metricBudgetSchema).default({}),
 	failOnNew: z.array(dottedIdSchema).default([]),
 });
