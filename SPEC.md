@@ -282,17 +282,101 @@ result.
   test-to-production matches follow the documented contract (test and
   production duplication are reported separately).
 
-The concrete method — a small token-based implementation vs. an embeddable
-deterministic clone analyzer — is selected by a dedicated evaluation
-(`trellis-5a91`) against fixed local fixtures and a declared corpus,
-comparing normalized-token behavior, near-clone scope, overlap handling,
-runtime, memory, dependency, and license implications. The decision fixes
-exact/normalized clone semantics, minimum clone size, overlap union, and the
-production/test boundary, and is **recorded in this section** together with
-corpus sizes, environment, timing, and limitations. Whichever method is
-chosen must run offline without downloading tools or requiring target
-dependencies. *(Selection pending — this paragraph is the placeholder the
-decision lands in.)*
+**Decision (trellis-5a91, 2026-09-16): a small normalized-token
+detector over the shared parse, built and owned by trellis.** The evaluation
+compared a spike of this approach against the two embeddable forms of the
+existing deterministic analyzer jscpd — 4.3.0 (JS library API) and 5.2.1
+(Rust engine, prebuilt platform binaries) — on fixed local fixtures and two
+declared corpora (record below). Both jscpd forms were rejected: 5.2.1
+embeds only as a subprocess around an opaque platform binary (8
+optionalDependency platform packages), reports clone *pairs* rather than
+groups, is type-1 only by default, runs threaded with a timestamped payload,
+and auto-discovers config from scanned ancestors — an external process
+boundary inside the measurement path, against the §8 “local parsing and
+arithmetic” invariant. 4.3.0 is the unmaintained JS line: it fails to import
+under Bun (reproduced: `colors` CJS/ESM interop), pulls 118 transitive
+packages (~20 MB), is type-1 only, and stamps `foundDate` into clone
+payloads. The own implementation adds **zero runtime dependencies** (the
+pinned `typescript` is already ours), reuses the one shared parse (§13), and
+is the only candidate that natively provides the required semantics below —
+clone groups, overlap-union line accounting, per-source-set separation, and
+budget-exhaustion `incomplete` states.
+
+Semantics fixed by this decision:
+
+- **Token stream**: the leaf tokens of the shared `ts.SourceFile` in document
+  order (comments and trivia never appear). A raw scanner loop is not used:
+  it mis-tokenizes template literals without manual re-scan state
+  (reproduced); the AST walk is correct by construction and needs no second
+  parse.
+- **Exact/normalized semantics**: every identifier maps to one placeholder
+  and every literal (string, numeric, bigint, regex, template part) maps to
+  one placeholder; all other tokens contribute their `SyntaxKind`. This
+  detects exact (type-1) and identifier/literal-renamed (type-2) clones.
+  Near clones (type-3) are **out of scope**: a divergence splits a match into
+  maximal exact-normalized runs, each reported independently if above the
+  minimum size. (jscpd 5’s `--similarity` AST mode is the noted direction if
+  type-3 is ever revisited.)
+- **Minimum clone size** (provisional; the corpus stage, trellis-e924, owns
+  final calibration): **50 normalized tokens and 3 lines**, both required.
+- **Grouping**: a clone group is the set of ranges sharing one identical
+  normalized token sequence (content identity), with at least two members
+  after dropping same-file token-contained members; there is no transitive
+  pairwise merging. Within-file repeats count as clones.
+- **Ranges** are token-exact maximal runs; a reported line range may include
+  a partial boundary line (both jscpd engines exhibit the same overhang).
+- **Overlap union**: the numerator is the union of code-classified lines
+  (§5.1 line rules) covered by any member range, counted once per file —
+  overlapping or nested groups never double-count; the denominator is the
+  scope’s total code-classified lines, making the density a ratio of
+  compatible quantities.
+- **Production/test boundary**: detection runs **per source set** — token
+  streams are never matched across sets, so production and test duplication
+  are measured separately (§3.1); `generated`, `vendored`,
+  `declaration-only`, and excluded files are never tokenized.
+- **Bounded feasibility**: declared token-count and match-work budgets are
+  checked as the analysis runs; on exhaustion the metric is `incomplete`
+  with the reason — never a silent clean result (budget values land with the
+  implementation, trellis-6e4c, and are tuned in the corpus stage).
+
+Evaluation record (evidence; directional measurements, not benchmarks):
+
+- **Fixtures**: six hand-authored TS cases with known outcomes — exact copy,
+  identifier/literal rename, overlapping multi-file regions, four-way
+  multi-copy, below-threshold idiom, and a near clone with two changed
+  lines. At 50 tokens the spike produced exactly the semantics above (the
+  renamed clone detected; the below-threshold idiom silent; the near clone
+  reported as its maximal shared run). Both jscpd engines matched the
+  type-1 outcomes but missed the renamed clone entirely (jscpd 5 finds it
+  only in `--similarity` mode).
+- **Corpora**: C1 = trellis `src/` @ `853348b` (185 TS files including
+  tests; 22,854 physical lines, 19,847 token-covered code lines, 131,994
+  leaf tokens). C2 = C1 replicated 4× (740 files, 91,416 physical lines) as
+  a deterministic high-multiplicity stress corpus.
+- **Environment**: Linux x86_64 container (kernel 6.12), 2 vCPU Intel Xeon
+  @ 2.20 GHz, 32 GB RAM; Bun 1.2.23; Node 22.23.2; typescript 6.0.3; jscpd
+  4.3.0 / 5.2.1 from npm. Timings are median wall ms of 3 runs (1 run for
+  C2 spike/jscpd-4), process startup included; memory is peak RSS (VmHWM).
+
+| engine | C1 @ 50 tok | C1 @ 100 tok | C2 @ 50 tok |
+|---|---|---|---|
+| spike (naive, Bun) | 9.1 s / 360 MB | 7.5 s / 338 MB | 70.5 s / 493 MB |
+| jscpd 4.3.0 API (Node) | 11.3 s / 180 MB | — | 26.5 s / 303 MB |
+| jscpd 5.2.1 CLI (Rust) | 0.9 s / 47 MB | ~0.9 s / 47 MB | 1.6 s / 47 MB |
+
+- **Recall comparison** at 100 tokens on C1: spike 506 content groups /
+  2,909 union lines (14.7% of code lines) vs. jscpd 5: 13 pairs / 270 lines
+  (1.2%). Spot-checks confirmed the spike’s extra recall is dominated by
+  true renamed copy-paste (e.g. the `runCli` test helper cloned across four
+  test files) that exact-token engines cannot see, plus idiomatic-structure
+  matches that threshold calibration (trellis-e924) must control.
+- **Limitations**: the spike is deliberately naive (per-bucket pairwise
+  extension) — its numbers are a floor, and known optimizations (window
+  index built once, occurrence-deduped buckets, capped bucket enumeration)
+  precede the budget guard; even so, naive cost at real-repo scale is in
+  the same class as the mature JS engine. Type-3 near clones are deferred.
+  Timings come from one container on one day; they justify feasibility, not
+  speed claims.
 
 ### 5.4 Import cycles
 
