@@ -9,6 +9,23 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Added
+
+- **Versioned §6 contracts land in `src/contract/`** (trellis-58a6, SPEC §14
+  stage 4 of the deterministic-pivot plan `pl-b2ea`): zod-validated core types
+  and boundary schemas for metric values (unit, numerator/denominator,
+  complete/incomplete/unsupported/not-applicable states), located findings,
+  safeguard evidence (absent/configured/structurally-wired/unknown), source
+  coverage kept distinct from analysis completeness, the audit report
+  (raw metrics separate from score contributions; `score.partial` tied to the
+  completeness rollup), and the declarative audit configuration (source
+  exclusion/classification + failure policy — pure data, no executable hooks,
+  no scoring-weight overrides). One `SCHEMA_VERSION` covers the family;
+  `ANALYZER_VERSION` aliases the package version and `SCORING_VERSION` pins
+  `0.1.0-provisional`. `measurementPayload` strips run metadata (timestamps,
+  durations) from equality/fingerprint inputs. Contracts only — analyzers and
+  report consumers land with the named downstream issues.
+
 ### Removed
 
 - **The investigation subsystem is deleted** (trellis-4abc, SPEC §14 stage 3 of
