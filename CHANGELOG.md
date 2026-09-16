@@ -11,6 +11,28 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Duplication metrics identify clone groups and unique affected lines**
+  (trellis-6e4c, SPEC §14 stage 9 of the deterministic-pivot plan `pl-b2ea`):
+  `analyzeDuplication` in `src/metrics/` implements the trellis-5a91
+  decision (SPEC §5.3) — trellis's own normalized-token clone detector over
+  the shared syntax inventory, zero runtime dependencies. Leaf tokens of the
+  shared `ts.SourceFile` (identifiers and literals each normalized to one
+  placeholder) are sliding-window hashed at 50 tokens and extended into
+  maximal matches, grouped by content identity (same-file token-contained
+  members dropped, subsumed overlap groups dropped, no transitive merging);
+  the provisional minimum is 50 tokens **and** 3 lines per member. Groups
+  carry stable `clone-group-<n>` ids after deterministic location sorting.
+  The numerator is the union of code-classified lines covered by any member
+  (counted once per file) over the scope's code-line denominator, per source
+  set — production and test are never matched across sets, and
+  generated/vendored/declaration-only/excluded files are never tokenized.
+  Declared budgets (2,000,000 tokens, 100,000,000 token comparisons per
+  source set) trip `incomplete` with the reason instead of a silent clean
+  result. Emits `duplication.groups` / `duplication.duplicated-lines` /
+  `duplication.density` metrics per source set and one
+  `duplication.clone-group` finding per group. Hand-authored fixtures pin
+  exact, renamed, overlapping, multi-copy, below-threshold, near-clone, and
+  scope-boundary outcomes.
 - **Complexity and structural erosion measurements are reproducible**
   (trellis-fbc5, SPEC §14 stage 7 of the deterministic-pivot plan `pl-b2ea`):
   new `src/metrics/` holds the first deterministic analyzers over the shared

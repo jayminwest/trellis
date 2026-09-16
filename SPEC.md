@@ -336,8 +336,11 @@ Semantics fixed by this decision:
   `declaration-only`, and excluded files are never tokenized.
 - **Bounded feasibility**: declared token-count and match-work budgets are
   checked as the analysis runs; on exhaustion the metric is `incomplete`
-  with the reason — never a silent clean result (budget values land with the
-  implementation, trellis-6e4c, and are tuned in the corpus stage).
+  with the reason — never a silent clean result. Landed with the
+  implementation (trellis-6e4c; the corpus stage tunes them): a **token
+  budget** of 2,000,000 normalized tokens per source set and a
+  **match-work budget** of 100,000,000 token comparisons per source set
+  (`DEFAULT_DUPLICATION_BUDGET` in `src/metrics/duplication.ts`).
 
 Evaluation record (evidence; directional measurements, not benchmarks):
 

@@ -3,12 +3,32 @@
  * (SPEC §4 `metrics/`, §5).
  *
  * Currently: complexity & structural erosion (§5.1–5.2, trellis-fbc5) via
- * {@link analyzeComplexity}. Duplication (trellis-5a91/6e4c) and import
- * cycles (trellis-d214/cbde) land as sibling analyzers over the same
- * inventory; scoring (trellis-00d5) consumes the raw metrics.
+ * {@link analyzeComplexity}, and duplication (§5.3, trellis-6e4c) via
+ * {@link analyzeDuplication}. Import cycles (trellis-d214/cbde) land as a
+ * sibling analyzer over the same inventory; scoring (trellis-00d5) consumes
+ * the raw metrics.
  */
 export { analyzeComplexity } from "./analyze.ts";
+export {
+	analyzeDuplication,
+	type DuplicationAnalysis,
+	type DuplicationOptions,
+	type DuplicationScope,
+} from "./analyze-duplication.ts";
 export { type FunctionComplexity, measureFunctionComplexity } from "./complexity.ts";
+export {
+	type BudgetExhaustion,
+	type CloneDetection,
+	type CloneGroup,
+	type CloneMember,
+	collectTokenStream,
+	DEFAULT_DUPLICATION_BUDGET,
+	DUPLICATION_MIN_LINES,
+	DUPLICATION_MIN_TOKENS,
+	type DuplicationBudget,
+	type TokenStream,
+} from "./duplication.ts";
+export { detectClones } from "./duplication-detect.ts";
 export {
 	aggregateMass,
 	ccDistribution,
