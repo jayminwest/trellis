@@ -164,7 +164,7 @@ describe("runFleet", () => {
 				return stubAudit()(path, opts);
 			};
 			await runFleet(
-				fleet([target("warren", { skip: ["dast_scanning"], osecoDetectors: false })], {
+				fleet([target("warren", { skip: ["dast_scanning"] })], {
 					canonicalVersion: "1.0.0",
 				}),
 				deps(store, { audit }),
@@ -172,7 +172,6 @@ describe("runFleet", () => {
 			const opts = seen[0];
 			expect(opts?.repoId).toBe("warren");
 			expect(opts?.skip).toEqual(["dast_scanning"]);
-			expect(opts?.osecoDetectors).toBe(false);
 			expect(opts?.canonical?.canonicalVersion).toBe("1.0.0");
 			expect(opts?.now).toBe(NOW);
 			// No investigation wiring remains on the audit path (SPEC §14 stage 2).

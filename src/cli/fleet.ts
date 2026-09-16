@@ -5,8 +5,8 @@
  * service (load + validate the fleet, audit + drift each target, persist every
  * run, compute per-repo level deltas), shape the three output variants, then
  * apply the {@link assessFleet} exit-code policy. Each target's audit honors its
- * `allowedDeltas`, `skip`, and `osecoDetectors`; a missing path or a per-target
- * failure is isolated into an error row without aborting the fleet. `--db`
+ * `allowedDeltas` and `skip`; a missing path or a per-target failure is
+ * isolated into an error row without aborting the fleet. `--db`
  * overrides the central DB. Transitional (SPEC §14 stage 2): the retired
  * investigation knobs — `--no-cache`, `TRELLIS_PI_BIN`, and `targets.yaml`
  * `defaults.investigation` — are rejected with an actionable error.

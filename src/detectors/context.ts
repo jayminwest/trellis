@@ -24,8 +24,6 @@ export const SPAWN_FAILURE_EXIT = 127;
 export interface CreateContextOpts {
 	/** Per-run subprocess timeout in ms (default {@link DEFAULT_TIMEOUT_MS}). */
 	timeoutMs?: number;
-	/** os-eco-native detector toggle (SPEC §6.5/§8.4) surfaced on the context; default on. */
-	osecoDetectors?: boolean;
 }
 
 /**
@@ -117,6 +115,5 @@ export function createDetectionContext(
 		run,
 		readFile,
 		glob,
-		...(opts.osecoDetectors === undefined ? {} : { osecoDetectors: opts.osecoDetectors }),
 	};
 }

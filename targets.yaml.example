@@ -29,4 +29,4 @@ targets:
 
   - id: external-repo
     path: ../some-non-oseco-repo
-    osecoDetectors: false # disable os-eco-native detectors (SPEC §8.4)
+    languages: [python]

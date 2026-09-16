@@ -18,12 +18,11 @@ import type { Report } from "./types.ts";
 const GOLDEN_DIR = join(import.meta.dir, "__golden__");
 const UPDATE = process.env.TRELLIS_UPDATE_REPORT_GOLDEN === "1";
 
-/** A criterion record with the synthetic-only fields defaulted. */
+/** A deterministic criterion record with the synthetic-only fields defaulted. */
 function criterion(
 	id: string,
 	category: string,
 	scope: "repo" | "app",
-	discoveryVia: "deterministic" | "agent",
 ): Rubric["criteria"][number] {
 	return {
 		id,
@@ -31,8 +30,8 @@ function criterion(
 		scope,
 		level: 2,
 		skippable: false,
-		discoveryVia,
-		investigation: discoveryVia === "agent" ? "documentation" : null,
+		discoveryVia: "deterministic",
+		investigation: null,
 		gate: false,
 		weight: 1,
 	};
@@ -45,10 +44,10 @@ const SYNTHETIC_RUBRIC: Rubric = {
 		{ id: "code_quality", title: "Code Quality", description: "quality scope" },
 	],
 	criteria: [
-		criterion("readme", "documentation", "repo", "deterministic"),
-		criterion("agents_md", "documentation", "repo", "agent"),
-		criterion("lint_config", "code_quality", "app", "deterministic"),
-		criterion("type_check", "code_quality", "app", "deterministic"),
+		criterion("readme", "documentation", "repo"),
+		criterion("adr_presence", "documentation", "repo"),
+		criterion("lint_config", "code_quality", "app"),
+		criterion("type_check", "code_quality", "app"),
 	],
 };
 
@@ -56,10 +55,10 @@ const SYNTHETIC_RUBRIC: Rubric = {
 const GATED_RUBRIC: Rubric = {
 	categories: SYNTHETIC_RUBRIC.categories,
 	criteria: [
-		criterion("readme", "documentation", "repo", "deterministic"),
-		criterion("agents_md", "documentation", "repo", "agent"),
-		{ ...criterion("lint_config", "code_quality", "app", "deterministic"), gate: true },
-		criterion("type_check", "code_quality", "app", "deterministic"),
+		criterion("readme", "documentation", "repo"),
+		criterion("adr_presence", "documentation", "repo"),
+		{ ...criterion("lint_config", "code_quality", "app"), gate: true },
+		criterion("type_check", "code_quality", "app"),
 	],
 };
 
@@ -78,10 +77,10 @@ const SYNTHETIC_REPORT: Report = {
 	},
 	criteria: {
 		readme: { numerator: 1, denominator: 1, rationale: "README.md present" },
-		agents_md: {
+		adr_presence: {
 			numerator: null,
 			denominator: 1,
-			rationale: "investigation layer not yet wired",
+			rationale: "no detector bound for this criterion",
 			naKind: "no-detector",
 		},
 		lint_config: { numerator: 2, denominator: 3, rationale: "2/3 apps pass | piped" },
@@ -159,7 +158,7 @@ describe("renderJson", () => {
 
 	test("emits criteria in rubric (insertion) order", () => {
 		const json = renderJson(SYNTHETIC_REPORT);
-		const order = ["readme", "agents_md", "lint_config", "type_check"].map((id) =>
+		const order = ["readme", "adr_presence", "lint_config", "type_check"].map((id) =>
 			json.indexOf(`"${id}"`),
 		);
 		expect(order).toEqual([...order].sort((a, b) => a - b));
@@ -191,7 +190,7 @@ describe("renderMarkdown", () => {
 		expect(md).toContain("## Criteria");
 		expect(md).toContain("| `readme` | pass | 1/1 |");
 		expect(md).toContain("| `lint_config` | partial | 2/3 |");
-		expect(md).toContain("| `agents_md` | no-detector | n/a |");
+		expect(md).toContain("| `adr_presence` | no-detector | n/a |");
 		expect(md).toContain("| `type_check` | not-applicable | n/a |");
 		expect(md).toContain("README.md present");
 	});
@@ -251,7 +250,7 @@ describe("rollupByCategory", () => {
 		const rollups = rollupByCategory(SYNTHETIC_REPORT, SYNTHETIC_RUBRIC);
 		expect(rollups.map((c) => c.id)).toEqual(["documentation", "code_quality"]);
 		const [docs, quality] = rollups;
-		// documentation: readme counted (1/1), agents_md no-detector
+		// documentation: readme counted (1/1), adr_presence no-detector
 		expect(docs).toMatchObject({ counted: 1, noDetector: 1, passSum: 1, passRate: 1 });
 		// code_quality: lint_config counted (2/3), type_check not-applicable
 		expect(quality).toMatchObject({ counted: 1, notApplicable: 1 });

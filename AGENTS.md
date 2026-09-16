@@ -29,8 +29,9 @@ Three invariants define the product (SPEC §1):
 > **Breaking pivot in progress (plan `pl-b2ea`, SPEC §14).** trellis replaces
 > the retired 90-criterion agent-readiness product (rubric, maturity levels,
 > LLM investigation layer). The `src/` tree is mid-transition: legacy modules
-> (`src/rubric/`, `src/investigation/`, the per-language detector adapters)
-> remain operative until the staged plan removes or replaces them. Legacy
+> (`src/rubric/`, the per-language detector adapters) remain operative until
+> the staged plan removes or replaces them; the investigation subsystem was
+> deleted in stage 3 (trellis-4abc). Legacy
 > readiness scores are preserved in history as a separate quantity and are
 > never compared with the sloppiness index.
 
@@ -127,9 +128,7 @@ budget without filing `trellis-XXXX` and noting it in the commit body.
   under test.
 - Directories: `kebab-case`.
 - Golden fixtures live under `__golden__/`. Regenerate only via a documented
-  update gate, never by hand. (The legacy investigation goldens under
-  `src/investigation/__golden__/` are frozen with their subsystem and leave
-  with transition stage 3, SPEC §14.)
+  update gate, never by hand.
 - YAML config keys (audit configuration, `targets.yaml`) stay in the schema's
   casing.
 
@@ -153,9 +152,9 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 ### Architecture discipline (api>cli>sdk, SPEC §13.1)
 
 - All behavior lives in the **core** modules under `src/` (transitional set:
-  `src/rubric/`, `src/discovery/`, `src/detectors/`, `src/investigation/`,
-  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`;
-  the target layout is SPEC §4). No business logic anywhere else.
+  `src/rubric/`, `src/discovery/`, `src/detectors/`, `src/scoring/`,
+  `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`; the target
+  layout is SPEC §4). No business logic anywhere else.
 - `src/cli/` is a **thin** commander pass-through; `src/client/` is a typed
   SDK whose types **mirror the core** (annotate `// Mirrors src/<x>`). Both
   call the same core functions so a programmatic audit and a CLI audit

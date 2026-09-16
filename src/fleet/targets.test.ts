@@ -112,14 +112,13 @@ describe("targetAuditOptions", () => {
 		return { spec, absPath: `/abs/${spec.id}` };
 	}
 
-	test("plumbs skip, osecoDetectors, languages, and allowed deltas into the audit options", () => {
+	test("plumbs skip, languages, and allowed deltas into the audit options", () => {
 		const opts = targetAuditOptions(
 			resolved({
 				id: "warren",
 				path: "warren",
 				languages: ["typescript"],
 				skip: ["dast_scanning"],
-				osecoDetectors: false,
 				canonical: {
 					version: "1.0.0",
 					allowedDeltas: [{ file: "biome.json", reason: "wider line width" }],
@@ -129,7 +128,6 @@ describe("targetAuditOptions", () => {
 		);
 		expect(opts.repoId).toBe("warren");
 		expect(opts.skip).toEqual(["dast_scanning"]);
-		expect(opts.osecoDetectors).toBe(false);
 		expect(opts.languages).toEqual(["typescript"]);
 		expect(opts.canonical?.repoId).toBe("warren");
 		// Per-repo canonical version overrides the fleet default.
@@ -151,7 +149,6 @@ describe("targetAuditOptions", () => {
 		const opts = targetAuditOptions(resolved({ id: "a", path: "a" }), {});
 		expect(opts.skip).toBeUndefined();
 		expect(opts.languages).toBeUndefined();
-		expect(opts.osecoDetectors).toBeUndefined();
 		// Drift still runs; with no version anywhere it falls through to the bundled set.
 		expect(opts.canonical?.canonicalVersion).toBeUndefined();
 		expect(opts.canonical?.allowedDeltas).toBeUndefined();
