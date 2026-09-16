@@ -11,6 +11,27 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **A shared TypeScript syntax and function inventory is available**
+  (trellis-d81d, SPEC §14 stage 6 of the deterministic-pivot plan `pl-b2ea`):
+  new `src/syntax/` is the one parse layer every metric reuses within an
+  audit (SPEC §4, §13). `buildSyntaxInventory` consumes the discovery
+  `SourceInventory` and parses each classified TS/TSX file exactly once with
+  the now-**pinned** TypeScript compiler API (`dependencies.typescript` is
+  the exact `6.0.3` — moved from a floating devDependency; TS 7 dropped the
+  JS compiler API, and the inventory records `compilerVersion` for
+  traceability). Each `FileSyntax` carries the shared `ts.SourceFile`,
+  discovery ownership (`packagePath`/`sourceSet`), a function inventory
+  (declarations, expressions, arrows, methods, constructors, get/set
+  accessors — with documented naming, 1-based whole-node and body ranges,
+  and `depth`/`parentIndex` attribution), scanner-based line counts
+  (documented multiline-literal and comment-only handling), and located
+  parse diagnostics that roll up to report `completeness` instead of
+  throwing (SPEC §3.3). Documented binding rules: overload/`declare`/
+  abstract signatures are never inventory entries (they are counted and
+  attached to their implementation), and nested function bodies belong to
+  the nested function alone — `walkOwnNodes` enforces the attribution
+  mechanically so nested branches can never leak into parent totals (§5.1).
+  Facts only; scoring stays downstream.
 - **TypeScript source discovery produces a classified workspace inventory**
   (trellis-6003, SPEC §14 stage 5 of the deterministic-pivot plan `pl-b2ea`):
   `src/discovery/` gains `discoverSourceInventory` — one deterministic
