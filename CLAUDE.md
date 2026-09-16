@@ -1,17 +1,27 @@
 # trellis
 
-Agentic-readiness audit & sync for code repositories. A repo is scored 0–100%
-across a versioned, 9-category / 90-criterion rubric, mapped to a maturity
-Level 1–5, with score history tracked centrally so drift surfaces over time.
-~78% of criteria are deterministic file/config/command checks; the rest are
-graded deterministically from facts gathered by a bounded LLM investigation
-pass. trellis also detects **canonical-config drift** against a bundled,
-versioned `standards/` set with per-repo allowed deltas.
+Deterministic, offline-by-default sloppiness audit for TypeScript/TSX
+workspaces. trellis parses source with the TypeScript compiler API and
+measures structural debt — complexity, structural erosion, duplication, and
+import cycles — plus a separate, non-scoring inspection of safeguard
+configuration (hooks and check wiring). Each run emits a versioned report
+with a **0–100 sloppiness index where lower is better** (not a percentage of
+bad code; infrastructure cannot offset it), raw metrics, traceable
+contributions, ranked hotspots, and safeguard evidence.
 
-**The rubric (WHAT) never names a tool.** Detectors (HOW) are tool-specific and
-live in per-language adapters. That seam is the whole design — keep it clean.
+**Invariants (SPEC §1):** no-model execution on every audit path; the first
+audit needs neither Git nor credentials, a database, network, or installed
+project dependencies; one deterministic core serves local, fleet, and CI use
+with CLI/SDK parity.
 
-[`SPEC.md`](SPEC.md) is the authoritative V1 design record. [`AGENTS.md`](AGENTS.md)
+> **Breaking pivot in progress (plan `pl-b2ea`, SPEC §14).** The 90-criterion
+> agent-readiness product (rubric, maturity levels, LLM investigation layer)
+> is retired. The `src/` tree is mid-transition — legacy modules remain
+> operative until the staged plan removes or replaces them — and legacy
+> readiness scores are preserved in history as a separate quantity, never
+> compared with the sloppiness index.
+
+[`SPEC.md`](SPEC.md) is the authoritative design record. [`AGENTS.md`](AGENTS.md)
 is the canonical agent guide; this file adds tool-specific conventions and the
 os-eco session bootstrap.
 
@@ -19,40 +29,44 @@ os-eco session bootstrap.
 
 - **Runtime:** Bun (runs TypeScript directly, no build step).
 - **Language:** TypeScript strict (`noUncheckedIndexedAccess`, no `any`).
-- **Validation:** zod (rubric schema, findings schemas).
+- **Validation:** zod (report/configuration contracts, §6).
 - **Lint/format:** Biome, `--error-on-warnings`, tab indent / 100-col.
-- **Storage:** `bun:sqlite` (run history + drift queries).
+- **Storage:** `bun:sqlite` (opt-in run history only; audits are stateless by
+  default).
 - **CLI:** commander; **logging:** pino.
-- **LLM provider:** Pi in RPC mode (`pi --mode rpc`), exercised against frozen
-  golden fixtures offline (SPEC §9).
+- **Parsing:** the pinned TypeScript compiler API — one shared parse layer
+  reused by all metrics within an audit. No LLM provider exists in the
+  product (no-model invariant, SPEC §1).
 
 ## Architecture (api>cli>sdk core discipline, SPEC §13.1)
 
 All behavior lives in one surface-agnostic **domain core**; every other surface
-is a thin pass-through, so the surfaces cannot drift out of sync.
+is a thin pass-through, so the surfaces cannot drift out of sync. The tree
+below is the **transitional** layout (what exists today); the target layout is
+SPEC §4 and lands stage by stage per SPEC §14.
 
 ```
 src/
   cli/            # THIN commander entrypoints; parse args, call core, shape output
   client/         # typed SDK; request/response types MIRROR the core (// Mirrors src/<x>)
-  rubric/         # WHAT: schema.ts (zod), categories.yaml, repo-scope.yaml,
-                  #       app-scope.yaml, version.ts (RUBRIC_VERSION + comparability)
-  discovery/      # app discovery: independently-deployable dirs → apps
-  detectors/      # HOW (deterministic): registry.ts (criterion id → detector),
-                  #   common/, lang/{typescript,swift,python}/, oseco/
-  investigation/  # HOW (agent): areas.ts (4 fixed areas), findings.ts (zod),
-                  #   grader.ts (DETERMINISTIC facts → pass/fail/N-A), provider/pi/
-  scoring/        # pass-rate, coverage clamp, naKind handling, bands → level
+  rubric/         # LEGACY (leaves per SPEC §14): readiness rubric data + schema
+  discovery/      # app discovery today; becomes TS/TSX source-set inventory
+  detectors/      # LEGACY per-language adapters; safeguard inspection (§5.5)
+                  #   is the carried-forward subset
+  investigation/  # LEGACY (removed in transition stage 3): agent findings layer
+  scoring/        # today: readiness pass-rate; target: pure sloppiness formula
   standards/      # canonical/ (bundled files), manifest.yaml, drift.ts
-  fleet/          # targets.yaml loader + multi-repo orchestration
-  store/          # schema.sql + migrations/ (runs / criterion_results / investigation_cache)
+                  #   (separate capability; never feeds the sloppiness index)
+  fleet/          # targets.yaml loader + multi-repo orchestration (optional)
+  store/          # schema.sql + migrations/ (opt-in history; legacy runs kept
+                  #   separate, SPEC §10)
   report/         # terminal / JSON / markdown renderers
   index.ts        # public lib entry — VERSION constant only (lockstep w/ package.json)
 ```
 
 - **Core** = every module above except `cli/` and `client/`. It holds *all*
-  validation, scoring, drift, and investigation logic. There is **no HTTP
-  server** in MVP (a network API is a deferred surface over this same core).
+  validation, measurement, scoring, and drift logic. There is **no HTTP
+  server** (a network API is a deferred surface over this same core).
 - **CLI** never reimplements logic; **SDK** calls the same core functions
   in-process, so a programmatic audit and a CLI audit exercise one code path.
 - **Sync enforcement:** single core + strict `tsc` over mirrored SDK types +
@@ -66,15 +80,16 @@ See [`docs/architecture.mmd`](docs/architecture.mmd) for the rendered graph.
 - **Filenames:** `kebab-case.ts`. Tests are `<name>.test.ts` beside the unit.
   Golden fixtures under `__golden__/`.
 - **Identifiers:** `camelCase` values, `PascalCase` types, `SCREAMING_SNAKE_CASE`
-  constants (`RUBRIC_VERSION`, `VERSION`).
+  constants (`VERSION`).
 - **Imports:** `.ts` extensions; zod at every external boundary.
 - **Tests:** `describe("<unit>")` + `test("verb-led …")`, no `should`/`it`. No
-  mocks for fs/SQLite — temp dirs and `:memory:`/temp DBs. Stub only the Pi RPC
-  process boundary; layers above run real code against goldens.
+  mocks for fs/SQLite — temp dirs and `:memory:`/temp DBs. Stub only true
+  external process boundaries; layers above run real code against goldens.
 - **Debt markers:** every `TODO`/`FIXME`/`HACK`/`XXX` carries a tracker on the
   same line — `trellis-XXXX` / `mx-XXXX` / `#NNN` / a URL.
-- **Dogfood:** trellis must score L4+ against itself; adopt the same ratchets it
-  audits for.
+- **Dogfood:** once the deterministic core lands (SPEC §14), trellis audits
+  itself offline; a regression in its own sloppiness index is a real failure.
+  The quality-gate ratchets stay binding throughout the transition.
 
 ## Build & Test Commands
 
