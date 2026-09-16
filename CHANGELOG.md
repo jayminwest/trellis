@@ -11,6 +11,30 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **TypeScript source discovery produces a classified workspace inventory**
+  (trellis-6003, SPEC §14 stage 5 of the deterministic-pivot plan `pl-b2ea`):
+  `src/discovery/` gains `discoverSourceInventory` — one deterministic
+  filesystem walk (SPEC §3.1) that finds package boundaries from
+  `package.json` manifests and workspace declarations (npm/bun/yarn
+  `workspaces` array/object, pnpm `pnpm-workspace.yaml` with `!` negation),
+  assigns every TS/TSX file (`.ts`/`.tsx`/`.mts`/`.cts`) to exactly one source
+  set (production/test/generated/vendored/declaration-only) owned by its
+  nearest ancestor package so nested packages are never double-counted, and
+  reports — rather than hides — the excluded scope (build outputs
+  `dist`/`build`/`out`/`coverage` plus config `source.exclude` globs), the
+  unsupported scope (non-TS source files and whole non-TS packages, §3.3),
+  and the ignored scope (dependency dirs, dot dirs, symlinked dirs, which are
+  never descended into; directory symlinks are never followed so there are no
+  cycles). Classification defaults are documented in `classify.ts` with
+  explicit §6.5 overrides evaluated before them; matching uses a documented
+  minimal glob subset (`*`, `?`, `**`) in `glob.ts`. Discovery works on
+  uncommitted files and non-Git trees and never installs packages, runs
+  repository scripts, or touches the network. `toSourceCoverage` projects the
+  inventory onto the §6.4 report shape (sloc left to the measurement layer).
+  New `src/config/` loads and validates the optional `trellis.yaml` /
+  `trellis.yml` into the §6.5 audit-config contract (missing file → defaults;
+  invalid file → an error naming every offending key). Legacy app discovery
+  (`discoverApps`) remains for the transitional rubric path.
 - **Versioned §6 contracts land in `src/contract/`** (trellis-58a6, SPEC §14
   stage 4 of the deterministic-pivot plan `pl-b2ea`): zod-validated core types
   and boundary schemas for metric values (unit, numerator/denominator,
