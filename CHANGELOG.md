@@ -11,6 +11,28 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **The deterministic audit core assembles the new report** (trellis-ef85,
+  SPEC §4, stage 14 of the deterministic-pivot plan `pl-b2ea`):
+  `auditWorkspace(root)` in `src/audit/audit.ts` is the one core call that
+  audits a TS/TSX workspace end to end — configure → discover → one shared
+  parse → measure (complexity, duplication, dependency graph, import
+  cycles) → safeguard inspection → the pure provisional score → §6.4 report
+  assembly. It runs with no model, network, project-command, Git, or
+  database access and writes nothing (persistence and policy evaluation
+  stay outside the measurement pass); broad readiness categories, os-eco
+  scoring overlays, and the retired Python/Swift detectors are never
+  executed on this path. `src/audit/assemble.ts` folds the analysis
+  products into the versioned `AuditReport` purely — every analyzer metric
+  emitted exactly once (duplicate ids throw), findings grouped by kind with
+  analyzer rankings preserved, coverage pairing discovery counts with
+  measured sloc — and validates the contract's cross-field honesty
+  invariants (completeness rollup, `partial` headline, traceable
+  contributions) before a report can leave the core. Progress events
+  (`src/audit/progress.ts`) are bounded by the pipeline shape, never by
+  repository size. End-to-end fixtures exercise clean, sloppy, mixed-
+  language, incomplete (parse failure / unresolved import / budget
+  exhaustion), empty, and dirty-worktree repositories over real temporary
+  directories, and pin byte-equal measurement payloads per §3.5.
 - **The provisional sloppiness formula is explicit and versioned**
   (trellis-00d5, SPEC §7.1, stage 13 of the deterministic-pivot plan
   `pl-b2ea`): `scoreSloppiness(metrics)` in `src/scoring/sloppiness.ts` is
@@ -189,6 +211,14 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   `0.1.0-provisional`. `measurementPayload` strips run metadata (timestamps,
   durations) from equality/fingerprint inputs. Contracts only — analyzers and
   report consumers land with the named downstream issues.
+
+### Fixed
+
+- **Duplication metrics no longer emit a zero denominator** for a scope
+  with no code-classified lines (e.g. a repository without test files):
+  `duplication.duplicated-lines.<set>` omits the numerator/denominator pair
+  there, matching the §6.1 contract (denominators must be positive). The
+  audit core's schema validation (trellis-ef85) surfaced the violation.
 
 ### Removed
 
