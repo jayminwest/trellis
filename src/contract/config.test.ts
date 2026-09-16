@@ -40,6 +40,33 @@ describe("auditConfigSchema", () => {
 		expect(auditConfigSchema.safeParse({ source: specExample.source, policy }).success).toBe(false);
 	});
 
+	test("round-trips a regression policy with absolute and relative tolerances", () => {
+		const policy = {
+			...specExample.policy,
+			regression: { maxIncrease: 2, maxIncreasePercent: 10 },
+		};
+		expect(auditConfigSchema.parse({ policy }).policy.regression).toEqual({
+			maxIncrease: 2,
+			maxIncreasePercent: 10,
+		});
+	});
+
+	test("rejects out-of-range regression tolerances", () => {
+		for (const regression of [
+			{ maxIncrease: -1 },
+			{ maxIncrease: 101 },
+			{ maxIncreasePercent: -5 },
+			{ maxIncrease: Number.NaN },
+		]) {
+			expect(auditConfigSchema.safeParse({ policy: { regression } }).success).toBe(false);
+		}
+	});
+
+	test("rejects unknown keys inside the regression block", () => {
+		const policy = { regression: { maxIncrease: 2, weight: 0.5 } };
+		expect(auditConfigSchema.safeParse({ policy }).success).toBe(false);
+	});
+
 	test("rejects an out-of-range maxIndex", () => {
 		const policy = { ...specExample.policy, maxIndex: 101 };
 		expect(auditConfigSchema.safeParse({ source: specExample.source, policy }).success).toBe(false);

@@ -551,6 +551,9 @@ source:
     "scripts/tools/**": "test"          # explicit source-set overrides
 policy:                                 # failure policy only — never mutates scoring weights
   maxIndex: 40
+  regression:                           # score regression vs a baseline report (§9)
+    maxIncrease: 2                      # absolute tolerance, in index points
+    maxIncreasePercent: 10              # relative tolerance, % of the baseline index
   budgets:
     duplication.density: { max: 0.05 }
   failOnNew: [import-cycle, complexity.hotspot]
@@ -678,6 +681,22 @@ An audit run, end to end:
   (the report is still emitted to stdout; reasons go to stderr); `1` on
   operational error (the audit could not run). Policy failure and
   operational failure are always distinguishable.
+
+*(Landed, trellis-942c: `src/compare/` — `load.ts` reads a saved JSON report
+and re-validates it against the §6.4 contract (no Git, no SQLite; failures
+are operational errors, never policy failures). `compare.ts` compares two
+validated artifacts: comparability is refused explicitly on schema/analyzer/
+scoring version, metric-catalog, or supplied-configuration mismatches, while
+unverifiable configuration and changed source scope are reported as caveats;
+finding matching pairs by kind + path with unlimited line-shift tolerance
+inside a 1:1 group and reports ambiguous n:m groups as resolved + new pairs.
+`policy.ts` evaluates max-index, metric budgets, score regression (absolute
+`maxIncrease` points / relative `maxIncreasePercent` of the baseline index,
+each documented per knob), and `failOnNew` kinds independently — each returns
+structured coded reasons, a better index cannot suppress a cycle/hotspot
+failure, and baseline-dependent policies skip on an absent baseline but fail
+closed on an incompatible one. CLI (`trellis compare`, `--baseline`) and SDK
+wiring lands with trellis-9a88.)*
 
 ---
 

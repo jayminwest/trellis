@@ -14,6 +14,8 @@ export {
 	metricBudgetSchema,
 	type PolicyConfig,
 	policyConfigSchema,
+	type RegressionPolicy,
+	regressionPolicySchema,
 	type SourceConfig,
 	sourceConfigSchema,
 } from "./config.ts";
