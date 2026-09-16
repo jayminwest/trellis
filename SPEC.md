@@ -732,6 +732,14 @@ trellis standards              # canonical drift (separate capability, §11)
   score contributions, ranked hotspots, and safeguard evidence; JSON carries
   the full structured report; Markdown is a bounded summary. Every displayed
   score carries its direction and scoring version (§3.4).
+  *(Landed, trellis-a059: `src/report/audit-{terminal,json,markdown}.ts`
+  render the §6.4 report over the shared helpers in `audit-format.ts` — the
+  index always shows `N/100 · lower is better · scoring <version>`, never a
+  percentage; hotspot/finding lists are bounded with totals printed; the JSON
+  renderer re-validates the contract at the boundary. `audit-fixtures.ts`
+  audits the five render-fixture repositories — clean, sloppy,
+  mixed-language, incomplete, function-free — through the real core. CLI/SDK
+  wiring lands with trellis-9a88.)*
 - Retired flags (`--rubric-version`, `--min-level`, provider/model/cache
   knobs, …) fail with a useful "removed in the deterministic pivot" error,
   not a silent ignore.
