@@ -31,8 +31,6 @@ describe("trellis fleet", () => {
 	let dbPath: string;
 	let targetsFile: string;
 
-	const NO_PI = { TRELLIS_PI_BIN: "trellis-pi-absent" } as const;
-
 	beforeEach(() => {
 		// One real single-app fixture repo, plus a declared-but-missing target.
 		repoDir = mkdtempSync(join(tmpdir(), "trellis-fleet-repo-"));
@@ -64,7 +62,6 @@ describe("trellis fleet", () => {
 			["fleet", "--targets", targetsFile, "--db", dbPath, "--fail-on", "none"],
 			{
 				TRELLIS_DB: "",
-				...NO_PI,
 			},
 		);
 		expect(code).toBe(0);
@@ -87,7 +84,7 @@ describe("trellis fleet", () => {
 	test("--json emits the aggregate report with per-target entries", async () => {
 		const { code, stdout } = await runCli(
 			["fleet", "--targets", targetsFile, "--db", dbPath, "--json", "--fail-on", "none"],
-			{ TRELLIS_DB: "", ...NO_PI },
+			{ TRELLIS_DB: "" },
 		);
 		expect(code).toBe(0);
 		const report = JSON.parse(stdout);
@@ -104,9 +101,46 @@ describe("trellis fleet", () => {
 		writeFileSync(targetsFile, "targets:\n  - id: a\n"); // missing required `path`
 		const { code, stderr } = await runCli(["fleet", "--targets", targetsFile, "--db", dbPath], {
 			TRELLIS_DB: "",
-			...NO_PI,
 		});
 		expect(code).not.toBe(0);
 		expect(stderr).toContain("targets.yaml");
+	});
+
+	test("rejects a targets.yaml with retired defaults.investigation, actionably", async () => {
+		writeFileSync(
+			targetsFile,
+			`defaults:\n  investigation:\n    provider: anthropic\n    model: claude-opus-4-8\n` +
+				`targets:\n  - id: fixture\n    path: ${repoDir}\n`,
+		);
+		const { code, stdout, stderr } = await runCli(
+			["fleet", "--targets", targetsFile, "--db", dbPath, "--fail-on", "none"],
+			{ TRELLIS_DB: "" },
+		);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("defaults.investigation");
+		expect(stderr).toContain("no longer exists");
+		expect(stderr).toContain("Remove defaults.investigation");
+	});
+
+	test("--no-cache is rejected with an actionable retirement message", async () => {
+		const { code, stdout, stderr } = await runCli(
+			["fleet", "--targets", targetsFile, "--db", dbPath, "--no-cache"],
+			{ TRELLIS_DB: "" },
+		);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("--no-cache no longer exists");
+		expect(stderr).toContain("Remove --no-cache");
+	});
+
+	test("TRELLIS_PI_BIN is rejected with an actionable retirement message", async () => {
+		const { code, stdout, stderr } = await runCli(
+			["fleet", "--targets", targetsFile, "--db", dbPath, "--fail-on", "none"],
+			{ TRELLIS_DB: "", TRELLIS_PI_BIN: "/usr/local/bin/pi" },
+		);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("TRELLIS_PI_BIN no longer exists");
 	});
 });

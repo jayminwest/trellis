@@ -1,28 +1,27 @@
 /**
- * CLI progress rendering (SPEC §7.3 observability) — the surface half of the
- * core's progress contract. The domain core ({@link auditRepo}) emits structured
- * {@link AuditEvent}s; this module turns them into human progress on **stderr**,
- * keeping stdout reserved for the machine-clean report. Rendering is a CLI
- * concern only — core never logs — so the api>cli>sdk seam stays intact.
+ * CLI progress rendering — the surface half of the core's progress contract.
+ * The domain core ({@link auditRepo}) emits structured {@link AuditEvent}s;
+ * this module turns them into human progress on **stderr**, keeping stdout
+ * reserved for the machine-clean report. Rendering is a CLI concern only —
+ * core never logs — so the api>cli>sdk seam stays intact.
  *
- * Defaults are TTY-aware. An interactive run renders a **single status line that
- * rewrites in place** (`\r`) — one line tracking the current phase plus its
- * progress (area i/total, agent message count, detector i/total) so a long
- * (0.5–10min) run reads as live activity rather than a wall of text;
- * {@link ProgressReporter.finish} clears it before the report prints. A piped
- * run (CI) stays silent unless `--verbose`, which switches to a durable
- * line-per-event log (no in-place rewrite) that also surfaces per-criterion
- * detector lines and per-message Pi session detail. `--quiet` always suppresses.
+ * Defaults are TTY-aware. An interactive run renders a **single status line
+ * that rewrites in place** (`\r`) — one line tracking the current phase plus
+ * its progress (apps discovered, detector i/total) so a long run reads as live
+ * activity rather than a wall of text; {@link ProgressReporter.finish} clears
+ * it before the report prints. A piped run (CI) stays silent unless
+ * `--verbose`, which switches to a durable line-per-event log (no in-place
+ * rewrite) that also surfaces per-criterion detector lines. `--quiet` always
+ * suppresses.
  */
 
-import type { InvestigationEvent, SessionEvent } from "../investigation/index.ts";
 import type { AuditEvent, AuditPhase } from "../report/index.ts";
 
 /** Inputs that decide whether and how progress is rendered. */
 export interface ProgressReporterOptions {
 	/** Suppress all progress lines (`--quiet`). */
 	quiet?: boolean;
-	/** Surface per-detector / per-session-message detail (`--verbose`). */
+	/** Surface per-detector detail (`--verbose`). */
 	verbose?: boolean;
 	/** Whether the diagnostics stream is a TTY — gates the default (interactive) on. */
 	isTTY?: boolean;
@@ -46,59 +45,10 @@ function phaseLabel(phase: AuditPhase): string {
 	switch (phase) {
 		case "discovery":
 			return "discovering apps";
-		case "investigation":
-			return "running investigation";
 		case "detectors":
 			return "running detectors";
 		case "scoring":
 			return "scoring";
-	}
-}
-
-/** Human label for a Pi session event (verbose-only detail). */
-function sessionLabel(event: SessionEvent): string {
-	switch (event.type) {
-		case "message":
-			return "agent message";
-		case "agent-end":
-			return "turn ended";
-		case "retry":
-			return `corrective retry ${event.attempt}`;
-		case "heartbeat-stall":
-			return "stalled (no output)";
-	}
-}
-
-/** Render one lifted investigation event; session events only in verbose mode. */
-function renderInvestigation(
-	event: InvestigationEvent,
-	verbose: boolean,
-	write: (line: string) => void,
-): void {
-	switch (event.type) {
-		case "area-start":
-			write(`trellis:   ${event.area} (${event.index + 1}/${event.total})\n`);
-			return;
-		case "cache-hit":
-			write(`trellis:   ${event.area}: cache hit\n`);
-			return;
-		case "probe":
-			write(
-				event.ok
-					? `trellis:   pi ${event.detail} ready\n`
-					: `trellis:   pi unavailable: ${event.detail}\n`,
-			);
-			return;
-		case "session":
-			if (verbose) write(`trellis:   ${event.area}: ${sessionLabel(event.event)}\n`);
-			return;
-		case "area-end":
-			write(
-				event.ok
-					? `trellis:   ${event.area}: done\n`
-					: `trellis:   ${event.area}: ${event.reason ?? "unavailable"}\n`,
-			);
-			return;
 	}
 }
 
@@ -114,9 +64,6 @@ function render(event: AuditEvent, verbose: boolean, write: (line: string) => vo
 		case "detector":
 			if (verbose) write(`trellis:   [${event.index + 1}/${event.total}] ${event.id}\n`);
 			return;
-		case "investigation":
-			renderInvestigation(event.event, verbose, write);
-			return;
 	}
 }
 
@@ -129,12 +76,6 @@ const CLEAR_EOL = "\x1b[K";
 interface StatusState {
 	frame: number;
 	phase: AuditPhase;
-	/** Current investigation area + its 1-based position, set on area-start. */
-	area?: { name: string; index: number; total: number };
-	/** Agent messages seen in the current area — shown as in-flight progress. */
-	messages: number;
-	/** Latest Pi probe outcome, surfaced until the next area starts. */
-	probe?: string;
 	/** Detector pass position (1-based) once detectors begin. */
 	detector?: { index: number; total: number };
 	/** Number of apps discovered, surfaced through the discovery phase. */
@@ -146,8 +87,6 @@ function statusText(s: StatusState): string {
 	switch (s.phase) {
 		case "discovery":
 			return s.apps === undefined ? "discovering apps" : `discovered ${plural(s.apps, "app")}`;
-		case "investigation":
-			return investigationText(s);
 		case "detectors":
 			return s.detector
 				? `running detectors (${s.detector.index + 1}/${s.detector.total})`
@@ -155,15 +94,6 @@ function statusText(s: StatusState): string {
 		case "scoring":
 			return "scoring";
 	}
-}
-
-/** The investigation-phase status: latest probe, then the current area + its in-flight message count. */
-function investigationText(s: StatusState): string {
-	if (s.probe) return s.probe;
-	if (!s.area) return "investigating";
-	const pos = `${s.area.index + 1}/${s.area.total}`;
-	const msgs = s.messages > 0 ? ` · ${plural(s.messages, "msg")}` : "";
-	return `investigating · ${s.area.name} (${pos})${msgs}`;
 }
 
 /** `"1 app"` / `"3 apps"` — count with a naively pluralized noun. */
@@ -184,23 +114,6 @@ function advance(s: StatusState, event: AuditEvent): void {
 		case "apps-discovered":
 			s.apps = event.count;
 			return;
-		case "investigation": {
-			const e = event.event;
-			if (e.type === "area-start") {
-				s.area = { name: e.area, index: e.index, total: e.total };
-				s.messages = 0;
-				s.probe = undefined;
-			} else if (e.type === "cache-hit") {
-				s.area = { name: e.area, index: s.area?.index ?? 0, total: s.area?.total ?? 0 };
-				s.messages = 0;
-			} else if (e.type === "probe") {
-				s.probe = e.ok ? `pi ${e.detail} ready` : `pi unavailable: ${e.detail}`;
-			} else if (e.type === "session" && e.event.type === "message") {
-				s.messages += 1;
-				s.probe = undefined;
-			}
-			return;
-		}
 	}
 }
 
@@ -209,7 +122,7 @@ function advance(s: StatusState, event: AuditEvent): void {
  * line in place (`\r`), so the run shows live activity without scrolling.
  */
 function singleLineReporter(write: (line: string) => void): ProgressReporter {
-	const s: StatusState = { frame: 0, phase: "discovery", messages: 0 };
+	const s: StatusState = { frame: 0, phase: "discovery" };
 	let dirty = false;
 	return {
 		onProgress(event) {

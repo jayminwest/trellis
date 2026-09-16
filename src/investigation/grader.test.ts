@@ -238,24 +238,16 @@ describe("gradeArea", () => {
 	});
 });
 
-describe("coverage of the rubric's 20 agent criteria (acceptance)", () => {
+describe("retired agent criteria (SPEC §14 stage 2)", () => {
 	const rubric = loadRubric();
-	const agentCriteria = rubric.criteria.filter((c) => c.discoveryVia === "agent");
 
-	test("the grader covers exactly the 20 agent criteria, nothing more", () => {
-		expect(agentCriteria).toHaveLength(20);
-		expect([...gradedCriterionIds()].sort()).toEqual(agentCriteria.map((c) => c.id).sort());
-	});
-
-	test("each criterion's grader is bound to the area the rubric names", () => {
-		for (const c of agentCriteria) {
-			expect(CRITERION_AREA[c.id]).toBe(c.investigation ?? undefined);
-		}
-	});
-
-	test("rubric skippable flags agree with the grader's skippable set", () => {
-		for (const c of agentCriteria) {
-			expect(SKIPPABLE_AGENT_CRITERIA.has(c.id)).toBe(c.skippable);
+	test("the transitional catalog carries no agent criteria for the grader to cover", () => {
+		// The investigation pass is disconnected and this subsystem leaves with
+		// stage 3; the grader's 20 legacy ids are all retired from the catalog.
+		expect(rubric.criteria.filter((c) => c.discoveryVia === "agent")).toHaveLength(0);
+		expect(gradedCriterionIds()).toHaveLength(20);
+		for (const id of gradedCriterionIds()) {
+			expect(rubric.criteria.some((c) => c.id === id)).toBe(false);
 		}
 	});
 });

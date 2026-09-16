@@ -1,108 +1,17 @@
 # Repo-scope criteria (SPEC §5, §6.1) — the WHAT layer; never names a tool.
 #
-# The 44 criteria scored once for the whole repository (denominator always 1).
+# The 30 criteria scored once for the whole repository (denominator always 1).
 # Grouped by category in §5 order. Fields per SPEC §6.1:
 #   id, category, scope, level, skippable, discoveryVia,
 #   investigation (non-null IFF discoveryVia: agent),
 #   gate (reserved; exactly one per category), weight (reserved; default 1).
 # `gate`, `weight`, and a null `investigation` rely on schema defaults when
 # omitted. Clean-room authored from SPEC §5.
+#
+# Transitional (SPEC §14 stage 2): the agent-discovery criteria are retired —
+# every remaining criterion is deterministic.
 
-# --- 5.1 Documentation (10, all R, all agent) -----------------------------
-# Areas: documentation, agent-config.
-
-# README at root with setup/usage.
-- id: readme
-  category: documentation
-  scope: repo
-  level: 1
-  skippable: false
-  discoveryVia: agent
-  investigation: documentation
-
-# Non-trivial agent-instructions file.
-- id: agents_md
-  category: documentation
-  scope: repo
-  level: 2
-  skippable: false
-  discoveryVia: agent
-  investigation: agent-config
-
-# Build command written down.
-- id: build_cmd_doc
-  category: documentation
-  scope: repo
-  level: 2
-  skippable: false
-  discoveryVia: agent
-  investigation: documentation
-
-# Tool/workflow that generates docs.
-- id: automated_doc_generation
-  category: documentation
-  scope: repo
-  level: 2
-  skippable: false
-  discoveryVia: agent
-  investigation: documentation
-
-# Runbooks reachable.
-- id: runbooks_documented
-  category: documentation
-  scope: repo
-  level: 2
-  skippable: false
-  discoveryVia: agent
-  investigation: documentation
-
-# GATE: one-shot fresh-clone -> running dev env.
-- id: single_command_setup
-  category: documentation
-  scope: repo
-  level: 3
-  skippable: false
-  discoveryVia: agent
-  investigation: documentation
-  gate: true
-
-# >=1 valid skill.
-- id: skills
-  category: documentation
-  scope: repo
-  level: 3
-  skippable: false
-  discoveryVia: agent
-  investigation: agent-config
-
-# Key docs modified recently.
-- id: documentation_freshness
-  category: documentation
-  scope: repo
-  level: 3
-  skippable: false
-  discoveryVia: agent
-  investigation: documentation
-
-# Arch/flow diagram or dependency docs.
-- id: service_flow_documented
-  category: documentation
-  scope: repo
-  level: 3
-  skippable: false
-  discoveryVia: agent
-  investigation: documentation
-
-# Automation keeps agent-instructions honest (presupposes agents_md).
-- id: agents_md_validation
-  category: documentation
-  scope: repo
-  level: 4
-  skippable: false
-  discoveryVia: agent
-  investigation: agent-config
-
-# --- 5.2 Code Quality (2 R of 12) -----------------------------------------
+# --- 5.2 Code Quality (2 R) -----------------------------------------------
 
 # File-size budget enforced.
 - id: large_file_detection
@@ -120,8 +29,7 @@
   skippable: false
   discoveryVia: deterministic
 
-# --- 5.4 Environment & Setup (7, all R) -----------------------------------
-# Area: setup-runnability.
+# --- 5.4 Environment & Setup (4 R) ----------------------------------------
 
 # Committed .env-style example.
 - id: env_template
@@ -156,34 +64,7 @@
   skippable: false
   discoveryVia: deterministic
 
-# Secrets via managed mechanism, not committed.
-- id: secrets_management
-  category: environment_setup
-  scope: repo
-  level: 2
-  skippable: false
-  discoveryVia: agent
-  investigation: setup-runnability
-
-# Scripted one-shot local deps.
-- id: local_services_setup
-  category: environment_setup
-  scope: repo
-  level: 2
-  skippable: true
-  discoveryVia: agent
-  investigation: setup-runnability
-
-# Dev-container would actually build (presupposes devcontainer).
-- id: devcontainer_runnable
-  category: environment_setup
-  scope: repo
-  level: 3
-  skippable: true
-  discoveryVia: agent
-  investigation: setup-runnability
-
-# --- 5.5 CI, Release & Deployment (13 R of 14) ----------------------------
+# --- 5.5 CI, Release & Deployment (13 R) ----------------------------------
 
 # GATE: authenticated VCS-platform CLI available.
 - id: vcs_cli_tools
@@ -290,7 +171,7 @@
   skippable: true
   discoveryVia: deterministic
 
-# --- 5.7 Security & Data (5 R of 12) --------------------------------------
+# --- 5.7 Security & Data (5 R) --------------------------------------------
 
 # Branch-protection/ruleset.
 - id: branch_protection
@@ -332,7 +213,7 @@
   skippable: true
   discoveryVia: deterministic
 
-# --- 5.8 Process & Collaboration (7, all R) -------------------------------
+# --- 5.8 Process & Collaboration (6 R) ------------------------------------
 
 # GATE: code-ownership map.
 - id: codeowners
@@ -374,15 +255,6 @@
   level: 2
   skippable: true
   discoveryVia: deterministic
-
-# Agents actively participate (instruction surface + co-author history).
-- id: agentic_development
-  category: process_collaboration
-  scope: repo
-  level: 3
-  skippable: false
-  discoveryVia: agent
-  investigation: agent-config
 
 # Backlog actively groomed.
 - id: backlog_health

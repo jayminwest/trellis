@@ -6,9 +6,10 @@
  * run, compute per-repo level deltas), shape the three output variants, then
  * apply the {@link assessFleet} exit-code policy. Each target's audit honors its
  * `allowedDeltas`, `skip`, and `osecoDetectors`; a missing path or a per-target
- * failure is isolated into an error row without aborting the fleet. `--no-cache`
- * forces re-investigation; `--db` overrides the central DB; `TRELLIS_PI_BIN`
- * overrides the `pi` binary.
+ * failure is isolated into an error row without aborting the fleet. `--db`
+ * overrides the central DB. Transitional (SPEC §14 stage 2): the retired
+ * investigation knobs — `--no-cache`, `TRELLIS_PI_BIN`, and `targets.yaml`
+ * `defaults.investigation` — are rejected with an actionable error.
  *
  * Exit codes (SPEC §12): `0` clean; `2` when `--fail-on` trips for any target
  * (default: a gate criterion fails OR drift is detected; an unauditable target
@@ -25,6 +26,7 @@ import {
 	TARGETS_FILE,
 	TargetsError,
 } from "../fleet/index.ts";
+import { legacyConfigMessage } from "../legacy.ts";
 import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
 import { failPolicy } from "./fail-on.ts";
 import { CliError, EXIT, emit, FailOnExit, type Rendered, resolveFormat } from "./output.ts";
@@ -34,6 +36,7 @@ interface FleetCliOptions {
 	json?: boolean;
 	md?: boolean;
 	targets?: string;
+	/** Retired (`--no-cache`): kept as a hidden flag so passing it errors actionably. */
 	cache?: boolean;
 	/** SQLite history path; defaults to `TRELLIS_DB` env or `~/.trellis/trellis.db`. */
 	db?: string;
@@ -48,7 +51,7 @@ export function registerFleet(program: Command): void {
 		.command("fleet")
 		.description("audit every target in targets.yaml")
 		.option("--targets <file>", "fleet declaration", TARGETS_FILE)
-		.option("--no-cache", "force re-investigation (ignore cached findings)")
+		.addOption(new Option("--no-cache", "retired: no investigation pass remains").hideHelp())
 		.addOption(
 			new Option(
 				"--fail-on <mode>",
@@ -68,12 +71,14 @@ async function runFleetCommand(opts: FleetCliOptions): Promise<void> {
 	const policy = failPolicy(opts);
 	const targets = opts.targets ?? TARGETS_FILE;
 	const rubric = loadRubricOrThrow();
-	const piBin = process.env.TRELLIS_PI_BIN?.trim();
+	// Retired investigation knobs fail fast with an actionable message (SPEC §14 stage 2).
+	if (opts.cache === false) throw new CliError(legacyConfigMessage("--no-cache"));
+	if (process.env.TRELLIS_PI_BIN?.trim()) {
+		throw new CliError(legacyConfigMessage("TRELLIS_PI_BIN"));
+	}
 	const report = await runFleetOrThrow(targets, {
 		rubric,
-		...(opts.cache === false ? { noCache: true } : {}),
 		...(opts.db ? { db: opts.db } : {}),
-		...(piBin ? { piBin } : {}),
 	});
 	emit(format, {
 		human: renderFleetTerminal(report),

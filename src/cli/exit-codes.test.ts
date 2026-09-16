@@ -35,8 +35,6 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 	let dbDir: string;
 	let dbPath: string;
 
-	const NO_PI = { TRELLIS_PI_BIN: "trellis-pi-absent" } as const;
-
 	beforeEach(() => {
 		// A minimal fixture: real but sparse, so deterministic gate criteria fail.
 		dir = mkdtempSync(join(tmpdir(), "trellis-cli-exit-"));
@@ -57,7 +55,6 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 		// `--no-output`: these assert exit codes, not artifacts — never write a report file.
 		return runCli(["audit", dir, "--db", dbPath, "--no-persist", "--no-output", ...extra], {
 			TRELLIS_DB: "",
-			...NO_PI,
 		});
 	}
 
@@ -65,7 +62,7 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 		const { code, stdout, stderr } = await auditCli(["--json"]);
 		expect(code).toBe(2);
 		// The full report is still on stdout — the policy trips *after* emitting.
-		expect(Object.keys(JSON.parse(stdout).criteria)).toHaveLength(90);
+		expect(Object.keys(JSON.parse(stdout).criteria)).toHaveLength(70);
 		expect(stderr).toContain("gate criterion failed");
 	});
 
@@ -130,7 +127,6 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 		);
 		const fail = await runCli(["fleet", "--targets", targets, "--db", dbPath], {
 			TRELLIS_DB: "",
-			...NO_PI,
 		});
 		expect(fail.code).toBe(2);
 		expect(fail.stderr).toContain("gone");
@@ -138,7 +134,6 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 			["fleet", "--targets", targets, "--db", dbPath, "--fail-on", "none"],
 			{
 				TRELLIS_DB: "",
-				...NO_PI,
 			},
 		);
 		expect(clean.code).toBe(0);

@@ -6,7 +6,9 @@
  * a repo compares against, the **allowed deltas** that whitelist its sanctioned
  * divergences, the criteria it forces not-applicable, its language hint, and
  * whether os-eco-native detectors apply. `defaults` carries the fleet-wide
- * canonical version and the investigation provider/model.
+ * canonical version. Transitional (SPEC §14 stage 2): the retired
+ * `defaults.investigation` provider/model keys are rejected with an actionable
+ * error rather than silently ignored.
  *
  * Loading is zod-validated and strict (unknown keys are rejected so a typo fails
  * loudly rather than silently no-op'ing). Target ids must be unique — they key
@@ -27,6 +29,7 @@ import { dirname, isAbsolute, resolve } from "node:path";
 import yaml from "js-yaml";
 import { z } from "zod";
 import { LANGUAGES } from "../detectors/index.ts";
+import { legacyConfigMessage } from "../legacy.ts";
 import type { AuditOptions } from "../report/index.ts";
 import type { AllowedDelta, DriftOptions } from "../standards/index.ts";
 
@@ -59,15 +62,15 @@ const targetSchema = z.strictObject({
 	osecoDetectors: z.boolean().optional(),
 });
 
-/** Fleet-wide defaults (SPEC §6.5): canonical version + investigation provider/model. */
+/**
+ * Fleet-wide defaults (SPEC §6.5): the canonical version. `investigation` is
+ * accepted by the schema only so {@link loadFleet} can reject it with an
+ * actionable retirement message (SPEC §14 stage 2) instead of a bare
+ * "unrecognized key" — it has no effect otherwise.
+ */
 const defaultsSchema = z.strictObject({
 	canonicalVersion: semver.optional(),
-	investigation: z
-		.strictObject({
-			provider: z.string().min(1).optional(),
-			model: z.string().min(1).optional(),
-		})
-		.optional(),
+	investigation: z.unknown().optional(),
 });
 
 /** The full `targets.yaml` document. */
@@ -132,6 +135,10 @@ export function loadFleet(file: string = TARGETS_FILE): Fleet {
 		throw new TargetsError(issue?.message ?? "schema validation failed", where);
 	}
 
+	if (result.data.defaults?.investigation !== undefined) {
+		throw new TargetsError(legacyConfigMessage("defaults.investigation"), "defaults.investigation");
+	}
+
 	const seen = new Set<string>();
 	for (const target of result.data.targets) {
 		if (seen.has(target.id)) throw new TargetsError("duplicate target id", target.id);
@@ -152,8 +159,7 @@ export function loadFleet(file: string = TARGETS_FILE): Fleet {
  * {@link DriftOptions} is always present, carrying the resolved canonical version
  * (per-repo override > fleet default > the bundled set) and the repo's allowed
  * deltas. `skip`, `osecoDetectors`, and the language hint pass through only when
- * the target sets them. The investigation provider/model + cache are wired by the
- * orchestrator, not here.
+ * the target sets them.
  */
 export function targetAuditOptions(target: ResolvedTarget, defaults: FleetDefaults): AuditOptions {
 	const { spec } = target;

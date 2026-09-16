@@ -19,7 +19,6 @@
  * in tests. `now` is pinned across the fleet so every run shares one `scoredAt`.
  */
 import { statSync } from "node:fs";
-import type { InvestigationDeps } from "../investigation/index.ts";
 import { type AuditOptions, auditRepo, type Report } from "../report/index.ts";
 import { type Level, loadRubric, RUBRIC_VERSION, type Rubric } from "../rubric/index.ts";
 import { gateFails } from "../scoring/index.ts";
@@ -75,18 +74,14 @@ export interface FleetReport {
 	readonly summary: { readonly ok: number; readonly error: number };
 }
 
-/** Cache + provider wiring and injectable seams for {@link runFleet}. */
+/** Injectable seams for {@link runFleet}. */
 export interface FleetRunDeps {
-	/** Central store — run history + the investigation cache. The fleet persists every run. */
+	/** Central store — run history. The fleet persists every run. */
 	readonly store: Store;
 	/** Preloaded rubric, shared across targets so it loads once; defaults to the bundled rubric. */
 	readonly rubric?: Rubric;
 	/** Informational rubric-version pin echoed onto each report (SPEC §12). */
 	readonly rubricVersion?: string;
-	/** `--no-cache`: force re-investigation for every target. */
-	readonly noCache?: boolean;
-	/** `pi` binary override passed through to the investigation provider. */
-	readonly piBin?: string;
 	/** Wall-clock for every run's `scoredAt`, pinned across the fleet; defaults to now. */
 	readonly now?: Date;
 	/** Injectable audit fn (tests); defaults to the real core {@link auditRepo}. */
@@ -104,7 +99,7 @@ function realPathExists(absPath: string): boolean {
 	}
 }
 
-/** Assemble the per-target {@link AuditOptions}: spec mapping + investigation wiring + the §11 prior run. */
+/** Assemble the per-target {@link AuditOptions}: spec mapping + the §11 prior run. */
 function buildOptions(
 	target: ResolvedTarget,
 	defaults: FleetDefaults,
@@ -112,20 +107,11 @@ function buildOptions(
 	now: Date,
 	previous: StoredRun | null,
 ): AuditOptions {
-	const investigation: InvestigationDeps = {
-		cache: deps.store,
-		...(deps.noCache ? { noCache: true } : {}),
-		investigateOpts: {
-			...(deps.piBin ? { piBin: deps.piBin } : {}),
-			...(defaults.investigation ? { targetDefaults: defaults.investigation } : {}),
-		},
-	};
 	return {
 		...targetAuditOptions(target, defaults),
 		...(deps.rubric ? { rubric: deps.rubric } : {}),
 		...(deps.rubricVersion ? { rubricVersion: deps.rubricVersion } : {}),
 		now,
-		investigation,
 		// Embed the §11 delta against this repo's prior run (null on its first run).
 		previousRun: previous ? storedReport(previous) : null,
 	};

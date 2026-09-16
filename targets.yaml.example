@@ -6,9 +6,8 @@
 
 defaults:
   canonicalVersion: "1.0.0" # which standards/ version to compare against
-  # investigation:            # optional default provider/model (SPEC §9.4)
-  #   provider: anthropic
-  #   model: claude-opus-4-8
+  # NOTE: the `investigation` provider/model keys are retired (SPEC §14) —
+  # trellis runs no agent pass; setting them is rejected with an error.
 
 targets:
   - id: warren

@@ -198,9 +198,21 @@ describe("agenticDevelopment evidence", () => {
 });
 
 describe("OSECO_OVERLAY map", () => {
-	test("every key is a real rubric criterion id", () => {
+	test("every key is a current or retired (SPEC §14 stage 2) rubric criterion id", () => {
+		// The overlay is unwired from the audit pipeline (stage 2) and leaves with
+		// the investigation subsystem (stage 3); keys naming retired agent
+		// criteria are expected until then.
+		const RETIRED = new Set([
+			"agents_md",
+			"skills",
+			"automated_doc_generation",
+			"documentation_freshness",
+			"agentic_development",
+		]);
 		const ids = new Set(loadRubric().criteria.map((c) => c.id));
-		for (const id of Object.keys(OSECO_OVERLAY)) expect(ids.has(id)).toBe(true);
+		for (const id of Object.keys(OSECO_OVERLAY)) {
+			expect(ids.has(id) || RETIRED.has(id)).toBe(true);
+		}
 	});
 
 	test("covers the SPEC §8.4 mapped criteria", () => {

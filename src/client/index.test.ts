@@ -14,9 +14,6 @@ import * as client from "./index.ts";
 
 const MAIN = join(import.meta.dir, "..", "cli", "main.ts");
 
-/** Force the Pi probe to miss so agent criteria degrade deterministically. */
-const NO_PI = "trellis-pi-absent";
-
 /** Spawn the CLI and capture exit code + streams. */
 async function runCli(
 	args: string[],
@@ -25,7 +22,7 @@ async function runCli(
 	const proc = Bun.spawn(["bun", "run", MAIN, ...args], {
 		stdout: "pipe",
 		stderr: "pipe",
-		env: { ...process.env, TRELLIS_LOG_LEVEL: "silent", TRELLIS_PI_BIN: NO_PI, ...env },
+		env: { ...process.env, TRELLIS_LOG_LEVEL: "silent", ...env },
 	});
 	const [stdout, stderr] = await Promise.all([
 		new Response(proc.stdout).text(),
@@ -56,7 +53,7 @@ describe("client SDK", () => {
 	});
 
 	test("audit() and the CLI produce deep-equal reports (one code path)", async () => {
-		const sdk = await client.audit(dir, { persist: false, piBin: NO_PI });
+		const sdk = await client.audit(dir, { persist: false });
 		const cli = await runCli(
 			["audit", dir, "--json", "--no-persist", "--no-output", "--fail-on", "none"],
 			{ TRELLIS_DB: "" },
@@ -66,10 +63,25 @@ describe("client SDK", () => {
 	});
 
 	test("audit() returns a §6.3 report with every rubric criterion", async () => {
-		const report = await client.audit(dir, { persist: false, piBin: NO_PI });
+		const report = await client.audit(dir, { persist: false });
 		expect(report.rubricVersion).toBe(RUBRIC_VERSION);
-		expect(Object.keys(report.criteria)).toHaveLength(90);
+		expect(Object.keys(report.criteria)).toHaveLength(70);
 		expect(report.level).toBeGreaterThanOrEqual(1);
+	});
+
+	test("audit() rejects retired investigation options with an actionable message", async () => {
+		// Untyped callers passing the retired knobs get a clear error, not a silent ignore.
+		const legacy = { persist: false, piBin: "pi" } as unknown as client.AuditRequest;
+		await expect(client.audit(dir, legacy)).rejects.toThrow(/option 'piBin' no longer exists/);
+		const legacyCache = { persist: false, noCache: true } as unknown as client.AuditRequest;
+		await expect(client.audit(dir, legacyCache)).rejects.toThrow(/option 'noCache'/);
+	});
+
+	test("fleet() rejects retired investigation options with an actionable message", async () => {
+		const legacy = { noCache: true } as unknown as client.FleetRequest;
+		await expect(client.fleet("missing-targets.yaml", legacy)).rejects.toThrow(
+			/option 'noCache' no longer exists/,
+		);
 	});
 
 	test("drift() and the CLI produce deep-equal drift reports", () => {
@@ -88,8 +100,8 @@ describe("client SDK", () => {
 	test("rubric() summarizes the bundled rubric", () => {
 		const summary = client.rubric();
 		expect(summary.rubricVersion).toBe(RUBRIC_VERSION);
-		expect(summary.criterionCount).toBe(90);
-		expect(summary.categoryCount).toBe(9);
+		expect(summary.criterionCount).toBe(70);
+		expect(summary.categoryCount).toBe(8);
 	});
 
 	test("report() on an empty store returns an empty dashboard", () => {
@@ -99,7 +111,7 @@ describe("client SDK", () => {
 	});
 
 	test("assessReport() re-exports the exit-code rule and trips on a failing gate", async () => {
-		const report = await client.audit(dir, { persist: false, piBin: NO_PI });
+		const report = await client.audit(dir, { persist: false });
 		const rubric = client.loadRubric();
 		// The default policy fails on gate ∨ drift; this sparse fixture fails gates.
 		const def = client.assessReport(report, rubric);

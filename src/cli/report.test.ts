@@ -31,8 +31,6 @@ describe("trellis report", () => {
 	let dbPath: string;
 	let targetsFile: string;
 
-	const NO_PI = { TRELLIS_PI_BIN: "trellis-pi-absent" } as const;
-
 	beforeEach(() => {
 		repoDir = mkdtempSync(join(tmpdir(), "trellis-report-repo-"));
 		writeFileSync(join(repoDir, "README.md"), "# fixture\n");
@@ -62,7 +60,6 @@ describe("trellis report", () => {
 			["fleet", "--targets", targetsFile, "--db", dbPath, "--fail-on", "none"],
 			{
 				TRELLIS_DB: "",
-				...NO_PI,
 			},
 		);
 		expect(code).toBe(0);
