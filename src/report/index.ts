@@ -15,7 +15,7 @@ export {
 	type FailPolicy,
 	failingGateIds,
 } from "./assess.ts";
-export { AGENT_NOT_WIRED, type AuditOptions, auditRepo, SKIPPED_VIA_TARGETS } from "./build.ts";
+export { type AuditOptions, auditRepo, SKIPPED_VIA_TARGETS } from "./build.ts";
 export { changesSinceLastRun, criterionStatus, snapshot } from "./changes.ts";
 export { renderJson } from "./json.ts";
 export { renderMarkdown } from "./markdown.ts";

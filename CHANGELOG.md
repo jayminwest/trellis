@@ -9,6 +9,31 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Removed
+
+- **Agent execution is disconnected from every public audit path** (trellis-ba72,
+  SPEC §14 stage 2 of the deterministic-pivot plan `pl-b2ea`). The audit
+  pipeline, fleet orchestration, CLI, and SDK no longer wire the investigation
+  layer: there is no route to Pi or any model from `trellis audit`,
+  `trellis fleet`, or the SDK — including the default persistence path (the
+  central store is run history only, never an investigation cache). The os-eco
+  pass-override overlay is no longer folded into criterion verdicts.
+- The 20 agent-discovery criteria — and the all-agent `documentation` category —
+  are retired from the transitional rubric catalog: it now totals **70
+  deterministic criteria across 8 categories** (rubric `0.3.0`; pre-1.0
+  comparability rides the minor slot). Retired criteria no longer count as
+  missing measurements or affect the score.
+
+### Changed
+
+- Legacy investigation configuration is **rejected with an actionable error**
+  instead of silently honored: the `--no-cache` flag (audit + fleet), the
+  `TRELLIS_PI_BIN` environment variable, `targets.yaml`
+  `defaults.investigation`, and retired SDK option keys (`noCache`, `piBin`,
+  `investigation`, `provider`, `model`) all fail fast naming what to remove.
+  The investigation subsystem itself is deleted in the next stage
+  (trellis-4abc).
+
 ## [0.1.0] — 2026-06-10
 
 The MVP-complete release — every SPEC §14 milestone has landed — and the first

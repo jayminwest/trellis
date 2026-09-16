@@ -88,6 +88,22 @@ describe("loadFleet", () => {
 		const fleet = await loadYaml(dir, "targets:\n  - id: a\n    path: a\n");
 		expect(fleet.defaults).toEqual({});
 	});
+
+	test("rejects retired defaults.investigation with an actionable message", async () => {
+		const body =
+			"defaults:\n  investigation:\n    provider: anthropic\n    model: claude-opus-4-8\n" +
+			"targets:\n  - id: a\n    path: a\n";
+		let caught: unknown;
+		try {
+			await loadYaml(dir, body);
+		} catch (error) {
+			caught = error;
+		}
+		expect(caught).toBeInstanceOf(TargetsError);
+		expect((caught as Error).message).toContain("defaults.investigation");
+		expect((caught as Error).message).toContain("no longer exists");
+		expect((caught as Error).message).toContain("Remove defaults.investigation");
+	});
 });
 
 describe("targetAuditOptions", () => {

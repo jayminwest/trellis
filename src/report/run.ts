@@ -7,8 +7,14 @@
  *
  * Keeping this in core (not the CLI) is what lets a programmatic audit and a CLI
  * audit exercise one code path — the SDK's `audit()` is a direct call to this.
+ *
+ * Transitional (SPEC §14 stage 2): the audit is fully deterministic — no route
+ * to Pi or any model exists here, including the default persistence path (the
+ * store is run history only). Retired investigation knobs (`noCache`, `piBin`,
+ * `investigation`, …) are rejected with an actionable {@link LegacyConfigError}.
  */
 import { basename, resolve } from "node:path";
+import { rejectLegacyOptions } from "../legacy.ts";
 import type { Rubric } from "../rubric/index.ts";
 import { openStore, storedReport } from "../store/index.ts";
 import { type AuditOptions, auditRepo } from "./build.ts";
@@ -21,14 +27,10 @@ export interface AuditRunOptions {
 	rubricVersion?: string;
 	/** Canonical set version to compare against; present → fold `report.drift` (SPEC §10). */
 	canonical?: string;
-	/** Force re-investigation, ignoring cached findings (`--no-cache`, SPEC §7.3). */
-	noCache?: boolean;
 	/** SQLite history path; defaults to `$TRELLIS_DB` or `~/.trellis/trellis.db`. */
 	db?: string;
 	/** Persist this run to the central history; `false` touches no DB at all. Default true. */
 	persist?: boolean;
-	/** `pi` binary override passed through to the investigation provider. */
-	piBin?: string;
 	/** Wall-clock for `scoredAt` (determinism hook); defaults to now. */
 	now?: Date;
 	/** Preloaded rubric — pass to avoid a second load when the caller already has one. */
@@ -38,9 +40,8 @@ export interface AuditRunOptions {
 	/** Repo id for the report + central state; defaults to the audited path's basename. */
 	repoId?: string;
 	/**
-	 * Optional progress sink (SPEC §7.3 observability). Mirrored by the SDK's
-	 * {@link import("../client/index.ts").AuditRequest}; the CLI renders these
-	 * events to stderr. Absent → a silent run.
+	 * Optional progress sink. Mirrored by the SDK's {@link import("../client/index.ts").AuditRequest};
+	 * the CLI renders these events to stderr. Absent → a silent run.
 	 */
 	onProgress?: AuditProgress;
 }
@@ -49,10 +50,10 @@ export interface AuditRunOptions {
  * Run an audit of the repo at `repoPath`, persisting it to the central history
  * (unless `persist` is false) and returning its §6.3 {@link Report}. The prior
  * run is read before the new one is inserted, so the embedded §11 delta reflects
- * it. The store doubles as the investigation cache (SPEC §7.3); with
- * `persist: false` the run is uncached and writes nothing.
+ * it. With `persist: false` the run writes nothing.
  */
 export async function runAudit(repoPath: string, opts: AuditRunOptions = {}): Promise<Report> {
+	rejectLegacyOptions(opts);
 	const store = opts.persist === false ? null : openStore(opts.db);
 	try {
 		const repoId = opts.repoId ?? basename(resolve(repoPath));
@@ -65,11 +66,6 @@ export async function runAudit(repoPath: string, opts: AuditRunOptions = {}): Pr
 			...(opts.repoId ? { repoId: opts.repoId } : {}),
 			...(opts.onProgress ? { onProgress: opts.onProgress } : {}),
 			previousRun: previous ? storedReport(previous) : null,
-			investigation: {
-				...(store ? { cache: store } : {}),
-				noCache: opts.noCache === true,
-				...(opts.piBin ? { investigateOpts: { piBin: opts.piBin } } : {}),
-			},
 			...(opts.canonical ? { canonical: { canonicalVersion: opts.canonical } } : {}),
 		};
 		const report = await auditRepo(repoPath, auditOptions);

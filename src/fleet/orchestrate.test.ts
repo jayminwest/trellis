@@ -166,9 +166,8 @@ describe("runFleet", () => {
 			await runFleet(
 				fleet([target("warren", { skip: ["dast_scanning"], osecoDetectors: false })], {
 					canonicalVersion: "1.0.0",
-					investigation: { provider: "anthropic", model: "claude-opus-4-8" },
 				}),
-				deps(store, { audit, noCache: true }),
+				deps(store, { audit }),
 			);
 			const opts = seen[0];
 			expect(opts?.repoId).toBe("warren");
@@ -176,13 +175,8 @@ describe("runFleet", () => {
 			expect(opts?.osecoDetectors).toBe(false);
 			expect(opts?.canonical?.canonicalVersion).toBe("1.0.0");
 			expect(opts?.now).toBe(NOW);
-			// Investigation is wired to the central store + fleet provider/model + --no-cache.
-			expect(opts?.investigation?.cache).toBe(store);
-			expect(opts?.investigation?.noCache).toBe(true);
-			expect(opts?.investigation?.investigateOpts?.targetDefaults).toEqual({
-				provider: "anthropic",
-				model: "claude-opus-4-8",
-			});
+			// No investigation wiring remains on the audit path (SPEC §14 stage 2).
+			expect(opts && "investigation" in opts).toBe(false);
 		} finally {
 			store.close();
 		}

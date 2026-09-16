@@ -13,7 +13,6 @@ import { join } from "node:path";
  */
 
 const MAIN = join(import.meta.dir, "main.ts");
-const NO_PI = "trellis-pi-absent";
 
 async function runCli(
 	args: string[],
@@ -23,7 +22,7 @@ async function runCli(
 		stdout: "pipe",
 		stderr: "pipe",
 		...(opts.cwd ? { cwd: opts.cwd } : {}),
-		env: { ...process.env, TRELLIS_LOG_LEVEL: "silent", TRELLIS_PI_BIN: NO_PI, ...opts.env },
+		env: { ...process.env, TRELLIS_LOG_LEVEL: "silent", ...opts.env },
 	});
 	const [stdout, stderr] = await Promise.all([
 		new Response(proc.stdout).text(),
@@ -56,7 +55,7 @@ describe("trellis audit --output + progress", () => {
 		expect(code).toBe(0);
 		expect(existsSync(out)).toBe(true);
 		const parsed = JSON.parse(readFileSync(out, "utf8"));
-		expect(Object.keys(parsed.criteria)).toHaveLength(90);
+		expect(Object.keys(parsed.criteria)).toHaveLength(70);
 		// No format flag → stdout keeps the readable terminal summary, not JSON.
 		expect(stdout).not.toContain('"criteria"');
 		expect(stdout.length).toBeGreaterThan(0);
@@ -133,8 +132,44 @@ describe("trellis audit --output + progress", () => {
 		);
 		expect(code).toBe(1);
 		expect(stderr).toContain("could not write report to");
-		// The investigation/detector passes never ran, so no scorecard was emitted.
+		// The detector pass never ran, so no scorecard was emitted.
 		expect(stdout).toBe("");
 		expect(stderr).not.toContain("running detectors");
+	});
+});
+
+describe("trellis audit legacy investigation configuration (SPEC §14 stage 2)", () => {
+	let dir: string;
+
+	beforeEach(() => {
+		dir = mkdtempSync(join(tmpdir(), "trellis-audit-legacy-"));
+		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture" }));
+	});
+
+	afterEach(() => {
+		rmSync(dir, { recursive: true, force: true });
+	});
+
+	test("--no-cache is rejected with an actionable retirement message", async () => {
+		const { code, stdout, stderr } = await runCli(
+			["audit", dir, "--no-cache", "--no-persist", "--no-output", "--fail-on", "none"],
+			{ cwd: dir },
+		);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("--no-cache no longer exists");
+		expect(stderr).toContain("investigation");
+		expect(stderr).toContain("Remove --no-cache");
+	});
+
+	test("TRELLIS_PI_BIN is rejected with an actionable retirement message", async () => {
+		const { code, stdout, stderr } = await runCli(
+			["audit", dir, "--no-persist", "--no-output", "--fail-on", "none"],
+			{ cwd: dir, env: { TRELLIS_PI_BIN: "/usr/local/bin/pi" } },
+		);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("TRELLIS_PI_BIN no longer exists");
+		expect(stderr).toContain("Remove TRELLIS_PI_BIN");
 	});
 });

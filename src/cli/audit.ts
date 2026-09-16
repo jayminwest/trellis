@@ -6,13 +6,13 @@
  * nothing itself — the level, scores, per-criterion entries, and the pass/fail
  * verdict all come from core.
  *
- * Agent-discovery criteria are graded by the investigation layer (SPEC §7.3);
- * `--no-cache` forces re-investigation and a missing/incompatible Pi degrades
- * those criteria to `no-detector`. Each run persists to the central SQLite
- * history (SPEC §6.4) unless `--no-persist` is given; `--db` overrides the DB
- * location. `TRELLIS_PI_BIN` overrides the `pi` binary the provider spawns.
- * `--canonical <v>` opts the run into canonical-config drift (SPEC §10), folded
- * into `report.drift`.
+ * Transitional (SPEC §14 stage 2): the audit is fully deterministic — there is
+ * no route to Pi or any model. The retired investigation knobs are rejected
+ * with an actionable error: `--no-cache` and `TRELLIS_PI_BIN` no longer exist.
+ * Each run persists to the central SQLite history (SPEC §6.4) unless
+ * `--no-persist` is given; `--db` overrides the DB location. `--canonical <v>`
+ * opts the run into canonical-config drift (SPEC §10), folded into
+ * `report.drift`.
  *
  * Exit codes (SPEC §12): `0` clean; `2` when `--fail-on` trips (default: a gate
  * criterion fails OR drift is detected); `1` on an operational error. `--fail-on
@@ -22,6 +22,7 @@ import { accessSync, constants, existsSync, mkdirSync, statSync } from "node:fs"
 import { dirname, join } from "node:path";
 import type { Command } from "commander";
 import { Option } from "commander";
+import { legacyConfigMessage } from "../legacy.ts";
 import { assessReport, renderMarkdown, renderTerminal, runAudit } from "../report/index.ts";
 import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
 import { failPolicy } from "./fail-on.ts";
@@ -42,6 +43,7 @@ import { createProgressReporter } from "./progress.ts";
 interface AuditCliOptions {
 	json?: boolean;
 	md?: boolean;
+	/** Retired (`--no-cache`): kept as a hidden flag so passing it errors actionably. */
 	cache?: boolean;
 	rubricVersion?: string;
 	canonical?: string;
@@ -61,7 +63,7 @@ interface AuditCliOptions {
 	output?: string | false;
 	/** Suppress progress lines on stderr. */
 	quiet?: boolean;
-	/** Per-detector / per-session-message progress detail on stderr. */
+	/** Per-detector progress detail on stderr. */
 	verbose?: boolean;
 	/** Hidden: load an alternate rubric directory (used by tests/fixtures). */
 	rubricDir?: string;
@@ -73,7 +75,7 @@ export function registerAudit(program: Command): void {
 		.command("audit")
 		.argument("<repo-path>", "path to the repository to score")
 		.description("score one repo; print scorecard")
-		.option("--no-cache", "force re-investigation (ignore cached findings)")
+		.addOption(new Option("--no-cache", "retired: no investigation pass remains").hideHelp())
 		.option("--rubric-version <v>", "pin the rubric version (informational)")
 		.option("--canonical <v>", "pin the canonical standards version")
 		.option("--db <path>", "SQLite history path (default: $TRELLIS_DB or ~/.trellis/trellis.db)")
@@ -91,7 +93,7 @@ export function registerAudit(program: Command): void {
 		)
 		.option("--no-output", "do not write a report file (default writes .trellis/audit-<ts>.md)")
 		.option("--quiet", "suppress progress output on stderr")
-		.option("--verbose", "show per-detector and per-message progress on stderr")
+		.option("--verbose", "show per-detector progress on stderr")
 		.addOption(new Option("--rubric-dir <path>", "load an alternate rubric directory").hideHelp())
 		.action(function (this: Command, repoPath: string) {
 			return runAuditCommand(repoPath, this.optsWithGlobals() as AuditCliOptions);
@@ -103,10 +105,15 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 	const format = resolveFormat(opts);
 	const policy = failPolicy(opts);
 	const rubric = loadRubricOrThrow(opts.rubricDir);
+	// Retired investigation knobs fail fast with an actionable message (SPEC §14
+	// stage 2) — before any detector work runs.
+	if (opts.cache === false) throw new CliError(legacyConfigMessage("--no-cache"));
+	if (process.env.TRELLIS_PI_BIN?.trim()) {
+		throw new CliError(legacyConfigMessage("TRELLIS_PI_BIN"));
+	}
 	// Validate the report target up front so a bad `--output` fails immediately,
-	// before the (minutes-long) investigation pass burns time and tokens.
+	// before the detector pass runs.
 	const reportPlan = planReportTarget(repoPath, opts.output, format);
-	const piBin = process.env.TRELLIS_PI_BIN?.trim();
 	const quiet = opts.quiet === true;
 	const reporter = createProgressReporter({
 		quiet,
@@ -117,10 +124,8 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 		rubric,
 		...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
 		...(opts.canonical ? { canonical: opts.canonical } : {}),
-		...(opts.cache === false ? { noCache: true } : {}),
 		...(opts.db ? { db: opts.db } : {}),
 		...(opts.persist === false ? { persist: false } : {}),
-		...(piBin ? { piBin } : {}),
 		...(reporter ? { onProgress: reporter.onProgress } : {}),
 	});
 	reporter?.finish();
@@ -163,7 +168,7 @@ type ReportPlan =
  * lands under the **audited repo's** `.trellis/` (anchored to `repoPath`, never
  * the process cwd — a report about repo X belongs with repo X). Throws
  * {@link CliError} up front on an unwritable target so the failure costs no
- * investigation time.
+ * detector time.
  */
 function planReportTarget(
 	repoPath: string,

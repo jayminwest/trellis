@@ -61,7 +61,7 @@ for machine/report output. Six subcommands (SPEC §12):
 
 ```bash
 trellis audit <repo-path>            # score one repo; print scorecard
-  [--json|--md] [--no-cache] [--rubric-version <v>] [--canonical <v>]
+  [--json|--md] [--rubric-version <v>] [--canonical <v>]
   [--fail-on gate|drift|level|none] [--min-level <n>]
 trellis drift <repo-path>            # L1 canonical-config drift only
   [--canonical <v>] [--fail-on drift|none]

@@ -39,7 +39,7 @@ describe("trellis rubric", () => {
 		const { code, stdout } = await runCli(["rubric"]);
 		expect(code).toBe(0);
 		expect(stdout).toContain(`@ ${RUBRIC_VERSION}`);
-		expect(stdout).toContain("90 criteria across 9 categories");
+		expect(stdout).toContain("70 criteria across 8 categories");
 	});
 
 	test("--json emits the full summary shape on the real rubric", async () => {
@@ -47,9 +47,9 @@ describe("trellis rubric", () => {
 		expect(code).toBe(0);
 		const summary = JSON.parse(stdout);
 		expect(summary.rubricVersion).toBe(RUBRIC_VERSION);
-		expect(summary.categoryCount).toBe(9);
-		expect(summary.criterionCount).toBe(90);
-		expect(summary.categories).toHaveLength(9);
+		expect(summary.categoryCount).toBe(8);
+		expect(summary.criterionCount).toBe(70);
+		expect(summary.categories).toHaveLength(8);
 		const first = summary.categories[0];
 		expect(first).toHaveProperty("id");
 		expect(first).toHaveProperty("criterionCount");
@@ -71,7 +71,7 @@ describe("trellis rubric", () => {
 		expect(code).toBe(0);
 		const result = JSON.parse(stdout);
 		expect(result.valid).toBe(true);
-		expect(result.criterionCount).toBe(90);
+		expect(result.criterionCount).toBe(70);
 	});
 
 	test("rejects --json and --md together", async () => {
@@ -209,10 +209,6 @@ describe("trellis audit", () => {
 	let dbDir: string;
 	let dbPath: string;
 
-	// Force the Pi probe to miss so agent criteria degrade to no-detector
-	// deterministically — these tests assert pipeline plumbing, not live Pi.
-	const NO_PI = { TRELLIS_PI_BIN: "trellis-pi-absent" } as const;
-
 	beforeEach(() => {
 		// A minimal single-app fixture — keeps detector subprocesses cheap/fast.
 		dir = mkdtempSync(join(tmpdir(), "trellis-cli-audit-"));
@@ -232,7 +228,6 @@ describe("trellis audit", () => {
 	test("prints a coherent terminal scorecard", async () => {
 		const { code, stdout } = await runCli(["audit", dir, "--no-output", "--fail-on", "none"], {
 			TRELLIS_DB: dbPath,
-			...NO_PI,
 		});
 		expect(code).toBe(0);
 		expect(stdout).toContain("Level ");
@@ -244,21 +239,21 @@ describe("trellis audit", () => {
 	test("--json emits a parseable §6.3 report with every rubric criterion", async () => {
 		const { code, stdout } = await runCli(
 			["audit", dir, "--json", "--no-output", "--fail-on", "none"],
-			{ TRELLIS_DB: dbPath, ...NO_PI },
+			{ TRELLIS_DB: dbPath },
 		);
 		expect(code).toBe(0);
 		const report = JSON.parse(stdout);
 		expect(report.rubricVersion).toBe(RUBRIC_VERSION);
 		expect(report.level).toBeGreaterThanOrEqual(1);
 		expect(report.level).toBeLessThanOrEqual(5);
-		expect(Object.keys(report.criteria)).toHaveLength(90);
+		expect(Object.keys(report.criteria)).toHaveLength(70);
 		expect(report.apps).toBeDefined();
 	});
 
 	test("--md emits a markdown scorecard", async () => {
 		const { code, stdout } = await runCli(
 			["audit", dir, "--md", "--no-output", "--fail-on", "none"],
-			{ TRELLIS_DB: dbPath, ...NO_PI },
+			{ TRELLIS_DB: dbPath },
 		);
 		expect(code).toBe(0);
 		expect(stdout).toContain("# Agentic-readiness scorecard");
@@ -268,11 +263,10 @@ describe("trellis audit", () => {
 	test("persists each run to the central history (SPEC §6.4)", async () => {
 		const first = await runCli(["audit", dir, "--db", dbPath, "--no-output", "--fail-on", "none"], {
 			TRELLIS_DB: "",
-			...NO_PI,
 		});
 		const second = await runCli(
 			["audit", dir, "--db", dbPath, "--no-output", "--fail-on", "none"],
-			{ TRELLIS_DB: "", ...NO_PI },
+			{ TRELLIS_DB: "" },
 		);
 		expect(first.code).toBe(0);
 		expect(second.code).toBe(0);
@@ -293,7 +287,6 @@ describe("trellis audit", () => {
 			["audit", dir, "--db", dbPath, "--no-persist", "--no-output", "--fail-on", "none"],
 			{
 				TRELLIS_DB: "",
-				...NO_PI,
 			},
 		);
 		expect(code).toBe(0);
@@ -303,7 +296,7 @@ describe("trellis audit", () => {
 	test("omits report.drift by default", async () => {
 		const { code, stdout } = await runCli(
 			["audit", dir, "--json", "--no-output", "--fail-on", "none"],
-			{ TRELLIS_DB: dbPath, ...NO_PI },
+			{ TRELLIS_DB: dbPath },
 		);
 		expect(code).toBe(0);
 		expect(JSON.parse(stdout).drift).toBeUndefined();
@@ -314,7 +307,6 @@ describe("trellis audit", () => {
 			["audit", dir, "--json", "--canonical", "1.0.0", "--no-output", "--fail-on", "none"],
 			{
 				TRELLIS_DB: dbPath,
-				...NO_PI,
 			},
 		);
 		expect(code).toBe(0);
@@ -329,7 +321,6 @@ describe("trellis audit", () => {
 		// `.trellis/` (here the temp `dir`), never the CLI's cwd (the real repo).
 		const { code, stderr } = await runCli(["audit", dir, "--db", dbPath, "--fail-on", "none"], {
 			TRELLIS_DB: "",
-			...NO_PI,
 		});
 		expect(code).toBe(0);
 		const reports = readdirSync(join(dir, ".trellis")).filter((f) => /^audit-.*\.md$/.test(f));
