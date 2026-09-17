@@ -30,6 +30,7 @@ import { CLONE_MATCH_MODES } from "./clone-evidence.ts";
 import { SOURCE_SETS } from "./coverage.ts";
 import { dottedIdSchema, finiteNumberSchema } from "./primitives.ts";
 import { EVIDENCE_NAMESPACE, NATIVE_NAMESPACE } from "./provider.ts";
+import { knipProviderRequestSchema } from "./reachability-policy.ts";
 
 /**
  * Source handling: `exclude` adds glob exclusions to the documented defaults;
@@ -144,6 +145,14 @@ export type JscpdProviderRequest = z.infer<typeof jscpdProviderRequestSchema>;
  * pure compilation lives in `src/providers/dependency-cruiser/policy.ts` —
  * and still resolves to located `unsupported` evidence until the adapter
  * delivers (trellis-adbf).
+ *
+ * knip likewise already carries its declarative reachability-context
+ * subset (trellis-5da5, `src/contract/reachability-policy.ts`): explicit
+ * application/script entries, exported public surfaces and test
+ * participation as reachability roots. Such a request is valid
+ * configuration — the pure compilation and context preparation live in
+ * `src/providers/knip/` — and still resolves to located `unsupported`
+ * evidence until the adapter delivers (trellis-8ebc).
  */
 export const undeliveredProviderRequestSchema = z.strictObject({});
 
@@ -159,7 +168,7 @@ export type UndeliveredProviderRequest = z.infer<typeof undeliveredProviderReque
 export const providerSelectionSchema = z.strictObject({
 	jscpd: jscpdProviderRequestSchema.optional(),
 	"dependency-cruiser": dependencyCruiserProviderRequestSchema.optional(),
-	knip: undeliveredProviderRequestSchema.optional(),
+	knip: knipProviderRequestSchema.optional(),
 	sonarjs: undeliveredProviderRequestSchema.optional(),
 });
 

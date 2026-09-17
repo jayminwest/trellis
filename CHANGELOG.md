@@ -108,6 +108,58 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Reachability configuration records entries, public API and test
+  participation** (trellis-5da5, step 23 of 30 of plan `pl-43c5`,
+  SPEC §16.1/§16.4): a `knip` request in the `providers` block now
+  carries a declarative reachability context — inline data only, never
+  an executable `knip` config and never an entry guess. Three keys:
+  `entries` (explicit application/script entry files — reachability
+  roots), `public` (exported public surfaces, optionally narrowed to one
+  named export) and `tests` (whether the measured test files participate
+  as reachability roots; default `excluded`). Plugin vocabulary is not
+  declarable at all — framework/tool plugin discovery is disabled
+  outright, and any future plugin support requires a separately declared
+  trust boundary. The pure compilation and context preparation
+  (`src/providers/knip/`) resolve the declaration against the audit's
+  measured production/test classification: test participation and
+  declared test entries supply reachability evidence while staying
+  classified test — never scored as production, never diluting a
+  production denominator — and a barrel re-export stays a distinct
+  surface from the implementation it exposes. Omitted entries,
+  unresolvable declarations and missing dependency context become
+  recorded contextual assumptions: undefined reachability, never
+  confirmed dead code. The normalized configuration digest rides the
+  §16.2 provider options through the existing step-6 compatibility seam,
+  so a changed declared context is a changed measurement — noncomparable
+  evidence, never candidate churn. No adapter yet: requests still
+  resolve to located `unsupported` evidence until trellis-8ebc delivers.
+- **dependency-cruiser supplies coverage-checked architecture evidence**
+  (trellis-adbf, step 22 of 30 of plan `pl-43c5`, SPEC §16.2–§16.5): a
+  `dependency-cruiser` request now runs the pinned tool over a staged source
+  view through the delivered boundaries — pinned-tool resolution
+  (`dependency-cruiser@18.3.1`, a pure-JavaScript distribution recorded in the
+  supported-tool manifest with real digests; the launcher runs under
+  trellis's own runtime through the controlled process runner), a
+  **trellis-generated** tool config + minimal tsconfig in owned scratch
+  (never a target `.dependency-cruiser` config), the tool's locally resolved
+  TypeScript parser version recorded in analysis identity (a missing parser
+  produced a successful empty graph in the research record — the adapter
+  refuses to run blind), and raw-report validation before any normalization.
+  **Coverage is the point**: a successful empty or partial graph is
+  `incomplete` with the missing files named — never a clean pass with zero
+  violations — and builtin/external/unresolved-local stub nodes are
+  preserved separately from production nodes. Runtime and type-only edge
+  flavors stay distinct (separate cycle rules, `dependencyTypes` filters in
+  the generated rules, `type-only` recorded per finding), `allowed` boundaries
+  apply as explicit exceptions recorded as visible evidence (the tool's own
+  `allowed` whitelist has different semantics), and unresolved checks scope
+  to local specifiers — externals stay stub evidence. Evidence is namespaced
+  (`provider.dependency-cruiser.*`), advisory and unscored: native graph
+  analysis and scoring are untouched, and the report carries only the added
+  evidence entry. Conformance and failure-regression suites cover the
+  boundary/cycle/unresolved/allowed-import controls, repeat determinism,
+  empty-graph and limit failures; the capability table records the adapter
+  as delivered (requests resolve per run).
 - **Architecture policies describe a bounded declarative dependency-rule
   subset** (trellis-89be, step 21 of 30 of plan `pl-43c5`, SPEC §16.1/§16.4):
   a `dependency-cruiser` request in the `providers` block now carries

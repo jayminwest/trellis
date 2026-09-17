@@ -601,6 +601,10 @@ providers:                             # optional provider selection (§16.4) �
       - kind: cycle                   #   cycle and unresolved checks are rules too —
         name: no-runtime-cycles        #   runtime and type-only cycle policies stay distinct
         edges: [runtime]
+  knip:                                #   declared reachability context (trellis-5da5) — explicit
+    entries: [src/cli/main.ts]         #   application/script entries, exported public surfaces
+    public: [{ path: src/index.ts }]   #   and test participation as reachability roots; an
+    tests: excluded                    #   absent key records undefined reachability, never dead code
 policy:                                 # failure policy only — never mutates scoring weights
   maxIndex: 40
   regression:                           # score regression vs a baseline report (§9)
@@ -637,6 +641,25 @@ changed declared architecture is a changed measurement — never silently
 reported as code churn. The adapter (trellis-adbf) turns compiled rules
 into coverage-checked evidence; until it delivers, requests resolve to
 located `unsupported` evidence.
+
+Reachability configuration (`providers.knip`, trellis-5da5) records the
+declared reachability model any Knip evidence runs under: explicit
+application/script `entries`, exported `public` surfaces (optionally
+narrowed to one named export) and whether the measured `tests` participate
+as reachability roots. Local non-use never means unnecessary code:
+omitted entries, unresolvable declarations and missing dependency context
+are recorded contextual assumptions — a candidate over an assumed surface
+can never be confirmed dead code — and framework/tool plugin discovery is
+disabled outright (any future plugin support requires a separately
+declared trust boundary, never target configuration or plugin code).
+Test files that participate supply reachability evidence while staying
+classified test — never scored as production and never diluting a
+production denominator — and a barrel re-export is a distinct surface
+from the implementation it exposes. The compiled context's normalized
+digest rides the analysis identity (§16.2) through the same compatibility
+seam as the architecture policy; the adapter (trellis-8ebc) turns the
+prepared context into advisory evidence — until it delivers, requests
+resolve to located `unsupported` evidence.
 
 Policy budgets gate the run; they never silently change how the index is
 computed (§7). A budget key may also name a provider's namespaced evidence
@@ -1205,6 +1228,14 @@ Rules:
   > registry (`src/providers/process.ts`) may run it — with honest
   > per-platform execution records (`tested` / `research-tested` /
   > `declared-untested`) instead of universal platform claims.
+  > **Delivered (`trellis-adbf`, plan `pl-43c5` step 22):** the manifest
+  > also pins dependency-cruiser 18.3.1 — a pure-JavaScript distribution
+  > whose launcher runs under trellis's own runtime through the controlled
+  > process runner, with the tool's locally resolved TypeScript parser
+  > version recorded in analysis identity before anything runs (a missing
+  > parser produced a successful empty graph in the research record;
+  > `src/providers/dependency-cruiser/` owns the adapter, its generated
+  > tool config and its coverage-checked evidence).
 - **Never**: target scripts, target verification, models, network
   fetches, opportunistic downloads, or credentials.
 

@@ -18,8 +18,11 @@
  *   native-only pipeline. Only an explicitly requested provider stages a
  *   view or runs anything.
  * - **Delivered providers run per request.** jscpd (the delivered adapter,
- *   `src/providers/jscpd/`) stages the audit's measured production/test
- *   selection through the owned-scratch lifecycle and resolves per run.
+ *   `src/providers/jscpd/`) and dependency-cruiser (the delivered adapter,
+ *   `src/providers/dependency-cruiser/`, evaluating the declarative
+ *   architecture-policy subset over the same measured selection) stage the
+ *   audit's measured production/test selection through the owned-scratch
+ *   lifecycle and resolve per run.
  * - **Undelivered or gated providers resolve to located `unsupported`
  *   evidence** with the capability table's recorded reason
  *   (`src/providers/capabilities.ts` — including the deferred SonarJS
@@ -35,9 +38,15 @@
  *   provider is located evidence, never an abort of the native audit.
  */
 import { MEASURED_SOURCE_SETS } from "../analysis/index.ts";
-import type { AnalysisResult, AuditConfig, CloneMatchMode } from "../contract/index.ts";
+import type {
+	AnalysisResult,
+	AuditConfig,
+	CloneMatchMode,
+	DependencyCruiserProviderRequest,
+} from "../contract/index.ts";
 import type { SourceInventory } from "../discovery/index.ts";
 import { providerCapabilityStatus } from "../providers/capabilities.ts";
+import { runDependencyCruiserAnalysis } from "../providers/dependency-cruiser/analysis.ts";
 import { runJscpdAnalysis } from "../providers/jscpd/analysis.ts";
 import type { PinnedToolResolveOptions } from "../providers/resolve.ts";
 import type { StagedSelectionFile } from "../providers/staging.ts";
@@ -45,7 +54,11 @@ import type { StagedSelectionFile } from "../providers/staging.ts";
 /** One planned external-provider analysis: the requested provider and its request data. */
 export type ProviderAnalysisPlanEntry =
 	| { readonly providerId: "jscpd"; readonly mode: CloneMatchMode }
-	| { readonly providerId: "dependency-cruiser" | "knip" | "sonarjs" };
+	| {
+			readonly providerId: "dependency-cruiser";
+			readonly request: DependencyCruiserProviderRequest;
+	  }
+	| { readonly providerId: "knip" | "sonarjs" };
 
 /**
  * Translate the declarative `providers` block into the deterministic
@@ -60,7 +73,10 @@ export function providerExecutionPlan(config: AuditConfig): readonly ProviderAna
 	if (providers.jscpd !== undefined) {
 		entries.push({ providerId: "jscpd", mode: providers.jscpd.mode });
 	}
-	for (const providerId of ["dependency-cruiser", "knip", "sonarjs"] as const) {
+	if (providers["dependency-cruiser"] !== undefined) {
+		entries.push({ providerId: "dependency-cruiser", request: providers["dependency-cruiser"] });
+	}
+	for (const providerId of ["knip", "sonarjs"] as const) {
 		if (providers[providerId] !== undefined) entries.push({ providerId });
 	}
 	return entries.sort((a, b) =>
@@ -102,9 +118,7 @@ export function measuredSelection(source: SourceInventory): StagedSelectionFile[
  * while the entry stands; `mode` records that the request names the
  * capability set, not a delivered analysis mode.
  */
-export function undeliveredProviderEvidence(
-	providerId: "dependency-cruiser" | "knip" | "sonarjs",
-): AnalysisResult {
+export function undeliveredProviderEvidence(providerId: "knip" | "sonarjs"): AnalysisResult {
 	const status = providerCapabilityStatus(providerId);
 	if (status === undefined) {
 		throw new Error(
@@ -129,6 +143,40 @@ export function undeliveredProviderEvidence(
 	};
 }
 
+/** Options one delivered provider runs under (cancellation + the resolution test seam). */
+function deliveredProviderOptions(options: ProviderAnalysisOptions) {
+	return {
+		...(options.signal === undefined ? {} : { signal: options.signal }),
+		...(options.resolve === undefined ? {} : { resolve: options.resolve }),
+	};
+}
+
+/** Execute one planned entry (see the module docblock); ordered by the plan. */
+async function runPlannedEntry(
+	entry: ProviderAnalysisPlanEntry,
+	root: string,
+	source: SourceInventory,
+	options: ProviderAnalysisOptions,
+): Promise<AnalysisResult> {
+	if (entry.providerId === "jscpd") {
+		return await runJscpdAnalysis(
+			root,
+			measuredSelection(source),
+			entry.mode,
+			deliveredProviderOptions(options),
+		);
+	}
+	if (entry.providerId === "dependency-cruiser") {
+		return await runDependencyCruiserAnalysis(
+			root,
+			measuredSelection(source),
+			entry.request,
+			deliveredProviderOptions(options),
+		);
+	}
+	return undeliveredProviderEvidence(entry.providerId);
+}
+
 /**
  * Execute the configuration's provider plan over the audited workspace and
  * return the contract results (see the module docblock). Ordered by provider
@@ -148,16 +196,7 @@ export async function runProviderAnalyses(
 	if (plan.length === 0) return [];
 	const results: AnalysisResult[] = [];
 	for (const entry of plan) {
-		if (entry.providerId === "jscpd") {
-			results.push(
-				await runJscpdAnalysis(root, measuredSelection(source), entry.mode, {
-					...(options.signal === undefined ? {} : { signal: options.signal }),
-					...(options.resolve === undefined ? {} : { resolve: options.resolve }),
-				}),
-			);
-			continue;
-		}
-		results.push(undeliveredProviderEvidence(entry.providerId));
+		results.push(await runPlannedEntry(entry, root, source, options));
 	}
 	return results;
 }

@@ -163,9 +163,9 @@ export const SUPPORTED_PROVIDERS: readonly ProviderCapabilityStatus[] = (() => {
 			providerId: "dependency-cruiser",
 			capabilityIds: ["architecture.declared-rules"],
 			unscored: true,
-			status: "adapter-pending",
-			requestState: "unsupported",
-			reason: "contracted architecture-evidence candidate; no adapter delivered yet (plan pl-43c5)",
+			status: "delivered",
+			reason:
+				"architecture-evidence adapter delivered (src/providers/dependency-cruiser/, trellis-adbf) evaluating the declarative architecture-policy subset over staged views and selectable through declarative provider configuration: requests resolve per run",
 		},
 		{
 			providerId: "knip",

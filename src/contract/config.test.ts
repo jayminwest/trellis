@@ -152,7 +152,7 @@ describe("providerSelectionSchema (§16.3–16.4 — declarative provider select
 		expect(config.providers.jscpd).toEqual({ mode: "normalized" });
 	});
 
-	test("round-trips requests for undelivered and gated providers — valid configuration carrying no options", () => {
+	test("round-trips requests for providers whose options are optional — including the delivered dependency-cruiser", () => {
 		for (const providerId of ["dependency-cruiser", "knip", "sonarjs"] as const) {
 			const config = auditConfigSchema.parse({ providers: { [providerId]: {} } });
 			expect(config.providers[providerId]).toEqual({});

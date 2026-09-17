@@ -234,8 +234,9 @@ the digest for agents working in this repo:
   on every exit path — native audits never invoke it. The supported-tool
   manifest/resolver (`src/providers/manifest.ts` + `src/providers/resolve.ts`,
   trellis-ff52; see [`docs/provider-tools.md`](docs/provider-tools.md)) pins
-  the exact external artifacts (initially jscpd 5.2.1, an isolated
-  devDependency) and resolves them only from an operator-prepared local
+  the exact external artifacts (initially jscpd 5.2.1 and — with the
+  architecture-evidence adapter — dependency-cruiser 18.3.1, isolated
+  devDependencies) and resolves them only from an operator-prepared local
   installation — verified against recorded digests before use, never via
   PATH/bunx, never installed or downloaded at audit time. The jscpd adapter
   (`src/providers/jscpd/` — raw report schemas and validation, pinned argv
@@ -243,7 +244,21 @@ the digest for agents working in this repo:
   the pinned exact/normalized/near modes over a staged view through that
   runner and validates the raw JSON into typed evidence before any
   normalization (trellis-da4c owns that); it stays unscored and outside the
-  default audit.
+  default audit. The dependency-cruiser adapter
+  (`src/providers/dependency-cruiser/`, trellis-adbf) evaluates the
+  declarative architecture-rule subset through a trellis-generated tool
+  config over a staged view, records the TypeScript parser the tool
+  resolves locally, and keeps an empty or partial graph `incomplete` with
+  the coverage loss named — never a clean pass; it stays unscored and
+  outside the default audit. The Knip reachability context is
+  declarative (`src/contract/reachability-policy.ts` plus pure
+  compilation and context preparation in `src/providers/knip/`,
+  trellis-5da5): declared entries, public surfaces and test
+  participation compile into a normalized, assumption-carrying context —
+  omitted entries, unresolvable declarations, missing dependency context
+  and disabled plugin discovery are recorded contextual assumptions that
+  can never imply confirmed dead code — and the adapter is step 24
+  (trellis-8ebc).
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as

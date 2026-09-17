@@ -261,17 +261,17 @@ describe("renderAuditMarkdown with missing or partial provider evidence", () => 
 
 	test("renders requested undelivered providers as located unsupported evidence, never a clean zero", async () => {
 		await seedClonePair(repo);
-		const output = await render({ "dependency-cruiser": {}, knip: {}, sonarjs: {} });
+		// knip and sonarjs are the undelivered/gated set; dependency-cruiser
+		// delivered its adapter (trellis-adbf) and now runs per request.
+		const output = await render({ knip: {}, sonarjs: {} });
 		expect(output).toContain(`## ${PROVIDER_SECTION_TITLE}`);
 		expect(output).toContain("Evidence: incomplete");
 		// Analyses render in the report's provider-id order.
-		const first = output.indexOf("### dependency-cruiser");
-		const second = output.indexOf("### knip");
-		const third = output.indexOf("### sonarjs");
+		const first = output.indexOf("### knip");
+		const second = output.indexOf("### sonarjs");
 		expect(first).toBeGreaterThan(-1);
 		expect(first).toBeLessThan(second);
-		expect(second).toBeLessThan(third);
-		for (const id of ["dependency-cruiser", "knip", "sonarjs"]) {
+		for (const id of ["knip", "sonarjs"]) {
 			expect(output).toContain(`### ${id} — unsupported`);
 			expect(output).toMatch(/- reason: /);
 		}

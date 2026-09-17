@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { type AuditConfig, auditReportSchema, measurementPayload } from "../contract/index.ts";
 import { discoverSourceInventory, type SourceInventory } from "../discovery/index.ts";
+import { resolvePinnedTool } from "../providers/resolve.ts";
 import { auditWorkspace } from "./audit.ts";
 import {
 	carriedProviderIds,
@@ -296,5 +297,95 @@ describe("provider failures stay located evidence with native results intact", (
 		expect(results[0]?.state).toBe("unavailable");
 		expect(results[0]?.reason).toMatch(/cancelled/);
 		expect(await stagedScratchCount()).toBe(before);
+	});
+});
+
+describe("an explicitly requested dependency-cruiser adds unscored architecture evidence", () => {
+	/** Real-binary tests run only where the pinned artifact resolved on this host. */
+	const DC_TOOL_AVAILABLE = resolvePinnedTool("dependency-cruiser").state === "available";
+
+	/** A small architecture fixture: one runtime cycle and one unresolved local import. */
+	const ARCHITECTURE_RULES = [
+		{ kind: "cycle" as const, name: "no-runtime-cycles", edges: ["runtime" as const] },
+		{ kind: "unresolved" as const, name: "no-unresolved-imports" },
+	];
+
+	async function seedArchitecturePair(root: string): Promise<void> {
+		await putFile(
+			root,
+			"package.json",
+			JSON.stringify({ name: "fixture-architecture", version: "1.0.0" }),
+		);
+		await putFile(
+			root,
+			"src/a.ts",
+			'import { b } from "./b.ts";\nimport { gone } from "./gone.ts";\nexport const a = () => b + String(gone);\n',
+		);
+		await putFile(root, "src/b.ts", 'import { a } from "./a.ts";\nexport const b = () => a;\n');
+	}
+
+	test("translates the declarative architecture request into one plan entry", () => {
+		const request = { rules: ARCHITECTURE_RULES };
+		const plan = providerExecutionPlan(providerAuditConfig({ "dependency-cruiser": request }));
+		expect(plan).toEqual([{ providerId: "dependency-cruiser", request }]);
+		expect(
+			providerExecutionPlan(
+				providerAuditConfig({ jscpd: { mode: "exact" }, "dependency-cruiser": request }),
+			),
+		).toEqual([
+			{ providerId: "dependency-cruiser", request },
+			{ providerId: "jscpd", mode: "exact" },
+		]);
+	});
+
+	test.skipIf(!DC_TOOL_AVAILABLE)(
+		"adds one advisory namespaced entry with coverage-checked evidence, native results untouched",
+		async () => {
+			await seedArchitecturePair(repo);
+			const native = await auditWorkspace(repo, { now: PINNED });
+			const enriched = await auditWorkspace(repo, {
+				config: providerAuditConfig({ "dependency-cruiser": { rules: ARCHITECTURE_RULES } }),
+				now: PINNED,
+			});
+			// The report validates; native measurement, score and findings are
+			// identical — provider evidence never displaces the native graph.
+			expect(auditReportSchema.parse(enriched)).toEqual(enriched);
+			expect(enriched.score).toEqual(native.score);
+			expect(enriched.metrics).toEqual(native.metrics);
+			expect(enriched.findings).toEqual(native.findings);
+			// The fixture's own unresolved import makes the native graph partial —
+			// provider evidence never flips score completeness in either direction.
+			expect(native.score.partial).toBe(true);
+			expect(enriched.score.partial).toBe(true);
+			const entry = providerEntry(enriched, "dependency-cruiser");
+			expect(entry.scoring).toBe("advisory");
+			expect(entry.metricIds).toEqual([]);
+			expect(entry.state).toBe("complete");
+			// The graph asserts every measured file (coverage-checked evidence).
+			expect(entry.observedCoverage?.analyzedFiles).toEqual(["src/a.ts", "src/b.ts"]);
+			// Namespaced architecture evidence: the cycle and the unresolved
+			// local import, with the native graph's own findings untouched.
+			expect(entry.findings?.map((finding) => finding.kind).sort()).toEqual([
+				"provider.dependency-cruiser.no-runtime-cycles",
+				"provider.dependency-cruiser.no-unresolved-imports",
+			]);
+			// The area rolls up the native graph's own incomplete edge — the
+			// fixture's unresolved import is a native gap, never fixed or worsened
+			// by the advisory provider evidence (the dc entry itself is complete).
+			expect(evidenceArea(enriched).completeness).toBe("incomplete");
+		},
+	);
+
+	test("an unresolvable pin is located unavailable evidence with instructions, never an abort", async () => {
+		await seedArchitecturePair(repo);
+		const results = await runProviderAnalyses(
+			repo,
+			await inventory(),
+			providerAuditConfig({ "dependency-cruiser": { rules: ARCHITECTURE_RULES } }),
+			{ resolve: { fromDir: join(tmpdir(), "trellis-dc-not-installed-") } },
+		);
+		expect(results[0]?.provider.id).toBe("dependency-cruiser");
+		expect(results[0]?.state).toBe("unavailable");
+		expect(results[0]?.reason).toMatch(/is not installed where trellis resolves from/);
 	});
 });

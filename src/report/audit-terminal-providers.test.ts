@@ -214,17 +214,17 @@ describe("renderAuditTerminal with missing or partial provider evidence", () => 
 
 	test("renders requested undelivered providers as located unsupported evidence, never a clean zero", async () => {
 		await seedClonePair(repo);
-		const output = await render({ "dependency-cruiser": {}, knip: {}, sonarjs: {} });
+		// knip and sonarjs are the undelivered/gated set; dependency-cruiser
+		// delivered its adapter (trellis-adbf) and now runs per request.
+		const output = await render({ knip: {}, sonarjs: {} });
 		expectPlain(output);
 		expect(output).toContain(SECTION_TITLE);
 		expect(output).toContain("evidence: incomplete");
-		const first = output.indexOf("dependency-cruiser");
-		const second = output.indexOf("knip");
-		const third = output.indexOf("sonarjs");
+		const first = output.indexOf("knip");
+		const second = output.indexOf("sonarjs");
 		expect(first).toBeGreaterThan(-1);
 		expect(first).toBeLessThan(second);
-		expect(second).toBeLessThan(third);
-		for (const id of ["dependency-cruiser", "knip", "sonarjs"]) {
+		for (const id of ["knip", "sonarjs"]) {
 			expect(output).toMatch(new RegExp(`${id} +unsupported +mode capability-request`));
 			expect(output).toMatch(/reason: /);
 		}
