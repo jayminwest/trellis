@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { type AuditReport, auditReportSchema, measurementPayload } from "./report.ts";
+import { auditReportSchema, measurementPayload, type PreProviderAuditReport } from "./report.ts";
 
-function baseReport(): AuditReport {
+function baseReport(): PreProviderAuditReport {
 	return {
 		schemaVersion: "1.0.0",
 		analyzerVersion: "0.2.0",

@@ -14,7 +14,12 @@
  * policy from `assessPolicy` maps to `2`.
  */
 import { readFile } from "node:fs/promises";
-import { type AuditReport, auditReportSchema } from "../contract/index.ts";
+import {
+	type AuditReport,
+	auditReportSchema,
+	isSupportedSchemaVersion,
+	SUPPORTED_SCHEMA_VERSIONS,
+} from "../contract/index.ts";
 
 /** An operational failure to load a saved report artifact. */
 export class ReportArtifactError extends Error {
@@ -32,6 +37,8 @@ export class ReportArtifactError extends Error {
  * Load and validate a saved JSON report artifact. Throws
  * {@link ReportArtifactError} when the file is unreadable, is not JSON, or
  * violates the §6.4 contract (including its cross-field honesty invariants).
+ * A schema version this trellis cannot read fails actionably with the
+ * supported versions named (§16.6) — never with guessed semantics.
  */
 export async function loadReportArtifact(path: string): Promise<AuditReport> {
 	let text: string;
@@ -50,6 +57,16 @@ export async function loadReportArtifact(path: string): Promise<AuditReport> {
 		throw new ReportArtifactError(
 			path,
 			`not a JSON document (${cause instanceof Error ? cause.message : String(cause)})`,
+		);
+	}
+	const schemaVersion =
+		typeof data === "object" && data !== null
+			? (data as { schemaVersion?: unknown }).schemaVersion
+			: undefined;
+	if (typeof schemaVersion === "string" && !isSupportedSchemaVersion(schemaVersion)) {
+		throw new ReportArtifactError(
+			path,
+			`unsupported report schema version "${schemaVersion}" — this trellis reads ${SUPPORTED_SCHEMA_VERSIONS.join(", ")}; re-audit the workspace or upgrade trellis`,
 		);
 	}
 	const parsed = auditReportSchema.safeParse(data);

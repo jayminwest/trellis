@@ -17,7 +17,10 @@
  * the report bytes are identical to the pre-refactor baseline (proven by the
  * orchestration payload-equality tests), and no external provider is
  * selected or started — the registry holds native analyzers only at this
- * stage.
+ * stage. Since trellis-a24d the assembled report carries the per-analysis
+ * evidence area (§6.6): provenance, status, observed coverage and the
+ * declared scoring role per measured analysis, with overall evidence
+ * completeness independent from score completeness (§16.2).
  *
  * Invariants (SPEC §8):
  *
@@ -48,11 +51,13 @@ import {
 	NATIVE_REGISTRY,
 	type NativeAnalysisRun,
 	type NativeAnalyzer,
+	nativeScoringRequiredIds,
 	runComplexityAnalysis,
 	runDependencyGraphAnalysis,
 	runDuplicationAnalysis,
 	runImportCycleAnalysis,
 	runSafeguardInspection,
+	toContractResult,
 } from "../analysis/index.ts";
 import { loadAuditConfig } from "../config/index.ts";
 import type { AuditConfig, AuditReport } from "../contract/index.ts";
@@ -65,6 +70,7 @@ import {
 	assembleReport,
 	collectMetrics,
 	type MeasuredAnalysis,
+	type MeasuredAnalysisEvidence,
 } from "./assemble.ts";
 import { type AuditEvent, type AuditProgress, analyzerProgressId } from "./progress.ts";
 
@@ -171,6 +177,35 @@ export function measureAnalyses(
 }
 
 /**
+ * Fold the registered runs into the report's evidence contributions: each
+ * run's product (the native evidence) plus its contract result (internal
+ * products stripped), the scoring role derived from the registry (the
+ * analyzers the scoring catalog requires — owners of catalog metric ids
+ * plus transitive prerequisites — are the scored inputs; every other
+ * measured analyzer is advisory), and the registry-declared metric
+ * ownership. Pure over the runs and the registry; throws deterministically
+ * when a measured run names no registered analyzer.
+ */
+export function measuredAnalysisEvidence(
+	runs: readonly NativeAnalysisRun<MeasuredAnalysis>[],
+): MeasuredAnalysisEvidence[] {
+	const scored = new Set(nativeScoringRequiredIds());
+	return runs.map((run) => {
+		const id = run.result.provider.id;
+		const analyzer = NATIVE_REGISTRY.get(id);
+		if (analyzer === undefined) {
+			throw new Error(`measured analysis "${id}" is not registered in the native registry`);
+		}
+		return {
+			...run.product,
+			result: toContractResult(run.result),
+			scoring: scored.has(id) ? "scored" : "advisory",
+			metricIds: analyzer.metrics,
+		};
+	});
+}
+
+/**
  * Audit the workspace at `root` and return its §6.4 {@link AuditReport}
  * (see the module docblock for the invariants). Throws only on operational
  * errors — an unreadable root or an invalid `trellis.yaml`; source-level
@@ -212,9 +247,9 @@ export async function auditWorkspace(
 			: { duplicationBudget: options.duplicationBudget }),
 		...(options.onProgress === undefined ? {} : { onProgress: options.onProgress }),
 	});
-	// The registered runs carry their products' metrics and findings by
-	// reference — folding the products is folding the results' evidence.
-	const analyses = runs.map((run) => run.product);
+	// The registered runs fold into the report's evidence contributions —
+	// product, provenance, scoring role, metric ownership — before assembly.
+	const analyses = measuredAnalysisEvidence(runs);
 	const metrics = collectMetrics(analyses);
 	emit({
 		type: "measured",
