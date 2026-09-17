@@ -1,5 +1,5 @@
 /**
- * Report assembly (SPEC §6.4, trellis-ef85) — the pure fold from analysis
+ * Report assembly (SPEC §6.4, §6.6, trellis-ef85) — the pure fold from analysis
  * results to the versioned {@link AuditReport}.
  *
  * {@link assembleReport} takes the discovery/syntax inventories, the measured
@@ -16,17 +16,26 @@
  *   measured code-line counts from the one shared parse (§3.1);
  * - `repo.identity` is the root manifest's `name` when one exists — metadata
  *   only (§8); history (trellis-424d) owns collision-resistant identity;
- * - the assembled report is validated against `auditReportSchema` before it
- *   leaves the core, so the §6.4 cross-field honesty invariants
- *   (completeness rollup, `partial` flag, traceable contributions) can never
- *   be violated by a published report.
+ * - the report carries the per-analysis evidence area (§6.6,
+ *   trellis-a24d): one entry per measured analysis with its provenance,
+ *   status and observed coverage, its declared scoring role, and the metric
+ *   ids it owns — native measured output (values, findings) stays in the
+ *   report's own areas and is never duplicated per entry. The area's
+ *   completeness is the independent overall-evidence rollup; score
+ *   completeness comes from the scoring input alone, so the two can never
+ *   paper over each other (§16.2);
+ * - the assembled report is validated against the versioned report schema
+ *   before it leaves the core, so the §6.4 cross-field honesty invariants
+ *   (completeness rollup, `partial` flag, traceable contributions, metric
+ *   ownership, evidence status) can never be violated by a published
+ *   report.
  *
- * The fold is generic over the measured results (`MeasuredAnalysis` — the
- * structural minimum every measured analyzer's result satisfies): since the
- * registry routing (trellis-1e66) assembly consumes whatever the selected
- * execution list produced rather than a hardcoded four-analyzer set, with
- * byte-identical output — the wrapped native runs carry the same metrics and
- * findings the inline analyzers did.
+ * The fold is generic over the measured results ({@link MeasuredAnalysis} —
+ * the structural minimum every measured analyzer's product satisfies): since
+ * the registry routing (trellis-1e66) assembly consumes whatever the selected
+ * execution list produced rather than a hardcoded four-analyzer set, the
+ * wrapped native runs carry the same metrics and findings the inline
+ * analyzers did.
  *
  * This module does no I/O, reads no clock, and never scores: same analysis
  * results in ⇒ byte-equal report out (SPEC §3.5). Run metadata
@@ -35,13 +44,18 @@
  */
 import {
 	ANALYZER_VERSION,
+	type AnalysisResult,
 	type AuditReport,
-	auditReportSchema,
+	type EvidenceArea,
+	evidenceAuditReportSchema,
 	type Finding,
 	type MetricValue,
 	type RepoMetadata,
+	type ReportAnalysis,
 	rollUpCompleteness,
+	rollUpEvidenceCompleteness,
 	SCHEMA_VERSION,
+	type ScoringRole,
 	type SourceCoverage,
 	type SourceSet,
 } from "../contract/index.ts";
@@ -63,12 +77,28 @@ export interface MeasuredAnalysis {
 	findings: readonly Finding[];
 }
 
+/**
+ * One measured analysis's evidence contribution: its product (the native
+ * evidence the fold collects), its contract result (provenance, state,
+ * observed coverage — internal products stripped by the producer), and the
+ * registry-derived declarations the report carries: the analysis's scoring
+ * role and the metric ids it owns.
+ */
+export interface MeasuredAnalysisEvidence extends MeasuredAnalysis {
+	/** The measured contract result (§16.2): provider identity, state, analysis identity, observed coverage. */
+	result: AnalysisResult;
+	/** The analysis's role in the report's score — scored analyses feed the index; advisory analyses never do (§16.5). */
+	scoring: ScoringRole;
+	/** The metric ids this analysis owns; every id must appear in the report's metrics map. */
+	metricIds: readonly string[];
+}
+
 /** The analysis results one audit assembles into its report. */
 export interface AuditMeasurements {
 	source: SourceInventory;
 	syntax: SyntaxInventory;
-	/** The measured analyzers' results, in execution order (the selected execution list). */
-	analyses: readonly MeasuredAnalysis[];
+	/** The measured analyzers' evidence contributions, in execution order (the selected execution list). */
+	analyses: readonly MeasuredAnalysisEvidence[];
 	safeguards: SafeguardInspection;
 }
 
@@ -171,11 +201,58 @@ function repoMetadata(source: SourceInventory): RepoMetadata {
 }
 
 /**
+ * Build one analysis's evidence-area entry: its provenance, status and
+ * observed coverage plus the declared scoring role and metric ownership.
+ * Native measured output (metric values, findings, clone groups) lives in
+ * the report's own areas — the native entry carries only its ownership
+ * ids, never a diverging copy. External evidence is namespaced and lives
+ * inside its entry (§16.5, §6.6).
+ */
+function evidenceEntry(analysis: MeasuredAnalysisEvidence): ReportAnalysis {
+	const { metrics, findings, cloneEvidence, ...provenance } = analysis.result;
+	if (analysis.result.provider.kind === "native") {
+		return {
+			scoring: analysis.scoring,
+			metricIds: [...analysis.metricIds],
+			...provenance,
+		};
+	}
+	return {
+		scoring: analysis.scoring,
+		metricIds: [...analysis.metricIds],
+		...provenance,
+		...(metrics === undefined ? {} : { metrics }),
+		...(findings === undefined ? {} : { findings }),
+		...(cloneEvidence === undefined ? {} : { cloneEvidence }),
+	};
+}
+
+/**
+ * Assemble the evidence area (§6.6): the measured analyses' entries — unique,
+ * in provider-id order — plus the overall evidence completeness rolled up
+ * from the analysis states and the native metric states. Independent from
+ * score completeness by construction (§16.2): the rollup never reads the
+ * score.
+ */
+function assembleEvidence(
+	analyses: readonly MeasuredAnalysisEvidence[],
+	metrics: readonly MetricValue[],
+): EvidenceArea {
+	const entries = analyses
+		.map(evidenceEntry)
+		.sort((a, b) => (a.provider.id < b.provider.id ? -1 : a.provider.id > b.provider.id ? 1 : 0));
+	return {
+		completeness: rollUpEvidenceCompleteness(entries, metrics),
+		analyses: entries,
+	};
+}
+
+/**
  * Assemble and validate the §6.4 audit report (see the module docblock).
  * Pure: no I/O, no clock, no scoring — the {@link SloppinessScore} is an
  * input. Throws when the assembled report would violate the contract
- * (including the §6.4 honesty invariants), so a misleading report can never
- * leave the core.
+ * (including the §6.4 honesty invariants and the evidence-area cross-field
+ * checks), so a misleading report can never leave the core.
  */
 export function assembleReport(
 	measurements: AuditMeasurements,
@@ -193,13 +270,14 @@ export function assembleReport(
 						...(meta.durationMs === undefined ? {} : { durationMs: meta.durationMs }),
 					},
 				};
-	return auditReportSchema.parse({
+	return evidenceAuditReportSchema.parse({
 		schemaVersion: SCHEMA_VERSION,
 		analyzerVersion: ANALYZER_VERSION,
 		scoringVersion: scoring.scoringVersion,
 		repo: repoMetadata(measurements.source),
 		sourceCoverage: reportCoverage(measurements.source, measurements.syntax),
 		completeness: rollUpCompleteness(metrics.map((metric) => metric.state)),
+		evidence: assembleEvidence(measurements.analyses, metrics),
 		metrics: Object.fromEntries(metrics.map((metric) => [metric.id, metric])),
 		score: scoring.score,
 		findings,

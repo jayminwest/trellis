@@ -6,6 +6,10 @@ import {
 	SCHEMA_VERSION,
 	type SourceSet,
 } from "../contract/index.ts";
+import {
+	fixtureNativeAnalysisIdentity,
+	fixtureNativeProvider,
+} from "../contract/report.fixtures.ts";
 import type { SourceInventory } from "../discovery/index.ts";
 import type { SafeguardInspection } from "../safeguards/index.ts";
 import { scoreSloppiness } from "../scoring/index.ts";
@@ -87,12 +91,30 @@ function requiredMetrics(): MetricValue[] {
 	];
 }
 
-/** Minimal analysis stubs carrying only what assembly consumes. */
+/**
+ * Minimal analysis stubs carrying only what assembly consumes: one measured
+ * analysis (a complete native pass over the fake inventory) owning every
+ * metric it emits, scored — the registry-derived declarations the real audit
+ * supplies (audit.ts).
+ */
 function fakeMeasurements(metrics: MetricValue[], findings: Finding[] = []): AuditMeasurements {
 	return {
 		source: fakeSource(),
 		syntax: fakeSyntax([]),
-		analyses: [{ metrics, findings }],
+		analyses: [
+			{
+				metrics,
+				findings,
+				result: {
+					provider: fixtureNativeProvider,
+					state: "complete",
+					analysis: fixtureNativeAnalysisIdentity,
+					observedCoverage: { analyzedFiles: [], diagnostics: [], unsupported: [] },
+				},
+				scoring: "scored",
+				metricIds: [...metrics.map((metric) => metric.id)].sort(),
+			},
+		],
 		safeguards: { results: [], findings: [] } satisfies SafeguardInspection,
 	};
 }
