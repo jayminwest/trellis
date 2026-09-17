@@ -731,6 +731,21 @@ and SDK wiring landed with trellis-9a88.)*
   the sloppiness index** in either direction. It is not expanded in this
   release.
 
+*(Landed, trellis-8366: `src/fleet/` loads the pivoted `targets.yaml`
+(id/path/config/canonical; readiness `skip`/`languages` and investigation
+defaults rejected with actionable migration errors), runs each target
+through the same `runWorkspaceAudit` the single-repo surfaces fold, and
+aggregates a `FleetReport` whose entries preserve the full §6.4 report and
+the §9 policy assessment — deep-equal to independent core audits. Drift
+rides along per target as non-scoring evidence; it never enters the index
+or the exit rollup (`assessFleet` fails on target errors and tripped
+declarative policies only). Fleet runs are stateless by default;
+`--history` records each run and surfaces index moves against stored
+compatible baselines. `src/history/` renders the sloppiness dashboard —
+latest-run snapshot with compatible index deltas plus per-repo
+§3.5-compatible series — with legacy readiness runs in a visibly distinct,
+never-compared section (§10).)*
+
 ---
 
 ## 12. CLI & SDK surface
@@ -777,8 +792,9 @@ views in `src/report/compare-render.ts`; an incompatible pair fails closed
 flags are hidden commander options that fail fast with actionable
 messages. The SDK's `audit`/`compare` are direct calls to the same
 services; deep-equal parity tests cover measurement and policy.
-`fleet`/`report`/`drift`/`rubric`/`standards` remain the transitional
-legacy surface until trellis-8366.)*
+`fleet`/`report` adapted with trellis-8366 (§11);
+`drift`/`rubric`/`standards` remain the transitional legacy surface until
+the release stages.)*
 
 ---
 

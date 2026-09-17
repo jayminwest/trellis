@@ -10,9 +10,14 @@
  * operation, a programmatic audit and a CLI audit exercise one code path and
  * cannot drift (proven by the deep-equal test in `index.test.ts`).
  *
- * Transitional (SPEC §14): `drift` / `fleet` / `report` / `rubric` still wrap
- * the legacy readiness services until trellis-8366 adapts them; the
- * sloppiness surface above is the pivoted product.
+ * `fleet` / `report` (trellis-8366, SPEC §11) fold the same deterministic
+ * core: `fleet` → {@link runFleetTargets} (multi-repo orchestration over
+ * `runWorkspaceAudit`, with canonical drift as a separate non-scoring
+ * capability) and `report` → {@link buildReport} (the sloppiness history
+ * dashboard, with legacy readiness runs visibly distinct and never trended
+ * against the index, SPEC §10). Transitional (SPEC §14): `drift` / `rubric`
+ * still wrap the legacy readiness services until the release stages retire
+ * them.
  *
  * Request types mirror the core option types and response types ARE the core
  * report types — re-exported below, each annotated with its source module. No
@@ -39,6 +44,7 @@ import {
 import type { AuditConfig, AuditReport } from "../contract/index.ts"; // Mirrors src/contract
 import {
 	assessFleet,
+	type FleetAssessment,
 	type FleetReport,
 	type FleetRunOptions,
 	runFleetTargets,
@@ -64,6 +70,7 @@ export type {
 	DriftReport,
 	FailOnMode,
 	FailPolicy,
+	FleetAssessment,
 	FleetReport,
 	HistoryReport,
 	PolicyAssessment,
@@ -132,9 +139,13 @@ export function drift(repoPath: string, opts: DriftRequest = {}): DriftReport {
 export type FleetRequest = FleetRunOptions;
 
 /**
- * Audit every target in a `targets.yaml` and return the aggregate
- * {@link FleetReport}. Identical to `trellis fleet`. Transitional legacy
- * surface — trellis-8366 adapts it to the deterministic core.
+ * Audit every target in a `targets.yaml` through the deterministic core and
+ * return the aggregate {@link FleetReport} — each entry preserves the
+ * target's full §6.4 report (findings, completeness) and its declarative §9
+ * policy assessment; canonical drift rides along as a separate, non-scoring
+ * capability (SPEC §11). Stateless by default — pass `history: true` to
+ * record each run and surface index moves against stored baselines.
+ * Identical to `trellis fleet`.
  */
 export function fleet(targetsPath: string, opts: FleetRequest = {}): Promise<FleetReport> {
 	return runFleetTargets(targetsPath, opts);
@@ -144,9 +155,10 @@ export function fleet(targetsPath: string, opts: FleetRequest = {}): Promise<Fle
 export type ReportQuery = ReportRunOptions;
 
 /**
- * Project the run-history dashboard from the central store. Identical to
- * `trellis report`. Transitional legacy surface — trellis-8366 adapts the
- * history views to the new measurements.
+ * Project the run-history dashboard from the central store: the sloppiness
+ * snapshot and per-repo §3.5-compatible index series, with legacy readiness
+ * history in a visibly distinct section that is never compared with the
+ * sloppiness index (SPEC §10). Identical to `trellis report`.
  */
 export function report(query: ReportQuery = {}): HistoryReport {
 	return buildReport(query);

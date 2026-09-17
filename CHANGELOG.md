@@ -11,6 +11,33 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Fleet and history are optional consumers of the deterministic core**
+  (trellis-8366, SPEC §10–§11, stage 19 of the deterministic-pivot plan
+  `pl-b2ea`): `trellis fleet` now runs every `targets.yaml` target through
+  the same `runWorkspaceAudit` service the single-repo CLI and SDK fold —
+  each entry of the aggregate `FleetReport` preserves the target's full
+  §6.4 report (findings, completeness, metrics) plus the declarative §9
+  policy assessment over the target's own `trellis.yaml`, and fleet results
+  are proven deep-equal to independent core audits. Canonical-config drift
+  rides along per target as a **separate, non-scoring capability**: its
+  per-state counts render on the report but never enter the sloppiness
+  index, the policy assessment, or the fleet exit rollup (`assessFleet`
+  fails exactly when a target errored or tripped its own policy). Fleet
+  runs are stateless by default (SPEC §8, §10); `--history` records each
+  target's run and surfaces the index move against the repo's previous
+  compatible stored run. Legacy targets configuration is rejected with
+  actionable migration errors — `defaults.investigation` (the agent pass
+  is gone), per-target `skip` (readiness criterion skips) and `languages`
+  (detector hints), and the `--fail-on` / `--min-level` / `--no-cache`
+  flags (policy is declarative now). `trellis report` renders the
+  sloppiness history — a snapshot of each repo's latest audit with the
+  index move against the previous §3.5-compatible run, plus per-repo
+  compatible index series — with legacy readiness runs preserved in a
+  visibly distinct section that is never compared with, averaged into, or
+  trended against the sloppiness index (SPEC §10). The SDK's `fleet()` /
+  `report()` are direct calls to the same services, with a deep-equal
+  CLI⇄SDK fleet parity test. `drift` / `rubric` / `standards` remain the
+  transitional legacy surface until the release stages.
 - **CLI and SDK expose the same simplified deterministic audit** (trellis-9a88,
   SPEC §12, stage 18 of the deterministic-pivot plan `pl-b2ea`): `trellis
   audit <path>` now folds `runWorkspaceAudit` (`src/audit/run.ts`) —

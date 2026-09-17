@@ -1,27 +1,29 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`renderFleetTerminal renders the aggregate dashboard 1`] = `
-"trellis fleet · 3 targets · rubric 1.0.0 · canonical 1.0.0 · 2 ok · 1 error
-scored 2026-06-06T00:00:00.000Z
+exports[`fleet renderers renderFleetTerminal renders the aggregate dashboard 1`] = `
+"trellis fleet · 4 targets · 3 ok · 1 error · 1 policy failed
+audited 2026-06-06T00:00:00.000Z · index 0–100, lower is better
 
-  target         level   pass    cov  drift             Δ     note
-  warren         L4       78%    90%  drift 0 · miss 0  +1
-  my-swift-app   L3       55%    80%  drift 2 · miss 1  new
-  external-repo  —          —      —  —                 —     error: path not found or not a directory
+  target    index  state     findings  policy  drift             Δ     note
+  warren    0/100  complete         0  ok      drift 0 · miss 0  -4
+  trellis  55/100  complete         4  FAIL    drift 2 · miss 1  new
+  drifty    0/100  complete         0  ok      error             new   drift error: canonical version 9.9.9 is not bundled (have 1.0.0)
+  gone          —  —                —  —       —                 —     error: path not found or not a directory
 
-2 ok · 1 error"
+4 targets · 3 ok · 1 error · 1 policy failed"
 `;
 
-exports[`renderFleetMarkdown renders a PR/issue-ready table 1`] = `
+exports[`fleet renderers renderFleetMarkdown renders a PR/issue-ready table 1`] = `
 "# Fleet audit
 
-3 targets · rubric 1.0.0 · canonical 1.0.0 · 2 ok · 1 error
-scored 2026-06-06T00:00:00.000Z
+4 targets · 3 ok · 1 error · 1 policy failed · audited 2026-06-06T00:00:00.000Z
+Sloppiness index 0–100, **lower is better**; Δ is the index move vs the previous stored run (positive = worse).
 
-| Target | Level | Pass | Coverage | Drift | Δ | Note |
-| --- | --- | --- | --- | --- | --- | --- |
-| \`warren\` | L4 | 78% | 90% | drift 0 · miss 0 | +1 |  |
-| \`my-swift-app\` | L3 | 55% | 80% | drift 2 · miss 1 | new |  |
-| \`external-repo\` | — | — | — | — | — | error: path not found or not a directory |
+| Target | Index | State | Findings | Policy | Drift | Δ | Note |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| \`warren\` | 0/100 | complete | 0 | ok | drift 0 · miss 0 | -4 |  |
+| \`trellis\` | 55/100 | complete | 4 | FAIL | drift 2 · miss 1 | new |  |
+| \`drifty\` | 0/100 | complete | 0 | ok | error | new | drift error: canonical version 9.9.9 is not bundled (have 1.0.0) |
+| \`gone\` | — | — | — | — | — | — | error: path not found or not a directory |
 "
 `;

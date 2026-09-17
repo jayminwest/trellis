@@ -162,7 +162,44 @@ describe("client SDK (deterministic surface)", () => {
 		const clean = client.assessPolicy(sdk.report, { budgets: {}, failOnNew: [] });
 		expect(clean.failed).toBe(false);
 	});
+
+	test("fleet() and the CLI produce deep-equal fleet reports (one code path)", async () => {
+		const cleanDir = mkdtempSync(join(tmpdir(), "trellis-sdk-clean-"));
+		await seedFixtureRepo(cleanDir, "clean");
+		const targetsPath = join(dbDir, "targets.yaml");
+		writeFileSync(
+			targetsPath,
+			`targets:\n  - id: clean\n    path: ${cleanDir}\n  - id: sloppy\n    path: ${dir}\n`,
+		);
+		try {
+			const sdk = await client.fleet(targetsPath);
+			const cli = await runCli(["fleet", "--targets", targetsPath, "--json"], {
+				TRELLIS_DB: dbPath,
+			});
+			expect(cli.code).toBe(0);
+			expect(stripFleetClock(sdk)).toEqual(stripFleetClock(JSON.parse(cli.stdout)));
+		} finally {
+			rmSync(cleanDir, { recursive: true, force: true });
+		}
+	});
+
+	test("report() projects the sloppiness history with legacy runs distinct", async () => {
+		await client.audit(dir, { history: true, db: dbPath });
+		const dashboard = client.report({ db: dbPath });
+		expect(dashboard.audits.snapshot).toHaveLength(1);
+		expect(dashboard.audits.snapshot[0]?.index).toBeGreaterThan(0);
+		expect(dashboard.legacy).toEqual([]);
+	});
 });
+
+/** Drop the wall-clock fields (fleet auditedAt + per-entry run metadata) for structural comparison. */
+function stripFleetClock(report: client.FleetReport): unknown {
+	return JSON.parse(
+		JSON.stringify(report, (key, value: unknown) =>
+			key === "auditedAt" || key === "durationMs" || key === "run" ? undefined : value,
+		),
+	);
+}
 
 describe("client SDK (transitional legacy surface)", () => {
 	let dir: string;
@@ -201,7 +238,8 @@ describe("client SDK (transitional legacy surface)", () => {
 
 	test("report() on an empty store returns an empty dashboard", () => {
 		const dashboard = client.report({ db: ":memory:" });
-		expect(dashboard.fleet).toEqual([]);
-		expect(dashboard.repos).toEqual([]);
+		expect(dashboard.audits.snapshot).toEqual([]);
+		expect(dashboard.audits.repos).toEqual([]);
+		expect(dashboard.legacy).toEqual([]);
 	});
 });
