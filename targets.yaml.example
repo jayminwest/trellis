@@ -1,19 +1,20 @@
-# trellis fleet declaration (SPEC §6.5).
+# trellis fleet declaration (SPEC §11).
 #
-# Copy to `targets.yaml` (gitignored) and edit. Because trellis keeps audit
-# state centrally, per-repo *allowed deltas* for canonical-config drift live
-# here — not inside the audited repos themselves.
+# Copy to `targets.yaml` (gitignored) and edit. Each target is a workspace the
+# deterministic core audits — the same measurement `trellis audit <path>`
+# runs. A target's failure policy is the declarative `policy` block of its own
+# trellis.yaml (SPEC §6.5); per-repo *allowed deltas* for canonical-config
+# drift — a separate capability that never enters the sloppiness index — live
+# here, not inside the audited repos themselves.
 
 defaults:
   canonicalVersion: "1.0.0" # which standards/ version to compare against
-  # investigation:            # optional default provider/model (SPEC §9.4)
-  #   provider: anthropic
-  #   model: claude-opus-4-8
+  # NOTE: the `investigation` provider/model keys are retired (SPEC §14) —
+  # trellis runs no agent pass; setting them is rejected with an error.
 
 targets:
   - id: warren
     path: /Users/jaymin/Projects/os-eco/warren
-    languages: [typescript] # optional hint; auto-detected if omitted
     canonical:
       version: "1.0.0" # per-repo override of defaults.canonicalVersion
       allowedDeltas: # files/keys this repo is allowed to diverge on
@@ -22,12 +23,14 @@ targets:
         - file: .github/workflows/ci.yml
           paths: ["jobs.test.strategy"] # structural allow-list within a file
           reason: "matrix-tests the supported runtimes"
-    skip: [dast_scanning] # optional: force-N/A specific criteria
 
-  - id: my-swift-app
-    path: /Users/jaymin/Projects/strays/my-swift-app
-    languages: [swift]
+  - id: trellis
+    path: /Users/jaymin/Projects/os-eco/trellis
+    config: ./trellis-fleet.yaml # optional: explicit trellis.yaml (default: discovered at the target root)
 
   - id: external-repo
     path: ../some-non-oseco-repo
-    osecoDetectors: false # disable os-eco-native detectors (SPEC §8.4)
+
+# NOTE: the readiness-era target keys `skip` (force-N/A criteria) and
+# `languages` (detector hints) went away with the rubric (SPEC §14) — setting
+# them is rejected with an actionable migration error.

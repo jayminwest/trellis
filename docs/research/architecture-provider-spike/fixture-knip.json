@@ -1,0 +1,71 @@
+{
+  "issues": [
+    {
+      "file": "src/dead.ts",
+      "exports": [],
+      "files": [
+        {
+          "name": "src/dead.ts"
+        }
+      ],
+      "types": [],
+      "unresolved": []
+    },
+    {
+      "file": "src/domain/bad.ts",
+      "exports": [
+        {
+          "name": "bad",
+          "line": 2,
+          "col": 14,
+          "pos": 51
+        }
+      ],
+      "files": [],
+      "types": [],
+      "unresolved": []
+    },
+    {
+      "file": "src/domain/good.ts",
+      "exports": [
+        {
+          "name": "good",
+          "line": 2,
+          "col": 14,
+          "pos": 55
+        }
+      ],
+      "files": [],
+      "types": [],
+      "unresolved": []
+    },
+    {
+      "file": "src/live.ts",
+      "exports": [
+        {
+          "name": "unused",
+          "line": 2,
+          "col": 14,
+          "pos": 36
+        }
+      ],
+      "files": [],
+      "types": [],
+      "unresolved": []
+    },
+    {
+      "file": "src/main.ts",
+      "exports": [],
+      "files": [],
+      "types": [],
+      "unresolved": [
+        {
+          "name": "./missing.ts",
+          "line": 5,
+          "col": 8,
+          "pos": 132
+        }
+      ]
+    }
+  ]
+}

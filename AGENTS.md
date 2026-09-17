@@ -7,23 +7,37 @@ full design record see [`SPEC.md`](SPEC.md); for ecosystem context see
 
 ## Mission
 
-`trellis` — a mostly-deterministic, partly-agentic audit tool that keeps a
-fleet of repositories in sync on *agent-readiness*: how legible and verifiable
-a repo is to a non-human collaborator. A repo is scored 0–100% across a
-versioned, 9-category / 90-criterion rubric, mapped to a maturity Level 1–5,
-and its score history is tracked centrally so drift surfaces over time. ~78%
-of criteria are deterministic file/config/command checks; the rest are decided
-by a deterministic grader consuming objective facts gathered by a bounded LLM
-investigation pass. trellis also detects **canonical-config drift** — it
-compares a repo's shared tooling files against a bundled, versioned
-`src/standards/` set, honoring per-repo allowed deltas.
+`trellis` — a **deterministic, offline-by-default sloppiness audit** for
+TypeScript/TSX workspaces. It parses source with the TypeScript compiler API
+and measures structural debt — **complexity, structural erosion, duplication,
+and import cycles** — plus a separate, non-scoring inspection of safeguard
+configuration (hooks and check wiring). Each run emits a versioned report
+with a **0–100 sloppiness index where lower is better** (not a percentage of
+bad code; infrastructure cannot offset it), raw metrics, traceable score
+contributions, ranked hotspots, and safeguard evidence.
+
+Three invariants define the product (SPEC §1):
+
+1. **No-model execution.** No audit path — CLI, SDK, fleet, or CI — spawns an
+   agent, calls a model, or consumes model-derived grading.
+2. **Offline and zero-footprint by default.** The first audit needs neither
+   Git nor credentials, a database, network, or installed project
+   dependencies; it writes nothing unless the operator asks.
+3. **One core, every surface.** Local, fleet, and CI runs exercise the same
+   deterministic core; CLI and SDK are thin pass-throughs.
+
+> **Deterministic pivot delivered (plan `pl-b2ea`, SPEC §14).** Public
+> readiness catalog and assessment APIs are retired. Internal legacy modules
+> remain for historical report compatibility and regression fixtures; they
+> are not used by the audit, compare, fleet, or history surfaces. Legacy
+> readiness scores are preserved separately and never compared with the
+> sloppiness index. See [`docs/release-acceptance.md`](docs/release-acceptance.md).
 
 trellis is part of [os-eco](https://github.com/jayminwest/os-eco), the AI agent
-tooling ecosystem. It is the **measurement surface**: it grades the very
-properties the rest of the toolchain (warren, seeds, mulch, canopy, …) is built
-to provide. trellis is stack-agnostic by design but stack-first in practice —
-it mirrors the warren/burrow Bun + TypeScript-strict + Biome + SQLite stack and
-should score L4+ against itself (eat-its-own-dogfood, SPEC §13).
+tooling ecosystem. It is the **measurement surface**: it gives the fleet an
+objective, reproducible read on structural code health. trellis mirrors the
+warren/burrow Bun + TypeScript-strict + Biome + SQLite stack and dogfoods its
+own audit (SPEC §14).
 
 ## Commands
 
@@ -42,48 +56,63 @@ bun run check:coverage        # tests + coverage ratchet
 bun run test:ci               # bun test with junit + coverage reporters
 ```
 
-trellis ships a CLI (`trellis`, bin `./src/cli/main.ts`). The six MVP
-subcommands (SPEC §12):
+trellis ships a CLI (`trellis`, bin `./src/cli/main.ts`). The deterministic
+surface (SPEC §12) includes optional fleet/history and separate canonical
+standards/drift inspection:
 
 ```bash
-trellis audit <repo-path>     # score one repo; print scorecard
-trellis drift <repo-path>     # L1 canonical-config drift only
-trellis fleet                 # audit every target in targets.yaml
-trellis report                # render history/dashboard from SQLite
-trellis rubric [--validate]   # print the loaded rubric (and validate its invariants)
+trellis audit <path>          # measure + score one workspace; print the sloppiness report
+                              #   [--json|--md] [--out <file>] [--baseline <report.json>]
+                              #   [--config <file>] [--history] [--db <path>]
+trellis compare <a> <b>       # compare two saved report artifacts (no audit)
+trellis fleet                 # audit every target in targets.yaml through the same core
+                              #   [--history] [--db <path>] (drift rides along, never scored)
+trellis report                # sloppiness history from SQLite; legacy readiness kept distinct
+trellis drift <repo-path>     # canonical-config drift only (separate, unscored)
 trellis standards             # show canonical manifest + versions
 ```
 
-`--json` / `--md` switch terminal output to machine/report shapes.
+`--json` / `--md` switch terminal output to machine/report shapes. The
+default `audit` run is **stateless** — no database, no report files — unless
+`--history` / `--out` ask. Retired readiness/investigation flags
+(`--fail-on`, `--min-level`, `--rubric-version`, `--no-persist`, `--output`,
+`--no-cache`, …) fail fast with actionable "removed in the deterministic
+pivot" errors.
 
-### Exit codes (SPEC §12)
+### Exit codes (SPEC §9)
 
-Every command exits `0` clean, `2` when a `--fail-on` policy trips (the report
-is still emitted to stdout; the reason goes to stderr), or `1` on an operational
-error (the command could not run). The default policy (flag omitted) fails on a
-**gate** criterion failing **or** canonical **drift**; `--fail-on
-gate|drift|level|none` narrows it to one dimension (or disables it), and
-`--fail-on level` compares the audited level against `--min-level` (default
-`3`). `EXIT` lives in `src/cli/output.ts`; the assessment is core
-(`assessReport` in `src/report/assess.ts`, `assessFleet` in
-`src/fleet/assess.ts`), so the CLI and SDK gate identically.
+Every command exits `0` clean, `2` when a policy trips (the report is still
+emitted to stdout; the reason goes to stderr), or `1` on an operational
+error (the command could not run). On the deterministic surface the policy
+is **declarative**: the policy block of the workspace's trellis.yaml (SPEC §6.5 — max
+index, metric budgets, score regression, new-finding kinds) gates `audit`
+and `compare`, and an incompatible `compare` pair fails closed. `EXIT`
+lives in `src/cli/output.ts`; the assessment is core (`assessPolicy` in
+`src/compare/policy.ts`), so the CLI and SDK gate identically. `fleet`
+gates on each target's own declarative policy result plus per-target
+operational failures (`assessFleet` in `src/fleet/assess.ts`); canonical
+drift rides along as a separate, non-scoring capability and never gates.
+The separate `drift` command retains `--fail-on drift|none` for canonical
+configuration policy.
 
 ### Programmatic SDK (`src/client/`)
 
-`src/client/index.ts` exposes `audit` / `drift` / `fleet` / `report` / `rubric`
-plus the `assessReport` / `assessFleet` exit-code rule. Each is a direct call to
-the same core service the CLI folds (`runAudit`, `driftRepo`, `runFleetTargets`,
-`buildReport`, `summarizeRubric`) — **no logic beyond type shaping**. Request
-types mirror the core option types (`// Mirrors src/<x>`); responses are the core
-report shapes. The deep-equal test in `src/client/index.test.ts` proves a CLI
-audit and an SDK audit are one code path.
+`src/client/index.ts` exposes `audit` / `compare` / `fleet` / `report` over
+the deterministic core plus separate `drift` and the
+`assessPolicy` / `assessFleet` exit-code rules. Each is a
+direct call to the same core service the CLI folds (`runWorkspaceAudit`,
+`runComparison`, `driftRepo`, `runFleetTargets`, `buildReport`) — **no logic beyond type shaping**. Request types mirror
+the core option types (`// Mirrors src/<x>`); responses are the core report
+shapes. The deep-equal tests in `src/client/index.test.ts` prove a CLI
+audit/compare/fleet and an SDK audit/compare/fleet are one code path —
+measurement and policy alike.
 
 ### Quality gates
 
 `bun run check:all` (alias `bun run verify`) is the canonical quiet runner
 `scripts/check-all.ts` — byte-identical across the os-eco fleet (see the
 os-eco meta-repo's `docs/check-all-standard.md`, the same standard trellis's
-own rubric audits for). Never edit it in place; per-repo variation lives in
+own audit checks for). Never edit it in place; per-repo variation lives in
 `package.json` script bodies. It runs the nine core gates in canonical order:
 
 - `lint` — `biome check --error-on-warnings .`
@@ -109,17 +138,10 @@ budget without filing `trellis-XXXX` and noting it in the commit body.
 - Source files: kebab-case `*.ts`. Tests are `<name>.test.ts` next to the file
   under test.
 - Directories: `kebab-case`.
-- Golden fixtures live under `__golden__/` (e.g. captured Pi RPC sessions,
-  SPEC §9.7). Regenerate only via the documented update gate, never by hand.
-  Investigation goldens (`src/investigation/__golden__/<area>.jsonl`) are
-  re-recorded with `TRELLIS_UPDATE_PI_GOLDEN=1 bun run
-  scripts/update-pi-golden.ts --live` — both gates are required, so CI (which
-  sets neither) never makes a model call. Until a live capture exists the frozen
-  fixtures are hand-authored to the v0.74.0 wire shape (see
-  `src/investigation/__golden__/README.md`); the offline harness
-  (`src/investigation/golden.test.ts`) replays parser → zod → grader with no
-  network either way.
-- YAML config keys (rubric data, `targets.yaml`) stay in the schema's casing.
+- Golden fixtures live under `__golden__/`. Regenerate only via a documented
+  update gate, never by hand.
+- YAML config keys (audit configuration, `targets.yaml`) stay in the schema's
+  casing.
 
 Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 
@@ -127,8 +149,7 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 
 - `camelCase` for functions, variables, instance fields.
 - `PascalCase` for types, interfaces, classes.
-- `SCREAMING_SNAKE_CASE` for module-level true constants (`RUBRIC_VERSION`,
-  `VERSION`).
+- `SCREAMING_SNAKE_CASE` for module-level true constants (`VERSION`).
 - Booleans read as predicates: `isSkippable`, `hasDetector`.
 
 ### TypeScript
@@ -141,24 +162,33 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 
 ### Architecture discipline (api>cli>sdk, SPEC §13.1)
 
-- All behavior lives in the **core** modules under `src/` (`src/rubric/`,
-  `src/discovery/`, `src/detectors/`, `src/investigation/`, `src/scoring/`,
-  `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`). No business
-  logic anywhere else.
+- All behavior lives in the **core** modules under `src/` (current core:
+  `src/audit/`, `src/rubric/`, `src/discovery/`, `src/syntax/`, `src/detectors/`,
+  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`;
+  the target layout is SPEC §4). No business logic anywhere else.
+  `src/audit/` is the deterministic audit core (trellis-ef85):
+  `auditWorkspace(root)` runs discover → parse → measure → safeguards →
+  score → assemble and returns the versioned §6.4 `AuditReport`, with no
+  model, network, project-command, Git, or database access.
+  `runWorkspaceAudit(root)` (trellis-9a88) is the service the surfaces fold:
+  it composes configuration, the pure pass, baseline resolution, policy
+  assessment (`src/compare/`), and opt-in history (`src/store/`) around the
+  measurement — never inside it.
 - `src/cli/` is a **thin** commander pass-through; `src/client/` is a typed
   SDK whose types **mirror the core** (annotate `// Mirrors src/<x>`). Both
   call the same core functions so a programmatic audit and a CLI audit
   exercise one code path.
-- The rubric (WHAT) never names a tool; detectors (HOW) are tool-specific and
-  live in per-language adapters. Keep that seam clean.
+- The pivoted seam: deterministic analyzers over one shared syntax inventory;
+  scoring is a pure function of raw metrics; safeguards never enter the
+  score. Keep that seam clean.
 
 ### Test naming
 
 - `describe("<unitUnderTest>")` + `test("verb-led behaviour description")`.
 - No `should`, no `it`.
 - No mocks for filesystem or SQLite — use temp dirs and `:memory:`/temp DBs.
-  Stub only at true external boundaries (the Pi RPC process); the layers above
-  run real code paths against golden fixtures.
+  Stub only at true external process boundaries; the layers above run real
+  code paths against golden fixtures.
 
 ### Debt markers
 
@@ -174,10 +204,9 @@ reference on the same line. Accepted prefixes:
 
 ### Log scrubbing
 
-The pino logger must redact sensitive keys (`token`, `api_key`, `password`,
-`secret`, `authorization`, `set-cookie`) — relevant for the Pi provider's env
-passthrough (SPEC §9.4). Add new redact paths in the same commit that
-introduces a new sensitive field.
+CLI progress and errors write to stderr. Never include sensitive fields
+(`token`, `api_key`, `password`, `secret`, `authorization`, `set-cookie`) in
+diagnostics. Any future structured logger must redact those keys.
 
 ## Agent Workflow
 
@@ -194,7 +223,7 @@ When an agent works in `trellis`, it should:
 5. **Pin debt markers.** Any new `TODO` / `FIXME` must reference a tracker id
    created in the same change.
 6. **Commit & sync.** Commit message follows `<area>: <summary>` (e.g.
-   `scoring: clamp coverage at category boundary`).
+   `metrics: cap nesting contribution at package boundary`).
 7. **Record insights.** `ml record <domain> --type <type>` for any convention
    discovered, pattern applied, or failure encountered.
 
@@ -234,8 +263,8 @@ were removed and why.
 ### Tests live beside the unit
 
 `bunfig.toml` sets the test root to `src`. New tests belong next to the file
-under test as `<name>.test.ts`. Offline golden-fixture suites (Pi RPC, SPEC
-§9.7) read from `__golden__/` and must pass with no network.
+under test as `<name>.test.ts`. Golden-fixture suites read from `__golden__/`
+and must pass with no network.
 
 ### CI parity
 
@@ -249,16 +278,23 @@ mechanically: every `bun run <x>` in `ci*.yml` must be reachable from the
 
 ### Dogfood
 
-trellis audits itself: `trellis audit .` should band L4+ (SPEC §13, seeds
-`trellis-a534`). Treat a regression in trellis's own score as a real failure.
+trellis audits itself (SPEC §14):
+`trellis audit .` runs offline with no model, and a regression in trellis's
+own sloppiness index is a real failure. (The retired "band L4+ against the
+readiness rubric" gate went with the rubric.)
 
 ## Further reading
 
-- [`SPEC.md`](SPEC.md) — the V1 design record (authoritative)
+- [`SPEC.md`](SPEC.md) — the deterministic product contract (authoritative)
 - [`README.md`](README.md) — user-facing pitch + install
 - [`CLAUDE.md`](CLAUDE.md) — tool-specific conventions for agents
 - [`CHANGELOG.md`](CHANGELOG.md) — release history
 - [`RUNBOOK.md`](RUNBOOK.md) — release / triage / rollback procedure
-- [`docs/architecture.mmd`](docs/architecture.mmd) — module graph
+- [`docs/architecture.mmd`](docs/architecture.mmd) — module graph of the
+  deterministic core (SPEC §4)
+- [`docs/corpus-validation.md`](docs/corpus-validation.md) — the fixed-corpus
+  validation record (trellis-e924): score-behavior evidence, runtime/memory
+  budgets, and the duplication-minimum calibration; corpus lives in
+  [`corpus/`](corpus/README.md), harness in `scripts/validate-corpus.ts`
 - `scripts/` — ratchet scripts and pre-commit hook (lands with `trellis-4ec4`)
 - `.github/workflows/` — CI + sync-labels + publish (lands with `trellis-7baf`)

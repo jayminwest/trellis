@@ -8,8 +8,17 @@
  * and returns a {@link Store} of typed functions: {@link Store.insertRun}
  * writes a `runs` row plus its exploded `criterion_results` in one transaction;
  * {@link Store.latestRun} / {@link Store.runsSince} drive the §11 history
- * queries; {@link Store.getCache} / {@link Store.putCache} back the
- * §7.3 investigation cache.
+ * queries. The transitional investigation-cache API is gone (SPEC §14 stage 3);
+ * the historical `investigation_cache` table stays in the append-only
+ * migrations, untouched, but nothing reads or writes it.
+ *
+ * The store also carries the pivoted product's history (SPEC §10,
+ * trellis-424d): migration 0002 adds the `audit_runs` table, and the
+ * {@link import("./audit-store.ts").AuditStore} operations are composed into
+ * the returned {@link Store}. Legacy readiness rows are preserved untouched
+ * and tagged `kind: "legacy-readiness"`; sloppiness runs live in their own
+ * table behind their own queries, tagged `kind: "sloppiness"` — the two
+ * products never form a mixed score trend.
  *
  * `report_json` is the byte-stable §6.3 document ({@link renderJson}), so two
  * audits of the same checkout at a pinned `scoredAt` persist identical JSON.
@@ -22,6 +31,7 @@ import { renderJson } from "../report/json.ts";
 import type { Report } from "../report/types.ts";
 import type { Level } from "../rubric/index.ts";
 import type { NaKind } from "../scoring/index.ts";
+import { type AuditStore, auditStore } from "./audit-store.ts";
 import { migrate } from "./migrate.ts";
 
 /** The in-memory DB sentinel `bun:sqlite` recognizes — never touches disk. */
@@ -29,6 +39,8 @@ const IN_MEMORY = ":memory:";
 
 /** A row read back from `runs`, with columns mapped to camelCase. */
 export interface StoredRun {
+	/** Product discriminator — legacy readiness history, never sloppiness (SPEC §10). */
+	kind: "legacy-readiness";
 	id: number;
 	repo: string;
 	commit: string;
@@ -40,12 +52,6 @@ export interface StoredRun {
 	scoredAt: string;
 }
 
-/** A cached investigation entry read back from `investigation_cache`. */
-export interface CachedFindings {
-	findingsJson: string;
-	createdAt: string;
-}
-
 /** One `criterion_results` row joined to its run's `scored_at` — a point on a §11 trend. */
 export interface TrendRow {
 	criterion: string;
@@ -55,8 +61,12 @@ export interface TrendRow {
 	naKind: NaKind | null;
 }
 
-/** The typed store surface over the central SQLite history. */
-export interface Store {
+/**
+ * The typed store surface over the central SQLite history: the legacy
+ * readiness operations below plus the composed
+ * {@link import("./audit-store.ts").AuditStore} sloppiness operations (SPEC §10).
+ */
+export interface Store extends AuditStore {
 	/** Persist a report: one `runs` row + its exploded `criterion_results`, in one transaction. Returns the new run id. */
 	insertRun(report: Report): number;
 	/** The most recent run for `repo` (ties broken by insertion order), or `null` if none. */
@@ -69,16 +79,6 @@ export interface Store {
 	runs(repo: string, since?: string): StoredRun[];
 	/** Per-criterion trend points for `repo` (optionally since `since`), ordered oldest run first then criterion id. */
 	criterionTrend(repo: string, since?: string): TrendRow[];
-	/** Cached findings for an investigation area at a commit, or `null` on a miss. */
-	getCache(repo: string, commitSha: string, area: string): CachedFindings | null;
-	/** Upsert cached findings for an investigation area at a commit. */
-	putCache(
-		repo: string,
-		commitSha: string,
-		area: string,
-		findingsJson: string,
-		createdAt: string,
-	): void;
 	/** Close the underlying database handle. */
 	close(): void;
 }
@@ -132,6 +132,7 @@ export function storedReport(run: StoredRun): Report {
 /** Map a raw {@link RunRow} to the camelCase {@link StoredRun} surface. */
 function toStoredRun(row: RunRow): StoredRun {
 	return {
+		kind: "legacy-readiness",
 		id: row.id,
 		repo: row.repo,
 		commit: row.commit_sha,
@@ -197,20 +198,6 @@ export function openStore(dbPath?: string): Store {
 	const trendSinceStmt = db.query<TrendRowRaw, [string, string]>(
 		`SELECT ${trendColumns} FROM criterion_results cr JOIN runs r ON r.id = cr.run_id WHERE r.repo = ? AND r.scored_at >= ? ${trendOrder}`,
 	);
-	const getCacheStmt = db.query<
-		{ findings_json: string; created_at: string },
-		[string, string, string]
-	>(
-		"SELECT findings_json, created_at FROM investigation_cache WHERE repo = ? AND commit_sha = ? AND area = ?",
-	);
-	const putCacheStmt = db.query(
-		`INSERT INTO investigation_cache (repo, commit_sha, area, findings_json, created_at)
-		 VALUES (?, ?, ?, ?, ?)
-		 ON CONFLICT(repo, commit_sha, area) DO UPDATE SET
-		   findings_json = excluded.findings_json,
-		   created_at = excluded.created_at`,
-	);
-
 	const insertRunTxn = db.transaction((report: Report): number => {
 		const result = insertRunStmt.run(
 			report.repo,
@@ -237,6 +224,7 @@ export function openStore(dbPath?: string): Store {
 	});
 
 	return {
+		...auditStore(db),
 		insertRun(report) {
 			return insertRunTxn(report);
 		},
@@ -257,13 +245,6 @@ export function openStore(dbPath?: string): Store {
 		criterionTrend(repo, since) {
 			const rows = since === undefined ? trendAllStmt.all(repo) : trendSinceStmt.all(repo, since);
 			return rows.map(toTrendRow);
-		},
-		getCache(repo, commitSha, area) {
-			const row = getCacheStmt.get(repo, commitSha, area);
-			return row ? { findingsJson: row.findings_json, createdAt: row.created_at } : null;
-		},
-		putCache(repo, commitSha, area, findingsJson, createdAt) {
-			putCacheStmt.run(repo, commitSha, area, findingsJson, createdAt);
 		},
 		close() {
 			db.close();

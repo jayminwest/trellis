@@ -33,12 +33,11 @@ We will keep you informed of progress throughout the process.
 
 trellis audits other repositories, so its most sensitive surfaces are:
 
-- **The Pi RPC investigation layer (SPEC §9).** trellis spawns an LLM agent
-  (`pi --mode rpc`) against a target repo and passes provider credentials
-  through the environment. The pino logger redacts sensitive keys (`token`,
-  `api_key`, `password`, `secret`, `authorization`, `set-cookie`); report any
-  path that leaks a credential into logs, the SQLite store, or a rendered
-  report.
+- **Credential hygiene in logs and artifacts.** trellis runs no agent and
+  calls no model, but audits may execute a target repo's own tooling commands.
+  The pino logger redacts sensitive keys (`token`, `api_key`, `password`,
+  `secret`, `authorization`, `set-cookie`); report any path that leaks a
+  credential or secret into logs, the SQLite store, or a rendered report.
 - **Reading untrusted repositories.** `trellis audit`/`drift` read arbitrary
   target repos and their configs. Report any path traversal, command injection
   via repo contents, or unsafe execution of code from an audited repo.

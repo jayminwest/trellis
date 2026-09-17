@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RUBRIC_VERSION } from "../rubric/version.ts";
+import { seedFixtureRepo } from "../report/audit-fixtures.ts";
 
 /** Absolute path to the CLI entrypoint, resolved relative to this test file. */
 const MAIN = join(import.meta.dir, "main.ts");
@@ -31,25 +31,17 @@ describe("trellis fleet", () => {
 	let dbPath: string;
 	let targetsFile: string;
 
-	const NO_PI = { TRELLIS_PI_BIN: "trellis-pi-absent" } as const;
-
-	beforeEach(() => {
-		// One real single-app fixture repo, plus a declared-but-missing target.
+	beforeEach(async () => {
+		// One real TS fixture repo, plus a declared-but-missing target.
 		repoDir = mkdtempSync(join(tmpdir(), "trellis-fleet-repo-"));
-		writeFileSync(join(repoDir, "README.md"), "# fixture\n");
-		writeFileSync(
-			join(repoDir, "package.json"),
-			JSON.stringify({ name: "fixture", main: "./i.ts" }),
-		);
-		writeFileSync(join(repoDir, ".gitignore"), "node_modules\n");
+		await seedFixtureRepo(repoDir, "clean");
 
 		workDir = mkdtempSync(join(tmpdir(), "trellis-fleet-work-"));
 		dbPath = join(workDir, "trellis.db");
 		targetsFile = join(workDir, "targets.yaml");
 		writeFileSync(
 			targetsFile,
-			`defaults:\n  canonicalVersion: "1.0.0"\ntargets:\n` +
-				`  - id: fixture\n    path: ${repoDir}\n    languages: [typescript]\n` +
+			`targets:\n  - id: fixture\n    path: ${repoDir}\n` +
 				`  - id: gone\n    path: ${join(workDir, "does-not-exist")}\n`,
 		);
 	});
@@ -59,54 +51,148 @@ describe("trellis fleet", () => {
 		rmSync(workDir, { recursive: true, force: true });
 	});
 
-	test("audits every target, isolates a missing path, and persists each scored run", async () => {
-		const { code, stdout } = await runCli(
-			["fleet", "--targets", targetsFile, "--db", dbPath, "--fail-on", "none"],
-			{
-				TRELLIS_DB: "",
-				...NO_PI,
-			},
-		);
-		expect(code).toBe(0);
+	test("audits every target and isolates a missing path (exit 2, report still emitted)", async () => {
+		const { code, stdout, stderr } = await runCli(["fleet", "--targets", targetsFile], {
+			TRELLIS_DB: "",
+		});
+		expect(code).toBe(2);
 		expect(stdout).toContain("trellis fleet");
+		expect(stdout).toContain("lower is better");
 		expect(stdout).toContain("fixture");
-		expect(stdout).toContain("1 ok · 1 error");
+		expect(stdout).toContain("1 ok · 1 error · 0 policy failed");
 		expect(stdout).toContain("error: path not found");
+		expect(stderr).toContain("gone");
+	});
 
+	test("a fleet of healthy targets is clean (exit 0)", async () => {
+		writeFileSync(targetsFile, `targets:\n  - id: fixture\n    path: ${repoDir}\n`);
+		const { code, stdout } = await runCli(["fleet", "--targets", targetsFile], { TRELLIS_DB: "" });
+		expect(code).toBe(0);
+		expect(stdout).toContain("1 ok · 0 error · 0 policy failed");
+	});
+
+	test("a target's tripped declarative policy exits 2 with the reason on stderr", async () => {
+		// A sloppy repo has a non-zero index, so maxIndex: 0 trips.
+		const sloppyDir = mkdtempSync(join(tmpdir(), "trellis-fleet-sloppy-"));
+		await seedFixtureRepo(sloppyDir, "sloppy");
+		writeFileSync(join(sloppyDir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
+		writeFileSync(targetsFile, `targets:\n  - id: fixture\n    path: ${sloppyDir}\n`);
+		const { code, stdout, stderr } = await runCli(["fleet", "--targets", targetsFile], {
+			TRELLIS_DB: "",
+		});
+		rmSync(sloppyDir, { recursive: true, force: true });
+		expect(code).toBe(2);
+		// The target audited fine — its declarative policy tripped.
+		expect(stdout).toContain("1 ok · 0 error · 1 policy failed");
+		expect(stderr).toContain("fixture: policy failed");
+		expect(stderr).toContain("exceeds the configured maximum");
+	});
+
+	test("--json emits the aggregate report with per-target entries", async () => {
+		const { code, stdout } = await runCli(["fleet", "--targets", targetsFile, "--json"], {
+			TRELLIS_DB: "",
+		});
+		expect(code).toBe(2); // the missing target still trips the exit rollup
+		const report = JSON.parse(stdout);
+		expect(report.summary).toEqual({ ok: 1, error: 1, policyFailed: 0 });
+		const fixture = report.entries.find((e: { id: string }) => e.id === "fixture");
+		expect(fixture.ok).toBe(true);
+		// The entry preserves the full §6.4 report and the non-scoring drift counts.
+		expect(fixture.report.score.direction).toBe("lower-is-better");
+		expect(fixture.drift.missing).toBeGreaterThan(0);
+		expect(fixture.previousIndex).toBeNull();
+	});
+
+	test("--history persists one audit run per scored target", async () => {
+		const { code } = await runCli(
+			["fleet", "--targets", targetsFile, "--history", "--db", dbPath],
+			{ TRELLIS_DB: "" },
+		);
+		expect(code).toBe(2);
 		const { openStore } = await import("../store/index.ts");
 		const store = openStore(dbPath);
 		try {
-			// The scored target persists under its targets.yaml id (not the path basename).
-			expect(store.latestRun("fixture")).not.toBeNull();
-			expect(store.latestRun("gone")).toBeNull();
+			// The scored target persists under its workspace identity; the missing one does not.
+			expect(store.auditRepos()).toHaveLength(1);
 		} finally {
 			store.close();
 		}
 	});
 
-	test("--json emits the aggregate report with per-target entries", async () => {
-		const { code, stdout } = await runCli(
-			["fleet", "--targets", targetsFile, "--db", dbPath, "--json", "--fail-on", "none"],
-			{ TRELLIS_DB: "", ...NO_PI },
-		);
-		expect(code).toBe(0);
-		const report = JSON.parse(stdout);
-		expect(report.rubricVersion).toBe(RUBRIC_VERSION);
-		expect(report.summary).toEqual({ ok: 1, error: 1 });
-		const fixture = report.entries.find((e: { id: string }) => e.id === "fixture");
-		expect(fixture.ok).toBe(true);
-		// The entry carries the per-state drift counts (the report's drift summary).
-		expect(fixture.drift.missing).toBeGreaterThan(0);
-		expect(fixture.previousLevel).toBeNull();
+	test("is stateless by default — no database is created", async () => {
+		await runCli(["fleet", "--targets", targetsFile], { TRELLIS_DB: dbPath });
+		const { existsSync } = await import("node:fs");
+		expect(existsSync(dbPath)).toBe(false);
 	});
 
 	test("errors clearly on a malformed targets.yaml", async () => {
 		writeFileSync(targetsFile, "targets:\n  - id: a\n"); // missing required `path`
-		const { code, stderr } = await runCli(["fleet", "--targets", targetsFile, "--db", dbPath], {
-			TRELLIS_DB: "",
-			...NO_PI,
-		});
-		expect(code).not.toBe(0);
+		const { code, stderr } = await runCli(["fleet", "--targets", targetsFile], { TRELLIS_DB: "" });
+		expect(code).toBe(1);
 		expect(stderr).toContain("targets.yaml");
+	});
+
+	test("rejects a targets.yaml with retired defaults.investigation, actionably", async () => {
+		writeFileSync(
+			targetsFile,
+			`defaults:\n  investigation:\n    provider: anthropic\n    model: claude-opus-4-8\n` +
+				`targets:\n  - id: fixture\n    path: ${repoDir}\n`,
+		);
+		const { code, stdout, stderr } = await runCli(["fleet", "--targets", targetsFile], {
+			TRELLIS_DB: "",
+		});
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("defaults.investigation");
+		expect(stderr).toContain("no longer exists");
+		expect(stderr).toContain("Remove defaults.investigation");
+	});
+
+	test("rejects retired readiness skip/languages keys, actionably", async () => {
+		writeFileSync(
+			targetsFile,
+			`targets:\n  - id: fixture\n    path: ${repoDir}\n    languages: [typescript]\n    skip: [dast_scanning]\n`,
+		);
+		const { code, stdout, stderr } = await runCli(["fleet", "--targets", targetsFile], {
+			TRELLIS_DB: "",
+		});
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("no longer exists");
+		expect(stderr).toContain("Remove target 'fixture'.skip");
+	});
+
+	test("--no-cache is rejected with an actionable retirement message", async () => {
+		const { code, stdout, stderr } = await runCli(
+			["fleet", "--targets", targetsFile, "--no-cache"],
+			{ TRELLIS_DB: "" },
+		);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("--no-cache no longer exists");
+		expect(stderr).toContain("Remove --no-cache");
+	});
+
+	test("--fail-on and --min-level are rejected with actionable migration messages", async () => {
+		const failOn = await runCli(["fleet", "--targets", targetsFile, "--fail-on", "none"], {
+			TRELLIS_DB: "",
+		});
+		expect(failOn.code).toBe(1);
+		expect(failOn.stderr).toContain("--fail-on no longer exists");
+		const minLevel = await runCli(["fleet", "--targets", targetsFile, "--min-level", "3"], {
+			TRELLIS_DB: "",
+		});
+		expect(minLevel.code).toBe(1);
+		expect(minLevel.stderr).toContain("--min-level no longer exists");
+	});
+
+	test("TRELLIS_PI_BIN is rejected with an actionable retirement message", async () => {
+		const { code, stdout, stderr } = await runCli(["fleet", "--targets", targetsFile], {
+			TRELLIS_DB: "",
+			TRELLIS_PI_BIN: "/usr/local/bin/pi",
+		});
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("TRELLIS_PI_BIN no longer exists");
 	});
 });

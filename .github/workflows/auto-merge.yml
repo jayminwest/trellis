@@ -1,14 +1,27 @@
 name: auto-merge
 
-# Enable GitHub's auto-merge on PRs authored by the repo owner so they
-# merge as soon as the `ci` required check passes. Other authors' PRs
-# still run CI but require a manual `gh pr merge` (or click). Squash is
-# the chosen merge method — keeps main history linear, drops the
-# burrow/run_xxx branch noise from agent-opened PRs.
+# Enable GitHub's auto-merge on PRs authored by the repo owner — or by
+# one of the deployment's dedicated bot accounts, named by the repo
+# variable AUTO_MERGE_BOT_LOGIN (unset → owner-only; a comma-separated
+# list with no spaces, e.g. `warren-run-bot`) — so they merge as soon
+# as the `ci` required check passes. Other authors' PRs still run CI
+# but require a manual `gh pr merge` (or click). Squash is the chosen
+# merge method — keeps main history linear, drops the warren/run_xxx
+# branch noise from agent-opened PRs.
 #
-# Uses AUTO_MERGE_PAT (not GITHUB_TOKEN) so that the resulting push to
-# main triggers downstream workflows (CI, Publish). GITHUB_TOKEN-authored
-# pushes are deliberately suppressed by GitHub to prevent recursive loops.
+# Uses a GitHub App installation token (not GITHUB_TOKEN) so that the
+# resulting push to main triggers downstream workflows (CI, Publish).
+# GITHUB_TOKEN-authored pushes are deliberately suppressed by GitHub to
+# prevent recursive loops. The token is minted fresh per run from
+# AUTO_MERGE_APP_ID (repo variable) + AUTO_MERGE_APP_PRIVATE_KEY (secret),
+# the same app warren uses, so there is no expiring PAT to rotate — the
+# static AUTO_MERGE_PAT died silently around 2026-09-05 and failed 21
+# arms in a row before anyone noticed.
+#
+# The arm step mirrors warren's: GitHub computes mergeability
+# asynchronously after `opened` / `synchronize`, so a single
+# `gh pr merge --auto` fired immediately can error out and leave the PR
+# unarmed. Poll for a definitive state, skip CONFLICTING PRs, and retry.
 
 on:
   pull_request:
@@ -23,10 +36,53 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       !github.event.pull_request.draft &&
-      github.event.pull_request.user.login == github.repository_owner
+      (github.event.pull_request.user.login == github.repository_owner ||
+       (vars.AUTO_MERGE_BOT_LOGIN != '' &&
+        contains(format(',{0},', vars.AUTO_MERGE_BOT_LOGIN),
+                 format(',{0},', github.event.pull_request.user.login)))) &&
+      !contains(github.event.pull_request.labels.*.name, 'no-automerge')
     steps:
+      - name: Mint app installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          app-id: ${{ vars.AUTO_MERGE_APP_ID }}
+          private-key: ${{ secrets.AUTO_MERGE_APP_PRIVATE_KEY }}
+
       - name: Enable auto-merge (squash)
         env:
-          GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash "$PR_URL"
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -uo pipefail
+
+          if [ -n "$(gh pr view "$PR_NUMBER" --json autoMergeRequest --jq '.autoMergeRequest.enabledAt // empty')" ]; then
+            echo "auto-merge already armed — nothing to do."
+            exit 0
+          fi
+
+          state=""
+          for i in 1 2 3 4 5 6; do
+            state="$(gh pr view "$PR_NUMBER" --json mergeable --jq .mergeable)"
+            echo "poll $i: mergeable=$state"
+            [ "$state" = "UNKNOWN" ] || break
+            sleep 10
+          done
+
+          if [ "$state" = "CONFLICTING" ]; then
+            echo "PR is CONFLICTING — cannot arm until the branch is repaired."
+            exit 0
+          fi
+
+          for attempt in 1 2 3 4 5 6; do
+            if gh pr merge --auto --squash "$PR_URL"; then
+              echo "auto-merge armed (attempt $attempt)."
+              exit 0
+            fi
+            echo "::warning::arm attempt $attempt failed — retrying in 10s."
+            sleep 10
+          done
+          echo "::error::auto-merge could not be armed after 6 attempts."
+          exit 1

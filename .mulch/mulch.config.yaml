@@ -13,6 +13,9 @@ domains:
   standards: {}
   fleet: {}
   quality: {}
+  syntax: {}
+  metrics: {}
+  architecture: {}
 governance:
   max_entries: 100
   warn_entries: 150
