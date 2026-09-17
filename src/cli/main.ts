@@ -88,5 +88,5 @@ export async function run(argv: string[]): Promise<number> {
 }
 
 if (import.meta.main) {
-	process.exit(await run(process.argv));
+	process.exitCode = await run(process.argv);
 }

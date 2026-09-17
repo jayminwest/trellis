@@ -11,7 +11,7 @@ import {
 describe("SCORING_FORMULA", () => {
 	test("is pinned to the contract scoring version and labelled provisional", () => {
 		expect(SCORING_FORMULA.version).toBe(SCORING_VERSION);
-		expect(SCORING_FORMULA.version).toBe("0.1.0-provisional");
+		expect(SCORING_FORMULA.version).toBe("0.2.0-provisional");
 		expect(SCORING_FORMULA.provisional).toBe(true);
 	});
 
@@ -21,7 +21,7 @@ describe("SCORING_FORMULA", () => {
 				dimension: "complexity-erosion",
 				weight: 0.5,
 				terms: [
-					{ metricId: "erosion.eroded-count.production", saturatesAt: 20, share: 0.5 },
+					{ metricId: "erosion.eroded-count.production", countScale: 20, share: 0.5 },
 					{ metricId: "erosion.eroded-share.production", saturatesAt: 0.25, share: 0.5 },
 				],
 			},
@@ -30,7 +30,7 @@ describe("SCORING_FORMULA", () => {
 				weight: 0.3,
 				terms: [
 					{ metricId: "duplication.density.production", saturatesAt: 0.15, share: 0.5 },
-					{ metricId: "duplication.groups.production", saturatesAt: 15, share: 0.5 },
+					{ metricId: "duplication.groups.production", countScale: 15, share: 0.5 },
 				],
 			},
 			{
@@ -38,7 +38,7 @@ describe("SCORING_FORMULA", () => {
 				weight: 0.2,
 				terms: [
 					{ metricId: "import-cycle.density", saturatesAt: 0.1, share: 0.5 },
-					{ metricId: "import-cycle.groups", saturatesAt: 5, share: 0.5 },
+					{ metricId: "import-cycle.groups", countScale: 5, share: 0.5 },
 				],
 			},
 		]);
@@ -51,7 +51,7 @@ describe("SCORING_FORMULA", () => {
 			const share = dimension.terms.reduce((sum, term) => sum + term.share, 0);
 			expect(share).toBeCloseTo(1, 12);
 			for (const term of dimension.terms) {
-				expect(term.saturatesAt).toBeGreaterThan(0);
+				expect("countScale" in term ? term.countScale : term.saturatesAt).toBeGreaterThan(0);
 			}
 		}
 	});

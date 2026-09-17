@@ -32,6 +32,10 @@
  * 4. **External** — anything else (including `node:` builtins) is an
  *    `external` edge recorded by package name, never resolved into.
  *
+ * After compiler resolution fails, relative and mapped paths also probe exact
+ * non-source asset files through the guarded host (trellis-f6b0). Missing
+ * assets remain unresolved; existing assets are classified out-of-scope.
+ *
  * A resolved target is classified against the audited inventory: inventoried
  * ⇒ `local`; existing but not classified (excluded build output, non-TS
  * siblings, ignored dirs) ⇒ `out-of-scope`; above the root ⇒ `unresolved`
@@ -42,6 +46,7 @@
 import { dirname, join, relative } from "node:path";
 import ts from "typescript";
 import type { SourceInventory } from "../discovery/index.ts";
+import { resolveAsset } from "./graph-assets.ts";
 import type { ImportSite } from "./graph-imports.ts";
 import type { EdgeResolution, GraphConfig } from "./graph-types.ts";
 import { exportsCandidates, manifestCandidates, wildcardMatch } from "./graph-workspace.ts";
@@ -114,7 +119,10 @@ function parseConfig(root: string, absPath: string, host: ts.ParseConfigHost): G
 	}
 	// TS 5+ semantics: `paths` without `baseUrl` resolve against the config's directory.
 	if (options.paths !== undefined && options.baseUrl === undefined) {
-		options.baseUrl = dirname(absPath);
+		options.baseUrl =
+			"pathsBasePath" in options && typeof options.pathsBasePath === "string"
+				? options.pathsBasePath
+				: dirname(absPath);
 	}
 	return { path: rel, status: "parsed", options };
 }
@@ -273,7 +281,9 @@ function resolveBare(
 	if (specifier.startsWith("node:")) {
 		return { status: "external", packageName: specifier };
 	}
-	const aliased = resolveModule(state, specifier, absFrom, options);
+	const aliased =
+		resolveModule(state, specifier, absFrom, options) ??
+		resolveAsset(specifier, absFrom, options, state.host);
 	if (aliased !== null) return classifyTarget(state, aliased);
 	if (matchesPathPattern(options, specifier)) {
 		return {
@@ -318,7 +328,9 @@ export function createGraphResolver(source: SourceInventory): GraphResolver {
 		const absFrom = join(state.root, fromPath);
 		const options = governingOptions(state, absFrom);
 		if (site.specifier.startsWith("./") || site.specifier.startsWith("../")) {
-			const resolved = resolveModule(state, site.specifier, absFrom, options);
+			const resolved =
+				resolveModule(state, site.specifier, absFrom, options) ??
+				resolveAsset(site.specifier, absFrom, options, state.host);
 			return resolved === null
 				? {
 						status: "unresolved",

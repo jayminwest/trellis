@@ -9,6 +9,16 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Fixed
+
+- CLI reports drain fully when piped, including policy-failure output (trellis-5b25).
+- Existing aliased and relative non-source assets no longer produce unresolved
+  graph edges; missing assets remain unresolved (trellis-f6b0). Analyzer 0.2.1.
+- Count contributions use a bounded logarithmic curve without finite saturation,
+  restoring sensitivity above the former 20/15/5 cutoffs (trellis-831b).
+  Scoring 0.2.0-provisional preserves count non-dilution and monotonicity;
+  earlier scoring versions are not comparable. Evidence: `docs/count-calibration.md`.
+
 ### Changed
 
 - **Deterministic pivot release acceptance completed** (`pl-b2ea`,

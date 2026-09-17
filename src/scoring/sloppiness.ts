@@ -38,25 +38,23 @@ import {
 	apportionPoints,
 	type FormulaDimension,
 	type FormulaTerm,
+	normalizeCount,
 	normalizeTerm,
 	roundHalfUp,
 	SCORING_FORMULA,
 } from "./formula.ts";
 
 /** One scored term with its raw input and normalized value (0–100, exact). */
-export interface ScoredTerm {
-	metricId: string;
+export type ScoredTerm = FormulaTerm & {
 	/** False when the metric was absent from the input entirely. */
 	present: boolean;
 	/** The metric's analysis state, or `missing` when absent. */
 	state: AnalysisState | "missing";
 	/** The raw value consumed, or `null` when no value was available. */
 	rawValue: number | null;
-	saturatesAt: number;
-	share: number;
 	/** Normalized 0–100 (exact, unrounded); 100 on missing/incomplete (never zero debt). */
 	normalized: number;
-}
+};
 
 /** `scored` from raw metrics, or `degraded` to the worst case by missing analysis. */
 export type DimensionState = "scored" | "degraded";
@@ -105,9 +103,7 @@ function formatNumber(value: number): string {
 /** Score one term against its metric, under the documented state rules. */
 function scoreTerm(term: FormulaTerm, metric: MetricValue | undefined): ScoredTerm {
 	const base = {
-		metricId: term.metricId,
-		saturatesAt: term.saturatesAt,
-		share: term.share,
+		...term,
 	};
 	if (metric === undefined) {
 		return { ...base, present: false, state: "missing", rawValue: null, normalized: 100 };
@@ -124,7 +120,10 @@ function scoreTerm(term: FormulaTerm, metric: MetricValue | undefined): ScoredTe
 		present: true,
 		state: "complete",
 		rawValue: metric.value,
-		normalized: normalizeTerm(metric.value, term.saturatesAt),
+		normalized:
+			"countScale" in term
+				? normalizeCount(metric.value, term.countScale)
+				: normalizeTerm(metric.value, term.saturatesAt),
 	};
 }
 
@@ -132,7 +131,7 @@ function scoreTerm(term: FormulaTerm, metric: MetricValue | undefined): ScoredTe
 function termTrace(term: ScoredTerm): string {
 	const raw = term.rawValue === null ? term.state : formatNumber(term.rawValue);
 	return (
-		`${term.metricId} ${raw}/${formatNumber(term.saturatesAt)} ` +
+		`${term.metricId} ${"countScale" in term ? `bounded-log(${raw}, scale=${term.countScale})` : `${raw}/${formatNumber(term.saturatesAt)}`} ` +
 		`→ ${formatNumber(term.normalized)} (×${term.share})`
 	);
 }

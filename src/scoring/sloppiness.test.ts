@@ -32,15 +32,15 @@ function productionMetrics(values: Partial<Record<string, number>>): MetricValue
 	return ids.map((id) => metric(id, values[id] ?? 0));
 }
 
-/** The §7.1 golden fixture: every normalized value is binary-exact. */
+/** The §7.1 fixture: density terms are binary-exact; count terms use bounded logs. */
 function goldenMetrics(): MetricValue[] {
 	return productionMetrics({
 		"erosion.eroded-share.production": 0.125, // → 50
-		"erosion.eroded-count.production": 5, //     → 25
+		"erosion.eroded-count.production": 5, //     → 18.243447
 		"duplication.density.production": 0.075, //  → 50
 		"duplication.groups.production": 0, //       → 0
 		"import-cycle.density": 0.05, //             → 50
-		"import-cycle.groups": 5, //                 → 100
+		"import-cycle.groups": 5, //                 → 40.938389
 	});
 }
 
@@ -58,7 +58,7 @@ describe("scoreSloppiness — bounds, rounding, and contribution totals", () => 
 		expect(result.dimensions.map((d) => d.points)).toEqual([0, 0, 0]);
 	});
 
-	test("a fully saturated repo scores exactly 100 (clamped, weights sum to 1)", () => {
+	test("retains count headroom when all density terms saturate", () => {
 		const result = scoreSloppiness(
 			productionMetrics({
 				"erosion.eroded-share.production": 0.9,
@@ -69,23 +69,22 @@ describe("scoreSloppiness — bounds, rounding, and contribution totals", () => 
 				"import-cycle.groups": 9,
 			}),
 		);
-		expect(result.index).toBe(100);
-		expect(result.score.contributions.map((c) => c.points)).toEqual([50, 30, 20]);
+		expect(result.index).toBe(77);
+		expect(result.score.contributions.map((c) => c.points)).toEqual([39, 23, 15]);
 	});
 
 	test("golden fixture: index, rounding, and apportioned contributions match §7.1 arithmetic", () => {
 		const result = scoreSloppiness(goldenMetrics());
-		// complexity-erosion: (50+25)/2 × 0.5 = 18.75; duplication: 25 × 0.3 = 7.5;
-		// import-cycle: 75 × 0.2 = 15 → total 41.25 → roundHalfUp → 41.
-		expect(result.index).toBe(41);
+		// Bounded-log counts: complexity ≈17.060862, duplication 7.5, cycles ≈9.093839.
+		expect(result.index).toBe(34);
 		expect(result.score.contributions).toEqual([
-			{ dimension: "complexity-erosion", points: 19, metricIds: expect.any(Array) },
-			{ dimension: "duplication", points: 7, metricIds: expect.any(Array) },
-			{ dimension: "import-cycle", points: 15, metricIds: expect.any(Array) },
+			{ dimension: "complexity-erosion", points: 17, metricIds: expect.any(Array) },
+			{ dimension: "duplication", points: 8, metricIds: expect.any(Array) },
+			{ dimension: "import-cycle", points: 9, metricIds: expect.any(Array) },
 		]);
 		const complexity = result.dimensions[0];
-		expect(complexity?.normalized).toBe(37.5);
-		expect(complexity?.exactPoints).toBe(18.75);
+		expect(complexity?.normalized).toBeCloseTo(34.121724, 5);
+		expect(complexity?.exactPoints).toBeCloseTo(17.060862, 5);
 	});
 
 	test("contribution points always sum exactly to the index", () => {
@@ -210,8 +209,8 @@ describe("scoreSloppiness — counts and densities are both retained", () => {
 		);
 		const countTerm = (result: typeof before) =>
 			result.dimensions[0]?.terms.find((t) => t.metricId === "erosion.eroded-count.production");
-		expect(countTerm(before)?.normalized).toBe(50);
-		expect(countTerm(after)?.normalized).toBe(50); // counts are not diluted
+		expect(countTerm(before)?.normalized).toBeCloseTo(28.849176, 5);
+		expect(countTerm(after)?.normalized).toBe(countTerm(before)?.normalized); // counts are not diluted
 		expect(after.index).toBeLessThan(before.index); // only the density term moved
 		expect(after.index).toBeGreaterThan(0); // and the count term still weighs in
 		// Both the count and the density metric remain traceable on the contribution.
@@ -219,7 +218,9 @@ describe("scoreSloppiness — counts and densities are both retained", () => {
 			"erosion.eroded-count.production",
 			"erosion.eroded-share.production",
 		]);
-		expect(after.dimensions[0]?.explanation).toContain("erosion.eroded-count.production 10/20");
+		expect(after.dimensions[0]?.explanation).toContain(
+			"erosion.eroded-count.production bounded-log(10, scale=20)",
+		);
 	});
 });
 

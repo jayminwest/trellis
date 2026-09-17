@@ -29,7 +29,7 @@ Three invariants define the tool (SPEC §1):
 > implemented: discovery → parse → measure → score → report, baseline
 > comparison and declarative policies, opt-in history, and fleet/standards as
 > optional consumers. The scoring formula is **provisional**
-> (`0.1.0-provisional`) pending further calibration.
+> (`0.2.0-provisional`) pending further calibration.
 
 ## Install
 
@@ -241,13 +241,17 @@ counted as clean. The index scores the **production** set only.
 
 Scoring is a pure function of raw metrics — no configuration input, so policy
 budgets can never move weights. Each dimension blends a density term with an
-absolute-count term (50/50), so large clean additions cannot dilute debt:
+absolute-count term (50/50). Clean additions cannot dilute count contributions;
+unsaturated density contributions can decrease:
 
-| dimension | weight | saturates at |
+| dimension | weight | density saturation · count log scale |
 | --- | --- | --- |
-| complexity-erosion | 0.50 | eroded share 0.25 · eroded count 20 |
-| duplication | 0.30 | density 0.15 · 15 groups |
-| import-cycle | 0.20 | density 0.10 · 5 groups |
+| complexity-erosion | 0.50 | eroded share 0.25 · scale 20 |
+| duplication | 0.30 | density 0.15 · scale 15 |
+| import-cycle | 0.20 | density 0.10 · scale 5 |
+
+Counts use `b = ln(1 + count / scale)` and `100 × b / (1 + b)`, with no
+finite saturation. See [calibration evidence](docs/count-calibration.md).
 
 Every reported point traces to the raw metric ids and thresholds that
 produced it. A required dimension that could not be fully analyzed scores at
@@ -270,10 +274,9 @@ is never published from partial analysis.
 - **Resolution is local-only.** Absent `node_modules` degrades import
   resolution to documented `unresolved` edges — never a network fetch — and
   incomplete graph coverage rolls cycle metrics up `incomplete`.
-- **Provisional calibration and evidence gaps.** Count terms can saturate on
-  large repositories (`trellis-831b`); aliased non-TS assets can conservatively
-  mark graph coverage incomplete (`trellis-f6b0`); indirect budget references
-  can remain only `configured` (`trellis-b412`). See the
+- **Provisional calibration and evidence gaps.** The count curve preserves
+  sensitivity at large counts, but weights still need broader validation.
+  Indirect budget references can remain only `configured` (`trellis-b412`). See the
   [release acceptance record](docs/release-acceptance.md) for tested scope.
 - **Explicitly not in this product:** unused-code analysis, architecture
   rules beyond cycle detection, any AI feature, a web UI, hosted/scheduled

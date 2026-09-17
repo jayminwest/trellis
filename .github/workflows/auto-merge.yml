@@ -9,9 +9,14 @@ name: auto-merge
 # merge method — keeps main history linear, drops the warren/run_xxx
 # branch noise from agent-opened PRs.
 #
-# Uses AUTO_MERGE_PAT (not GITHUB_TOKEN) so that the resulting push to
-# main triggers downstream workflows (CI, Publish). GITHUB_TOKEN-authored
-# pushes are deliberately suppressed by GitHub to prevent recursive loops.
+# Uses a GitHub App installation token (not GITHUB_TOKEN) so that the
+# resulting push to main triggers downstream workflows (CI, Publish).
+# GITHUB_TOKEN-authored pushes are deliberately suppressed by GitHub to
+# prevent recursive loops. The token is minted fresh per run from
+# AUTO_MERGE_APP_ID (repo variable) + AUTO_MERGE_APP_PRIVATE_KEY (secret),
+# the same app warren uses, so there is no expiring PAT to rotate — the
+# static AUTO_MERGE_PAT died silently around 2026-09-05 and failed 21
+# arms in a row before anyone noticed.
 #
 # The arm step mirrors warren's: GitHub computes mergeability
 # asynchronously after `opened` / `synchronize`, so a single
@@ -37,9 +42,16 @@ jobs:
                  format(',{0},', github.event.pull_request.user.login)))) &&
       !contains(github.event.pull_request.labels.*.name, 'no-automerge')
     steps:
+      - name: Mint app installation token
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          app-id: ${{ vars.AUTO_MERGE_APP_ID }}
+          private-key: ${{ secrets.AUTO_MERGE_APP_PRIVATE_KEY }}
+
       - name: Enable auto-merge (squash)
         env:
-          GH_TOKEN: ${{ secrets.AUTO_MERGE_PAT }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
