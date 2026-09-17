@@ -250,7 +250,15 @@ the digest for agents working in this repo:
   config over a staged view, records the TypeScript parser the tool
   resolves locally, and keeps an empty or partial graph `incomplete` with
   the coverage loss named — never a clean pass; it stays unscored and
-  outside the default audit.
+  outside the default audit. The Knip reachability context is
+  declarative (`src/contract/reachability-policy.ts` plus pure
+  compilation and context preparation in `src/providers/knip/`,
+  trellis-5da5): declared entries, public surfaces and test
+  participation compile into a normalized, assumption-carrying context —
+  omitted entries, unresolvable declarations, missing dependency context
+  and disabled plugin discovery are recorded contextual assumptions that
+  can never imply confirmed dead code — and the adapter is step 24
+  (trellis-8ebc).
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as
