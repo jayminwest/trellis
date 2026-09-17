@@ -25,13 +25,36 @@
  * `--rubric-version`, `--min-level`, `--fail-on`, `--canonical`,
  * `--no-persist`, `--output`/`--no-output`, and investigation-era
  * `--no-cache` / `TRELLIS_PI_BIN`.
+ *
+ * **Optional provider selection (SPEC §16.4).** The repeatable
+ * `--provider <id[:mode]>` flag names the supported optional evidence
+ * providers (jscpd needs a match mode, e.g. `--provider jscpd:normalized`;
+ * the still-undelivered ids take a bare id). Flags translate into exactly
+ * the declarative `providers` block the core configuration accepts — no
+ * CLI-side planning, execution or policy evaluation — and apply **per
+ * provider** over the configuration file's block: a provider named by a
+ * flag uses the flag's request, providers not named keep their
+ * `trellis.yaml` entry. Native analysis stays the default and the
+ * authoritative scoring basis: provider evidence is advisory, namespaced
+ * and unscored, so the flag never changes the index. The pinned tools are
+ * resolved only from the operator's local installation — never installed
+ * or fetched at audit time — and an enabled external analysis runs over
+ * isolated temporary scratch storage trellis owns and cleans up (a native
+ * audit creates none).
  */
 import { accessSync, constants, existsSync } from "node:fs";
 import { dirname } from "node:path";
 import type { Command } from "commander";
 import { Option } from "commander";
-import { runWorkspaceAudit, type WorkspaceAuditResult } from "../audit/index.ts";
+import {
+	runWorkspaceAudit,
+	type WorkspaceAuditOptions,
+	type WorkspaceAuditResult,
+} from "../audit/index.ts";
 import type { PolicyAssessment } from "../compare/index.ts";
+import { loadAuditConfig, loadAuditConfigFile } from "../config/index.ts";
+import type { ProviderSelection } from "../contract/config.ts";
+import type { AuditConfig } from "../contract/index.ts";
 import { legacyConfigMessage, retiredReadinessMessage } from "../legacy.ts";
 import { renderAuditMarkdown, renderAuditTerminal } from "../report/index.ts";
 import {
@@ -45,6 +68,7 @@ import {
 	writeReportFile,
 } from "./output.ts";
 import { createProgressReporter } from "./progress.ts";
+import { providerSelectionFromFlags } from "./provider-flags.ts";
 
 /** Local options for the audit command, merged with the global format flags. */
 interface AuditCliOptions {
@@ -76,6 +100,8 @@ interface AuditCliOptions {
 	canonical?: string;
 	failOn?: string;
 	minLevel?: string;
+	/** Repeatable: one `--provider <id[:mode]>` selection per optional provider (SPEC §16.4). */
+	provider?: string[];
 }
 
 /** Register the `audit` subcommand on `program`. */
@@ -89,6 +115,15 @@ export function registerAudit(program: Command): void {
 		.option("--config <file>", "explicit trellis.yaml (default: discovered at the workspace root)")
 		.option("--history", "record the run in the central history (opt-in; default stateless)")
 		.option("--db <path>", "SQLite history path (requires --history)")
+		.option(
+			"--provider <id[:mode]>",
+			"select an optional evidence provider (repeatable; per provider it overrides the " +
+				"trellis.yaml providers block). The pinned tool must already be installed locally — " +
+				"trellis never installs or fetches tools at audit time — and the analysis runs over " +
+				"isolated temporary scratch storage trellis owns and cleans up (native audits create " +
+				"none). jscpd needs a match mode: --provider jscpd:<exact|normalized|near>",
+			(value: string, previous: string[] = []) => [...previous, value],
+		)
 		.option("--quiet", "suppress progress output on stderr")
 		.option("--verbose", "show per-analyzer progress on stderr")
 		// Retired flags: hidden, and each fails fast with an actionable error.
@@ -171,6 +206,41 @@ function assertWritableTarget(path: string): void {
 }
 
 /**
+ * Resolve the core service options for this run. Without `--provider`
+ * selections this is exactly the previous pass-through (`--config` or root
+ * discovery, decided by the core). With them, the flag selections apply
+ * **per provider** over the declarative configuration's `providers` block:
+ * a provider named by a flag uses the flag's request, providers not named
+ * keep their `trellis.yaml` entry. The base configuration is loaded through
+ * the core loaders with the same precedence the service itself applies, so
+ * an invalid `trellis.yaml` stays the same operational error it always was.
+ */
+async function resolveServiceOptions(
+	repoPath: string,
+	opts: AuditCliOptions,
+	providerSelection: ProviderSelection | undefined,
+): Promise<WorkspaceAuditOptions> {
+	const common = {
+		...(opts.baseline ? { baselinePath: opts.baseline } : {}),
+		...(opts.history === true ? { history: true } : {}),
+		...(opts.db ? { db: opts.db } : {}),
+	};
+	if (providerSelection === undefined) {
+		return { ...common, ...(opts.config ? { configPath: opts.config } : {}) };
+	}
+	let base: AuditConfig;
+	try {
+		base = opts.config ? await loadAuditConfigFile(opts.config) : await loadAuditConfig(repoPath);
+	} catch (error) {
+		throw new CliError(error instanceof Error ? error.message : String(error));
+	}
+	return {
+		...common,
+		config: { ...base, providers: { ...base.providers, ...providerSelection } },
+	};
+}
+
+/**
  * Call the core audit service, mapping every failure onto the operational
  * exit (SPEC §9): the audit could not run, nothing was emitted — exit 1 with
  * the reason. The progress line is always cleared on the way out.
@@ -178,14 +248,13 @@ function assertWritableTarget(path: string): void {
 async function runService(
 	repoPath: string,
 	opts: AuditCliOptions,
+	providerSelection: ProviderSelection | undefined,
 	reporter: ReturnType<typeof createProgressReporter>,
 ): Promise<WorkspaceAuditResult> {
 	try {
+		const coreOptions = await resolveServiceOptions(repoPath, opts, providerSelection);
 		return await runWorkspaceAudit(repoPath, {
-			...(opts.config ? { configPath: opts.config } : {}),
-			...(opts.baseline ? { baselinePath: opts.baseline } : {}),
-			...(opts.history === true ? { history: true } : {}),
-			...(opts.db ? { db: opts.db } : {}),
+			...coreOptions,
 			...(reporter ? { onProgress: reporter.onProgress } : {}),
 		});
 	} catch (error) {
@@ -201,6 +270,12 @@ async function runService(
 async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise<void> {
 	const format = resolveFormat(opts);
 	rejectRetiredFlags(opts);
+	// Translate --provider flags (and reject bad selections) before any
+	// measurement work, so an invalid selection fails fast and stateless.
+	const providerSelection =
+		opts.provider === undefined || opts.provider.length === 0
+			? undefined
+			: providerSelectionFromFlags(opts.provider);
 	// Validate the report target up front so a bad `--out` fails immediately,
 	// before the measurement pass runs.
 	if (opts.out !== undefined) assertWritableTarget(opts.out);
@@ -210,7 +285,7 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 		verbose: opts.verbose === true,
 		isTTY: Boolean(process.stderr.isTTY),
 	});
-	const result = await runService(repoPath, opts, reporter);
+	const result = await runService(repoPath, opts, providerSelection, reporter);
 	const rendered = {
 		human: renderAuditTerminal(result.report),
 		json: result.report,
