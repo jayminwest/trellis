@@ -12,6 +12,14 @@
  * the historical `investigation_cache` table stays in the append-only
  * migrations, untouched, but nothing reads or writes it.
  *
+ * The store also carries the pivoted product's history (SPEC §10,
+ * trellis-424d): migration 0002 adds the `audit_runs` table, and the
+ * {@link import("./audit-store.ts").AuditStore} operations are composed into
+ * the returned {@link Store}. Legacy readiness rows are preserved untouched
+ * and tagged `kind: "legacy-readiness"`; sloppiness runs live in their own
+ * table behind their own queries, tagged `kind: "sloppiness"` — the two
+ * products never form a mixed score trend.
+ *
  * `report_json` is the byte-stable §6.3 document ({@link renderJson}), so two
  * audits of the same checkout at a pinned `scoredAt` persist identical JSON.
  */
@@ -23,6 +31,7 @@ import { renderJson } from "../report/json.ts";
 import type { Report } from "../report/types.ts";
 import type { Level } from "../rubric/index.ts";
 import type { NaKind } from "../scoring/index.ts";
+import { type AuditStore, auditStore } from "./audit-store.ts";
 import { migrate } from "./migrate.ts";
 
 /** The in-memory DB sentinel `bun:sqlite` recognizes — never touches disk. */
@@ -30,6 +39,8 @@ const IN_MEMORY = ":memory:";
 
 /** A row read back from `runs`, with columns mapped to camelCase. */
 export interface StoredRun {
+	/** Product discriminator — legacy readiness history, never sloppiness (SPEC §10). */
+	kind: "legacy-readiness";
 	id: number;
 	repo: string;
 	commit: string;
@@ -50,8 +61,12 @@ export interface TrendRow {
 	naKind: NaKind | null;
 }
 
-/** The typed store surface over the central SQLite history. */
-export interface Store {
+/**
+ * The typed store surface over the central SQLite history: the legacy
+ * readiness operations below plus the composed
+ * {@link import("./audit-store.ts").AuditStore} sloppiness operations (SPEC §10).
+ */
+export interface Store extends AuditStore {
 	/** Persist a report: one `runs` row + its exploded `criterion_results`, in one transaction. Returns the new run id. */
 	insertRun(report: Report): number;
 	/** The most recent run for `repo` (ties broken by insertion order), or `null` if none. */
@@ -117,6 +132,7 @@ export function storedReport(run: StoredRun): Report {
 /** Map a raw {@link RunRow} to the camelCase {@link StoredRun} surface. */
 function toStoredRun(row: RunRow): StoredRun {
 	return {
+		kind: "legacy-readiness",
 		id: row.id,
 		repo: row.repo,
 		commit: row.commit_sha,
@@ -208,6 +224,7 @@ export function openStore(dbPath?: string): Store {
 	});
 
 	return {
+		...auditStore(db),
 		insertRun(report) {
 			return insertRunTxn(report);
 		},
