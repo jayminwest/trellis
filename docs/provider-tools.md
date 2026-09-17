@@ -45,6 +45,32 @@ The pin records:
   with the binary path (`bin/jscpd`, `bin/jscpd.exe` on Windows), and
 - a per-platform execution record (see below).
 
+**dependency-cruiser 18.3.1** (`providerId: dependency-cruiser`, plan
+`pl-43c5` step 22 — trellis-adbf) — the architecture-evidence adapter's
+pinned tool. A **pure-JavaScript** distribution: its "binary" is the
+launcher script `bin/dependency-cruiser.mjs`, so
+
+- the pin records the launcher digest plus the package manifest's digest
+  (the tool ships no platform map — the package manifest is the second
+  cross-platform identity file),
+- the declared platform's "platform package" is the tool package itself
+  (there is nothing platform-specific to resolve), and the adapter runs
+  the launcher under **trellis's own runtime** through the controlled
+  process runner — never a PATH lookup, never `node`/`bunx`, with an
+  owned minimal environment (`HOME` inside the owned scratch: the tool
+  resolves its global configuration through the home directory), and
+- the tool reads TypeScript through the compiler it resolves locally; the
+  adapter resolves and **records that compiler's version** in analysis
+  identity before anything runs — a missing or mismatched parser produces
+  a successful empty graph (the research record,
+  `docs/research/architecture-provider-spike`), so the adapter refuses to
+  run blind and the coverage check keeps an empty graph `incomplete`.
+
+For dependency-cruiser 18.3.1: **linux-x64-gnu** is `tested` (the adapter's
+conformance and failure-regression suites + the provider smoke). No other
+platform is declared — the pinned distribution is host-independent
+  JavaScript, but trellis claims only what it exercised.
+
 ## Preparing an installation (operator step, never audit-time)
 
 trellis never installs, updates, or downloads tools. The supported
@@ -54,11 +80,15 @@ execution context is a **local installation prepared by the operator**:
   (`"jscpd": "5.2.1"` in `package.json`), so `bun install` prepares the
   exact artifact offline from `bun.lock`. The dups gate and the provider
   smoke (`bun run smoke:provider-tools`) then resolve it locally.
+  The dependency-cruiser pin is prepared the same way
+  (`"dependency-cruiser": "18.3.1"`), alongside the repository's own
+  `typescript` install the tool resolves as its parser.
 - **For a CLI install**, prepare the tool in the `node_modules` tree trellis
   itself resolves from, e.g. in the package that depends on
   `@os-eco/trellis-cli`:
   `npm install --save-exact --save-dev jscpd@5.2.1`
-  (or `bun add --dev jscpd@5.2.1`).
+  (or `bun add --dev jscpd@5.2.1`); likewise
+  `npm install --save-exact --save-dev dependency-cruiser@18.3.1`.
 
 A request for a tool that is not installed resolves to `unavailable` with
 these instructions attached (SPEC §16.2/§16.3) — never a fabricated run and
@@ -119,10 +149,10 @@ provider and analysis identity (SPEC §16.6). Consequences:
 - The pin is a **devDependency**, never a runtime dependency:
   `scripts/smoke-package.ts` asserts the packed tarball keeps optional
   provider tools out of the native runtime (`EXCLUDED_OPTIONAL_TOOLS`).
-- `knip.json` lists `jscpd` under `ignoreDependencies` — justified because
-  the artifact is resolved by string at runtime through the manifest (the
-  pin must stay); removing the pin to satisfy the dependency gate is not an
-  option.
+- `knip.json` lists `jscpd` and `dependency-cruiser` under
+  `ignoreDependencies` — justified because the artifacts are resolved by
+  string at runtime through the manifest (the pins must stay); removing a
+  pin to satisfy the dependency gate is not an option.
 - Nothing in `src/audit/`, scoring, or the report schema reads this
   machinery; only explicitly requested provider evidence will (later plan
   steps).

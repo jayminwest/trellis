@@ -65,6 +65,7 @@
 		"@biomejs/biome": "^2.4.14",
 		"@types/bun": "latest",
 		"@types/js-yaml": "^4.0.9",
+		"dependency-cruiser": "18.3.1",
 		"jscpd": "5.2.1",
 		"knip": "^6.14.2",
 		"yaml": "^2.8.2"

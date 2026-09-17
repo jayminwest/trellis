@@ -24,6 +24,10 @@
 
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import {
+	dependencyCruiserEnvironment,
+	pinnedLauncherInvocation,
+} from "../src/providers/dependency-cruiser/invocation.ts";
 import { PINNED_TOOLS } from "../src/providers/manifest.ts";
 import { resolveExecutable, runControlledProcess } from "../src/providers/process.ts";
 import { resolvePinnedTool } from "../src/providers/resolve.ts";
@@ -85,6 +89,37 @@ export interface ProviderToolSmokeResult {
 	invoked: { providerId: string; platformKey: string; versionOutput: string }[];
 }
 
+/**
+ * How one pinned tool's `--version` check is invoked: platform-binary tools
+ * run their own resolved executable; pure-JavaScript distributions (the
+ * dependency-cruiser launcher) run under trellis's own runtime through the
+ * same controlled runner, with the pinned launcher path as an inert first
+ * argument — never a PATH lookup (src/providers/dependency-cruiser/
+ * invocation.ts owns the composition).
+ */
+function versionInvocation(entry: (typeof PINNED_TOOLS)[number]): {
+	executable: ReturnType<typeof resolveExecutable>;
+	args: string[];
+	env: Record<string, string>;
+} {
+	if (entry.providerId === "dependency-cruiser") {
+		const resolution = resolvePinnedTool(entry.providerId);
+		if (resolution.state !== "available") {
+			throw new Error(
+				`pinned tool "${entry.providerId}" did not resolve on this host (${resolution.state}): ` +
+					`${resolution.reason} — ${resolution.instructions}`,
+			);
+		}
+		const invocation = pinnedLauncherInvocation(resolution);
+		return {
+			executable: invocation.interpreter,
+			args: [invocation.launcher.path, "--version"],
+			env: dependencyCruiserEnvironment("/trellis-owned-smoke-home"),
+		};
+	}
+	return { executable: resolveExecutable(entry.providerId), args: ["--version"], env: {} };
+}
+
 /** Verify the pins, then resolve and invoke every pinned tool offline. */
 export async function smokeProviderTools(
 	repoRoot: string = DEFAULT_REPO_ROOT,
@@ -101,10 +136,10 @@ export async function smokeProviderTools(
 					`${resolution.reason} — ${resolution.instructions}`,
 			);
 		}
-		const executable = resolveExecutable(entry.providerId);
+		const { executable, args, env } = versionInvocation(entry);
 		const result = await runControlledProcess(executable, {
-			args: ["--version"],
-			env: {},
+			args,
+			env,
 			timeoutMs: 15_000,
 			maxOutputBytes: 4096,
 		});
