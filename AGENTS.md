@@ -231,7 +231,13 @@ the digest for agents working in this repo:
   that seam consumes: a content-fingerprinted, classified source snapshot
   with opt-in declarative project context, realpath-validated containment
   (no symlink/traversal escapes, canonical paths) and owned scratch cleanup
-  on every exit path — native audits never invoke it.
+  on every exit path — native audits never invoke it. The supported-tool
+  manifest/resolver (`src/providers/manifest.ts` + `src/providers/resolve.ts`,
+  trellis-ff52; see [`docs/provider-tools.md`](docs/provider-tools.md)) pins
+  the exact external artifacts (initially jscpd 5.2.1, an isolated
+  devDependency) and resolves them only from an operator-prepared local
+  installation — verified against recorded digests before use, never via
+  PATH/bunx, never installed or downloaded at audit time.
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as
@@ -363,5 +369,9 @@ readiness rubric" gate went with the rubric.)
 - [`docs/research/provider-spike.md`](docs/research/provider-spike.md) — the
   fixed-corpus provider research (jscpd/SonarJS/dependency-cruiser/Knip)
   behind the SPEC §16 optional-provider contract
+- [`docs/provider-tools.md`](docs/provider-tools.md) — the pinned
+  supported-tool manifest and local resolver: operator-prepared
+  installation, artifact verification, honest platform records, and
+  upgrade/identity rules (trellis-ff52)
 - `scripts/` — ratchet scripts and pre-commit hook (lands with `trellis-4ec4`)
 - `.github/workflows/` — CI + sync-labels + publish (lands with `trellis-7baf`)
