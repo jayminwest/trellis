@@ -4,7 +4,10 @@
  *
  * Contracts (zod schemas + types) live in `src/contract/`; this module holds
  * the typed internal products and result interfaces that producers and
- * downstream native analyzers use in-process. The capability registry
- * (trellis-cb51) and audit orchestration (trellis-1e66) build on these.
+ * downstream native analyzers use in-process, plus the native capability
+ * registry and the wrapped native analyzers (trellis-cb51).
  */
+export * from "./native.ts";
+export * from "./provenance.ts";
+export * from "./registry.ts";
 export * from "./result.ts";
