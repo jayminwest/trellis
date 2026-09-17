@@ -140,7 +140,8 @@ export const SUPPORTED_PROVIDERS: readonly ProviderCapabilityStatus[] = (() => {
 			unscored: true,
 			status: "adapter-pending",
 			requestState: "unsupported",
-			reason: "contracted duplication-evidence candidate; no adapter delivered yet (plan pl-43c5)",
+			reason:
+				"duplication-evidence adapter delivered (src/providers/jscpd/, trellis-f4e2); not yet selectable through the audit surface (plan pl-43c5 steps 15+)",
 		},
 		{
 			providerId: "dependency-cruiser",
