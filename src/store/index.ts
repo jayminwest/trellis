@@ -4,18 +4,19 @@
  * typed query/insert functions (legacy readiness plus the composed
  * {@link AuditStore} sloppiness operations), the {@link StoredRun} /
  * {@link StoredAuditRun} row shapes, {@link repoIdentity} for
- * collision-resistant repository identity, and {@link resolveDbPath} for the
- * central-by-default DB location.
+ * collision-resistant repository identity, {@link resolveDbPath} for the
+ * central-by-default DB location, and the scored-basis selection helpers
+ * ({@link decodedStoredReport} / {@link scoredBasisCompatible}) history
+ * surfaces reuse.
  */
 export {
 	type AuditStore,
-	type ReportVersions,
 	repoIdentity,
-	reportVersions,
 	type SloppinessTrendPoint,
 	type StoredAuditRun,
 	storedAuditReport,
 } from "./audit-store.ts";
+export { decodedStoredReport, scoredBasisCompatible } from "./compatible-runs.ts";
 export { MigrationError, migrate } from "./migrate.ts";
 export {
 	openStore,

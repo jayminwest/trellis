@@ -13,7 +13,7 @@ import {
 } from "../contract/index.ts";
 import { fixtureEvidenceArea } from "../contract/report.fixtures.ts";
 import { renderAuditJson } from "../report/audit-json.ts";
-import { openStore, repoIdentity, reportVersions, type Store, storedAuditReport } from "./index.ts";
+import { openStore, repoIdentity, type Store, storedAuditReport } from "./index.ts";
 import { migrate } from "./migrate.ts";
 
 /** A minimal but §6.4-valid audit report fixture; run metadata is pinned for determinism. */
@@ -246,9 +246,8 @@ describe("compatible run selection", () => {
 		db.close();
 	}
 
-	test("latestCompatibleRun skips newer runs with incompatible versions", () => {
+	test("latestCompatibleRun skips newer runs with incompatible scored bases", () => {
 		const current = makeAuditReport({ root: dir });
-		const versions = reportVersions(current);
 		const identity = repoIdentity(dir, "fixture");
 
 		store.insertAuditRun(
@@ -273,14 +272,13 @@ describe("compatible run selection", () => {
 			}),
 		);
 
-		const prior = store.latestCompatibleRun(identity, versions);
+		const prior = store.latestCompatibleRun(identity, current);
 		expect(prior?.sloppinessIndex).toBe(30);
 		expect(prior?.auditedAt).toBe("2026-01-01T00:00:00.000Z");
 	});
 
-	test("compatible trends contain only same-version runs, oldest first", () => {
+	test("compatible trends contain only scored-basis-compatible runs, oldest first", () => {
 		const current = makeAuditReport({ root: dir });
-		const versions = reportVersions(current);
 		const identity = repoIdentity(dir, "fixture");
 
 		store.insertAuditRun(
@@ -295,10 +293,10 @@ describe("compatible run selection", () => {
 			makeAuditReport({ root: dir, auditedAt: "2026-04-01T00:00:00.000Z", index: 10 }),
 		);
 
-		const compatible = store.compatibleAuditRuns(identity, versions);
+		const compatible = store.compatibleAuditRuns(identity, current);
 		expect(compatible.map((r) => r.sloppinessIndex)).toEqual([30, 10]);
 
-		const trend = store.sloppinessTrend(identity, versions);
+		const trend = store.sloppinessTrend(identity, current);
 		expect(trend.map((p) => p.index)).toEqual([30, 10]);
 		expect(trend.map((p) => p.auditedAt)).toEqual([
 			"2026-01-01T00:00:00.000Z",
@@ -308,7 +306,7 @@ describe("compatible run selection", () => {
 
 		// The since floor applies to the compatible series too.
 		expect(
-			store.sloppinessTrend(identity, versions, "2026-02-15T00:00:00.000Z").map((p) => p.index),
+			store.sloppinessTrend(identity, current, "2026-02-15T00:00:00.000Z").map((p) => p.index),
 		).toEqual([10]);
 	});
 
@@ -331,7 +329,7 @@ describe("compatible run selection", () => {
 		const identity = repoIdentity(dir, "fixture");
 
 		// The sloppiness trend sees only the sloppiness run — readiness never enters it.
-		const trend = store.sloppinessTrend(identity, reportVersions(report));
+		const trend = store.sloppinessTrend(identity, report);
 		expect(trend).toHaveLength(1);
 		expect(trend[0]?.index).toBe(12);
 
@@ -358,9 +356,7 @@ describe("disabled persistence", () => {
 		try {
 			expect(store.auditRepos()).toEqual([]);
 			expect(store.latestAuditRun(repoIdentity(dir))).toBeNull();
-			expect(store.sloppinessTrend(repoIdentity(dir), reportVersions(makeAuditReport()))).toEqual(
-				[],
-			);
+			expect(store.sloppinessTrend(repoIdentity(dir), makeAuditReport())).toEqual([]);
 		} finally {
 			store.close();
 		}

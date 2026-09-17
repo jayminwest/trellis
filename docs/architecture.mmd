@@ -49,6 +49,7 @@ flowchart LR
     compare -->|"policy verdict (exit 0/2)"| cli
     audit -.->|"opt-in --history"| store
     store --> history
+    store -.->|"scored-basis selection (trellis-ab01)"| compare
     fleet --> audit
     fleet -.-> standards
     standards --> report
