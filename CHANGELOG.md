@@ -38,6 +38,24 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Typed analysis results carry provider provenance and observed coverage**
+  (trellis-90d6, step 2 of 30 of plan `pl-43c5`, SPEC §16): new focused
+  contracts under `src/contract/` type what a provider analysis is before any
+  integration exists — provider identity (id, pinned tool/adapter versions,
+  mode, normalized relevant options with machine paths, timestamps and
+  durations structurally excluded as execution-only metadata), analysis
+  identity (source selection with content fingerprints, parser identity,
+  trellis-owned options) with a canonical `measurementIdentity`, observed
+  coverage (intended vs. actually analyzed files, diagnostics, unsupported
+  context), the five §16.2 states enforced as a structural state matrix where
+  empty successful output can never claim `complete`, namespaced external
+  evidence ids (`provider.<id>.…`, never colliding with native metrics or
+  finding kinds), pair/group clone evidence kept distinct with `near` matches
+  pair-only, and a minimum `analysisResultSchema` shared by native and
+  external producers. `src/analysis/` adds the internal interfaces that let
+  producers carry typed graph/clone products in-process beyond the serialized
+  minimum. Contracts only: no report, registry, execution or scoring change;
+  native analysis stays the default and authoritative.
 - **Offline public-path regression**: real CLI, SDK, and fleet audits run in
   an isolated child with no inherited credentials or executable tools,
   forbidden subprocess/fetch boundaries, and throwing executable target

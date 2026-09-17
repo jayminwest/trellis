@@ -1,12 +1,18 @@
 /**
- * Versioned measurement, finding, and audit-configuration contracts (SPEC §6).
+ * Versioned measurement, finding, and audit-configuration contracts (SPEC §6)
+ * plus the provider/analysis contracts for optional quality-evidence providers
+ * (SPEC §16, plan `pl-43c5`).
  *
  * One schema version (`SCHEMA_VERSION`) covers the whole contract family —
  * metric values, findings, safeguard results, source coverage, the audit
- * report, and the declarative audit configuration (SPEC §3.5). This module
- * defines contracts only: analyzers (trellis-fbc5, …), the audit core
- * (trellis-ef85), and history (trellis-424d) consume them.
+ * report, the declarative audit configuration (SPEC §3.5), and the analysis
+ * identity/coverage/result contracts (§16). This module defines contracts
+ * only: analyzers (trellis-fbc5, …), the audit core (trellis-ef85), history
+ * (trellis-424d), and the provider surfaces (pl-43c5) consume them.
  */
+export * from "./analysis.ts";
+export * from "./analysis-result.ts";
+export * from "./clone-evidence.ts";
 export {
 	type AuditConfig,
 	auditConfigSchema,
@@ -45,6 +51,25 @@ export {
 	relativePathSchema,
 	versionStringSchema,
 } from "./primitives.ts";
+export {
+	capabilityDeclarationsSchema,
+	EVIDENCE_NAMESPACE,
+	isNamespacedEvidenceId,
+	NATIVE_NAMESPACE,
+	namespacedEvidenceId,
+	PRODUCER_KINDS,
+	PROVIDER_STATES,
+	type ProducerKind,
+	type ProviderCapability,
+	type ProviderIdentity,
+	type ProviderOptions,
+	type ProviderState,
+	producerKindSchema,
+	providerIdentitySchema,
+	providerIdSchema,
+	providerOptionsSchema,
+	providerStateSchema,
+} from "./provider.ts";
 export {
 	type AuditReport,
 	auditReportSchema,

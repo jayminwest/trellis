@@ -57,6 +57,8 @@ describe("trellis compare", () => {
 		rmSync(dir, { recursive: true, force: true });
 	});
 
+	// Tests spawn the CLI as a subprocess (audit runs, reads); the 20s budget
+	// accommodates slow CI containers where the 5s default is marginal.
 	test("prints the comparison summary for a comparable pair (exit 0)", async () => {
 		const { code, stdout } = await runCli(["compare", clean, sloppy]);
 		expect(code).toBe(0);
@@ -65,7 +67,7 @@ describe("trellis compare", () => {
 		expect(stdout).toMatch(/index: 0\/100 → \d+\/100 \(\+\d+\) · lower is better/);
 		expect(stdout).toContain("metric deltas:");
 		expect(stdout).toMatch(/findings: \d+ new · \d+ resolved · \d+ persistent/);
-	});
+	}, 20_000);
 
 	test("--json emits the structured comparison", async () => {
 		const { code, stdout } = await runCli(["compare", clean, sloppy, "--json"]);
@@ -75,14 +77,14 @@ describe("trellis compare", () => {
 		expect(comparison.score.delta).toBeGreaterThan(0);
 		expect(Array.isArray(comparison.metrics)).toBe(true);
 		expect(Array.isArray(comparison.findings.new)).toBe(true);
-	});
+	}, 20_000);
 
 	test("--md emits a markdown summary", async () => {
 		const { code, stdout } = await runCli(["compare", clean, sloppy, "--md"]);
 		expect(code).toBe(0);
 		expect(stdout).toContain("# trellis compare —");
 		expect(stdout).toContain("## Index");
-	});
+	}, 20_000);
 
 	test("a tripped --config policy exits 2 with the comparison still emitted", async () => {
 		const configPath = join(dir, "trellis.yaml");
@@ -98,14 +100,14 @@ describe("trellis compare", () => {
 		expect(stdout).toContain("trellis compare ·");
 		expect(stderr).toContain("policy score-regression failed");
 		expect(stderr).toContain("policy new-findings failed");
-	});
+	}, 20_000);
 
 	test("a passing --config policy stays clean", async () => {
 		const configPath = join(dir, "trellis.yaml");
 		writeFileSync(configPath, "policy:\n  maxIndex: 100\n");
 		const { code } = await runCli(["compare", clean, sloppy, "--config", configPath]);
 		expect(code).toBe(0);
-	});
+	}, 20_000);
 
 	test("an incompatible pair fails closed (exit 2) with explicit reasons", async () => {
 		const tampered = JSON.parse(readFileSync(sloppy, "utf8")) as { scoringVersion: string };
@@ -116,14 +118,14 @@ describe("trellis compare", () => {
 		expect(stdout).toContain("comparable: NO");
 		expect(stderr).toContain("not comparable");
 		expect(stderr).toContain("scoring-version");
-	});
+	}, 20_000);
 
 	test("an unreadable artifact is an operational error (exit 1)", async () => {
 		const { code, stdout, stderr } = await runCli(["compare", join(dir, "absent.json"), sloppy]);
 		expect(code).toBe(1);
 		expect(stdout).toBe("");
 		expect(stderr).toContain("cannot read report artifact");
-	});
+	}, 20_000);
 
 	test("an invalid artifact is an operational error (exit 1)", async () => {
 		const bad = join(dir, "bad.json");
@@ -131,7 +133,7 @@ describe("trellis compare", () => {
 		const { code, stderr } = await runCli(["compare", bad, sloppy]);
 		expect(code).toBe(1);
 		expect(stderr).toContain("invalid audit report");
-	});
+	}, 20_000);
 
 	test("an invalid --config file is an operational error (exit 1)", async () => {
 		const configPath = join(dir, "trellis.yaml");
@@ -139,5 +141,5 @@ describe("trellis compare", () => {
 		const { code, stderr } = await runCli(["compare", clean, sloppy, "--config", configPath]);
 		expect(code).toBe(1);
 		expect(stderr).toContain("policy.maxIndex");
-	});
+	}, 20_000);
 });
