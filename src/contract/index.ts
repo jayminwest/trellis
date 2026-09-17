@@ -36,6 +36,17 @@ export {
 	sourceCoverageSchema,
 } from "./coverage.ts";
 export {
+	type EvidenceArea,
+	evidenceAreaSchema,
+	type ReportAnalysis,
+	reportAnalysisSchema,
+	rollUpEvidenceCompleteness,
+	rollUpScoreCompleteness,
+	SCORING_ROLES,
+	type ScoringRole,
+	scoringRoleSchema,
+} from "./evidence.ts";
+export {
 	type Finding,
 	findingSchema,
 	type Position,
@@ -73,8 +84,13 @@ export {
 export {
 	type AuditReport,
 	auditReportSchema,
+	carriedAnalyses,
+	type EvidenceAuditReport,
+	evidenceAuditReportSchema,
 	type MeasurementPayload,
 	measurementPayload,
+	type PreProviderAuditReport,
+	preProviderAuditReportSchema,
 	type RepoMetadata,
 	type RunMetadata,
 	repoMetadataSchema,
@@ -100,4 +116,12 @@ export {
 	completenessSchema,
 	rollUpCompleteness,
 } from "./states.ts";
-export { ANALYZER_VERSION, SCHEMA_VERSION, SCORING_VERSION } from "./version.ts";
+export {
+	ANALYZER_VERSION,
+	isSupportedSchemaVersion,
+	PRE_PROVIDER_SCHEMA_VERSION,
+	SCHEMA_VERSION,
+	SCORING_VERSION,
+	SUPPORTED_SCHEMA_VERSIONS,
+	type SupportedSchemaVersion,
+} from "./version.ts";

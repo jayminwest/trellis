@@ -5,6 +5,7 @@ import {
 	SCHEMA_VERSION,
 	SCORING_VERSION,
 } from "../contract/index.ts";
+import { fixtureEvidenceArea } from "../contract/report.fixtures.ts";
 import type { Report } from "../report/index.ts";
 import { openStore, repoIdentity, type Store } from "../store/index.ts";
 import { buildHistory } from "./dashboard.ts";
@@ -29,6 +30,7 @@ function makeAuditReport(
 		},
 		sourceCoverage: { production: { files: 1, sloc: 10 }, test: { files: 0 } },
 		completeness: "complete",
+		evidence: fixtureEvidenceArea(["complexity.average-cc"]),
 		metrics: {
 			"complexity.average-cc": {
 				id: "complexity.average-cc",

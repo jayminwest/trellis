@@ -2,19 +2,24 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import {
+	runComplexityAnalysis,
+	runDependencyGraphAnalysis,
+	runDuplicationAnalysis,
+	runImportCycleAnalysis,
+	runSafeguardInspection,
+} from "../analysis/index.ts";
 import { auditReportSchema, measurementPayload, SCHEMA_VERSION } from "../contract/index.ts";
 import { discoverSourceInventory } from "../discovery/index.ts";
-import {
-	analyzeComplexity,
-	analyzeCycles,
-	analyzeDependencyGraph,
-	analyzeDuplication,
-} from "../metrics/index.ts";
-import { inspectSafeguards } from "../safeguards/index.ts";
 import { scoreSloppiness } from "../scoring/index.ts";
 import { buildSyntaxInventory } from "../syntax/index.ts";
 import { assembleReport, collectMetrics } from "./assemble.ts";
-import { auditWorkspace, measureAnalyses, selectedMeasuredAnalyzers } from "./audit.ts";
+import {
+	auditWorkspace,
+	measureAnalyses,
+	measuredAnalysisEvidence,
+	selectedMeasuredAnalyzers,
+} from "./audit.ts";
 import { ANALYZER_IDS, type AuditEvent, analyzerProgressId } from "./progress.ts";
 import { runWorkspaceAudit } from "./run.ts";
 
@@ -108,26 +113,31 @@ async function runCliJson(path: string): Promise<{ code: number; stdout: string 
 }
 
 describe("audit orchestration through the registry", () => {
-	test("matches the pre-refactor pipeline's measurement payload exactly", async () => {
+	test("matches the hand-composed registered pipeline's measurement payload exactly", async () => {
 		await seedSloppy();
-		// The pre-refactor pipeline, rebuilt by hand: the raw inline analyzers
-		// over one discover+parse, folded by the same pure assembly with the
-		// raw products as its measured sources and the run clock pinned.
+		// The pipeline rebuilt by hand: the registered native wrappers over one
+		// discover+parse, folded into evidence contributions by the same
+		// registry-derived mapping the audit uses, then scored and assembled
+		// with the run clock pinned — the report carries per-analysis
+		// provenance since trellis-a24d, so the baseline is the wrapped
+		// pipeline (the raw analyzers alone no longer produce a report).
 		const source = await discoverSourceInventory(repo);
 		const syntax = await buildSyntaxInventory(source);
-		const complexity = analyzeComplexity(syntax);
-		const duplication = analyzeDuplication(syntax);
-		const graph = analyzeDependencyGraph(source, syntax);
-		const cycles = analyzeCycles(graph);
-		const safeguards = await inspectSafeguards(source.root);
-		const metrics = collectMetrics([complexity, duplication, graph, cycles]);
+		const complexity = runComplexityAnalysis(syntax);
+		const duplication = runDuplicationAnalysis(syntax);
+		const graph = runDependencyGraphAnalysis(source, syntax);
+		const cycles = runImportCycleAnalysis(graph);
+		const safeguards = (await runSafeguardInspection(source.root)).product;
+		const analyses = measuredAnalysisEvidence([complexity, duplication, graph, cycles]);
+		const metrics = collectMetrics(analyses);
 		const baseline = assembleReport(
-			{ source, syntax, analyses: [complexity, duplication, graph, cycles], safeguards },
+			{ source, syntax, analyses, safeguards },
 			scoreSloppiness(metrics),
 			{ auditedAt: PINNED.toISOString() },
 		);
 		const refactored = await auditWorkspace(repo, { now: PINNED });
-		// Byte equality: metrics, findings (and their order), coverage, score.
+		// Byte equality: metrics, findings (and their order), coverage, score,
+		// and the evidence area.
 		expect(JSON.stringify(measurementPayload(refactored))).toBe(
 			JSON.stringify(measurementPayload(baseline)),
 		);
@@ -223,10 +233,12 @@ describe("audit orchestration through the registry", () => {
 			expect(run.result.state).toBe("incomplete");
 			expect(run.result.reason).toMatch(/parse diagnostics/);
 		}
-		// The report shape is untouched: no provider field, no new version.
+		// The report now carries the additive evidence area (§6.6) under the
+		// bumped schema version — still no provider selected or reported.
 		expect(Object.keys(report).sort()).toEqual([
 			"analyzerVersion",
 			"completeness",
+			"evidence",
 			"findings",
 			"metrics",
 			"repo",
@@ -238,6 +250,14 @@ describe("audit orchestration through the registry", () => {
 			"sourceCoverage",
 		]);
 		expect(report.schemaVersion).toBe(SCHEMA_VERSION);
+		if (report.schemaVersion !== SCHEMA_VERSION) {
+			throw new Error("expected an evidence-carrying report");
+		}
+		expect(report.evidence.completeness).toBe("incomplete");
+		for (const analysis of report.evidence.analyses) {
+			expect(analysis.provider.kind).toBe("native");
+			expect(analysis.scoring).toBe("scored");
+		}
 	});
 
 	test("stays one code path across core, service and CLI over a dirty, non-Git workspace", async () => {
@@ -258,6 +278,47 @@ describe("audit orchestration through the registry", () => {
 		expect(measurementPayload(auditReportSchema.parse(JSON.parse(cli.stdout)))).toEqual(
 			measurementPayload(core),
 		);
+	});
+});
+
+describe("measuredAnalysisEvidence", () => {
+	test("derives each contribution's role and ownership from the registry", async () => {
+		await seedSloppy();
+		const source = await discoverSourceInventory(repo);
+		const syntax = await buildSyntaxInventory(source);
+		const contributions = measuredAnalysisEvidence(measureAnalyses(source, syntax));
+		// Every measured analyzer the scoring catalog requires is a scored
+		// input (owners of catalog metric ids plus the graph prerequisite);
+		// the contributions carry the registry-declared metric ownership.
+		const registry = selectedMeasuredAnalyzers();
+		expect(contributions.map((c) => c.result.provider.id)).toEqual(
+			registry.map((analyzer) => analyzer.identity.id),
+		);
+		for (const contribution of contributions) {
+			const analyzer = registry.find((a) => a.identity.id === contribution.result.provider.id);
+			if (analyzer === undefined) throw new Error("measured run without a registry entry");
+			expect(contribution.scoring).toBe("scored");
+			expect(contribution.metricIds).toEqual(analyzer.metrics);
+			// The contract result is the report-shaped minimum: internal
+			// products never serialize.
+			expect("products" in contribution.result).toBe(false);
+		}
+	});
+
+	test("rejects a measured run naming no registered analyzer deterministically", async () => {
+		await seedSloppy();
+		const source = await discoverSourceInventory(repo);
+		const syntax = await buildSyntaxInventory(source);
+		const [first] = measureAnalyses(source, syntax);
+		if (first === undefined) throw new Error("no measured runs");
+		const unregistered = {
+			...first,
+			result: {
+				...first.result,
+				provider: { ...first.result.provider, id: "trellis.unregistered" },
+			},
+		};
+		expect(() => measuredAnalysisEvidence([unregistered])).toThrow(/not registered/);
 	});
 });
 
