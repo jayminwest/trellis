@@ -1,43 +1,38 @@
 /**
- * Fleet exit-code assessment (SPEC §12) — the multi-repo analogue of
- * {@link assessReport}. A {@link FleetReport} carries only aggregate per-target
- * metrics (level, drift counts, gate-failure count), so the assessment works off
- * those rather than per-criterion data. Any target that failed to audit trips a
- * non-zero exit under any active policy — an unauditable repo is a CI failure —
- * while `none` is always clean.
+ * Fleet exit-code assessment (SPEC §9, §11, trellis-8366) — the multi-repo
+ * analogue of the declarative policy gate. There are no fleet-level scoring
+ * knobs: each target already carries the §9 {@link PolicyAssessment} over its
+ * own `trellis.yaml` policy block, so the fleet fails exactly when a target
+ * could not audit (an unauditable repo is a CI failure) or a target's
+ * declarative policy tripped. Canonical drift, a separate capability, never
+ * gates here — it has no policy dimension and cannot change the structural
+ * score (SPEC §11).
  */
-import {
-	type Assessment,
-	activeChecks,
-	DEFAULT_MIN_LEVEL,
-	type FailPolicy,
-} from "../report/index.ts";
-import { hasFailingDrift } from "../standards/index.ts";
 import type { FleetReport } from "./orchestrate.ts";
 
+/** The fleet-level pass/fail rollup: `failed` plus one human reason per tripped target. */
+export interface FleetAssessment {
+	readonly failed: boolean;
+	readonly reasons: readonly string[];
+}
+
 /**
- * Assess a {@link FleetReport} against a {@link FailPolicy}. With every check off
- * (`--fail-on none`) the fleet is always clean; otherwise each errored target
- * fails, and each scored target contributes a reason per tripped dimension.
+ * Assess a {@link FleetReport} for the exit-code contract: `failed` iff any
+ * target errored or any target's policy assessment failed. Reasons name the
+ * target and the tripped policy codes so CI logs are actionable.
  */
-export function assessFleet(report: FleetReport, policy: FailPolicy = {}): Assessment {
-	const checks = activeChecks(policy.mode);
-	if (!checks.gate && !checks.drift && !checks.level) return { failed: false, reasons: [] };
-	const min = policy.minLevel ?? DEFAULT_MIN_LEVEL;
+export function assessFleet(report: FleetReport): FleetAssessment {
 	const reasons: string[] = [];
 	for (const entry of report.entries) {
 		if (!entry.ok) {
 			reasons.push(`${entry.id}: ${entry.error}`);
 			continue;
 		}
-		if (checks.gate && entry.gateFailures > 0) {
-			reasons.push(`${entry.id}: ${entry.gateFailures} gate criterion failure(s)`);
-		}
-		if (checks.drift && entry.drift && hasFailingDrift(entry.drift)) {
-			reasons.push(`${entry.id}: canonical drift detected`);
-		}
-		if (checks.level && entry.level < min) {
-			reasons.push(`${entry.id}: level L${entry.level} below minimum L${min}`);
+		if (entry.policy.failed) {
+			const codes = entry.policy.results
+				.filter((r) => r.status === "fail")
+				.flatMap((r) => r.reasons.map((reason) => reason.message));
+			reasons.push(`${entry.id}: policy failed — ${codes.join("; ")}`);
 		}
 	}
 	return { failed: reasons.length > 0, reasons };

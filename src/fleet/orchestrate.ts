@@ -1,55 +1,79 @@
 /**
- * Fleet orchestration (SPEC §6.5, §11) — audit every target in a loaded
- * {@link Fleet} sequentially and assemble the aggregate {@link FleetReport}.
+ * Fleet orchestration (SPEC §11, trellis-8366) — audit every target in a
+ * loaded {@link Fleet} sequentially through the **same deterministic core** a
+ * single-repo run uses, and assemble the aggregate {@link FleetReport}.
  *
- * Each target runs the same core {@link auditRepo} the single-repo CLI does
- * (audit + canonical drift, with the target's `allowedDeltas` and `skip` applied
- * via {@link targetAuditOptions}), persists its run to the central store, and is
- * compared against that repo's *previous* run to surface a level delta (SPEC
- * §11). The previous run is read **before** the new one is inserted, so the delta
- * reflects the prior audit, not the one just written.
+ * Each target folds {@link runWorkspaceAudit} — the exact service the CLI's
+ * `trellis audit` and the SDK's `audit()` call — so a fleet audit and an
+ * independent core audit of the same workspace can never drift (the tests
+ * prove the measurement payloads are deep-equal). The entry preserves the
+ * target's whole §6.4 report (findings, completeness, metrics) plus the
+ * declarative §9 policy assessment over the target's own configuration;
+ * nothing is re-aggregated or re-scored at the fleet level.
  *
- * **Partial-failure isolation:** a target whose path is missing/unreadable, or
- * whose audit throws (e.g. an unbundled canonical version), becomes a per-target
- * error entry — the fleet keeps going and the surviving targets still score and
- * persist. One bad repo never aborts the run.
+ * **Standards drift stays a separate capability (SPEC §11).** Each target
+ * also runs {@link driftRepo} with its `canonical` options, and the per-state
+ * counts ride along on the entry — but drift never enters the sloppiness
+ * index, the policy assessment, or the fleet exit policy. A drift failure
+ * (e.g. an unbundled canonical version) degrades to `driftError` on an
+ * otherwise healthy entry; it never eats the audit.
  *
- * The orchestrator is surface-agnostic core: it takes an injectable store, audit
- * fn, path check, and clock so the whole flow runs offline and deterministically
- * in tests. `now` is pinned across the fleet so every run shares one `scoredAt`.
+ * **Partial-failure isolation:** a target whose path is missing/unreadable,
+ * or whose audit throws (e.g. an invalid `trellis.yaml`), becomes a
+ * per-target error entry — the fleet keeps going and the surviving targets
+ * still score. One bad repo never aborts the run.
+ *
+ * **Stateless by default (SPEC §8, §10).** Persistence is opt-in: with
+ * `history` on, each target's run appends to the central audit history and
+ * the entry carries the index move against the repo's previous compatible
+ * run; without it the fleet opens no database.
+ *
+ * The orchestrator is surface-agnostic core: it takes an injectable audit
+ * service, drift fn, path check, and clock so the whole flow runs offline
+ * and deterministically in tests. `now` is pinned across the fleet so every
+ * entry shares one `auditedAt`.
  */
 import { statSync } from "node:fs";
-import { type AuditOptions, auditRepo, type Report } from "../report/index.ts";
-import { type Level, loadRubric, RUBRIC_VERSION, type Rubric } from "../rubric/index.ts";
-import { gateFails } from "../scoring/index.ts";
-import type { DriftState } from "../standards/index.ts";
-import { type Store, type StoredRun, storedReport } from "../store/index.ts";
+import {
+	runWorkspaceAudit,
+	type WorkspaceAuditOptions,
+	type WorkspaceAuditResult,
+} from "../audit/index.ts";
+import type { PolicyAssessment } from "../compare/index.ts";
+import type { AuditReport } from "../contract/index.ts";
+import {
+	type DriftOptions,
+	type DriftReport,
+	type DriftState,
+	driftRepo,
+} from "../standards/index.ts";
 import {
 	type Fleet,
 	type FleetDefaults,
 	type ResolvedTarget,
-	targetAuditOptions,
+	targetDriftOptions,
 } from "./targets.ts";
 
-/** A target that scored — its headline metrics plus its level move vs the previous run. */
+/** A target that audited — its full §6.4 report, policy assessment, and non-scoring drift counts. */
 export interface FleetTargetOk {
 	readonly id: string;
 	readonly path: string;
 	readonly ok: true;
-	readonly level: Level;
-	readonly passRate: number;
-	readonly coverage: number;
-	/** Per-state canonical-drift counts, or `null` when no canonical comparison ran. */
+	/** The §6.4 report the deterministic core assembled — findings and completeness preserved whole. */
+	readonly report: AuditReport;
+	/** The independent §9 policy evaluation over the target's own configuration. */
+	readonly policy: PolicyAssessment;
+	/** Per-state canonical-drift counts (separate capability, never scored), or `null` when drift did not run. */
 	readonly drift: Record<DriftState, number> | null;
-	/** Count of gate criteria measured and not fully passing (SPEC §3.3), for `--fail-on gate`. */
-	readonly gateFailures: number;
-	/** This repo's previous run's level, or `null` when this is its first run. */
-	readonly previousLevel: Level | null;
-	/** `level − previousLevel`, or `null` when there is no prior run (SPEC §11). */
-	readonly levelDelta: number | null;
+	/** The drift failure, when the drift comparison itself could not run (the audit still stands). */
+	readonly driftError: string | null;
+	/** The previous compatible stored run's index, or `null` (no history, or a first run). */
+	readonly previousIndex: number | null;
+	/** `index − previousIndex` (positive = worse; lower is better), or `null` without a prior run. */
+	readonly indexDelta: number | null;
 }
 
-/** A target that could not be scored — path missing/unreadable or the audit threw. */
+/** A target that could not be audited — path missing/unreadable or the audit threw. */
 export interface FleetTargetErr {
 	readonly id: string;
 	readonly path: string;
@@ -57,37 +81,40 @@ export interface FleetTargetErr {
 	readonly error: string;
 }
 
-/** One target's outcome in the aggregate dashboard. */
+/** One target's outcome in the aggregate report. */
 export type FleetEntry = FleetTargetOk | FleetTargetErr;
 
-/** The aggregate fleet dashboard (SPEC §6.5) — one entry per declared target. */
+/** The aggregate fleet report (SPEC §11) — one entry per declared target. */
 export interface FleetReport {
-	/** ISO-8601 wall-clock shared by every run in this fleet pass. */
-	readonly scoredAt: string;
-	/** Rubric version every target scored against (SPEC §6.1). */
-	readonly rubricVersion: string;
-	/** Fleet-default canonical version (per-repo overrides not reflected here), or `null`. */
-	readonly canonicalVersion: string | null;
+	/** ISO-8601 wall-clock shared by every audit in this fleet pass. */
+	readonly auditedAt: string;
 	/** Per-target results, in `targets.yaml` order. */
 	readonly entries: readonly FleetEntry[];
-	/** Counts of scored vs errored targets, for the headline. */
-	readonly summary: { readonly ok: number; readonly error: number };
+	/** Counts of audited vs errored targets, and how many audits tripped their policy. */
+	readonly summary: {
+		readonly ok: number;
+		readonly error: number;
+		readonly policyFailed: number;
+	};
 }
 
 /** Injectable seams for {@link runFleet}. */
 export interface FleetRunDeps {
-	/** Central store — run history. The fleet persists every run. */
-	readonly store: Store;
-	/** Preloaded rubric, shared across targets so it loads once; defaults to the bundled rubric. */
-	readonly rubric?: Rubric;
-	/** Informational rubric-version pin echoed onto each report (SPEC §12). */
-	readonly rubricVersion?: string;
-	/** Wall-clock for every run's `scoredAt`, pinned across the fleet; defaults to now. */
-	readonly now?: Date;
-	/** Injectable audit fn (tests); defaults to the real core {@link auditRepo}. */
-	readonly audit?: (repoPath: string, opts: AuditOptions) => Promise<Report>;
+	/**
+	 * Injectable audit service (tests); defaults to the real
+	 * {@link runWorkspaceAudit} — the same service the CLI and SDK fold.
+	 */
+	readonly audit?: (root: string, opts: WorkspaceAuditOptions) => Promise<WorkspaceAuditResult>;
+	/** Injectable drift fn (tests); defaults to the real {@link driftRepo}. */
+	readonly drift?: (repoPath: string, opts: DriftOptions) => DriftReport;
 	/** Injectable directory check (tests); defaults to a real `statSync` `isDirectory`. */
 	readonly pathExists?: (absPath: string) => boolean;
+	/** Wall-clock for every audit's `run.auditedAt`, pinned across the fleet; defaults to now. */
+	readonly now?: Date;
+	/** Opt-in persistence (SPEC §10): record each run and resolve a stored baseline. Default false. */
+	readonly history?: boolean;
+	/** SQLite history path (meaningful only with `history`); defaults to `$TRELLIS_DB` or `~/.trellis/trellis.db`. */
+	readonly db?: string;
 }
 
 /** True iff `absPath` is a readable directory — the real per-target path guard. */
@@ -99,65 +126,56 @@ function realPathExists(absPath: string): boolean {
 	}
 }
 
-/** Assemble the per-target {@link AuditOptions}: spec mapping + the §11 prior run. */
-function buildOptions(
+/** Run the separate drift capability for one target, isolating its failure from the audit. */
+function runDrift(
 	target: ResolvedTarget,
 	defaults: FleetDefaults,
-	deps: FleetRunDeps,
-	now: Date,
-	previous: StoredRun | null,
-): AuditOptions {
-	return {
-		...targetAuditOptions(target, defaults),
-		...(deps.rubric ? { rubric: deps.rubric } : {}),
-		...(deps.rubricVersion ? { rubricVersion: deps.rubricVersion } : {}),
-		now,
-		// Embed the §11 delta against this repo's prior run (null on its first run).
-		previousRun: previous ? storedReport(previous) : null,
-	};
-}
-
-/** Count of gate criteria in `report` that were measured and did not fully pass (SPEC §3.3). */
-function countFailingGates(report: Report, gateIds: readonly string[]): number {
-	let count = 0;
-	for (const id of gateIds) {
-		if (gateFails(report.criteria[id])) count += 1;
+	drift: (repoPath: string, opts: DriftOptions) => DriftReport,
+): { summary: Record<DriftState, number> | null; error: string | null } {
+	try {
+		return {
+			summary: drift(target.absPath, targetDriftOptions(target, defaults)).summary,
+			error: null,
+		};
+	} catch (error) {
+		return { summary: null, error: error instanceof Error ? error.message : String(error) };
 	}
-	return count;
 }
 
-/** Audit one target, persist its run, and shape its dashboard entry (failures isolated). */
+/** Audit one target through the deterministic core and shape its entry (failures isolated). */
 async function runTarget(
 	target: ResolvedTarget,
 	defaults: FleetDefaults,
-	deps: FleetRunDeps,
-	audit: (repoPath: string, opts: AuditOptions) => Promise<Report>,
+	audit: (root: string, opts: WorkspaceAuditOptions) => Promise<WorkspaceAuditResult>,
+	drift: (repoPath: string, opts: DriftOptions) => DriftReport,
 	pathExists: (absPath: string) => boolean,
+	deps: FleetRunDeps,
 	now: Date,
-	gateIds: readonly string[],
 ): Promise<FleetEntry> {
 	const { id } = target.spec;
 	const path = target.absPath;
 	if (!pathExists(path)) {
 		return { id, path, ok: false, error: "path not found or not a directory" };
 	}
-	// Read the prior run before inserting the new one so the delta reflects it.
-	const previous = deps.store.latestRun(id);
-	const previousLevel = previous ? previous.level : null;
 	try {
-		const report = await audit(path, buildOptions(target, defaults, deps, now, previous));
-		deps.store.insertRun(report);
+		const result = await audit(path, {
+			...(target.absConfigPath === undefined ? {} : { configPath: target.absConfigPath }),
+			...(deps.history === true ? { history: true } : {}),
+			...(deps.history === true && deps.db !== undefined ? { db: deps.db } : {}),
+			now,
+		});
+		const driftResult = runDrift(target, defaults, drift);
+		const previousIndex = result.baseline?.score.index ?? null;
 		return {
 			id,
 			path,
 			ok: true,
-			level: report.level,
-			passRate: report.passRate,
-			coverage: report.coverage,
-			drift: report.drift ? report.drift.summary : null,
-			gateFailures: countFailingGates(report, gateIds),
-			previousLevel,
-			levelDelta: previousLevel === null ? null : report.level - previousLevel,
+			report: result.report,
+			policy: result.policy,
+			drift: driftResult.summary,
+			driftError: driftResult.error,
+			previousIndex,
+			indexDelta: previousIndex === null ? null : result.report.score.index - previousIndex,
 		};
 	} catch (error) {
 		return { id, path, ok: false, error: error instanceof Error ? error.message : String(error) };
@@ -165,31 +183,28 @@ async function runTarget(
 }
 
 /**
- * Audit every target in `fleet` sequentially, persisting each run and comparing
- * it against that repo's previous run, then return the aggregate
- * {@link FleetReport}. A per-target failure is isolated into an error entry —
- * the rest of the fleet still scores. `now` is pinned across the whole pass for
- * a deterministic, reproducible dashboard.
+ * Audit every target in `fleet` sequentially through the deterministic core
+ * and return the aggregate {@link FleetReport} (see the module docblock for
+ * the contract). A per-target failure is isolated into an error entry — the
+ * rest of the fleet still scores. `now` is pinned across the whole pass for
+ * a deterministic, reproducible report.
  */
-export async function runFleet(fleet: Fleet, deps: FleetRunDeps): Promise<FleetReport> {
-	const audit = deps.audit ?? auditRepo;
+export async function runFleet(fleet: Fleet, deps: FleetRunDeps = {}): Promise<FleetReport> {
+	const audit = deps.audit ?? runWorkspaceAudit;
+	const drift = deps.drift ?? driftRepo;
 	const pathExists = deps.pathExists ?? realPathExists;
 	const now = deps.now ?? new Date();
-	// Gate ids come from the run's rubric (or the bundled one) so `--fail-on gate`
-	// counts failing floors per target (SPEC §3.3).
-	const gateIds = (deps.rubric ?? loadRubric()).criteria.filter((c) => c.gate).map((c) => c.id);
 
 	const entries: FleetEntry[] = [];
 	for (const target of fleet.targets) {
-		entries.push(await runTarget(target, fleet.defaults, deps, audit, pathExists, now, gateIds));
+		entries.push(await runTarget(target, fleet.defaults, audit, drift, pathExists, deps, now));
 	}
 
 	const ok = entries.filter((e) => e.ok).length;
+	const policyFailed = entries.filter((e) => e.ok && e.policy.failed).length;
 	return {
-		scoredAt: now.toISOString(),
-		rubricVersion: deps.rubricVersion ?? RUBRIC_VERSION,
-		canonicalVersion: fleet.defaults.canonicalVersion ?? null,
+		auditedAt: now.toISOString(),
 		entries,
-		summary: { ok, error: entries.length - ok },
+		summary: { ok, error: entries.length - ok, policyFailed },
 	};
 }

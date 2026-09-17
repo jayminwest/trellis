@@ -59,18 +59,19 @@ bun run test:ci               # bun test with junit + coverage reporters
 ```
 
 trellis ships a CLI (`trellis`, bin `./src/cli/main.ts`). The deterministic
-surface (SPEC §12, landed trellis-9a88) plus the transitional legacy
-subcommands (SPEC §14; `fleet`/`report`/`drift`/`rubric`/`standards` are
-adapted or retired by trellis-8366 and the release stages):
+surface (SPEC §12, landed trellis-9a88; fleet/history adapted trellis-8366)
+plus the transitional legacy subcommands (SPEC §14; `drift`/`rubric`/
+`standards` are retired by the release stages):
 
 ```bash
 trellis audit <path>          # measure + score one workspace; print the sloppiness report
                               #   [--json|--md] [--out <file>] [--baseline <report.json>]
                               #   [--config <file>] [--history] [--db <path>]
 trellis compare <a> <b>       # compare two saved report artifacts (no audit)
+trellis fleet                 # audit every target in targets.yaml through the same core
+                              #   [--history] [--db <path>] (drift rides along, never scored)
+trellis report                # sloppiness history from SQLite; legacy readiness kept distinct
 trellis drift <repo-path>     # L1 canonical-config drift only (transitional)
-trellis fleet                 # audit every target in targets.yaml (transitional)
-trellis report                # render history/dashboard from SQLite (transitional)
 trellis rubric [--validate]   # print the loaded rubric (transitional)
 trellis standards             # show canonical manifest + versions
 ```
@@ -91,23 +92,25 @@ is **declarative**: the policy block of the workspace's trellis.yaml (SPEC §6.5
 index, metric budgets, score regression, new-finding kinds) gates `audit`
 and `compare`, and an incompatible `compare` pair fails closed. `EXIT`
 lives in `src/cli/output.ts`; the assessment is core (`assessPolicy` in
-`src/compare/policy.ts`), so the CLI and SDK gate identically. The
-transitional `drift`/`fleet` commands keep the legacy `--fail-on
-gate|drift|level|none` knobs (`assessReport` in `src/report/assess.ts`,
-`assessFleet` in `src/fleet/assess.ts`) until trellis-8366.
+`src/compare/policy.ts`), so the CLI and SDK gate identically. `fleet`
+gates on each target's own declarative policy result plus per-target
+operational failures (`assessFleet` in `src/fleet/assess.ts`); canonical
+drift rides along as a separate, non-scoring capability and never gates.
+The transitional `drift` command keeps its legacy `--fail-on drift|none`
+knob until the release stages.
 
 ### Programmatic SDK (`src/client/`)
 
-`src/client/index.ts` exposes `audit` / `compare` over the deterministic
-core plus the transitional `drift` / `fleet` / `report` / `rubric` and the
+`src/client/index.ts` exposes `audit` / `compare` / `fleet` / `report` over
+the deterministic core plus the transitional `drift` / `rubric` and the
 `assessPolicy` / `assessReport` / `assessFleet` exit-code rules. Each is a
 direct call to the same core service the CLI folds (`runWorkspaceAudit`,
 `runComparison`, `driftRepo`, `runFleetTargets`, `buildReport`,
 `summarizeRubric`) — **no logic beyond type shaping**. Request types mirror
 the core option types (`// Mirrors src/<x>`); responses are the core report
 shapes. The deep-equal tests in `src/client/index.test.ts` prove a CLI
-audit/compare and an SDK audit/compare are one code path — measurement and
-policy alike.
+audit/compare/fleet and an SDK audit/compare/fleet are one code path —
+measurement and policy alike.
 
 ### Quality gates
 

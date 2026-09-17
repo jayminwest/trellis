@@ -8,9 +8,9 @@ import { seedFixtureRepo } from "../report/audit-fixtures.ts";
  * The CLI exit-code contract (SPEC §9, §12): `0` clean, `2` when a policy
  * trips (the report is still emitted to stdout; reasons go to stderr), `1`
  * on an operational error (the command could not run). On the deterministic
- * `audit` surface the policy is declarative (`trellis.yaml`, SPEC §6.5) — no
- * policy configured means nothing to trip. The transitional `drift`/`fleet`
- * commands keep their legacy `--fail-on` knobs until trellis-8366.
+ * `audit`/`fleet` surfaces the policy is declarative (`trellis.yaml`, SPEC
+ * §6.5) — no policy configured means nothing to trip. The transitional
+ * `drift` command keeps its legacy `--fail-on` knob until the release stages.
  */
 
 /** Absolute path to the CLI entrypoint, resolved relative to this test file. */
@@ -113,24 +113,32 @@ describe("trellis exit-code contract (SPEC §9)", () => {
 		expect(code).toBe(0);
 	});
 
-	test("a fleet with an unauditable target trips a non-zero exit by default", async () => {
+	test("a fleet with an unauditable target trips exit 2 with the report still emitted", async () => {
 		const targets = join(dbDir, "targets.yaml");
 		writeFileSync(
 			targets,
-			`targets:\n  - id: fixture\n    path: ${dir}\n    languages: [typescript]\n` +
+			`targets:\n  - id: fixture\n    path: ${dir}\n` +
 				`  - id: gone\n    path: ${join(dbDir, "missing")}\n`,
 		);
-		const fail = await runCli(["fleet", "--targets", targets, "--db", dbPath], {
+		const fail = await runCli(["fleet", "--targets", targets], { TRELLIS_DB: "" });
+		expect(fail.code).toBe(2);
+		expect(fail.stdout).toContain("trellis fleet");
+		expect(fail.stderr).toContain("gone");
+	});
+
+	test("a fleet whose target trips its declarative policy exits 2, distinct from an operational error", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
+		const targets = join(dbDir, "targets.yaml");
+		writeFileSync(targets, `targets:\n  - id: fixture\n    path: ${dir}\n`);
+		const tripped = await runCli(["fleet", "--targets", targets], { TRELLIS_DB: "" });
+		expect(tripped.code).toBe(2);
+		expect(tripped.stdout).toContain("trellis fleet");
+		expect(tripped.stderr).toContain("fixture: policy failed");
+		// Operational: the fleet declaration itself is broken — nothing on stdout, exit 1.
+		const broken = await runCli(["fleet", "--targets", join(dbDir, "absent.yaml")], {
 			TRELLIS_DB: "",
 		});
-		expect(fail.code).toBe(2);
-		expect(fail.stderr).toContain("gone");
-		const clean = await runCli(
-			["fleet", "--targets", targets, "--db", dbPath, "--fail-on", "none"],
-			{
-				TRELLIS_DB: "",
-			},
-		);
-		expect(clean.code).toBe(0);
+		expect(broken.code).toBe(1);
+		expect(broken.stdout).toBe("");
 	});
 });
