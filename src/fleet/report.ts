@@ -10,7 +10,18 @@
  * always renders with its direction (`lower is better`, §3.4), and the Δ
  * column is the index move against the target's previous compatible stored
  * run (positive = worse). No ANSI, so they compose with pipes and CI logs.
+ *
+ * **Provider evidence stays per target and unscored (§16, plan `pl-43c5`
+ * step 20 — trellis-f3e5).** The evidence column projects each target's
+ * carried external analyses as `id:state` pairs, straight off the entry's
+ * own report and in the report's deterministic order — never re-ranked,
+ * never summed, never aggregated into anything score-like. A target that
+ * requested no provider shows `—` (an explicit absence, never a zero and
+ * never "complete"); a mixed fleet (one target with complete evidence, one
+ * unavailable, one native-only) renders each situation as it is, so the
+ * fleet view can never suggest a uniform evidence state that no target has.
  */
+import { carriedAnalyses } from "../contract/index.ts";
 import type { FleetEntry, FleetReport } from "./orchestrate.ts";
 
 /** Right-pad `s` to `width` for fixed-width columns. */
@@ -45,6 +56,14 @@ function policyCell(e: FleetEntry): string {
 	return e.policy.failed ? "FAIL" : "ok";
 }
 
+/** The target's carried external analyses as `id:state` pairs in report order; `—` when none. */
+function evidenceCell(e: FleetEntry): string {
+	if (!e.ok) return "—";
+	const external = carriedAnalyses(e.report).filter((a) => a.provider.kind === "external");
+	if (external.length === 0) return "—";
+	return external.map((a) => `${a.provider.id}:${a.state}`).join(" · ");
+}
+
 /** Failing-state drift counts (`drift N · miss N`), `error` when drift itself failed, `—` on target error. */
 function driftCell(e: FleetEntry): string {
 	if (!e.ok) return "—";
@@ -75,15 +94,16 @@ function headline(report: FleetReport): string {
 export function renderFleetTerminal(report: FleetReport): string {
 	const idWidth = Math.max(6, ...report.entries.map((e) => e.id.length));
 	const driftWidth = Math.max(5, ...report.entries.map((e) => driftCell(e).length));
+	const evidenceWidth = Math.max(8, ...report.entries.map((e) => evidenceCell(e).length));
 	const lines = [
 		`trellis fleet · ${headline(report)}`,
 		`audited ${report.auditedAt} · index 0–100, lower is better`,
 		"",
-		`  ${pad("target", idWidth)}  ${padStart("index", 6)}  ${pad("state", 8)}  ${padStart("findings", 8)}  ${pad("policy", 6)}  ${pad("drift", driftWidth)}  ${pad("Δ", 4)}  note`,
+		`  ${pad("target", idWidth)}  ${padStart("index", 6)}  ${pad("state", 8)}  ${pad("evidence", evidenceWidth)}  ${padStart("findings", 8)}  ${pad("policy", 6)}  ${pad("drift", driftWidth)}  ${pad("Δ", 4)}  note`,
 	];
 	for (const e of report.entries) {
 		lines.push(
-			`  ${pad(e.id, idWidth)}  ${padStart(indexCell(e), 6)}  ${pad(stateCell(e), 8)}  ${padStart(findingsCell(e), 8)}  ${pad(policyCell(e), 6)}  ${pad(driftCell(e), driftWidth)}  ${pad(deltaCell(e), 4)}  ${noteCell(e)}`.trimEnd(),
+			`  ${pad(e.id, idWidth)}  ${padStart(indexCell(e), 6)}  ${pad(stateCell(e), 8)}  ${pad(evidenceCell(e), evidenceWidth)}  ${padStart(findingsCell(e), 8)}  ${pad(policyCell(e), 6)}  ${pad(driftCell(e), driftWidth)}  ${pad(deltaCell(e), 4)}  ${noteCell(e)}`.trimEnd(),
 		);
 	}
 	lines.push("");
@@ -97,15 +117,15 @@ export function renderFleetMarkdown(report: FleetReport): string {
 		"# Fleet audit",
 		"",
 		`${headline(report)} · audited ${report.auditedAt}`,
-		"Sloppiness index 0–100, **lower is better**; Δ is the index move vs the previous stored run (positive = worse).",
+		"Sloppiness index 0–100, **lower is better**; Δ is the index move vs the previous stored run (positive = worse). Provider evidence is per target, advisory and never scored.",
 		"",
-		"| Target | Index | State | Findings | Policy | Drift | Δ | Note |",
-		"| --- | --- | --- | --- | --- | --- | --- | --- |",
+		"| Target | Index | State | Evidence | Findings | Policy | Drift | Δ | Note |",
+		"| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
 	];
 	for (const e of report.entries) {
 		const note = noteCell(e).replace(/\|/g, "\\|");
 		lines.push(
-			`| \`${e.id}\` | ${indexCell(e)} | ${stateCell(e)} | ${findingsCell(e)} | ${policyCell(e)} | ${driftCell(e)} | ${deltaCell(e)} | ${note} |`,
+			`| \`${e.id}\` | ${indexCell(e)} | ${stateCell(e)} | ${evidenceCell(e)} | ${findingsCell(e)} | ${policyCell(e)} | ${driftCell(e)} | ${deltaCell(e)} | ${note} |`,
 		);
 	}
 	lines.push("");

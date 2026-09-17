@@ -23,6 +23,27 @@
  * per-target error entry — the fleet keeps going and the surviving targets
  * still score. One bad repo never aborts the run.
  *
+ * **Per-target provider scope (SPEC §16, plan `pl-43c5` step 20 —
+ * trellis-f3e5).** Optional provider selection rides each target's own
+ * configuration (the `providers` block of its `trellis.yaml` or explicit
+ * `config`) through the same core service — the fleet holds no provider
+ * logic, planning or policy of its own. Because every target folds its own
+ * isolated `runWorkspaceAudit` call, nothing provider-related is shared
+ * across targets: each request stages its own source view under trellis-owned
+ * scratch (a fresh `mkdtemp` per analysis, cleaned on every exit path — a
+ * neighbor's failure, unavailability or cleanup problem cannot touch it),
+ * resolves its own pinned tool, and carries its own namespaced, unscored
+ * evidence on its own report. A target that requests no provider stays
+ * byte-identical to a native-only audit, and provider evidence never enters
+ * the index, the summary counts or the exit rollup — mixed situations (one
+ * target with complete evidence, one unavailable, one unrequested) stay
+ * explicit per entry instead of being summed or averaged into anything
+ * score-like. The fleet stays sequential (bounded concurrency of one, no
+ * scheduling service): each target's staged-scratch lifecycle is fully
+ * awaited inside its own audit before the next target starts, so two
+ * targets can never share or race on a scratch path, and per-target
+ * cancellation/cleanup semantics are exactly the single-audit core's.
+ *
  * **Stateless by default (SPEC §8, §10).** Persistence is opt-in: with
  * `history` on, each target's run appends to the central audit history and
  * the entry carries the index move against the repo's previous compatible
