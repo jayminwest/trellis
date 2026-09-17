@@ -21,6 +21,21 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Changed
 
+- **Audit orchestration consumes the registered native analyzers without
+  changing native behavior** (trellis-1e66, step 4 of 30 of plan `pl-43c5`,
+  SPEC §16): the measure phase now selects and orders analyzers through the
+  internal capability registry (trellis-cb51) and folds the selected
+  execution list's results generically — `src/audit/audit.ts` runs each
+  registered measured analyzer through its step-3 wrapper over the one
+  shared parse, feeding the cycle analyzer the exact produced graph run,
+  and `src/audit/assemble.ts` takes a generic measured-analyses list
+  instead of a hardcoded four-analyzer shape. Progress analyzer events
+  derive from the selected execution list (registry order, counts from the
+  list). Report shape, metrics, findings, ordering, score, safeguards and
+  exit behavior are byte-identical to the pre-refactor baseline — proven by
+  payload-equality tests against the pre-refactor pipeline and core/service/
+  CLI parity over dirty, non-Git workspaces; no provider is selected,
+  started, or reported, and no report field or version changed.
 - **Deterministic pivot release acceptance completed** (`pl-b2ea`,
   trellis-b12d, trellis-d03d): reconciled the legacy backlog with explicit
   keep/superseded/deferred decisions; recorded offline integration, package
