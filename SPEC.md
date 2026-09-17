@@ -571,7 +571,7 @@ computed (§7).
 ## 7. Scoring — the provisional formula
 
 Scoring is a **pure function** of structural raw metrics. The initial formula
-is **provisional** (`scoringVersion: 0.1.0-provisional`) pending calibration
+is **provisional** (`scoringVersion: 0.2.0-provisional`) pending calibration
 against the fixed corpus (§14); normalization thresholds and weights are
 documented in §7.1 (landed with `trellis-00d5`) and recalibrated only with a
 scoring-version bump.
@@ -613,14 +613,18 @@ repo-level by construction.
 
 | dimension | weight | terms (raw value ⇒ saturation ⇒ 100) |
 |---|---|---|
-| `complexity-erosion` | 0.50 | `erosion.eroded-share.production` @ 0.25; `erosion.eroded-count.production` @ 20 |
-| `duplication` | 0.30 | `duplication.density.production` @ 0.15; `duplication.groups.production` @ 15 |
-| `import-cycle` | 0.20 | `import-cycle.density` @ 0.10; `import-cycle.groups` @ 5 |
+| `complexity-erosion` | 0.50 | `erosion.eroded-share.production` @ 0.25; `erosion.eroded-count.production` log scale 20 |
+| `duplication` | 0.30 | `duplication.density.production` @ 0.15; `duplication.groups.production` log scale 15 |
+| `import-cycle` | 0.20 | `import-cycle.density` @ 0.10; `import-cycle.groups` log scale 5 |
 
-- Each term normalizes linearly: `100 × min(1, value / saturation)`. Every
-  dimension blends an **absolute-count term** beside its **density term**
-  (even 50/50), so large clean additions can never dilute counts or erase
-  hotspot weight — counts and densities are both retained (§3.4).
+- Density terms normalize linearly: `100 × min(1, value / saturation)`.
+  Absolute counts use `b = ln(1 + count / scale)`, then `100 × b / (1 + b)`.
+  There is no finite count saturation and no repository-size denominator.
+  Each dimension retains a 50/50 count/density blend. Clean additions cannot
+  reduce count contributions or erase hotspot weight; unsaturated densities
+  can still decrease. The integer headline can round away small changes.
+  This is count non-dilution, not an invariant total score under clean additions.
+  See [count calibration](docs/count-calibration.md) for evidence and alternatives.
 - Grouping complexity, erosion, and size into one `complexity-erosion`
   dimension keeps the same underlying tangle from being penalized multiple
   times.

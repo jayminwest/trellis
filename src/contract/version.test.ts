@@ -10,7 +10,7 @@ describe("contract version constants", () => {
 	});
 
 	test("pins the provisional scoring version from SPEC §7", () => {
-		expect(SCORING_VERSION).toBe("0.1.0-provisional");
+		expect(SCORING_VERSION).toBe("0.2.0-provisional");
 	});
 
 	test("aliases the analyzer version from the package version", () => {
@@ -21,7 +21,7 @@ describe("contract version constants", () => {
 describe("versionStringSchema", () => {
 	test("accepts plain and prerelease semantic versions", () => {
 		expect(versionStringSchema.safeParse("1.0.0").success).toBe(true);
-		expect(versionStringSchema.safeParse("0.1.0-provisional").success).toBe(true);
+		expect(versionStringSchema.safeParse("0.2.0-provisional").success).toBe(true);
 		expect(versionStringSchema.safeParse("0.1.0-rc.1").success).toBe(true);
 	});
 

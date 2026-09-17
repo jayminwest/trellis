@@ -95,7 +95,7 @@ describe("renderAuditTerminal per-fixture content", () => {
 
 	test("renders a sloppy repository with ranked hotspots and traceable contributions", () => {
 		const output = render("sloppy");
-		expect(output).toContain("sloppiness index 55/100");
+		expect(output).toContain("sloppiness index 54/100");
 		expect(output).toContain("hotspots (top 4 of 4)");
 		expect(output).toContain("complexity-erosion");
 		expect(output).toContain("pts · erosion.eroded-count.production");

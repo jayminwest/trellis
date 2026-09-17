@@ -4,7 +4,7 @@
  * - **The provisional sloppiness formula** (SPEC §7, trellis-00d5):
  *   {@link scoreSloppiness} is a pure function of the raw contract metrics,
  *   with every constant pinned in {@link SCORING_FORMULA} under
- *   `SCORING_VERSION` (`0.1.0-provisional`).
+ *   `SCORING_VERSION` (`0.2.0-provisional`).
  * - The **legacy readiness scorecard** (pass-rate, coverage clamp, naKind
  *   handling, 20-pt bands, repo/app aggregation) — transitional; it leaves
  *   with the rubric in the staged plan.

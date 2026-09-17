@@ -3,7 +3,7 @@
  * constants and pure math helpers.
  *
  * `SCORING_FORMULA` pins every normalization threshold, term share, and
- * dimension weight under {@link SCORING_VERSION} (`0.1.0-provisional`).
+ * dimension weight under {@link SCORING_VERSION} (`0.2.0-provisional`).
  * The formula is **provisional** pending calibration against the fixed
  * corpus (SPEC §14); any recalibration bumps the scoring version and its
  * test expectations together. The formula takes **no configuration input**:
@@ -18,11 +18,9 @@
  * - Overlapping signals (complexity, erosion, size) are grouped into one
  *   `complexity-erosion` dimension so the same underlying tangle is never
  *   penalized multiple times.
- * - Each term normalizes linearly to 0–100 against a documented
- *   **saturation** threshold (`100 × min(1, value / saturation)`), and each
- *   dimension blends an absolute-count term beside its density term, so
- *   large clean additions can never dilute counts or erase hotspot weight
- *   (§3.4 "counts and densities are both retained").
+ * - Densities normalize linearly to saturation. Counts use a bounded log
+ *   curve with no finite saturation; clean additions cannot dilute their
+ *   contribution. Counts and densities retain equal shares (§3.4).
  * - Every term is non-decreasing in its raw metric and every weight is
  *   positive, so the index is monotonic: no code change that worsens a raw
  *   metric may improve the index.
@@ -32,15 +30,11 @@
  */
 import { SCORING_VERSION } from "../contract/index.ts";
 
-/** One scored term: a raw metric, the value at which it saturates to 100, and its blend share. */
-export interface FormulaTerm {
-	/** Contract metric id consumed by this term (SPEC §6.1). */
+/** A density saturation or an absolute-count log scale, plus its blend share. */
+export type FormulaTerm = {
 	metricId: string;
-	/** Raw value at which the term saturates to 100 normalized points. */
-	saturatesAt: number;
-	/** Share of this term within its dimension; shares sum to 1 per dimension. */
 	share: number;
-}
+} & ({ saturatesAt: number } | { countScale: number });
 
 /** One grouped dimension of the index. */
 export interface FormulaDimension {
@@ -73,7 +67,7 @@ export const SCORING_FORMULA: ScoringFormula = {
 			dimension: "complexity-erosion",
 			weight: 0.5,
 			terms: [
-				{ metricId: "erosion.eroded-count.production", saturatesAt: 20, share: 0.5 },
+				{ metricId: "erosion.eroded-count.production", countScale: 20, share: 0.5 },
 				{ metricId: "erosion.eroded-share.production", saturatesAt: 0.25, share: 0.5 },
 			],
 		},
@@ -82,7 +76,7 @@ export const SCORING_FORMULA: ScoringFormula = {
 			weight: 0.3,
 			terms: [
 				{ metricId: "duplication.density.production", saturatesAt: 0.15, share: 0.5 },
-				{ metricId: "duplication.groups.production", saturatesAt: 15, share: 0.5 },
+				{ metricId: "duplication.groups.production", countScale: 15, share: 0.5 },
 			],
 		},
 		{
@@ -90,7 +84,7 @@ export const SCORING_FORMULA: ScoringFormula = {
 			weight: 0.2,
 			terms: [
 				{ metricId: "import-cycle.density", saturatesAt: 0.1, share: 0.5 },
-				{ metricId: "import-cycle.groups", saturatesAt: 5, share: 0.5 },
+				{ metricId: "import-cycle.groups", countScale: 5, share: 0.5 },
 			],
 		},
 	],
@@ -106,6 +100,12 @@ export function clamp01(value: number): number {
 /** Normalize a raw metric to 0–100 points: linear up to `saturatesAt`, clamped beyond. */
 export function normalizeTerm(value: number, saturatesAt: number): number {
 	return clamp01(value / saturatesAt) * 100;
+}
+
+/** Bounded logarithmic count burden: no finite cap and no workspace-size denominator. */
+export function normalizeCount(value: number, scale: number): number {
+	const burden = Math.log1p(Math.max(0, value) / scale);
+	return (100 * burden) / (1 + burden);
 }
 
 /** Stable rounding: `⌊x + 0.5⌋` (round half up) over IEEE-754 doubles. */

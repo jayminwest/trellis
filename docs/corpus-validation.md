@@ -1,3 +1,6 @@
+> Historical 0.1.0-provisional calibration record. The subsequent count-curve
+> recalibration and current corpus checks are in [count calibration](count-calibration.md).
+
 # Corpus validation record (trellis-e924, SPEC §14 stage 10)
 
 The fixed TypeScript corpus that validates the deterministic audit's score

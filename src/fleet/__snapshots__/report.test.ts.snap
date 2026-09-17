@@ -6,7 +6,7 @@ audited 2026-06-06T00:00:00.000Z · index 0–100, lower is better
 
   target    index  state     findings  policy  drift             Δ     note
   warren    0/100  complete         0  ok      drift 0 · miss 0  -4
-  trellis  55/100  complete         4  FAIL    drift 2 · miss 1  new
+  trellis  54/100  complete         4  FAIL    drift 2 · miss 1  new
   drifty    0/100  complete         0  ok      error             new   drift error: canonical version 9.9.9 is not bundled (have 1.0.0)
   gone          —  —                —  —       —                 —     error: path not found or not a directory
 
@@ -22,7 +22,7 @@ Sloppiness index 0–100, **lower is better**; Δ is the index move vs the previ
 | Target | Index | State | Findings | Policy | Drift | Δ | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | \`warren\` | 0/100 | complete | 0 | ok | drift 0 · miss 0 | -4 |  |
-| \`trellis\` | 55/100 | complete | 4 | FAIL | drift 2 · miss 1 | new |  |
+| \`trellis\` | 54/100 | complete | 4 | FAIL | drift 2 · miss 1 | new |  |
 | \`drifty\` | 0/100 | complete | 0 | ok | error | new | drift error: canonical version 9.9.9 is not bundled (have 1.0.0) |
 | \`gone\` | — | — | — | — | — | — | error: path not found or not a directory |
 "
