@@ -1,10 +1,11 @@
 /**
  * Report assembly (SPEC §6.4, trellis-ef85) — the pure fold from analysis
- * products to the versioned {@link AuditReport}.
+ * results to the versioned {@link AuditReport}.
  *
- * {@link assembleReport} takes the discovery/syntax inventories, the four
- * metric-analyzer outputs, the safeguard inspection, and the provisional
- * sloppiness score, and produces the §6.4 report:
+ * {@link assembleReport} takes the discovery/syntax inventories, the measured
+ * analyzers' results (the selected execution list — see
+ * `measureAnalyses` in `audit.ts`), the safeguard inspection, and the
+ * provisional sloppiness score, and produces the §6.4 report:
  *
  * - every analyzer metric is emitted exactly once (a duplicate id is a core
  *   bug and throws — the deterministic pipeline never papers it over);
@@ -20,8 +21,15 @@
  *   (completeness rollup, `partial` flag, traceable contributions) can never
  *   be violated by a published report.
  *
+ * The fold is generic over the measured results (`MeasuredAnalysis` — the
+ * structural minimum every measured analyzer's result satisfies): since the
+ * registry routing (trellis-1e66) assembly consumes whatever the selected
+ * execution list produced rather than a hardcoded four-analyzer set, with
+ * byte-identical output — the wrapped native runs carry the same metrics and
+ * findings the inline analyzers did.
+ *
  * This module does no I/O, reads no clock, and never scores: same analysis
- * products in ⇒ byte-equal report out (SPEC §3.5). Run metadata
+ * results in ⇒ byte-equal report out (SPEC §3.5). Run metadata
  * (`auditedAt`, `durationMs`) is attached by the caller and is excluded
  * from the deterministic measurement payload (§6.4).
  */
@@ -38,24 +46,29 @@ import {
 	type SourceSet,
 } from "../contract/index.ts";
 import { type SourceInventory, toSourceCoverage } from "../discovery/index.ts";
-import type {
-	ComplexityAnalysis,
-	CycleAnalysis,
-	DependencyGraphAnalysis,
-	DuplicationAnalysis,
-} from "../metrics/index.ts";
 import type { SafeguardInspection } from "../safeguards/index.ts";
 import type { SloppinessScore } from "../scoring/index.ts";
 import type { SyntaxInventory } from "../syntax/index.ts";
 
-/** The analysis products one audit assembles into its report. */
+/**
+ * One measured analysis's report contribution — the structural minimum every
+ * measured analyzer's product satisfies (the native wrapped runs carry their
+ * products' metrics and findings by reference, so the raw analyzer products
+ * fit directly too — which the orchestration payload-equality tests rely
+ * on). Order within is the producer's internal (deterministic) order; the
+ * fold sorts across producers.
+ */
+export interface MeasuredAnalysis {
+	metrics: readonly MetricValue[];
+	findings: readonly Finding[];
+}
+
+/** The analysis results one audit assembles into its report. */
 export interface AuditMeasurements {
 	source: SourceInventory;
 	syntax: SyntaxInventory;
-	complexity: ComplexityAnalysis;
-	duplication: DuplicationAnalysis;
-	graph: DependencyGraphAnalysis;
-	cycles: CycleAnalysis;
+	/** The measured analyzers' results, in execution order (the selected execution list). */
+	analyses: readonly MeasuredAnalysis[];
 	safeguards: SafeguardInspection;
 }
 
@@ -169,19 +182,8 @@ export function assembleReport(
 	scoring: SloppinessScore,
 	meta: AssemblyMetadata = {},
 ): AuditReport {
-	const metrics = collectMetrics([
-		measurements.complexity,
-		measurements.duplication,
-		measurements.graph,
-		measurements.cycles,
-	]);
-	const findings = orderFindings([
-		measurements.complexity,
-		measurements.duplication,
-		measurements.graph,
-		measurements.cycles,
-		measurements.safeguards,
-	]);
+	const metrics = collectMetrics(measurements.analyses);
+	const findings = orderFindings([...measurements.analyses, measurements.safeguards]);
 	const run =
 		meta.auditedAt === undefined && meta.durationMs === undefined
 			? {}
