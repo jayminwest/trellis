@@ -174,7 +174,8 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 
 - All behavior lives in the **core** modules under `src/` (current core:
   `src/audit/`, `src/rubric/`, `src/discovery/`, `src/syntax/`, `src/detectors/`,
-  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`;
+  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`,
+  `src/providers/`;
   the target layout is SPEC §4). No business logic anywhere else.
   `src/audit/` is the deterministic audit core (trellis-ef85):
   `auditWorkspace(root)` runs discover → parse → measure → safeguards →
@@ -219,7 +220,11 @@ the digest for agents working in this repo:
   Explicitly enabled external execution may use trellis-owned isolated
   temporary storage with cleanup and never writes to the target. No target
   scripts, executable target configuration, arbitrary command strings,
-  audit-time downloads, or models — ever.
+  audit-time downloads, or models — ever. The controlled process runner
+  (`src/providers/process.ts`, trellis-eddc) is the only seam that may
+  start a provider subprocess: fixed `argv`, supported executables only,
+  explicit environment, wall-time/output limits, process-group
+  termination, scrubbed diagnostics — no shell, no success claims.
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as
