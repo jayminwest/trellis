@@ -33,8 +33,9 @@ os-eco session bootstrap.
   default).
 - **CLI:** commander; progress and handled errors write to stderr.
 - **Parsing:** the pinned TypeScript compiler API — one shared parse layer
-  reused by all metrics within an audit. No LLM provider exists in the
-  product (no-model invariant, SPEC §1).
+  reused by all **native** metrics within an audit. No LLM provider exists
+  in the product (no-model invariant, SPEC §1); optional analysis providers
+  (contracted, SPEC §16) are deterministic local tools — never models.
 
 ## Architecture (api>cli>sdk core discipline, SPEC §13.1)
 
@@ -77,6 +78,17 @@ src/
 - **Sync enforcement:** single core + strict `tsc` over mirrored SDK types +
   golden snapshots of stable output shapes, all wired into one `check:all` CI
   runs verbatim. Drift becomes a red build, not a review judgment call.
+
+**Provider evidence (planned, SPEC §16, plan `pl-43c5`):** optional
+supplemental providers — pinned jscpd, dependency-cruiser, Knip; SonarJS
+gated on a documented distribution decision — run only on explicit opt-in,
+stay unscored, and never relax the no-model, offline, no-target-command
+invariants. Native analysis and the calibrated scoring remain
+authoritative; provider failures are located `unavailable`/`incomplete`
+evidence (policy exit `2` only via a violated declarative requirement;
+invalid configuration stays exit `1`). Implementation lands with steps
+`trellis-90d6` onward; research record:
+[`docs/research/provider-spike.md`](docs/research/provider-spike.md).
 
 See [`docs/architecture.mmd`](docs/architecture.mmd) for the rendered graph.
 

@@ -7,7 +7,8 @@
 > tool. The pivot is a **breaking change**: the 90-criterion readiness rubric,
 > maturity levels, and the LLM investigation layer are retired, not
 > reinterpreted. See §14 for the staged transition and what is actually built
-> at any moment — nothing in this document claims unbuilt behavior.
+> at any moment — nothing in this document claims unbuilt behavior. §16
+> records the optional-provider integration contract under the same rule.
 
 ---
 
@@ -27,13 +28,19 @@ Three invariants define the product:
    agent, calls a model, or consumes model-derived grading. There is no
    provider, prompt, or model configuration anywhere in the shipped surface.
    This is an invariant, not a default: a change that introduces one is a
-   product bug.
+   product bug. Optional analysis providers (§16, contracted) are
+   deterministic local tools — never models or agents — and this invariant
+   covers them without exception.
 2. **Offline and zero-footprint by default.** The first audit of a repo
    requires **neither Git nor credentials, a database, network access, or
    installed project dependencies**. It reads files as they exist on disk
    (dirty worktrees included), never runs the target's scripts or installs
    its packages, and writes nothing unless the operator explicitly requests
-   an output file, a baseline, or history persistence.
+   an output file, a baseline, or history persistence. Optional providers
+   (§16, contracted) are explicit opt-in only: enabling one never relaxes
+   these rules for the native audit, and the provider run itself stays
+   offline, never writes to the target, and never acquires tools at audit
+   time (§16.4).
 3. **One core, every surface.** Local CLI runs, the programmatic SDK, fleet
    orchestration, and CI usage all exercise the same deterministic core with
    the same measurement, scoring, and policy code path. Parity is mechanical
@@ -75,9 +82,13 @@ checks.
 
 ### Non-goals (explicitly deferred)
 
-- **Unused-code analysis** (dead exports, unreachable modules, orphan files).
+- **Unused-code analysis** (dead exports, unreachable modules, orphan files)
+  as a native, scored capability — optional advisory reachability evidence
+  from a provider is contracted in §16.
 - **Broader architecture rules** (layering constraints, boundary enforcement,
-  dependency-direction policies beyond cycle detection).
+  dependency-direction policies beyond cycle detection) — optional advisory
+  evidence for declared rules is contracted in §16; native enforcement stays
+  deferred.
 - **Project verification execution** — running the target's tests, builds,
   linters, or hooks. trellis inspects their *configuration*; it never
   executes them and never claims they pass.
@@ -143,6 +154,14 @@ Every measurement and every report carries an explicit state:
 Test coverage (how much *test* source exists) and analysis completeness (how
 much of the intended scope was actually measured) are distinct fields and are
 never conflated.
+
+Two further states apply to optional provider analyses (§16.2, contract —
+plan `pl-43c5`): `unrequested` (not enabled for this run; no evidence and
+no invented metrics) and `unavailable` (enabled but could not run —
+missing or malformed pinned tool, exhausted execution limits; located, with
+a reason, never a silent clean result). Provider states never roll into
+the native completeness rollup above: overall evidence completeness and
+score completeness are independent quantities (§16.2).
 
 ### 3.4 The sloppiness index
 
@@ -385,6 +404,21 @@ Evaluation record (evidence; directional measurements, not benchmarks):
   Timings come from one container on one day; they justify feasibility, not
   speed claims.
 
+**Revision (trellis-06f8, plan `pl-43c5`, 2026-09-17):** the decision above
+stands unchanged for the **native default engine and scoring basis** — no
+jscpd form replaces the trellis detector or feeds the score. Its blanket
+restriction reading — no subprocess engine may ever run in any analysis
+slot — is explicitly narrowed by the optional-provider contract (§16):
+pinned jscpd 5.2.1 may run as a **supplemental, unscored** duplication
+evidence provider under the controlled execution boundary (§16.4). Spike
+2 ([`docs/research/provider-spike.md`](docs/research/provider-spike.md))
+showed the 5.2.1 binary supports `--ignore-identifiers`,
+`--ignore-literals`, `--max-gap-lines` and `--similarity`, which the
+type-1-only assessment above did not reflect. Native clone groups and
+overlap-union line accounting remain authoritative (§16.5); a provider
+backend promotion or provider-derived weight would require its own
+versioned calibration (§16.5).
+
 ### 5.4 Import cycles
 
 - **Graph construction**: imports are taken from the AST (comments and string
@@ -566,6 +600,16 @@ policy:                                 # failure policy only — never mutates 
 Policy budgets gate the run; they never silently change how the index is
 computed (§7).
 
+### 6.6 Provider evidence (contract — §16; lands with plan `pl-43c5`)
+
+When optional providers ship, their observations join the report as an
+**additive, namespaced provider-evidence area** — never inside `metrics`,
+never as native finding kinds, never inside `score`. Each entry carries
+provider identity, analysis identity, observed coverage, one of the §16.2
+states, and located findings. The schema-version governance above applies;
+older reports without the area remain valid, and its absence reads as
+`unrequested` (§16.6), never as a failure.
+
 ---
 
 ## 7. Scoring — the provisional formula
@@ -597,6 +641,10 @@ Formula rules (fixed now):
 - **No offsets**: safeguards, test code, and infrastructure contribute
   nothing (§3.4). Policy budgets (§6.5) gate pass/fail; they do not mutate
   weights.
+- **Providers never score** (contract, §16.5): optional provider observations
+  are unscored evidence — the formula consumes native metrics only. Backend
+  promotion or provider-derived weights require a separately versioned
+  calibration; they are never part of this scoring version.
 
 ### 7.1 The provisional constants
 
@@ -649,9 +697,11 @@ An audit run, end to end:
 - **No model.** No agent process, provider SDK, prompt, or API key is
   involved in any code path. There is nothing to configure because there is
   nothing to connect.
-- **No network.** All analysis is local parsing and arithmetic. Tool
+- **No network.** All native analysis is local parsing and arithmetic; tool
   acquisition (if any) is a separate preparation step, never part of an
-  audit.
+  audit. *(Revised for optional providers by the §16 contract: an
+  explicitly enabled provider may run as a controlled local subprocess —
+  still no audit-time acquisition, §16.4.)*
 - **No Git required.** Dirty worktrees and uncommitted files are analyzed as
   they exist; non-Git directories audit fine. Commit identity, when present,
   is metadata only.
@@ -663,6 +713,13 @@ An audit run, end to end:
   executes the target's scripts, and never imports its executable
   configuration. Absent `node_modules` degrades import resolution to
   documented unresolved edges (§5.4).
+- **Controlled optional-provider execution** (contract, §16.4 — not yet
+  implemented). When a provider is explicitly enabled, its pinned local
+  tool may run over an isolated staged source view using trellis-owned
+  temporary scratch with owned cleanup; it never writes to the target,
+  never accepts executable target configuration or arbitrary command
+  strings, and never downloads. The default audit — and the native
+  measurement pass of every audit — is exactly as specified above.
 
 ---
 
@@ -685,6 +742,13 @@ An audit run, end to end:
   (the report is still emitted to stdout; reasons go to stderr); `1` on
   operational error (the audit could not run). Policy failure and
   operational failure are always distinguishable.
+- **Provider failure semantics** (contract, §16.3 — not yet implemented).
+  A requested optional provider that cannot run or cannot cover its scope
+  becomes located `unavailable`/`incomplete` evidence in the emitted report
+  — never fabricated metrics, never a silent clean result. A declarative
+  requirement violated by it trips policy (exit `2`); invalid provider
+  configuration or inability to run the audit remains operational error
+  (exit `1`).
 
 *(Landed, trellis-942c: `src/compare/` — `load.ts` reads a saved JSON report
 and re-validates it against the §6.4 contract (no Git, no SQLite; failures
@@ -810,7 +874,11 @@ Unchanged from the warren/burrow stack:
 - **Runtime:** Bun (runs TS directly, no build step for the CLI).
 - **Language:** TypeScript strict (`noUncheckedIndexedAccess`, no `any`).
 - **Parsing:** the pinned TypeScript compiler API — one shared parse layer
-  reused by all metrics within an audit.
+  reused by all **native** metrics within an audit. *(Optional providers,
+  per the §16 contract, may run their own pinned engines behind the §16.4
+  execution boundary, with their parser recorded in analysis identity
+  — the shared-parse rule governs native measurement and is never weakened
+  there.)*
 - **Validation:** zod at every external boundary (contracts, configuration).
 - **Lint/format:** Biome, `--error-on-warnings`.
 - **Storage:** `bun:sqlite` (opt-in history only).
@@ -884,9 +952,11 @@ audit; a regression in its own index is a real failure. (The retired
 ## 15. Deferred / open
 
 - **Unused-code analysis** — dead exports, unreachable modules (deferred per
-  §2; the natural next metric family).
+  §2 as a native capability; optional advisory reachability evidence is
+  contracted in §16).
 - **Broader architecture rules** — enforced layering/boundaries beyond cycle
-  detection.
+  detection (optional advisory evidence for declared rules is contracted in
+  §16; native enforcement stays deferred).
 - **Project verification execution** — actually running checks; trellis stays
   an inspector, not a runner.
 - **New language adapters** — Swift/Python and others; the contracts keep
@@ -894,6 +964,229 @@ audit; a regression in its own index is a real failure. (The retired
   break.
 - **Web dashboard, hosted/scheduled service, auto-remediation fan-out,
   README badges** — adjacent surfaces over the same core, not now.
+
+---
+
+## 16. Optional quality-evidence providers (integration contract — plan `pl-43c5`)
+
+> **Contract only — nothing in this section is implemented.** This is the
+> integration contract for optional provider evidence (plan `pl-43c5`,
+> feature `trellis-8ac1`, 30 forward-chained issues; research input
+> [`docs/research/provider-spike.md`](docs/research/provider-spike.md)).
+> It fixes scope, trust and score semantics for the implementing steps
+> (from `trellis-90d6`); it changes no delivered behavior of the completed
+> foundation (§14) — it builds on that foundation and never reopens a
+> closed `pl-b2ea` stage. **Native analysis remains the default and the
+> authoritative measurement and scoring basis throughout the plan.**
+
+### 16.1 What a provider is — and is not
+
+A **provider** is a pinned, deterministic local analysis tool that trellis
+may run — **only when explicitly enabled by the operator** — to add
+supplemental engineering-quality evidence to a report. Contracted
+candidates: jscpd (duplication evidence), dependency-cruiser (declared
+architecture-rule evidence), Knip (contextual reachability candidates);
+SonarJS is gated (§16.7).
+
+A provider is **not**: a model, agent, or network service (the §1 no-model
+invariant covers providers without exception); a replacement for any
+native analyzer; a scored signal; a runner of the target's scripts or
+configuration; or any new default behavior. Optional providers are
+supplemental in this delivery, and a provider's absence never marks code
+clean or dirty.
+
+This contract **explicitly revises two foundation restrictions** — the
+restrictions, never the guarantees:
+
+- **Shared-parser restriction (§13).** "One shared parse layer reused by
+  all metrics" remains the rule for **native** metrics. An optional
+  provider may run its own pinned engine (e.g. jscpd's Rust engine,
+  Knip's parser) behind the §16.4 execution boundary, recording its
+  parser/version in analysis identity (§16.2); trellis validates the
+  provider's raw output before it becomes evidence.
+- **Subprocess restriction (§8 "local parsing and arithmetic").** The
+  native measurement pass is unchanged. An explicitly enabled provider
+  may run as a **controlled local subprocess** over an isolated staged
+  view — still offline, still never a target command, still no
+  audit-time acquisition (§16.4).
+
+The §5.3 jscpd decision is narrowed, not reversed (see the revision note
+there): jscpd remains rejected as the native default engine and as a
+scoring source; it is permitted as an optional, pinned, unscored
+evidence provider.
+
+**Unchanged guarantees:** no-model execution; no target commands and no
+executable target configuration; no audit-time downloads (tool
+acquisition is a separate operator preparation step — pinned and
+discoverable per `trellis-ff52`); and the default audit stays offline and
+zero-footprint (§8) — an unrequested provider runs nothing.
+
+### 16.2 Identity, coverage, status, and states
+
+Every provider analysis recorded in a report carries:
+
+- **Provider identity** — a stable provider id, the pinned tool version,
+  the trellis adapter version, and the exact mode/option set supplied.
+- **Analysis identity** — what the analysis consumed: the input snapshot
+  identity (selected source sets and files with content fingerprints),
+  the provider's own parser/version where it differs from trellis's
+  pinned TypeScript, and the trellis-owned declarative options in
+  effect. Two analyses are identical only when all of these match.
+- **Observed coverage** — what the analysis actually observed
+  (files/lines, per source set), **asserted from the provider's own
+  evidence, never inferred from exit status** (the spike recorded a
+  successful empty graph from dependency-cruiser without its supported
+  TypeScript parser, and filesystem-alias false positives from Knip).
+  Coverage is evidence, not cleanliness: uncovered surface is reported,
+  never scored as clean.
+- **Status** — **required** or **advisory**, declared by the audit's
+  declarative policy. Required evidence is demanded; advisory evidence is
+  requested but optional. Unrequested or advisory absence never
+  invalidates the native score (§16.5); a violated requirement trips
+  policy (§16.3).
+
+The allowed states for a provider analysis are exactly five:
+
+| state | meaning |
+|---|---|
+| `complete` | ran over its full intended scope, with observed coverage asserted |
+| `incomplete` | ran but did not cover the full intended scope — what and where is recorded |
+| `unavailable` | enabled but could not run — missing or malformed pinned tool, exhausted execution limits; located, with reason |
+| `unsupported` | enabled but the capability is not supported for this scope/platform/inputs — including a gated, explicitly deferred capability (§16.7); located, with reason |
+| `unrequested` | not enabled for this run; no evidence exists |
+
+Rules:
+
+- **No invented metrics.** An absent execution is recorded as its state;
+  it never materializes zero-valued metrics, "0 findings", or clean
+  coverage. Absence is explicit.
+- **No conflation with native states.** Provider states never roll into
+  the native completeness rollup (§3.3): overall evidence completeness
+  and score completeness are independent quantities. An optional
+  provider's `unavailable` state never makes the native score partial
+  and never blocks the headline index (the report-level split is
+  designed in `trellis-a24d`).
+- **Truthful success.** A successful run with empty or partial observed
+  coverage is reported as exactly that — never as a silently clean
+  result.
+
+### 16.3 Failure semantics and exit codes
+
+- A **requested optional-provider failure is located unavailable/incomplete
+  evidence**: the report carries the provider id, state, reason, and —
+  where known — the location. It never becomes a clean result and never
+  fabricates metrics.
+- A **declarative requirement can trip policy**: when the audit's policy
+  declares provider evidence required and that evidence is `unavailable`,
+  `unsupported`, or `incomplete`, the run exits **`2`** — the report is
+  still emitted to stdout, reasons go to stderr (§9). An advisory-only
+  provider failure leaves the exit unchanged; the visible evidence in
+  the report is the failure's surface.
+- **Operational error `1` is preserved** for invalid configuration and
+  inability to run the audit: a provider request that fails schema
+  validation (unknown provider id, malformed options, contradictory
+  requirements) fails fast with no report, and a failure that prevents
+  the audit itself from running is operational. A *valid* request whose
+  execution fails is evidence, not an abort — the native audit still
+  runs and emits.
+- Policy failure and operational failure remain always distinguishable
+  (§9).
+
+### 16.4 Execution, trust, and storage boundary
+
+- **Default: no scratch.** A native audit (no provider enabled) creates
+  no scratch files and writes nothing — §8 is unchanged.
+- **Opt-in external execution may use isolated temporary storage owned by
+  trellis** — a staged source view and working area — with trellis-owned
+  cleanup when the run ends, and **never a write to the target
+  workspace**. A cleanup failure is a visible, reported condition, never
+  silently dropped.
+- **Declarative requests only.** No executable target configuration and
+  no arbitrary command strings are accepted. Provider requests are
+  trellis-owned declarative data: a validated schema, pinned artifacts,
+  trellis-supplied options. The target's own tool configuration (a
+  discovered `.jscpd.json`, a `dep-cruiserrc.js`, …) is never executed
+  or trusted — the spike showed jscpd auto-discovers ancestor configs;
+  adapters must prevent that.
+- **Trust boundary — supported installation.** The supported execution
+  context is a local tool installation prepared by the operator (pinned,
+  discoverable offline, `trellis-ff52`). trellis never installs, updates,
+  or downloads tools at audit time. This boundary is a **controlled
+  execution** statement, not a sandbox claim: it does not certify the
+  execution environment as safe for arbitrary untrusted code. Resource
+  limits, staged input snapshots, and raw-evidence validation (steps
+  `trellis-eddc`, `trellis-2fe6`) are the compensating controls.
+- **Never**: target scripts, target verification, models, network
+  fetches, opportunistic downloads, or credentials.
+
+### 16.5 Scoring semantics
+
+- **Provider observations are unscored under this plan.** The sloppiness
+  index and its contributions are computed exclusively from native
+  metrics under the calibrated formula (§7.1 constants, frozen after the
+  `pl-b2ea` calibration). Provider data never enters the score in either
+  direction.
+- Provider findings live in their own **namespaced evidence area** of the
+  report (§6.6) — located findings, never in the native metrics map and
+  never under native finding kinds.
+- **Absence never invalidates a native score.** An optional provider that
+  is unrequested, unavailable, or incomplete does not make the native
+  score partial and does not block the headline index (§16.2).
+- **Backend promotion or extra weights require a separately versioned
+  calibration** — an explicit scoring-version bump with its own corpus
+  validation, outside this plan. A provider replacing a native analyzer
+  as the default is likewise outside this plan.
+- Summing provider counts into any composite quality number is rejected:
+  one problem can trigger several providers, and provider absence can
+  mean missing context rather than quality (spike record).
+
+### 16.6 Compatibility and versioning rules
+
+- **Comparisons evaluate per basis** (§9; designed in `trellis-bd0c`):
+  - *Scored basis* — the native index compares under the existing
+    analyzer/scoring/configuration compatibility rules. Provider
+    presence, absence, or upgrade never changes the native index and
+    never fragments score history; advisory-only provider changes
+    cannot make two otherwise-compatible reports incompatible.
+  - *Scored-measurement changes* — native analyzer/scoring changes keep
+    the existing fail-closed behavior (§3.5, §9): incompatible pairs are
+    reported explicitly, never silently trended.
+  - *Evidence basis* — provider evidence compares only across identical
+    provider identity (id + pinned tool version + adapter version +
+    mode/options) and identical input/config identity; mismatches are
+    reported explicitly (incompatible or caveated), never silently
+    trended.
+- **Input/config identity**: a provider observation's identity is its
+  provider identity plus its analysis identity (§16.2). A changed option
+  set or a changed source scope is a different analysis — never
+  presented as the same evidence continuing a trend.
+- **Older artifacts remain valid**: reports produced without providers
+  (or with fewer) load and compare. Missing provider evidence in an
+  older artifact reads as `unrequested`, never as a regression or an
+  `unavailable` failure. Provider availability added later never
+  rewrites stored history (§10).
+- **Schema evolution**: provider evidence is an additive, versioned
+  report change (§6.6; steps `trellis-a24d`, `trellis-bba6`); older
+  schemas stay loadable per §9.
+
+### 16.7 Sonar decision gate
+
+SonarJS evidence is **contingent on an affirmative, documented
+distribution and metric-interface decision** (`trellis-db3e`). The spike
+recorded conflicting license evidence (package metadata reads
+`LGPL-3.0-only` while the shipped header identifies the Sonar
+Source-Available License v1.0) and that the research metric adapter parses
+threshold-zero diagnostics through a pinned research adapter — not a
+stable public metric API. Distribution cannot be inferred from metadata.
+
+Until the decision clears a route, Sonar evidence is **explicitly
+deferred**: the provider id is known, so a request for it is valid
+configuration, but it resolves to `unsupported` with the deferral reason
+recorded. The deferral is visible and policy-testable — a declarative
+requirement on it fails closed (§16.3) — and no nonexistent analysis is
+ever reported as `complete`. A deferred outcome is a documented capability
+state (`trellis-7b99` owns the follow-through), not a claim of
+implementation.
 
 ---
 
