@@ -866,6 +866,21 @@ latest-run snapshot with compatible index deltas plus per-repo
 §3.5-compatible series — with legacy readiness runs in a visibly distinct,
 never-compared section (§10).)*
 
+*(Per-target provider scope, trellis-f3e5 — plan `pl-43c5` step 20: optional
+provider selection rides each fleet member's own configuration through the
+same core service — the fleet layer holds no provider logic, planning or
+policy of its own. Each member stages its own isolated source view under
+trellis-owned scratch (a fresh temp directory per analysis, cleaned on every
+exit path) and carries its own namespaced, unscored evidence on its own
+report; a member without a selection stays byte-identical to a native-only
+audit, and one member's provider failure, unavailability or cleanup problem
+never touches another's report, score or the exit rollup. The fleet stays
+sequential (no scheduling service), so members can never share or race on a
+scratch path, and mixed situations — one member with complete evidence, one
+unavailable, one unrequested — stay explicit per entry; the rendered views
+project each member's carried analysis states per target, never summed or
+averaged into anything score-like.)*
+
 ---
 
 ## 12. CLI & SDK surface

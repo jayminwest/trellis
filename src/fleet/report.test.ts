@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { auditWorkspace } from "../audit/index.ts";
+import { providerAuditConfig } from "../audit/provider-fixtures.ts";
 import { auditFixture } from "../report/audit-fixtures.ts";
 import type { FleetEntry, FleetReport } from "./orchestrate.ts";
 import { renderFleetMarkdown, renderFleetTerminal } from "./report.ts";
@@ -83,6 +85,25 @@ describe("fleet renderers", () => {
 			expect(out).toContain("drift error: canonical version 9.9.9 is not bundled");
 			expect(out).toContain("3 ok · 1 error · 1 policy failed");
 		});
+
+		test("projects each target's carried provider evidence per target, never aggregated", async () => {
+			// A real core audit of the fixture root with a requested-but-gated
+			// provider — located unsupported evidence, never a clean zero.
+			const report = await auditWorkspace(clean.root, {
+				config: providerAuditConfig({ sonarjs: {} }),
+			});
+			const out = renderFleetTerminal({
+				...REPORT,
+				entries: [okEntry("evidenced", report), okEntry("native-only", clean.report)],
+			});
+			// The evidence column carries each target's own analysis state —
+			// never a fleet-level sum, average or verdict.
+			expect(out).toContain("sonarjs:unsupported");
+			// A native-only target shows an explicit absence, not a zero or "complete".
+			const row = out.split("\n").find((line) => line.includes("native-only"));
+			expect(row).toBeDefined();
+			expect(row?.split(/\s{2,}/).includes("—")).toBe(true);
+		});
 	});
 
 	describe("renderFleetMarkdown", () => {
@@ -96,6 +117,20 @@ describe("fleet renderers", () => {
 			expect(rows).toHaveLength(4);
 			expect(out).toContain("**lower is better**");
 			expect(out).toContain(`| \`warren\` | ${clean.report.score.index}/100 | complete |`);
+		});
+
+		test("carries per-target provider evidence states in their own column", async () => {
+			const report = await auditWorkspace(clean.root, {
+				config: providerAuditConfig({ sonarjs: {} }),
+			});
+			const out = renderFleetMarkdown({
+				...REPORT,
+				entries: [okEntry("evidenced", report), okEntry("native-only", clean.report)],
+			});
+			expect(out).toContain("| `evidenced` |");
+			expect(out).toContain("| sonarjs:unsupported |");
+			// A native-only target shows an explicit absence in the evidence column.
+			expect(out).toContain("| — | 0 | ok |");
 		});
 	});
 });

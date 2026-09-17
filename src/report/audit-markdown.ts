@@ -4,8 +4,12 @@
  * index with its direction and scoring version, source coverage, score
  * contributions traceable to raw metrics, the raw metric table, ranked
  * hotspots (bounded; the total is always printed), remaining located
- * findings, and safeguard evidence (never folded into the score). JSON
- * remains the full structured document; this view is the human summary.
+ * findings, safeguard evidence (never folded into the score), and — when
+ * the report actually carries external provider analyses — a distinct
+ * advisory evidence section with its own completeness, separate from the
+ * score (see `./audit-markdown-providers.ts`). A default native-only audit
+ * renders byte-identically, with no provider noise. JSON remains the full
+ * structured document; this view is the human summary.
  *
  * All numbers and locations come from {@link ./audit-format.ts} so this view
  * can never disagree with the terminal/JSON ones, and no readiness levels,
@@ -26,6 +30,7 @@ import {
 	scoreHeadline,
 	sortedMetrics,
 } from "./audit-format.ts";
+import { providerAnalysesSection } from "./audit-markdown-providers.ts";
 
 /** Options for {@link renderAuditMarkdown}. */
 export interface AuditMarkdownOptions {
@@ -33,6 +38,8 @@ export interface AuditMarkdownOptions {
 	hotspotLimit?: number;
 	/** Maximum non-hotspot findings shown; the total is always printed. */
 	findingLimit?: number;
+	/** Maximum provider findings shown per optional analysis; the total is always printed. */
+	providerFindingLimit?: number;
 }
 
 /** Escape a value for a table cell (pipes and newlines would break the table). */
@@ -120,6 +127,14 @@ export function renderAuditMarkdown(
 		lines.push(
 			`| ${result.id} | ${result.evidence} | ${cell(locations)} | ${cell(result.notes ?? "")} |`,
 		);
+	}
+
+	const providerLines = providerAnalysesSection(
+		report,
+		options.providerFindingLimit ?? DEFAULT_HOTSPOT_LIMIT,
+	);
+	if (providerLines.length > 0) {
+		lines.push("", ...providerLines);
 	}
 
 	return lines.join("\n");

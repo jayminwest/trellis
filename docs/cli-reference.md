@@ -12,6 +12,7 @@ trellis audit <path>               # measure + score one workspace; print the sl
   [--json|--md] [--out <file>]     #   artifact: .json/.md inferred from the extension
   [--baseline <report.json>]       #   compare against a saved report (§9)
   [--config <file>]                #   explicit trellis.yaml (default: discovered at the root)
+  [--provider <id[:mode]>]         #   optional evidence provider, repeatable (§16.4)
   [--history] [--db <path>]        #   opt-in persistence (default: stateless)
   [--quiet|--verbose]
 trellis compare <a.json> <b.json>  # compare two saved report artifacts (no audit)
@@ -27,6 +28,25 @@ The default `audit` run is **stateless** — no database, no report files —
 unless `--history` / `--out` ask. History lives centrally at
 `~/.trellis/trellis.db` (`$TRELLIS_DB` or `--db` overrides), never inside the
 audited repo.
+
+### Optional evidence providers (`--provider`, SPEC §16.4)
+
+`--provider <id[:mode]>` selects an optional quality-evidence provider —
+repeatable, and advisory/unscored: it adds namespaced evidence alongside the
+authoritative native measurement and never changes the sloppiness index.
+Today the supported ids are `jscpd` (needs a match mode:
+`--provider jscpd:exact|normalized|near`), `dependency-cruiser`, `knip` and
+`sonarjs` (the latter three resolve to located `unsupported` evidence until
+their adapters ship). A flag applies **per provider** over the `providers`
+block of `trellis.yaml`: a flagged provider uses the flag's request,
+providers not flagged keep their file entry. The pinned tool must already
+be installed locally where trellis resolves from (see
+[provider-tools.md](provider-tools.md)) — trellis never installs or fetches
+tools at audit time — and an enabled external analysis runs over isolated
+temporary scratch storage trellis owns and cleans up; a native-only audit
+creates none. A provider that cannot run is located evidence (`unavailable`
+/ `unsupported`), never an abort — and `policy.requireEvidence` in
+`trellis.yaml` turns a required-but-missing provider into exit `2`.
 
 ### Exit codes (SPEC §9)
 

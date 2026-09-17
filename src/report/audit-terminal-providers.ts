@@ -25,10 +25,17 @@
  *   (analyses in provider-id order, findings in the entry's carried order —
  *   never re-ranked here), and the block points at the JSON report for the
  *   full evidence.
+ *
+ * The section's vocabulary — state labels, provenance, coverage and
+ * clone-unit summaries, and the §16.2/§16.5 notes — is exported as pure
+ * helpers so the Markdown view (`./audit-markdown-providers.ts`, plan step
+ * 17, trellis-bba6) renders the same semantics with the same words; the
+ * terminal output itself is unchanged.
  */
 import {
 	type AuditReport,
 	CLONE_MATCH_MODES,
+	type CloneEvidence,
 	carriedAnalyses,
 	type ObservedCoverage,
 	type ReportAnalysis,
@@ -46,9 +53,10 @@ const JSON_EVIDENCE_POINTER =
 
 /**
  * State labels: `unrequested` reads as *not requested* — an explicit absence,
- * never confusable with a completed analysis that found nothing.
+ * never confusable with a completed analysis that found nothing. Shared
+ * with the Markdown view so the renderers agree (§16.2).
  */
-const STATE_LABELS = {
+export const STATE_LABELS = {
 	unrequested: "not requested",
 	unavailable: "unavailable",
 	unsupported: "unsupported",
@@ -61,40 +69,66 @@ function pad(s: string, width: number): string {
 	return s.length >= width ? s : s + " ".repeat(width - s.length);
 }
 
-/** Pluralize `noun` for `count`. */
-function plural(noun: string, count: number): string {
+/** Pluralize `noun` for `count` (shared with the Markdown view). */
+export function plural(noun: string, count: number): string {
 	return `${noun}${count === 1 ? "" : "s"}`;
 }
 
-/** The overall-evidence line (§16.2): visible whether or not anything failed. */
+/** The overall-evidence phrases (§16.2), shared with the Markdown view. */
+export const EVIDENCE_COMPLETE_NOTE =
+	"complete — every carried analysis ran over its full selection";
+export const EVIDENCE_INCOMPLETE_NOTE =
+	"incomplete — at least one analysis did not run or ran partially (see each entry's reason)";
+
+/** The clone-unit separator (§16.5 clone-evidence contract), shared with the Markdown view. */
+export const NEVER_SUMMED_NOTE =
+	"provider pairs and native clone groups are distinct units, never summed";
+
+/** The match-mode legend (§16.5), shared with the Markdown view. */
+export const MATCH_MODES_NOTE =
+	"exact = identical text · normalized = renamed identifiers · near = similar text (pair-only, never grouped)";
+
+/** An unrequested analysis's explicit-absence note (§16.2), shared with the Markdown view. */
+export const NOT_REQUESTED_NOTE =
+	"not requested — no analysis ran and no evidence exists " +
+	"(a completed analysis that found nothing is a different, positive result)";
+
+/** A completed analysis with zero findings is an explicit positive result, shared with the Markdown view. */
+export const ZERO_FINDINGS_NOTE = "findings: none — the analysis completed and found none";
+
+/**
+ * The overall-evidence line (§16.2): visible whether or not anything failed.
+ */
 function overallEvidenceLine(report: AuditReport): string {
 	if (report.schemaVersion !== "1.1.0") {
 		throw new Error("external provider evidence requires an evidence-carrying (1.1.0) report");
 	}
 	return report.evidence.completeness === "complete"
-		? "  evidence: complete — every carried analysis ran over its full selection"
-		: "  evidence: incomplete — at least one analysis did not run or ran partially (see each entry's reason)";
+		? `  evidence: ${EVIDENCE_COMPLETE_NOTE}`
+		: `  evidence: ${EVIDENCE_INCOMPLETE_NOTE}`;
 }
 
-/** One analysis's concise provenance: the mode it ran under and its pinned versions. */
-function provenance(analysis: ReportAnalysis): string {
+/** One analysis's concise provenance: the mode it ran under and its pinned versions (shared with the Markdown view). */
+export function provenance(analysis: ReportAnalysis): string {
 	return (
 		`mode ${analysis.provider.mode} · tool ${analysis.provider.toolVersion} · ` +
 		`adapter ${analysis.provider.adapterVersion}`
 	);
 }
 
-/** What an analysis actually covered, against its selection (asserted, never exit-status-inferred). */
-function coverageLine(analysis: ReportAnalysis): string {
+/**
+ * What an analysis actually covered, against its selection (asserted, never
+ * exit-status-inferred) — the shared summary phrase; `undefined` when the
+ * analysis carries no observed coverage.
+ */
+export function coverageSummary(analysis: ReportAnalysis): string | undefined {
 	const coverage: ObservedCoverage = analysis.observedCoverage ?? {
 		analyzedFiles: [],
 		diagnostics: [],
 		unsupported: [],
 	};
 	const selected = analysis.analysis?.selection.files.length ?? coverage.analyzedFiles.length;
-	let line =
-		`    coverage: analyzed ${coverage.analyzedFiles.length} of ${selected} selected ` +
-		plural("file", selected);
+	let line = `analyzed ${coverage.analyzedFiles.length} of ${selected} selected ${plural("file", selected)}`;
 	const bySourceSet = coverage.bySourceSet;
 	const sets = SOURCE_SETS.filter((set) => bySourceSet?.[set] !== undefined).map(
 		(set) => `${set} ${bySourceSet?.[set]}`,
@@ -109,21 +143,29 @@ function coverageLine(analysis: ReportAnalysis): string {
 	return line;
 }
 
-/** Pair and group counts, by match mode — distinct units, never summed (§16.5 clone-evidence contract). */
-function cloneEvidenceLines(analysis: ReportAnalysis): string[] {
-	const evidence = analysis.cloneEvidence;
-	if (evidence === undefined) return [];
+/**
+ * Pair and group counts, by match mode — the shared unit summary; distinct
+ * units, never summed (§16.5 clone-evidence contract).
+ */
+export function cloneUnitSummary(evidence: readonly CloneEvidence[]): string {
 	const pairs = evidence.filter((clone) => clone.kind === "pair");
 	const groups = evidence.filter((clone) => clone.kind === "group");
 	const byMode = CLONE_MATCH_MODES.map(
 		(mode) => `${mode}: ${pairs.filter((pair) => pair.matchMode === mode).length}`,
 	);
+	return (
+		`${pairs.length} ${plural("pair", pairs.length)} (${byMode.join(" · ")}) · ` +
+		`${groups.length} ${plural("group", groups.length)}`
+	);
+}
+
+/** Pair and group counts, by match mode — distinct units, never summed (§16.5 clone-evidence contract). */
+function cloneEvidenceLines(analysis: ReportAnalysis): string[] {
+	const evidence = analysis.cloneEvidence;
+	if (evidence === undefined) return [];
 	return [
-		`    clone evidence: ${pairs.length} ${plural("pair", pairs.length)} (${byMode.join(" · ")}) · ` +
-			`${groups.length} ${plural("group", groups.length)} — provider pairs and native clone groups are ` +
-			"distinct units, never summed",
-		"    match modes: exact = identical text · normalized = renamed identifiers · " +
-			"near = similar text (pair-only, never grouped)",
+		`    clone evidence: ${cloneUnitSummary(evidence)} — ${NEVER_SUMMED_NOTE}`,
+		`    match modes: ${MATCH_MODES_NOTE}`,
 	];
 }
 
@@ -142,9 +184,7 @@ function findingLines(analysis: ReportAnalysis, limit: number): string[] {
 	if (findings.length === 0) {
 		// A completed analysis with no findings is an explicit positive result —
 		// never the same silence as a provider that never ran.
-		return analysis.state === "complete"
-			? ["    findings: none — the analysis completed and found none"]
-			: [];
+		return analysis.state === "complete" ? [`    ${ZERO_FINDINGS_NOTE}`] : [];
 	}
 	const bounded = boundFindings(findings, limit);
 	const kindWidth = Math.max(4, ...bounded.shown.map((finding) => finding.kind.length));
@@ -169,14 +209,12 @@ function analysisLines(
 			`${pad(STATE_LABELS[analysis.state], stateWidth)}  ${provenance(analysis)}`,
 	];
 	if (analysis.state === "unrequested") {
-		lines.push(
-			"    not requested — no analysis ran and no evidence exists " +
-				"(a completed analysis that found nothing is a different, positive result)",
-		);
+		lines.push(`    ${NOT_REQUESTED_NOTE}`);
 		return lines;
 	}
 	if (analysis.reason !== undefined) lines.push(`    reason: ${analysis.reason}`);
-	if (analysis.observedCoverage !== undefined) lines.push(coverageLine(analysis));
+	const summary = coverageSummary(analysis);
+	if (summary !== undefined) lines.push(`    coverage: ${summary}`);
 	lines.push(...cloneEvidenceLines(analysis));
 	lines.push(...metricLines(analysis));
 	lines.push(...findingLines(analysis, limit));
