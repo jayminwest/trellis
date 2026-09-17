@@ -15,7 +15,7 @@ describe("manifest", () => {
 			expect(isKnownProviderId(entry.providerId)).toBe(true);
 			expect(entry.pinnedVersion).toMatch(/^\d+\.\d+\.\d+$/);
 		}
-		expect(PINNED_TOOLS.map((entry) => entry.providerId)).toEqual(["jscpd"]);
+		expect(PINNED_TOOLS.map((entry) => entry.providerId)).toEqual(["jscpd", "dependency-cruiser"]);
 	});
 
 	test("pins jscpd 5.2.1 with its real distribution digests", () => {
@@ -28,6 +28,34 @@ describe("manifest", () => {
 		expect(jscpd?.platformMapSha256).toBe(
 			"ad6f2a21dfcae532d675125663cd349fac478f220334e34d3a90bc6d3fe28b2a",
 		);
+	});
+
+	test("pins dependency-cruiser 18.3.1, a pure-JavaScript distribution, with its real digests", () => {
+		const dependencyCruiser = pinnedTool("dependency-cruiser");
+		expect(dependencyCruiser?.pinnedVersion).toBe("18.3.1");
+		expect(dependencyCruiser?.versionOutput).toBe("18.3.1");
+		// The launcher is the "binary" of every declared platform; the package
+		// manifest is the second cross-platform identity file (no platform map
+		// ships — see the manifest entry's own record).
+		expect(dependencyCruiser?.launcherSha256).toBe(
+			"3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6",
+		);
+		expect(dependencyCruiser?.platformMapSha256).toBe(
+			"6aed892071cdd9ebca9517665d19a67ded18510f64a608beb611f711623c6cbd",
+		);
+		expect(dependencyCruiser?.platforms).toEqual([
+			{
+				key: "linux-x64-gnu",
+				packageName: "dependency-cruiser",
+				os: "linux",
+				cpu: "x64",
+				libc: "glibc",
+				binaryRelPath: "bin/dependency-cruiser.mjs",
+				execution: "tested",
+				evidence: expect.stringContaining("trellis-adbf"),
+				binarySha256: "3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6",
+			},
+		]);
 	});
 
 	test("records platform availability honestly, exercised hosts only carrying digests", () => {

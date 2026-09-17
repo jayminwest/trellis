@@ -1190,6 +1190,14 @@ Rules:
   > registry (`src/providers/process.ts`) may run it — with honest
   > per-platform execution records (`tested` / `research-tested` /
   > `declared-untested`) instead of universal platform claims.
+  > **Delivered (`trellis-adbf`, plan `pl-43c5` step 22):** the manifest
+  > also pins dependency-cruiser 18.3.1 — a pure-JavaScript distribution
+  > whose launcher runs under trellis's own runtime through the controlled
+  > process runner, with the tool's locally resolved TypeScript parser
+  > version recorded in analysis identity before anything runs (a missing
+  > parser produced a successful empty graph in the research record;
+  > `src/providers/dependency-cruiser/` owns the adapter, its generated
+  > tool config and its coverage-checked evidence).
 - **Never**: target scripts, target verification, models, network
   fetches, opportunistic downloads, or credentials.
 

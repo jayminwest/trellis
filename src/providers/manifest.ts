@@ -234,6 +234,53 @@ export const PINNED_TOOLS: readonly PinnedToolManifestEntry[] = (() => {
 				"jscpd@5.2.1` / `bun add --dev jscpd@5.2.1`; trellis then discovers and verifies the " +
 				"artifact offline (SPEC §16.4)",
 		},
+		{
+			/**
+			 * dependency-cruiser 18.3.1 (plan `pl-43c5` step 22, trellis-adbf) is a
+			 * **pure-JavaScript** distribution: its "binary" is the launcher script
+			 * `bin/dependency-cruiser.mjs` itself, and the platform package of every
+			 * declared host is the tool package — there is no platform map. The two
+			 * cross-platform distribution files the pin verifies are therefore the
+			 * launcher and the package manifest. The adapter executes the launcher
+			 * under trellis's own runtime through the controlled process runner
+			 * (`src/providers/dependency-cruiser/invocation.ts`); the tool resolves its
+			 * own TypeScript parser locally, and the adapter records that parser's
+			 * version per run (the research record: a missing parser produced a
+			 * successful empty graph — docs/research/architecture-provider-spike).
+			 */
+			providerId: "dependency-cruiser",
+			packageName: "dependency-cruiser",
+			pinnedVersion: "18.3.1",
+			versionOutput: "18.3.1",
+			binCommand: "dependency-cruiser",
+			binEntry: "bin/dependency-cruiser.mjs",
+			launcherRelPath: "bin/dependency-cruiser.mjs",
+			platformMapRelPath: "package.json",
+			launcherSha256: "3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6",
+			platformMapSha256: "6aed892071cdd9ebca9517665d19a67ded18510f64a608beb611f711623c6cbd",
+			platforms: [
+				{
+					key: "linux-x64-gnu",
+					packageName: "dependency-cruiser",
+					os: "linux",
+					cpu: "x64",
+					libc: "glibc",
+					binaryRelPath: "bin/dependency-cruiser.mjs",
+					execution: "tested",
+					evidence:
+						"src/providers/dependency-cruiser conformance suite + scripts/smoke-provider-tools.ts " +
+						"(plan pl-43c5 step 22, trellis-adbf)",
+					binarySha256: "3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6",
+				},
+			],
+			installInstructions:
+				"prepare the pinned tool locally where trellis resolves from (never at audit time): " +
+				"run `bun install` in this repository (dependency-cruiser 18.3.1 is a pinned " +
+				"devDependency, alongside a local typescript install it can resolve as its parser), or " +
+				"in the package tree a trellis CLI install runs from run `npm install --save-exact " +
+				"--save-dev dependency-cruiser@18.3.1` / `bun add --dev dependency-cruiser@18.3.1`; trellis " +
+				"then discovers and verifies the artifact offline (SPEC §16.4)",
+		},
 	];
 	const validated = z.array(pinnedToolManifestEntrySchema).parse(table);
 	for (const entry of validated) {
@@ -243,7 +290,6 @@ export const PINNED_TOOLS: readonly PinnedToolManifestEntry[] = (() => {
 	}
 	return validated;
 })();
-
 /** The manifest entry for `providerId`; `undefined` when no artifact is pinned. */
 export function pinnedTool(providerId: string): PinnedToolManifestEntry | undefined {
 	return PINNED_TOOLS.find((entry) => entry.providerId === providerId);

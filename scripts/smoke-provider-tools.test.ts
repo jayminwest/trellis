@@ -13,7 +13,10 @@ describe("verifyPinnedToolPin", () => {
 	test("accepts this repository's exact devDependency pin", () => {
 		const packageJson = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8"));
 		const pinned = verifyPinnedToolPin(packageJson);
-		expect(pinned).toEqual([{ tool: "jscpd", pinnedVersion: "5.2.1" }]);
+		expect(pinned).toEqual([
+			{ tool: "jscpd", pinnedVersion: "5.2.1" },
+			{ tool: "dependency-cruiser", pinnedVersion: "18.3.1" },
+		]);
 	});
 
 	test("rejects a version range instead of an exact pin", () => {
@@ -49,13 +52,19 @@ describe("verifyLockfilePin", () => {
 });
 
 describe("smokeProviderTools", () => {
-	test("resolves and invokes the pinned jscpd offline from the repository install", async () => {
+	test("resolves and invokes every pinned tool offline from the repository install", async () => {
 		const result = await smokeProviderTools(REPO_ROOT);
-		expect(result.pinned).toEqual([{ tool: "jscpd", pinnedVersion: "5.2.1" }]);
-		expect(result.invoked.length).toBe(1);
-		const invocation = result.invoked[0];
-		expect(invocation?.providerId).toBe("jscpd");
-		expect(invocation?.versionOutput).toBe("jscpd 5.2.1");
-		expect(invocation?.platformKey.length ?? 0).toBeGreaterThan(0);
+		expect(result.pinned).toEqual([
+			{ tool: "jscpd", pinnedVersion: "5.2.1" },
+			{ tool: "dependency-cruiser", pinnedVersion: "18.3.1" },
+		]);
+		expect(result.invoked.length).toBe(2);
+		const jscpd = result.invoked.find((run) => run.providerId === "jscpd");
+		expect(jscpd?.versionOutput).toBe("jscpd 5.2.1");
+		// The pure-JavaScript dependency-cruiser launcher runs under trellis's
+		// own runtime, reporting exactly the pinned version output.
+		const dependencyCruiser = result.invoked.find((run) => run.providerId === "dependency-cruiser");
+		expect(dependencyCruiser?.versionOutput).toBe("18.3.1");
+		expect(dependencyCruiser?.platformKey.length ?? 0).toBeGreaterThan(0);
 	}, 20_000);
 });
