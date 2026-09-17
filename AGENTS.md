@@ -58,43 +58,56 @@ bun run check:coverage        # tests + coverage ratchet
 bun run test:ci               # bun test with junit + coverage reporters
 ```
 
-trellis ships a CLI (`trellis`, bin `./src/cli/main.ts`). The current
-transitional subcommands (SPEC §14; the target surface is SPEC §12):
+trellis ships a CLI (`trellis`, bin `./src/cli/main.ts`). The deterministic
+surface (SPEC §12, landed trellis-9a88) plus the transitional legacy
+subcommands (SPEC §14; `fleet`/`report`/`drift`/`rubric`/`standards` are
+adapted or retired by trellis-8366 and the release stages):
 
 ```bash
-trellis audit <repo-path>     # score one repo; print scorecard
-trellis drift <repo-path>     # L1 canonical-config drift only
-trellis fleet                 # audit every target in targets.yaml
-trellis report                # render history/dashboard from SQLite
-trellis rubric [--validate]   # print the loaded rubric (and validate its invariants)
+trellis audit <path>          # measure + score one workspace; print the sloppiness report
+                              #   [--json|--md] [--out <file>] [--baseline <report.json>]
+                              #   [--config <file>] [--history] [--db <path>]
+trellis compare <a> <b>       # compare two saved report artifacts (no audit)
+trellis drift <repo-path>     # L1 canonical-config drift only (transitional)
+trellis fleet                 # audit every target in targets.yaml (transitional)
+trellis report                # render history/dashboard from SQLite (transitional)
+trellis rubric [--validate]   # print the loaded rubric (transitional)
 trellis standards             # show canonical manifest + versions
 ```
 
-`--json` / `--md` switch terminal output to machine/report shapes.
+`--json` / `--md` switch terminal output to machine/report shapes. The
+default `audit` run is **stateless** — no database, no report files — unless
+`--history` / `--out` ask. Retired readiness/investigation flags
+(`--fail-on`, `--min-level`, `--rubric-version`, `--no-persist`, `--output`,
+`--no-cache`, …) fail fast with actionable "removed in the deterministic
+pivot" errors.
 
 ### Exit codes (SPEC §9)
 
-Every command exits `0` clean, `2` when a `--fail-on` policy trips (the report
-is still emitted to stdout; the reason goes to stderr), or `1` on an operational
-error (the command could not run). This 0/1/2 convention carries forward into
-the pivoted product; the transitional policy below (gate criterion / canonical
-drift) is replaced by metric-budget and regression policies per SPEC §9. The default policy (flag omitted) fails on a
-**gate** criterion failing **or** canonical **drift**; `--fail-on
-gate|drift|level|none` narrows it to one dimension (or disables it), and
-`--fail-on level` compares the audited level against `--min-level` (default
-`3`). `EXIT` lives in `src/cli/output.ts`; the assessment is core
-(`assessReport` in `src/report/assess.ts`, `assessFleet` in
-`src/fleet/assess.ts`), so the CLI and SDK gate identically.
+Every command exits `0` clean, `2` when a policy trips (the report is still
+emitted to stdout; the reason goes to stderr), or `1` on an operational
+error (the command could not run). On the deterministic surface the policy
+is **declarative**: the policy block of the workspace's trellis.yaml (SPEC §6.5 — max
+index, metric budgets, score regression, new-finding kinds) gates `audit`
+and `compare`, and an incompatible `compare` pair fails closed. `EXIT`
+lives in `src/cli/output.ts`; the assessment is core (`assessPolicy` in
+`src/compare/policy.ts`), so the CLI and SDK gate identically. The
+transitional `drift`/`fleet` commands keep the legacy `--fail-on
+gate|drift|level|none` knobs (`assessReport` in `src/report/assess.ts`,
+`assessFleet` in `src/fleet/assess.ts`) until trellis-8366.
 
 ### Programmatic SDK (`src/client/`)
 
-`src/client/index.ts` exposes `audit` / `drift` / `fleet` / `report` / `rubric`
-plus the `assessReport` / `assessFleet` exit-code rule. Each is a direct call to
-the same core service the CLI folds (`runAudit`, `driftRepo`, `runFleetTargets`,
-`buildReport`, `summarizeRubric`) — **no logic beyond type shaping**. Request
-types mirror the core option types (`// Mirrors src/<x>`); responses are the core
-report shapes. The deep-equal test in `src/client/index.test.ts` proves a CLI
-audit and an SDK audit are one code path.
+`src/client/index.ts` exposes `audit` / `compare` over the deterministic
+core plus the transitional `drift` / `fleet` / `report` / `rubric` and the
+`assessPolicy` / `assessReport` / `assessFleet` exit-code rules. Each is a
+direct call to the same core service the CLI folds (`runWorkspaceAudit`,
+`runComparison`, `driftRepo`, `runFleetTargets`, `buildReport`,
+`summarizeRubric`) — **no logic beyond type shaping**. Request types mirror
+the core option types (`// Mirrors src/<x>`); responses are the core report
+shapes. The deep-equal tests in `src/client/index.test.ts` prove a CLI
+audit/compare and an SDK audit/compare are one code path — measurement and
+policy alike.
 
 ### Quality gates
 
@@ -159,6 +172,10 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
   `auditWorkspace(root)` runs discover → parse → measure → safeguards →
   score → assemble and returns the versioned §6.4 `AuditReport`, with no
   model, network, project-command, Git, or database access.
+  `runWorkspaceAudit(root)` (trellis-9a88) is the service the surfaces fold:
+  it composes configuration, the pure pass, baseline resolution, policy
+  assessment (`src/compare/`), and opt-in history (`src/store/`) around the
+  measurement — never inside it.
 - `src/cli/` is a **thin** commander pass-through; `src/client/` is a typed
   SDK whose types **mirror the core** (annotate `// Mirrors src/<x>`). Both
   call the same core functions so a programmatic audit and a CLI audit

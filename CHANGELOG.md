@@ -11,6 +11,26 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **CLI and SDK expose the same simplified deterministic audit** (trellis-9a88,
+  SPEC §12, stage 18 of the deterministic-pivot plan `pl-b2ea`): `trellis
+  audit <path>` now folds `runWorkspaceAudit` (`src/audit/run.ts`) —
+  configuration (`--config`, else the workspace's `trellis.yaml`) → the
+  deterministic core → baseline resolution (`--baseline <report.json>`, else
+  the latest compatible stored run when `--history` is on) → declarative
+  policy assessment (SPEC §6.5, §9) → opt-in persistence. The default run is
+  stateless: no database is opened and no report file is written unless
+  `--history` / `--out <file>` ask. The new `trellis compare <a.json>
+  <b.json>` compares two saved report artifacts without an audit
+  (`runComparison` in `src/compare/run.ts`, terminal/Markdown views in
+  `src/report/compare-render.ts`); an incompatible pair fails closed (exit
+  2, the comparison still emitted). Retired readiness/investigation flags
+  (`--rubric-version`, `--min-level`, `--fail-on`, `--canonical`,
+  `--no-persist`, `--output`/`--no-output`, `--no-cache`, `TRELLIS_PI_BIN`)
+  fail fast with actionable "removed in the deterministic pivot" errors. The
+  SDK's `audit` / `compare` (`src/client/index.ts`) are direct calls to the
+  same services, and deep-equal parity tests prove CLI and SDK share one
+  measurement and policy code path. `fleet` / `report` / `drift` / `rubric`
+  / `standards` remain the transitional legacy surface until trellis-8366.
 - **The deterministic audit core assembles the new report** (trellis-ef85,
   SPEC §4, stage 14 of the deterministic-pivot plan `pl-b2ea`):
   `auditWorkspace(root)` in `src/audit/audit.ts` is the one core call that

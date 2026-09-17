@@ -13,6 +13,19 @@ import { type AuditConfig, auditConfigSchema } from "../contract/index.ts";
 /** Candidate config filenames at the repo root, in priority order. */
 export const CONFIG_FILENAMES = ["trellis.yaml", "trellis.yml"] as const;
 
+/** Parse + validate one config document, naming its source file in any error. */
+function parseConfig(text: string, name: string): AuditConfig {
+	const data: unknown = yaml.load(text) ?? {};
+	const parsed = auditConfigSchema.safeParse(data);
+	if (!parsed.success) {
+		const details = parsed.error.issues
+			.map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
+			.join("; ");
+		throw new Error(`invalid ${name}: ${details}`);
+	}
+	return parsed.data;
+}
+
 /**
  * Load and validate the audit configuration for `root`. Returns the parsed
  * defaults when no config file exists; throws an `Error` describing every
@@ -26,15 +39,25 @@ export async function loadAuditConfig(root: string): Promise<AuditConfig> {
 		} catch {
 			continue; // absent or unreadable → try the next candidate
 		}
-		const data: unknown = yaml.load(text) ?? {};
-		const parsed = auditConfigSchema.safeParse(data);
-		if (!parsed.success) {
-			const details = parsed.error.issues
-				.map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
-				.join("; ");
-			throw new Error(`invalid ${name}: ${details}`);
-		}
-		return parsed.data;
+		return parseConfig(text, name);
 	}
 	return auditConfigSchema.parse({});
+}
+
+/**
+ * Load and validate an explicit configuration file (the `--config <file>`
+ * surface, SPEC §12). Unlike {@link loadAuditConfig} the file must exist and
+ * be readable — the operator named it, so an absent file is an operational
+ * error, never the defaults.
+ */
+export async function loadAuditConfigFile(path: string): Promise<AuditConfig> {
+	let text: string;
+	try {
+		text = await readFile(path, "utf8");
+	} catch (cause) {
+		throw new Error(
+			`cannot read config file ${path} (${cause instanceof Error ? cause.message : String(cause)})`,
+		);
+	}
+	return parseConfig(text, path);
 }

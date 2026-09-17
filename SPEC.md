@@ -695,8 +695,8 @@ inside a 1:1 group and reports ambiguous n:m groups as resolved + new pairs.
 each documented per knob), and `failOnNew` kinds independently — each returns
 structured coded reasons, a better index cannot suppress a cycle/hotspot
 failure, and baseline-dependent policies skip on an absent baseline but fail
-closed on an incompatible one. CLI (`trellis compare`, `--baseline`) and SDK
-wiring lands with trellis-9a88.)*
+closed on an incompatible one. The CLI (`trellis compare`, `--baseline`)
+and SDK wiring landed with trellis-9a88.)*
 
 ---
 
@@ -757,13 +757,28 @@ trellis standards              # canonical drift (separate capability, §11)
   percentage; hotspot/finding lists are bounded with totals printed; the JSON
   renderer re-validates the contract at the boundary. `audit-fixtures.ts`
   audits the five render-fixture repositories — clean, sloppy,
-  mixed-language, incomplete, function-free — through the real core. CLI/SDK
-  wiring lands with trellis-9a88.)*
+  mixed-language, incomplete, function-free — through the real core.)*
 - Retired flags (`--rubric-version`, `--min-level`, provider/model/cache
   knobs, …) fail with a useful "removed in the deterministic pivot" error,
   not a silent ignore.
 - The SDK (`src/client/`) exposes the same audit/compare/fleet/report calls
   over the same core; deep-equal tests prove CLI and SDK are one code path.
+
+*(CLI/SDK landed, trellis-9a88: `trellis audit` folds `runWorkspaceAudit`
+(`src/audit/run.ts`) — configuration (`--config`, else the root's
+`trellis.yaml`) → the deterministic core → baseline resolution
+(`--baseline`, else the latest compatible stored run when `--history` is
+on) → declarative policy assessment → opt-in persistence. The default run
+is stateless: no database is opened and no report file is written unless
+`--history`/`--out` ask. `trellis compare` folds `runComparison`
+(`src/compare/run.ts`) — two artifacts, no audit — with terminal/Markdown
+views in `src/report/compare-render.ts`; an incompatible pair fails closed
+(exit 2, the comparison still emitted). Retired readiness/investigation
+flags are hidden commander options that fail fast with actionable
+messages. The SDK's `audit`/`compare` are direct calls to the same
+services; deep-equal parity tests cover measurement and policy.
+`fleet`/`report`/`drift`/`rubric`/`standards` remain the transitional
+legacy surface until trellis-8366.)*
 
 ---
 

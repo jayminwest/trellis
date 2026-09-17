@@ -11,7 +11,10 @@
  *
  * Persistence (trellis-424d), baseline comparison and failure policies
  * (trellis-942c), and renderers (trellis-a059) are downstream consumers of
- * this core — they live outside the measurement pass.
+ * this core — they live outside the measurement pass. {@link runWorkspaceAudit}
+ * (trellis-9a88) is the service that composes them around the pure pass —
+ * configuration, baseline resolution, policy assessment, opt-in history —
+ * and is the one code path the CLI and SDK both fold (SPEC §13.1).
  */
 export {
 	type AssemblyMetadata,
@@ -29,3 +32,9 @@ export {
 	type AuditPhase,
 	type AuditProgress,
 } from "./progress.ts";
+export {
+	AuditRunError,
+	runWorkspaceAudit,
+	type WorkspaceAuditOptions,
+	type WorkspaceAuditResult,
+} from "./run.ts";
