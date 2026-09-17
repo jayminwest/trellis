@@ -52,13 +52,15 @@ describe("trellis exit-code contract (SPEC §9)", () => {
 		rmSync(dbDir, { recursive: true, force: true });
 	});
 
+	// Tests spawn the CLI as a subprocess (audit runs, reads); the 20s budget
+	// accommodates slow CI containers where the 5s default is marginal.
 	test("audit with no configured policy is clean (exit 0)", async () => {
 		const { code, stdout } = await runCli(["audit", dir, "--json", "--quiet"], {
 			TRELLIS_DB: dbPath,
 		});
 		expect(code).toBe(0);
 		expect(JSON.parse(stdout).score.index).toBeGreaterThan(0);
-	});
+	}, 20_000);
 
 	test("a tripped declarative policy exits 2 and still emits the report", async () => {
 		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
@@ -68,13 +70,13 @@ describe("trellis exit-code contract (SPEC §9)", () => {
 		expect(code).toBe(2);
 		expect(JSON.parse(stdout).score.index).toBeGreaterThan(0);
 		expect(stderr).toContain("policy max-index failed");
-	});
+	}, 20_000);
 
 	test("a passing declarative policy stays clean (exit 0)", async () => {
 		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 100\n");
 		const { code } = await runCli(["audit", dir, "--quiet"], { TRELLIS_DB: dbPath });
 		expect(code).toBe(0);
-	});
+	}, 20_000);
 
 	test("an unreadable workspace is an operational error (exit 1), distinct from a policy trip", async () => {
 		const { code, stdout, stderr } = await runCli(["audit", join(dbDir, "absent"), "--quiet"], {
@@ -83,7 +85,7 @@ describe("trellis exit-code contract (SPEC §9)", () => {
 		expect(code).toBe(1);
 		expect(stdout).toBe("");
 		expect(stderr.length).toBeGreaterThan(0);
-	});
+	}, 20_000);
 
 	test("policy failure and operational failure are always distinguishable (2 vs 1)", async () => {
 		// Policy trip: report on stdout, reasons on stderr, exit 2.
@@ -100,18 +102,18 @@ describe("trellis exit-code contract (SPEC §9)", () => {
 		);
 		expect(broken.code).toBe(1);
 		expect(broken.stdout).toBe("");
-	});
+	}, 20_000);
 
 	test("drift defaults to failing when drift is detected (exit 2)", async () => {
 		const { code, stderr } = await runCli(["drift", dir]);
 		expect(code).toBe(2);
 		expect(stderr).toContain("canonical drift detected");
-	});
+	}, 20_000);
 
 	test("drift --fail-on none exits 0 despite drift", async () => {
 		const { code } = await runCli(["drift", dir, "--fail-on", "none"]);
 		expect(code).toBe(0);
-	});
+	}, 20_000);
 
 	test("a fleet with an unauditable target trips exit 2 with the report still emitted", async () => {
 		const targets = join(dbDir, "targets.yaml");
@@ -124,7 +126,7 @@ describe("trellis exit-code contract (SPEC §9)", () => {
 		expect(fail.code).toBe(2);
 		expect(fail.stdout).toContain("trellis fleet");
 		expect(fail.stderr).toContain("gone");
-	});
+	}, 20_000);
 
 	test("a fleet whose target trips its declarative policy exits 2, distinct from an operational error", async () => {
 		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
@@ -140,5 +142,5 @@ describe("trellis exit-code contract (SPEC §9)", () => {
 		});
 		expect(broken.code).toBe(1);
 		expect(broken.stdout).toBe("");
-	});
+	}, 20_000);
 });

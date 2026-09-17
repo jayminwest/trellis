@@ -239,7 +239,12 @@ the digest for agents working in this repo:
 - **Sonar gate.** SonarJS requires an affirmative documented
   distribution/metric-interface decision; until then it is explicitly
   deferred — a valid request resolves to `unsupported` with the reason,
-  visible and policy-testable, never claimed implementation.
+  visible and policy-testable, never claimed implementation. The decision
+  is recorded as **deferred** in
+  [`docs/sonarjs-decision.md`](docs/sonarjs-decision.md) (trellis-db3e)
+  and carried by the typed capability metadata in
+  `src/providers/capabilities.ts`; the clearance prerequisite is tracked
+  as `trellis-7f5d`.
 
 ### Test naming
 
