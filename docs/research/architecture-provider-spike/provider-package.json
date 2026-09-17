@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "dependency-cruiser": "17.3.8",
+    "typescript": "5.9.3"
+  }
+}

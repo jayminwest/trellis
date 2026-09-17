@@ -1,25 +1,22 @@
 /**
  * Catalog tests: assert the authored rubric data (categories.yaml,
- * repo-scope.yaml, app-scope.yaml) matches the SPEC §5 catalog exactly.
+ * repo-scope.yaml, app-scope.yaml) matches the transitional catalog exactly.
  *
  * These run the real loader against the real authored YAML (no temp dirs), so
- * a green run is the acceptance gate for trellis-db3d: the step-5 loader
- * accepts all three files with zero invariant violations, and the catalog
- * totals (9 categories, 44+46=90 criteria, 70 det / 20 agent, 9 gates one per
- * category) hold.
+ * a green run is the acceptance gate for the loader: it accepts all three
+ * files with zero invariant violations, and the transitional totals (8
+ * categories, 30+40=70 criteria, all deterministic, 8 gates one per category)
+ * hold. Transitional (SPEC §14 stage 2): the agent-discovery criteria — and
+ * the all-agent documentation category — are retired; none may return without
+ * re-wiring the investigation pass.
  */
 import { describe, expect, test } from "bun:test";
 import { loadRubric } from "./loader.ts";
-import { INVESTIGATION_AREAS, type InvestigationArea } from "./schema.ts";
-
-/** Widened so `toContain` accepts a nullable `investigation` value. */
-const AREAS: readonly (InvestigationArea | null)[] = INVESTIGATION_AREAS;
 
 const rubric = loadRubric();
 
-/** The 9 categories, in SPEC §5 order. */
+/** The 8 categories, in SPEC §5 order (documentation retired with its all-agent criteria). */
 const EXPECTED_CATEGORIES = [
-	"documentation",
 	"code_quality",
 	"testing",
 	"environment_setup",
@@ -30,9 +27,8 @@ const EXPECTED_CATEGORIES = [
 	"locality_contracts",
 ] as const;
 
-/** The 9 gate criteria (SPEC §5), one per category. */
+/** The 8 gate criteria, one per category. */
 const EXPECTED_GATES = [
-	"single_command_setup",
 	"type_check",
 	"unit_tests_runnable",
 	"deps_pinned",
@@ -51,46 +47,30 @@ describe("rubric catalog", () => {
 		expect(rubric.criteria.length).toBeGreaterThan(0);
 	});
 
-	test("declares exactly the 9 §5 categories", () => {
+	test("declares exactly the 8 transitional categories", () => {
 		expect(rubric.categories.map((c) => c.id)).toEqual([...EXPECTED_CATEGORIES]);
 	});
 
-	test("totals 90 criteria: 44 repo-scope + 46 app-scope", () => {
+	test("totals 70 criteria: 30 repo-scope + 40 app-scope", () => {
 		const repo = rubric.criteria.filter((c) => c.scope === "repo");
 		const app = rubric.criteria.filter((c) => c.scope === "app");
-		expect(repo).toHaveLength(44);
-		expect(app).toHaveLength(46);
-		expect(rubric.criteria).toHaveLength(90);
+		expect(repo).toHaveLength(30);
+		expect(app).toHaveLength(40);
+		expect(rubric.criteria).toHaveLength(70);
 	});
 
-	test("splits 70 deterministic / 20 agent", () => {
-		const det = rubric.criteria.filter((c) => c.discoveryVia === "deterministic");
+	test("is deterministic-only — no agent criteria remain (SPEC §14 stage 2)", () => {
 		const agent = rubric.criteria.filter((c) => c.discoveryVia === "agent");
-		expect(det).toHaveLength(70);
-		expect(agent).toHaveLength(20);
+		expect(agent).toHaveLength(0);
+		expect(rubric.criteria.every((c) => c.investigation === null)).toBe(true);
 	});
 
-	test("carries exactly the 9 gates, one per category", () => {
+	test("carries exactly the 8 gates, one per category", () => {
 		const gates = rubric.criteria.filter((c) => c.gate);
 		expect(gates.map((c) => c.id).sort()).toEqual([...EXPECTED_GATES].sort());
 
 		const gateCategories = gates.map((c) => c.category).sort();
 		expect(gateCategories).toEqual([...EXPECTED_CATEGORIES].sort());
-	});
-
-	test("every agent criterion names one of the 4 investigation areas", () => {
-		const agent = rubric.criteria.filter((c) => c.discoveryVia === "agent");
-		for (const c of agent) {
-			expect(c.investigation).not.toBeNull();
-			expect(AREAS).toContain(c.investigation);
-		}
-	});
-
-	test("every deterministic criterion has no investigation area", () => {
-		const det = rubric.criteria.filter((c) => c.discoveryVia === "deterministic");
-		for (const c of det) {
-			expect(c.investigation).toBeNull();
-		}
 	});
 
 	test("every criterion's category resolves to a declared category", () => {

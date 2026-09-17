@@ -23,7 +23,7 @@ Category-floor criteria that were measured and did not fully pass:
 
 | Criterion | Verdict | Score | Rationale |
 | --- | --- | ---: | --- |
-| `agents_md` | no-detector | n/a | investigation layer not yet wired |
+| `adr_presence` | no-detector | n/a | no detector bound for this criterion |
 | `readme` | pass | 1/1 | README.md present |
 
 ### Code Quality

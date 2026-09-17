@@ -6,7 +6,7 @@ name: prioritize
 
 Analyze all open issues across GitHub Issues and Seeds, cross-reference with codebase health, and recommend the top ~5 issues to tackle next.
 
-**Argument:** `$ARGUMENTS` — optional: a label or area to focus on (e.g., `detectors`, `scoring`, `investigation`, `standards`). If empty, analyze everything.
+**Argument:** `$ARGUMENTS` — optional: a label or area to focus on (e.g., `detectors`, `scoring`, `metrics`, `standards`). If empty, analyze everything.
 
 ## gather-issues
 
@@ -47,7 +47,7 @@ For every unique issue (deduplicated), assess:
 
 ### a. Impact
 - Does it fix a bug that blocks audits or produces wrong scores?
-- Does it enable new capabilities or unblock other work (e.g. a new adapter, the investigation layer, the store)?
+- Does it enable new capabilities or unblock other work (e.g. a new metric, the shared parse layer, the store)?
 - How many other issues does it unblock (dependency graph)?
 - Does it affect external users (GitHub issues from community) or the dogfood gate?
 

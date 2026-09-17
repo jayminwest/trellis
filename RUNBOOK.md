@@ -20,6 +20,11 @@ Key facts:
   `src/index.ts` `export const VERSION`
 - **Changelog:** `CHANGELOG.md`
 - **Tracker prefix:** `trellis-`
+- **Package smoke test:** `bun run smoke:package`
+  (`scripts/smoke-package.ts`) — packs the tarball and confirms the
+  deterministic analyzer ships complete after the readiness rubric's
+  retirement: bin entry, runtime dependencies, analyzer assets, and a real
+  audit of a fixture workspace through the packed CLI.
 
 ## Pre-flight (do once per machine)
 
@@ -94,9 +99,13 @@ bun run lint
 bun run typecheck
 bun test
 bun run check:all
+bun run smoke:package
 ```
 
-All must exit 0. If any fails, **stop** — fix locally and re-run.
+All must exit 0. If any fails, **stop** — fix locally and re-run. The smoke
+test is the last line of defense against shipping a tarball that omits an
+analyzer asset or dependency (it packs, unpacks, and audits a fixture
+through the packed CLI — offline, no registry involved).
 
 ### 1.5 Push to main
 
@@ -127,13 +136,20 @@ gh release view vX.Y.Z               # confirm release page renders
 npm view @os-eco/trellis-cli version # confirm the published version
 ```
 
-Smoke-install in a clean dir:
+Smoke-install in a clean dir and run a real audit — the published package
+must measure a workspace, not just boot:
 
 ```bash
 mkdir /tmp/trellis-smoke && cd /tmp/trellis-smoke
 bun install @os-eco/trellis-cli
 bunx @os-eco/trellis-cli --version
+mkdir fixture && printf 'export const x: number = 1;\n' > fixture/x.ts
+bunx @os-eco/trellis-cli audit fixture --json | head -20
 ```
+
+The audit must exit `0` and print a §6.4 report whose `analyzerVersion`
+matches the release. (The audit is offline and stateless — no Git, network,
+or database needed, so a clean-dir smoke is a faithful install check.)
 
 ## 2. Triage of a failed publish
 
@@ -229,50 +245,6 @@ installs); it surfaces a warning at install time.
   `> ⚠️ This release contains a regression. Use vX.Y.(Z+1) or later.`
 - File `trellis-XXXX` with root cause + remediation links.
 
-## 4. Regenerating investigation goldens (SPEC §9.7)
-
-The investigation layer is tested offline against frozen `pi --mode rpc`
-sessions under `src/investigation/__golden__/` — one `<area>.jsonl` per area plus
-a `corrupted.jsonl`. `golden.test.ts` replays each stream through the real
-parser → zod validation → deterministic grader with **no network**. Until a live
-capture exists the fixtures are **hand-authored** to the v0.74.0 wire shape
-(marked in `__golden__/README.md`).
-
-### 4.1 When to regenerate
-
-- The Pi RPC envelope shape changes (a supported-version bump in `version.ts`).
-- A findings schema (`findings.ts`) changes the `submit_findings` argument shape.
-- You are replacing a hand-authored fixture with a real captured session.
-
-### 4.2 How to regenerate (operator, makes real model calls)
-
-Capture is **double-gated** so CI can never trigger a model call — it refuses
-unless both the env flag and `--live` are present:
-
-```bash
-# All four areas, against this repo:
-TRELLIS_UPDATE_PI_GOLDEN=1 bun run scripts/update-pi-golden.ts --live
-
-# A single area, against another checkout:
-TRELLIS_UPDATE_PI_GOLDEN=1 bun run scripts/update-pi-golden.ts --live \
-  --area documentation --repo /path/to/repo
-```
-
-Requires a working `pi` on `PATH` (>= the version in `version.ts`) and the
-provider credentials in the environment (e.g. `ANTHROPIC_API_KEY`, or `pi
-/login`). Each area is investigated through the real provider path; the raw
-stdout stream is canonicalized (volatile ids/timestamps/usage → fixed
-placeholders) and frozen.
-
-### 4.3 After regenerating
-
-1. Re-read the diff — only the captured **facts** should change, never the
-   placeholders.
-2. Update the `EXPECTED_GRADES` in `src/investigation/golden.test.ts` to match
-   the new facts, then `bun test src/investigation/golden.test.ts`.
-3. Run it twice — goldens must grade identically across consecutive runs.
-4. `bun run check:all` and commit the `__golden__/` change with the test update.
-
 ## Appendix — Common commands
 
 ```bash
@@ -291,6 +263,7 @@ gh run rerun <run-id> --failed
 - [ ] `package.json` + `src/index.ts` updated to X.Y.Z and in agreement.
 - [ ] `CHANGELOG.md` has a dated `[X.Y.Z]` section.
 - [ ] `bun run check:all` exits 0 locally.
+- [ ] `bun run smoke:package` exits 0 (packed tarball ships the analyzer).
 - [ ] `gh run watch` confirmed the release workflow succeeded.
 - [ ] `npm view @os-eco/trellis-cli version` reports X.Y.Z.
 - [ ] Smoke install in a clean dir succeeds.

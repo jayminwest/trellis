@@ -20,10 +20,10 @@
       "denominator": 1,
       "rationale": "README.md present"
     },
-    "agents_md": {
+    "adr_presence": {
       "numerator": null,
       "denominator": 1,
-      "rationale": "investigation layer not yet wired",
+      "rationale": "no detector bound for this criterion",
       "naKind": "no-detector"
     },
     "lint_config": {

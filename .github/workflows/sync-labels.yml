@@ -33,7 +33,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Pull-request runs are always dry-run: we want to see the diff in
       # the workflow logs before merging, but we never mutate the repo's
@@ -51,7 +51,7 @@ jobs:
           fi
 
       - name: Sync labels from .github/labels.yml
-        uses: crazy-max/ghaction-github-labeler@v5
+        uses: crazy-max/ghaction-github-labeler@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           yaml-file: .github/labels.yml

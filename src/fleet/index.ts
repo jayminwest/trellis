@@ -1,12 +1,16 @@
 /**
- * Fleet layer (SPEC §6.5, §11) — the `targets.yaml` loader and multi-repo
- * orchestration over the same surface-agnostic audit core a single-repo run uses.
+ * Fleet layer (SPEC §11) — the `targets.yaml` loader and multi-repo
+ * orchestration over the same deterministic audit core a single-repo run
+ * uses. Canonical-config drift rides along as a separate, non-scoring
+ * capability; it never enters the sloppiness index or the exit policy.
  *
- * Public surface: {@link loadFleet} (+ its schema/types and {@link targetAuditOptions}
- * mapping), {@link runFleet} (the orchestration entrypoint and its {@link FleetReport}
- * shape), and the {@link renderFleetTerminal}/{@link renderFleetMarkdown} dashboards.
+ * Public surface: {@link loadFleet} (+ its schema/types and the
+ * {@link targetDriftOptions} mapping), {@link runFleet} (the orchestration
+ * entrypoint and its {@link FleetReport} shape), {@link runFleetTargets} (the
+ * service the CLI/SDK fold), {@link assessFleet} (the exit-code rollup), and
+ * the {@link renderFleetTerminal}/{@link renderFleetMarkdown} views.
  */
-export { assessFleet } from "./assess.ts";
+export { assessFleet, type FleetAssessment } from "./assess.ts";
 export {
 	type FleetEntry,
 	type FleetReport,
@@ -26,6 +30,6 @@ export {
 	type TargetSpec,
 	TargetsError,
 	type TargetsFile,
-	targetAuditOptions,
+	targetDriftOptions,
 	targetsSchema,
 } from "./targets.ts";

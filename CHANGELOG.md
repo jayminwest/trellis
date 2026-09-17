@@ -9,6 +9,411 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Fixed
+
+- CLI reports drain fully when piped, including policy-failure output (trellis-5b25).
+- Existing aliased and relative non-source assets no longer produce unresolved
+  graph edges; missing assets remain unresolved (trellis-f6b0). Analyzer 0.2.1.
+- Count contributions use a bounded logarithmic curve without finite saturation,
+  restoring sensitivity above the former 20/15/5 cutoffs (trellis-831b).
+  Scoring 0.2.0-provisional preserves count non-dilution and monotonicity;
+  earlier scoring versions are not comparable. Evidence: `docs/count-calibration.md`.
+
+### Changed
+
+- **Deterministic pivot release acceptance completed** (`pl-b2ea`,
+  trellis-b12d, trellis-d03d): reconciled the legacy backlog with explicit
+  keep/superseded/deferred decisions; recorded offline integration, package
+  smoke, corpus performance, self-audit evidence, and retained limitations
+  in `docs/release-acceptance.md`. Corrected the corpus dilution explanation:
+  the paired densities remain saturated, so unchanged score alone does not
+  prove general dilution resistance.
+- **Public readiness catalog and assessment exports retired** (trellis-a835):
+  `trellis rubric` now returns actionable migration guidance and is hidden
+  from help. The SDK no longer exports `rubric`, `loadRubric`, readiness
+  report/policy types, `assessReport`, or maturity-policy constants. Canonical
+  `drift` / `standards` and separate legacy history remain supported. The
+  now-unused Pino logger and dependency are removed; package smoke verifies
+  the four remaining runtime dependencies.
+
+### Added
+
+- **Offline public-path regression**: real CLI, SDK, and fleet audits run in
+  an isolated child with no inherited credentials or executable tools,
+  forbidden subprocess/fetch boundaries, and throwing executable target
+  configuration. Measurement payloads agree and recursive file snapshots
+  prove the workspace and surrounding scratch directory remain unchanged.
+
+### Added
+
+- **Release documentation and portable usage examples reflect the pivot**
+  (trellis-7203, SPEC §14 stage 11, stage 21 of the deterministic-pivot plan
+  `pl-b2ea`): `README.md` is rewritten for the deterministic sloppiness
+  audit — the three invariants, the implemented CLI surface (`audit` /
+  `compare` / `fleet` / `report` / `standards` with their real flags), the
+  0/1/2 exit-code contract, and portable examples that run with no hosted
+  service: local refactor review over saved report artifacts, opt-in
+  fleet/history, and a GitHub Actions gate that pins the analyzer version,
+  retains the report artifact, and branches exit `2` (policy) from exit `1`
+  (operational). The metric catalog and provisional formula weights are
+  documented, alongside known limitations (TS/TSX only, no type-3 clones,
+  configuration inspection never execution), unsupported-language coverage,
+  and migration guidance from readiness reports and configuration.
+- **Install/package smoke test** (`bun run smoke:package`,
+  `scripts/smoke-package.ts`): packs the tarball with `bun pm pack`, unpacks
+  it, and confirms the rubric's retirement did not omit required analyzer
+  assets or dependencies — the `trellis` bin entry, the five runtime
+  dependencies, the audit core/metrics/syntax/scoring/compare/config/
+  contract/safeguards modules plus the bundled standards canonical set —
+  then audits a fixture workspace through the packed CLI and validates the
+  §6.4 report (schema and analyzer versions, in-range index). Runs offline
+  against the repo's own `node_modules`.
+
+### Changed
+
+- **Package metadata and architecture documentation pivoted** (trellis-7203):
+  `package.json` description and keywords now describe the deterministic
+  TypeScript sloppiness audit (no readiness/rubric wording);
+  `docs/architecture.mmd` renders the deterministic module graph
+  (discover → parse → measure → score → assemble, with policy/persistence
+  outside the measurement pass); `CLAUDE.md`'s module tree reflects the
+  current `src/` layout with `rubric/` and `detectors/` marked transitional;
+  `RUNBOOK.md` wires `smoke:package` into the release gate, the
+  post-publish smoke install (which now audits a fixture, not just boots),
+  and the pre-publish checklist.
+
+### Added
+
+- **A fixed TypeScript corpus validates score behavior and performance**
+  (trellis-e924, SPEC §14 stage 10, stage 20 of the deterministic-pivot
+  plan `pl-b2ea`): `corpus/` holds the committed validation corpus —
+  eleven fixture workspaces (the paired refactors clone removal, branch
+  growth, cycle introduction, and clean-addition dilution, plus
+  small-repo, test-separation, and incomplete-parse singles) and the
+  trellis checkout itself — defined by `corpus/manifest.json` with
+  explicit per-entry runtime/peak-memory budgets, review checks, and
+  paired expectations. `scripts/validate-corpus.ts` audits every entry
+  through the same `auditWorkspace` core (no model, no network), measures
+  median wall time and peak RSS in fresh child processes, and enforces
+  budgets, checks, and pair expectations; `scripts/corpus-report.ts`
+  renders the record and `scripts/validate-corpus.test.ts` asserts the
+  paired expectations continuously. The measured record — environment,
+  revisions, sizes, observations, budgets, paired results, the
+  dilution/small-repo/test-separation/incomplete-analysis reviews, and
+  the calibration decision — lands in `docs/corpus-validation.md`.
+  trellis's own `trellis.yaml` now excludes `corpus/**` from discovery so
+  the intentional fixture debt stays out of the dogfood self-audit.
+
+### Changed
+
+- **Duplication minimum clone size calibrated 50 → 100 normalized tokens**
+  (trellis-e924, SPEC §5.3): at 50 tokens the corpus and the trellis
+  self-audit were dominated by idiomatic-structure matches (78 of 124
+  trellis production groups were 50–74 tokens, saturating the duplication
+  dimension); at 100 the surviving groups are true copy-paste. Because
+  measurement semantics changed, the analyzer version bumps 0.1.0 →
+  0.2.0 (stored 0.1.0 reports correctly fail §3.5 comparability). The
+  §7.1 scoring constants are unchanged — the corpus showed them producing
+  explainable, monotonic, dilution-resistant behavior — so the scoring
+  version stays `0.1.0-provisional`. The §5.3 resource budgets
+  (`DEFAULT_DUPLICATION_BUDGET`) were confirmed against the measured
+  corpus, not changed. Clone test fixtures grew to 105 tokens over 13
+  lines at CC 10 so they never leak hotspot findings.
+
+### Added
+
+- **Fleet and history are optional consumers of the deterministic core**
+  (trellis-8366, SPEC §10–§11, stage 19 of the deterministic-pivot plan
+  `pl-b2ea`): `trellis fleet` now runs every `targets.yaml` target through
+  the same `runWorkspaceAudit` service the single-repo CLI and SDK fold —
+  each entry of the aggregate `FleetReport` preserves the target's full
+  §6.4 report (findings, completeness, metrics) plus the declarative §9
+  policy assessment over the target's own `trellis.yaml`, and fleet results
+  are proven deep-equal to independent core audits. Canonical-config drift
+  rides along per target as a **separate, non-scoring capability**: its
+  per-state counts render on the report but never enter the sloppiness
+  index, the policy assessment, or the fleet exit rollup (`assessFleet`
+  fails exactly when a target errored or tripped its own policy). Fleet
+  runs are stateless by default (SPEC §8, §10); `--history` records each
+  target's run and surfaces the index move against the repo's previous
+  compatible stored run. Legacy targets configuration is rejected with
+  actionable migration errors — `defaults.investigation` (the agent pass
+  is gone), per-target `skip` (readiness criterion skips) and `languages`
+  (detector hints), and the `--fail-on` / `--min-level` / `--no-cache`
+  flags (policy is declarative now). `trellis report` renders the
+  sloppiness history — a snapshot of each repo's latest audit with the
+  index move against the previous §3.5-compatible run, plus per-repo
+  compatible index series — with legacy readiness runs preserved in a
+  visibly distinct section that is never compared with, averaged into, or
+  trended against the sloppiness index (SPEC §10). The SDK's `fleet()` /
+  `report()` are direct calls to the same services, with a deep-equal
+  CLI⇄SDK fleet parity test. `drift` / `rubric` / `standards` remain the
+  transitional legacy surface until the release stages.
+- **CLI and SDK expose the same simplified deterministic audit** (trellis-9a88,
+  SPEC §12, stage 18 of the deterministic-pivot plan `pl-b2ea`): `trellis
+  audit <path>` now folds `runWorkspaceAudit` (`src/audit/run.ts`) —
+  configuration (`--config`, else the workspace's `trellis.yaml`) → the
+  deterministic core → baseline resolution (`--baseline <report.json>`, else
+  the latest compatible stored run when `--history` is on) → declarative
+  policy assessment (SPEC §6.5, §9) → opt-in persistence. The default run is
+  stateless: no database is opened and no report file is written unless
+  `--history` / `--out <file>` ask. The new `trellis compare <a.json>
+  <b.json>` compares two saved report artifacts without an audit
+  (`runComparison` in `src/compare/run.ts`, terminal/Markdown views in
+  `src/report/compare-render.ts`); an incompatible pair fails closed (exit
+  2, the comparison still emitted). Retired readiness/investigation flags
+  (`--rubric-version`, `--min-level`, `--fail-on`, `--canonical`,
+  `--no-persist`, `--output`/`--no-output`, `--no-cache`, `TRELLIS_PI_BIN`)
+  fail fast with actionable "removed in the deterministic pivot" errors. The
+  SDK's `audit` / `compare` (`src/client/index.ts`) are direct calls to the
+  same services, and deep-equal parity tests prove CLI and SDK share one
+  measurement and policy code path. `fleet` / `report` / `drift` / `rubric`
+  / `standards` remain the transitional legacy surface until trellis-8366.
+- **The deterministic audit core assembles the new report** (trellis-ef85,
+  SPEC §4, stage 14 of the deterministic-pivot plan `pl-b2ea`):
+  `auditWorkspace(root)` in `src/audit/audit.ts` is the one core call that
+  audits a TS/TSX workspace end to end — configure → discover → one shared
+  parse → measure (complexity, duplication, dependency graph, import
+  cycles) → safeguard inspection → the pure provisional score → §6.4 report
+  assembly. It runs with no model, network, project-command, Git, or
+  database access and writes nothing (persistence and policy evaluation
+  stay outside the measurement pass); broad readiness categories, os-eco
+  scoring overlays, and the retired Python/Swift detectors are never
+  executed on this path. `src/audit/assemble.ts` folds the analysis
+  products into the versioned `AuditReport` purely — every analyzer metric
+  emitted exactly once (duplicate ids throw), findings grouped by kind with
+  analyzer rankings preserved, coverage pairing discovery counts with
+  measured sloc — and validates the contract's cross-field honesty
+  invariants (completeness rollup, `partial` headline, traceable
+  contributions) before a report can leave the core. Progress events
+  (`src/audit/progress.ts`) are bounded by the pipeline shape, never by
+  repository size. End-to-end fixtures exercise clean, sloppy, mixed-
+  language, incomplete (parse failure / unresolved import / budget
+  exhaustion), empty, and dirty-worktree repositories over real temporary
+  directories, and pin byte-equal measurement payloads per §3.5.
+- **The provisional sloppiness formula is explicit and versioned**
+  (trellis-00d5, SPEC §7.1, stage 13 of the deterministic-pivot plan
+  `pl-b2ea`): `scoreSloppiness(metrics)` in `src/scoring/sloppiness.ts` is
+  a pure function of the raw contract metrics — no filesystem, no
+  configuration, no safeguard results. Every constant (dimension weights
+  0.50/0.30/0.20; per-term saturation thresholds; even in-dimension blends)
+  is pinned in `SCORING_FORMULA` (`src/scoring/formula.ts`) under
+  `SCORING_VERSION` `0.1.0-provisional`, and the strict audit-config schema
+  rejects scoring keys, so policy budgets can never mutate weights. The
+  overlapping complexity/erosion/size signals are grouped into one
+  `complexity-erosion` dimension (no multiple penalties for the same
+  tangle); each dimension blends an absolute-count term beside its density
+  term so large clean additions can never dilute hotspot counts (counts
+  and densities are both retained, SPEC §3.4). Only the production source
+  set is scored — test code never offsets production debt. Missing
+  analysis is never zero debt: a dimension whose required metrics are
+  `incomplete` or absent scores at full weight and the headline is flagged
+  `partial`, while a `not-applicable` ratio with complete zero counts is a
+  genuinely empty scope. The index is `clamp(round-half-up(Σ weight ×
+  dimension), 0, 100)` over IEEE-754 doubles; reported contributions are
+  largest-remainder integer apportionments (ties by dimension id) so they
+  sum exactly to the index, and every point traces to raw metric ids,
+  values, and thresholds in a deterministic explanation plus the §6.4
+  contract `score` view. Fixtures pin the bounds (0 clean / 100
+  saturated), lower-is-better monotonicity per raw metric, stable
+  rounding, exact contribution totals, the missing-analysis policy, and
+  summed-mass (never averaged-ratio) aggregation.
+- **Import-cycle measurements expose complete cycle groups** (trellis-cbde,
+  SPEC §14 stage 11 of the deterministic-pivot plan `pl-b2ea`):
+  `analyzeCycles` in `src/metrics/` consumes the trellis-d214 dependency
+  graph and reports **complete cyclic module groups** via strongly
+  connected components (iterative Tarjan — never first-cycle-only), under
+  the versioned `CYCLE_POLICY` (`1.0.0`). Runtime and type-only edges form
+  separate subgraphs and are **scored separately** (a pair linked runtime
+  one way and type-only the other is no cycle in either class); self-imports
+  are size-1 groups with representative path `[p, p]`. Group ids
+  (`cycle-<n>`, assigned in (smallest member, class) order) and
+  representative paths (shortest cycle from the smallest member over sorted
+  adjacency) are byte-stable across filesystem enumeration order. Package
+  views list cross-package groups by shared id while module counts stay
+  per-package, so the repo-level affected-module union never
+  double-counts. Emits `import-cycle.groups` / `import-cycle.modules` /
+  `import-cycle.density` metrics and one located `import-cycle` finding per
+  group; unresolved graph coverage accompanies the results — an incomplete
+  graph rolls every cycle metric up `incomplete` (SPEC §3.3) with the
+  graph's reasons and a machine-readable `unresolvedEdges` count.
+- **Workspace-aware import resolution produces a documented dependency graph**
+  (trellis-d214, SPEC §14 stage 10 of the deterministic-pivot plan `pl-b2ea`):
+  `analyzeDependencyGraph` in `src/metrics/` replaces the regex/relative-only
+  graph foundation with AST extraction over the one shared parse (comments,
+  string contents, and JSDoc import types cannot forge edges) plus the pinned
+  compiler's own module resolution over **local files and configuration
+  only** — `node_modules` is never consulted and nothing is ever fetched, so
+  absent dependencies change nothing. Edges are typed (`import` /
+  `re-export` / `dynamic`; type-only edges — `import type`, `export type …
+  from`, type-position `import("…")` — keep their identity) under the
+  versioned `GRAPH_POLICY` (`1.0.0`: type-only retained-distinct,
+  literal-only dynamic imports, self-edges retained, externals
+  recorded-never-resolved). Resolution order: relative (extension
+  substitution `.js`→`.ts`, `.mts`/`.cts` mapping, `/index` barrels), then
+  the nearest governing `tsconfig.json`'s `paths`/`baseUrl` (undeclared
+  `moduleResolution` defaults to `bundler`), then workspace packages by
+  manifest name through `exports` (one condition level, single `*` wildcard,
+  encapsulation for unlisted subpaths) → `main` → `types` → `index`; anything
+  else is an `external` edge recorded by package name. Resolved targets
+  outside the classified scope are `out-of-scope` edges; failed local intent
+  is `unresolved` with a machine-checkable reason (`no-target`,
+  `outside-root`, `exports-encapsulation`, `unsupported-exports`,
+  `non-literal-dynamic`) and a located `graph.unresolved-import` finding.
+  Emits `graph.files` / `graph.edges.local` / `graph.edges.external` /
+  `graph.edges.unresolved` metrics; unresolved edges and parse diagnostics
+  roll up `incomplete` (SPEC §3.3) while externals stay `complete` and
+  distinguishable. Hand-built fixtures pin aliases, package exports,
+  extension mapping, barrels, workspace boundaries, dynamic imports, and
+  forgery resistance; two runs over the same tree are byte-equal.
+
+- **Duplication metrics identify clone groups and unique affected lines**
+  (trellis-6e4c, SPEC §14 stage 9 of the deterministic-pivot plan `pl-b2ea`):
+  `analyzeDuplication` in `src/metrics/` implements the trellis-5a91
+  decision (SPEC §5.3) — trellis's own normalized-token clone detector over
+  the shared syntax inventory, zero runtime dependencies. Leaf tokens of the
+  shared `ts.SourceFile` (identifiers and literals each normalized to one
+  placeholder) are sliding-window hashed at 50 tokens and extended into
+  maximal matches, grouped by content identity (same-file token-contained
+  members dropped, subsumed overlap groups dropped, no transitive merging);
+  the provisional minimum is 50 tokens **and** 3 lines per member. Groups
+  carry stable `clone-group-<n>` ids after deterministic location sorting.
+  The numerator is the union of code-classified lines covered by any member
+  (counted once per file) over the scope's code-line denominator, per source
+  set — production and test are never matched across sets, and
+  generated/vendored/declaration-only/excluded files are never tokenized.
+  Declared budgets (2,000,000 tokens, 100,000,000 token comparisons per
+  source set) trip `incomplete` with the reason instead of a silent clean
+  result. Emits `duplication.groups` / `duplication.duplicated-lines` /
+  `duplication.density` metrics per source set and one
+  `duplication.clone-group` finding per group. Hand-authored fixtures pin
+  exact, renamed, overlapping, multi-copy, below-threshold, near-clone, and
+  scope-boundary outcomes.
+- **Complexity and structural erosion measurements are reproducible**
+  (trellis-fbc5, SPEC §14 stage 7 of the deterministic-pivot plan `pl-b2ea`):
+  new `src/metrics/` holds the first deterministic analyzers over the shared
+  syntax inventory (SPEC §5.1–5.2). `analyzeComplexity` measures per-function
+  cyclomatic complexity (an exact, documented decision table: `if`/`else if`,
+  every loop kind, `case` clauses but not `default`, `catch`, ternaries,
+  `&&`/`||`/`??` and their logical-assignment forms, and each `?.` token;
+  nested functions attributed to themselves via the opaque-leaf walk),
+  maximum control-structure nesting, and per-function SLOC (scanner-classified
+  code lines over the whole-node range; `src/syntax/sloc.ts` now exposes the
+  per-line classification as `classifyLines` so ranges are counted without
+  re-scanning). Erosion weights complexity by size (`mass = CC × √SLOC`,
+  eroded share = mass of functions with `CC > 10` over total mass);
+  aggregation from functions → packages → repo sums masses, never averages
+  package shares. Production and test are always measured separately; empty
+  scopes yield finite zeros for counts/mass and `not-applicable` for
+  distributions and the 0/0 share; scopes with parse diagnostics are
+  `incomplete` with partial values. Emits contract `MetricValue`s (ids
+  suffixed per source set) and ranked `complexity.hotspot` findings with
+  exact paths and line ranges. Hand-calculated fixtures pin branch counts,
+  nesting, and weighted erosion.
+- **A shared TypeScript syntax and function inventory is available**
+  (trellis-d81d, SPEC §14 stage 6 of the deterministic-pivot plan `pl-b2ea`):
+  new `src/syntax/` is the one parse layer every metric reuses within an
+  audit (SPEC §4, §13). `buildSyntaxInventory` consumes the discovery
+  `SourceInventory` and parses each classified TS/TSX file exactly once with
+  the now-**pinned** TypeScript compiler API (`dependencies.typescript` is
+  the exact `6.0.3` — moved from a floating devDependency; TS 7 dropped the
+  JS compiler API, and the inventory records `compilerVersion` for
+  traceability). Each `FileSyntax` carries the shared `ts.SourceFile`,
+  discovery ownership (`packagePath`/`sourceSet`), a function inventory
+  (declarations, expressions, arrows, methods, constructors, get/set
+  accessors — with documented naming, 1-based whole-node and body ranges,
+  and `depth`/`parentIndex` attribution), scanner-based line counts
+  (documented multiline-literal and comment-only handling), and located
+  parse diagnostics that roll up to report `completeness` instead of
+  throwing (SPEC §3.3). Documented binding rules: overload/`declare`/
+  abstract signatures are never inventory entries (they are counted and
+  attached to their implementation), and nested function bodies belong to
+  the nested function alone — `walkOwnNodes` enforces the attribution
+  mechanically so nested branches can never leak into parent totals (§5.1).
+  Facts only; scoring stays downstream.
+- **TypeScript source discovery produces a classified workspace inventory**
+  (trellis-6003, SPEC §14 stage 5 of the deterministic-pivot plan `pl-b2ea`):
+  `src/discovery/` gains `discoverSourceInventory` — one deterministic
+  filesystem walk (SPEC §3.1) that finds package boundaries from
+  `package.json` manifests and workspace declarations (npm/bun/yarn
+  `workspaces` array/object, pnpm `pnpm-workspace.yaml` with `!` negation),
+  assigns every TS/TSX file (`.ts`/`.tsx`/`.mts`/`.cts`) to exactly one source
+  set (production/test/generated/vendored/declaration-only) owned by its
+  nearest ancestor package so nested packages are never double-counted, and
+  reports — rather than hides — the excluded scope (build outputs
+  `dist`/`build`/`out`/`coverage` plus config `source.exclude` globs), the
+  unsupported scope (non-TS source files and whole non-TS packages, §3.3),
+  and the ignored scope (dependency dirs, dot dirs, symlinked dirs, which are
+  never descended into; directory symlinks are never followed so there are no
+  cycles). Classification defaults are documented in `classify.ts` with
+  explicit §6.5 overrides evaluated before them; matching uses a documented
+  minimal glob subset (`*`, `?`, `**`) in `glob.ts`. Discovery works on
+  uncommitted files and non-Git trees and never installs packages, runs
+  repository scripts, or touches the network. `toSourceCoverage` projects the
+  inventory onto the §6.4 report shape (sloc left to the measurement layer).
+  New `src/config/` loads and validates the optional `trellis.yaml` /
+  `trellis.yml` into the §6.5 audit-config contract (missing file → defaults;
+  invalid file → an error naming every offending key). Legacy app discovery
+  (`discoverApps`) remains for the transitional rubric path.
+- **Versioned §6 contracts land in `src/contract/`** (trellis-58a6, SPEC §14
+  stage 4 of the deterministic-pivot plan `pl-b2ea`): zod-validated core types
+  and boundary schemas for metric values (unit, numerator/denominator,
+  complete/incomplete/unsupported/not-applicable states), located findings,
+  safeguard evidence (absent/configured/structurally-wired/unknown), source
+  coverage kept distinct from analysis completeness, the audit report
+  (raw metrics separate from score contributions; `score.partial` tied to the
+  completeness rollup), and the declarative audit configuration (source
+  exclusion/classification + failure policy — pure data, no executable hooks,
+  no scoring-weight overrides). One `SCHEMA_VERSION` covers the family;
+  `ANALYZER_VERSION` aliases the package version and `SCORING_VERSION` pins
+  `0.1.0-provisional`. `measurementPayload` strips run metadata (timestamps,
+  durations) from equality/fingerprint inputs. Contracts only — analyzers and
+  report consumers land with the named downstream issues.
+
+### Fixed
+
+- **Duplication metrics no longer emit a zero denominator** for a scope
+  with no code-classified lines (e.g. a repository without test files):
+  `duplication.duplicated-lines.<set>` omits the numerator/denominator pair
+  there, matching the §6.1 contract (denominators must be positive). The
+  audit core's schema validation (trellis-ef85) surfaced the violation.
+
+### Removed
+
+- **The investigation subsystem is deleted** (trellis-4abc, SPEC §14 stage 3 of
+  the deterministic-pivot plan `pl-b2ea`). `src/investigation/` (areas, findings
+  contracts, grader, Pi RPC provider, frozen goldens) and the live golden
+  capture tooling (`scripts/update-pi-golden.ts`) are gone: no executable
+  model/provider/agent-grader implementation, prompt, or capture gate remains
+  in shipped source or scripts. The store's investigation-cache API
+  (`getCache`/`putCache`/`CachedFindings`) is removed; historical migrations
+  stay append-only, so the `investigation_cache` table still lands on fresh
+  databases and existing user data is untouched — nothing reads or writes it.
+- **The os-eco scoring overlay is removed** (SPEC §14 stage 3): the
+  `src/detectors/oseco/` evidence pack (dead since the stage-2 disconnect) and
+  the `osecoDetectors` toggle on `targets.yaml` targets, `AuditOptions`, and
+  the detection context. Strict `targets.yaml` validation now rejects the key.
+- **Agent execution is disconnected from every public audit path** (trellis-ba72,
+  SPEC §14 stage 2 of the deterministic-pivot plan `pl-b2ea`). The audit
+  pipeline, fleet orchestration, CLI, and SDK no longer wire the investigation
+  layer: there is no route to Pi or any model from `trellis audit`,
+  `trellis fleet`, or the SDK — including the default persistence path (the
+  central store is run history only, never an investigation cache). The os-eco
+  pass-override overlay is no longer folded into criterion verdicts.
+- The 20 agent-discovery criteria — and the all-agent `documentation` category —
+  are retired from the transitional rubric catalog: it now totals **70
+  deterministic criteria across 8 categories** (rubric `0.3.0`; pre-1.0
+  comparability rides the minor slot). Retired criteria no longer count as
+  missing measurements or affect the score.
+
+### Changed
+
+- Legacy investigation configuration is **rejected with an actionable error**
+  instead of silently honored: the `--no-cache` flag (audit + fleet), the
+  `TRELLIS_PI_BIN` environment variable, `targets.yaml`
+  `defaults.investigation`, and retired SDK option keys (`noCache`, `piBin`,
+  `investigation`, `provider`, `model`) all fail fast naming what to remove.
+
 ## [0.1.0] — 2026-06-10
 
 The MVP-complete release — every SPEC §14 milestone has landed — and the first

@@ -1,0 +1,228 @@
+{
+  "dependencyCruiser": {
+    "forbidden": [
+      {
+        "name": "no-cycles",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "circular": true
+        }
+      },
+      {
+        "name": "no-unresolved",
+        "severity": "error",
+        "from": {},
+        "to": {
+          "couldNotResolve": true
+        }
+      },
+      {
+        "name": "domain-must-not-import-ui",
+        "severity": "error",
+        "from": {
+          "path": "^src/domain/"
+        },
+        "to": {
+          "path": "^src/ui/"
+        }
+      }
+    ],
+    "options": {
+      "doNotFollow": {
+        "path": "node_modules"
+      },
+      "exclude": {
+        "path": "\\.test\\.ts$"
+      },
+      "tsPreCompilationDeps": true,
+      "tsConfig": {
+        "fileName": "<temp>/fixture/tsconfig.json"
+      },
+      "enhancedResolveOptions": {
+        "extensions": [
+          ".ts",
+          ".tsx",
+          ".js",
+          ".json"
+        ],
+        "conditionNames": [
+          "import",
+          "require",
+          "node",
+          "default"
+        ]
+      }
+    }
+  },
+  "knip": {
+    "angular": false,
+    "astro": false,
+    "astro-db": false,
+    "astro-og-canvas": false,
+    "ava": false,
+    "babel": false,
+    "biome": false,
+    "bumpp": false,
+    "bun": false,
+    "c8": false,
+    "capacitor": false,
+    "catalyst": false,
+    "changelogen": false,
+    "changelogithub": false,
+    "changesets": false,
+    "commitizen": false,
+    "commitlint": false,
+    "convex": false,
+    "create-typescript-app": false,
+    "cspell": false,
+    "cucumber": false,
+    "cypress": false,
+    "danger": false,
+    "dependency-cruiser": false,
+    "docusaurus": false,
+    "dotenv": false,
+    "drizzle": false,
+    "eleventy": false,
+    "eslint": false,
+    "execa": false,
+    "expo": false,
+    "expressive-code": false,
+    "fast": false,
+    "gatsby": false,
+    "github-action": false,
+    "github-actions": false,
+    "glob": false,
+    "graphql-codegen": false,
+    "hardhat": false,
+    "husky": false,
+    "i18next-parser": false,
+    "jest": false,
+    "karma": false,
+    "knex": false,
+    "ladle": false,
+    "lefthook": false,
+    "lint-staged": false,
+    "linthtml": false,
+    "lit": false,
+    "lockfile-lint": false,
+    "lost-pixel": false,
+    "markdownlint": false,
+    "mdx": false,
+    "mdxlint": false,
+    "metro": false,
+    "mocha": false,
+    "moonrepo": false,
+    "msw": false,
+    "nano-spawn": false,
+    "nano-staged": false,
+    "nest": false,
+    "netlify": false,
+    "next": false,
+    "next-intl": false,
+    "next-mdx": false,
+    "nitro": false,
+    "node": false,
+    "node-modules-inspector": false,
+    "nodemon": false,
+    "npm-package-json-lint": false,
+    "nuxt": false,
+    "nx": false,
+    "nyc": false,
+    "oclif": false,
+    "openapi-ts": false,
+    "orval": false,
+    "oxfmt": false,
+    "oxlint": false,
+    "panda-css": false,
+    "parcel": false,
+    "payload": false,
+    "pino": false,
+    "playwright": false,
+    "playwright-ct": false,
+    "playwright-test": false,
+    "plop": false,
+    "pm2": false,
+    "pnpm": false,
+    "postcss": false,
+    "preconstruct": false,
+    "prettier": false,
+    "prisma": false,
+    "qwik": false,
+    "raycast": false,
+    "react-cosmos": false,
+    "react-email": false,
+    "react-native": false,
+    "react-router": false,
+    "relay": false,
+    "release-it": false,
+    "remark": false,
+    "remix": false,
+    "rolldown": false,
+    "rollup": false,
+    "rsbuild": false,
+    "rslib": false,
+    "rspack": false,
+    "rstest": false,
+    "sanity": false,
+    "semantic-release": false,
+    "sentry": false,
+    "serverless-framework": false,
+    "simple-git-hooks": false,
+    "size-limit": false,
+    "sst": false,
+    "starlight": false,
+    "stencil": false,
+    "storybook": false,
+    "stryker": false,
+    "stylelint": false,
+    "svelte": false,
+    "sveltejs-package": false,
+    "sveltekit": false,
+    "svgo": false,
+    "svgr": false,
+    "swc": false,
+    "syncpack": false,
+    "tailwind": false,
+    "tanstack-router": false,
+    "taskfile": false,
+    "travis": false,
+    "ts-node": false,
+    "tsdown": false,
+    "tsup": false,
+    "tsx": false,
+    "typedoc": false,
+    "typescript": false,
+    "unbuild": false,
+    "unocss": false,
+    "vercel": false,
+    "vercel-og": false,
+    "vike": false,
+    "vite": false,
+    "vitepress": false,
+    "vitest": false,
+    "vue": false,
+    "webdriver-io": false,
+    "webpack": false,
+    "wireit": false,
+    "wrangler": false,
+    "wxt": false,
+    "xo": false,
+    "yarn": false,
+    "yorkie": false,
+    "zx": false,
+    "entry": [
+      "src/main.ts"
+    ],
+    "project": [
+      "src/**/*.ts"
+    ],
+    "ignore": [
+      "**/*.test.ts",
+      "**/__golden__/**"
+    ],
+    "ignoreUnresolved": [
+      "bun-types"
+    ]
+  }
+}

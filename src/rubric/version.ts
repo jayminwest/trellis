@@ -20,7 +20,7 @@
  * no major to break yet), so a minor bump before 1.0.0 may move scores. Post-1.0
  * the table above is binding.
  */
-export const RUBRIC_VERSION = "0.2.0";
+export const RUBRIC_VERSION = "0.3.0";
 
 /**
  * Compare two rubric versions for *score comparability*.
