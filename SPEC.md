@@ -590,6 +590,17 @@ source:
 providers:                             # optional provider selection (§16.4) — additive, unscored
   jscpd:                               #   evidence: no provider requested by default
     mode: normalized                   #   one match mode per request (exact | normalized | near)
+  dependency-cruiser:                  #   declared architecture rules (trellis-89be) — inline data,
+    rules:                             #   never an executable .dependency-cruiser config; an absent
+      - kind: boundary                 #   rules block declares no architecture claims
+        name: domain-must-not-import-ui
+        allowance: forbidden           #   forbidden, or allowed as an explicit exception
+        edges: [runtime, type-only]    #   the dependency kinds the rule governs
+        from: { path: "^src/domain/" } #   start-anchored, repo-relative scope selectors
+        to: { path: "^src/ui/" }
+      - kind: cycle                   #   cycle and unresolved checks are rules too —
+        name: no-runtime-cycles        #   runtime and type-only cycle policies stay distinct
+        edges: [runtime]
 policy:                                 # failure policy only — never mutates scoring weights
   maxIndex: 40
   regression:                           # score regression vs a baseline report (§9)
@@ -611,6 +622,21 @@ requested provider adds namespaced advisory evidence alongside the native
 duplication result and changes neither the native measurement nor the
 score; the default audit (no block) requests nothing, stages nothing and
 launches nothing.
+
+Architecture rules (`providers.dependency-cruiser.rules`, trellis-89be)
+are the bounded declarative dependency-rule subset — boundary
+(allowed/forbidden from/to scope selectors over explicit runtime /
+type-only edge kinds), cycle (per edge kind, so type-only and runtime
+cycle policies stay distinct) and unresolved rules as inline data.
+Unknown rule kinds, executable `.dependency-cruiser` configs, ambiguous
+rule sets and invalid patterns are rejected at config-load time; a request
+without rules declares no architecture claims — zero rules is never
+coherence, and no layering is inferred from directory names. The compiled
+policy's normalized digest rides the analysis identity (§16.2), so a
+changed declared architecture is a changed measurement — never silently
+reported as code churn. The adapter (trellis-adbf) turns compiled rules
+into coverage-checked evidence; until it delivers, requests resolve to
+located `unsupported` evidence.
 
 Policy budgets gate the run; they never silently change how the index is
 computed (§7). A budget key may also name a provider's namespaced evidence
