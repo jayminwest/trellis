@@ -53,6 +53,7 @@
 		"check:ci-parity": "bun scripts/check-ci-parity.ts",
 		"check:all": "bun scripts/check-all.ts",
 		"smoke:package": "bun run scripts/smoke-package.ts",
+		"smoke:provider-tools": "bun run scripts/smoke-provider-tools.ts",
 		"verify": "bun run check:all",
 		"test:coverage": "bun test --coverage --timeout 20000",
 		"test:ci": "mkdir -p test-results && bun test --timeout 20000 --coverage --coverage-reporter=lcov --coverage-dir=coverage --reporter=junit --reporter-outfile=test-results/junit.xml",
@@ -64,6 +65,7 @@
 		"@biomejs/biome": "^2.4.14",
 		"@types/bun": "latest",
 		"@types/js-yaml": "^4.0.9",
+		"jscpd": "5.2.1",
 		"knip": "^6.14.2",
 		"yaml": "^2.8.2"
 	},

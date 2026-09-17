@@ -1,0 +1,123 @@
+# Supported provider tools: pinned artifacts and local resolution
+
+**Status: delivered (`trellis-ff52`, plan `pl-43c5` step 11).** This page
+documents how trellis pins, discovers, and verifies the external
+quality-evidence provider artifacts it may execute — without ever
+installing, updating, or downloading anything at audit time (SPEC §16.4
+"Trust boundary — supported installation").
+
+Native analysis and scoring stay the default and the authoritative basis.
+Optional providers are opt-in, unscored evidence; an absent tool never
+changes a native audit (a default `trellis audit` never touches this
+machinery at all).
+
+## Where the manifest lives
+
+- `src/providers/manifest.ts` — the supported-tool manifest: one entry per
+  pinned external tool with the exact package version, the bin layout, the
+  SHA-256 digests of the pinned distribution's cross-platform files, and the
+  declared platforms with their honest execution records.
+- `src/providers/resolve.ts` — the local resolver: discovers an installed
+  tool, verifies it against the manifest, and returns a located outcome —
+  a verified executable path, or `unavailable`/`unsupported` with an
+  actionable reason and install instructions.
+- `src/providers/process.ts` — the controlled process runner's executable
+  registry resolves `jscpd` through this manifest (`requirePinnedToolExecutable`);
+  execution itself stays behind the step 9 limits (fixed argv, no shell,
+  explicit environment, wall-time/output bounds).
+
+## What is pinned
+
+**jscpd 5.2.1** (`providerId: jscpd`) — the duplication-evidence candidate.
+The pin records:
+
+- the npm package identity (`jscpd` at exactly `5.2.1` — no ranges),
+- the expected `bin.jscpd` entry (`./run-jscpd.js`),
+- SHA-256 digests of the two cross-platform files the package ships
+  (`run-jscpd.js`, `platform-map.js`), recorded from the real npm
+  distribution,
+- the platform packages (one per OS/CPU/libc, e.g. `jscpd-linux-x64-gnu`)
+  with the binary path (`bin/jscpd`, `bin/jscpd.exe` on Windows), and
+- a per-platform execution record (see below).
+
+## Preparing an installation (operator step, never audit-time)
+
+trellis never installs, updates, or downloads tools. The supported
+execution context is a **local installation prepared by the operator**:
+
+- **In this repository** the pin is an exact devDependency
+  (`"jscpd": "5.2.1"` in `package.json`), so `bun install` prepares the
+  exact artifact offline from `bun.lock`. The dups gate and the provider
+  smoke (`bun run smoke:provider-tools`) then resolve it locally.
+- **For a CLI install**, prepare the tool in the `node_modules` tree trellis
+  itself resolves from, e.g. in the package that depends on
+  `@os-eco/trellis-cli`:
+  `npm install --save-exact --save-dev jscpd@5.2.1`
+  (or `bun add --dev jscpd@5.2.1`).
+
+A request for a tool that is not installed resolves to `unavailable` with
+these instructions attached (SPEC §16.2/§16.3) — never a fabricated run and
+never an audit-time acquisition.
+
+## Discovery and the trust boundary
+
+Resolution walks the `node_modules` chain **upward from trellis's own
+module location** — the operator-prepared installation trellis runs from.
+It never:
+
+- searches `PATH` or runs `bunx`/`npm exec` (no opportunistic downloads),
+- accepts a target-workspace, operator-supplied, or command-string path,
+- installs, updates, or downloads anything, or
+- executes the tool during resolution.
+
+Before a resolved artifact may run, it is verified against the manifest:
+package name, **exact** version, bin layout, distribution file digests,
+platform-package identity and version, binary presence, and — where a real
+host produced one — the platform binary's digest. Any mismatch is a
+located `unavailable` result; trellis never silently uses a different
+version than the pin.
+
+## Platform support, honestly
+
+Every declared platform carries an execution record:
+
+| Record | Meaning |
+| --- | --- |
+| `tested` | installed and invoked offline by this step's package smoke on that host (`scripts/smoke-provider-tools.ts`, also exercised by `src/providers/resolve.test.ts` in CI) |
+| `research-tested` | installed and invoked by the research spike, with the binary digest recorded from that host (`docs/research/jscpd-provider-spike/summary.json`) |
+| `declared-untested` | shipped by the pinned tool's platform map but never executed by trellis — no digest is recorded for it |
+
+For jscpd 5.2.1: **linux-x64-gnu** is `tested`; **darwin-arm64** is
+`research-tested`; linux-arm64 (gnu/musl), linux-x64-musl, darwin-x64, and
+Windows (x64/arm64) are `declared-untested`. Hosts outside the table
+resolve `unsupported` — trellis claims no universal platform support. A
+`declared-untested` platform that is present resolves with
+`binaryDigestVerified: false` (everything except the binary digest is still
+verified); the recorded digests are the only ones claimed.
+
+## Where upgrades change analysis identity
+
+The pinned tool version is part of **provider identity** and therefore of
+**analysis identity** (SPEC §16.2): evidence compares only across identical
+provider and analysis identity (SPEC §16.6). Consequences:
+
+- Bumping the pin (e.g. jscpd 5.2.1 → 5.2.2) is a **manifest change**: new
+  version, fresh digests from the real distribution, and fresh platform
+  execution records. It must never happen silently at runtime.
+- Old reports remain valid; their evidence simply predates the new pin and
+  compares as a different basis, never as a silent trend.
+- The adapter version, mode, and option set (later steps, `trellis-f4e2`)
+  join the tool version in analysis identity.
+
+## Isolation from the native core
+
+- The pin is a **devDependency**, never a runtime dependency:
+  `scripts/smoke-package.ts` asserts the packed tarball keeps optional
+  provider tools out of the native runtime (`EXCLUDED_OPTIONAL_TOOLS`).
+- `knip.json` lists `jscpd` under `ignoreDependencies` — justified because
+  the artifact is resolved by string at runtime through the manifest (the
+  pin must stay); removing the pin to satisfy the dependency gate is not an
+  option.
+- Nothing in `src/audit/`, scoring, or the report schema reads this
+  machinery; only explicitly requested provider evidence will (later plan
+  steps).
