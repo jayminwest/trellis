@@ -85,20 +85,35 @@ describe("manifest", () => {
 
 describe("detectLinuxLibc", () => {
 	test("reports glibc from a runtime report that carries a glibc version", () => {
-		expect(detectLinuxLibc(() => ({ header: { glibcVersionRuntime: "2.36" } }))).toBe("glibc");
+		expect(detectLinuxLibc(() => ({ header: { glibcVersionRuntime: "2.36" } }), "linux")).toBe(
+			"glibc",
+		);
 	});
 
 	test("reports musl when the runtime report carries no glibc version", () => {
-		expect(detectLinuxLibc(() => ({ header: {} }))).toBe("musl");
-		expect(detectLinuxLibc(() => null)).toBe("musl");
+		expect(detectLinuxLibc(() => ({ header: {} }), "linux")).toBe("musl");
+		expect(detectLinuxLibc(() => null, "linux")).toBe("musl");
 	});
 
 	test("reports musl when the runtime report cannot be read", () => {
 		expect(
 			detectLinuxLibc(() => {
 				throw new Error("report unavailable");
-			}),
+			}, "linux"),
 		).toBe("musl");
+	});
+
+	test("leaves libc unspecified on non-Linux hosts without reading the report", () => {
+		for (const platform of ["darwin", "win32"] as const) {
+			let wasRead = false;
+			expect(
+				detectLinuxLibc(() => {
+					wasRead = true;
+					return { header: { glibcVersionRuntime: "2.36" } };
+				}, platform),
+			).toBeUndefined();
+			expect(wasRead).toBe(false);
+		}
 	});
 
 	test("reports the host's real platform and architecture", () => {

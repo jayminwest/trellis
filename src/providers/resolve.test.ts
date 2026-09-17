@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import {
@@ -46,7 +46,7 @@ interface Fixture {
 
 /** Build a hermetic synthetic pinned-tool installation plus its manifest entry. */
 function writePinnedInstall(overrides: FixtureOverrides = {}): Fixture {
-	const root = mkdtempSync(join(tmpdir(), "trellis-pinned-"));
+	const root = realpathSync(mkdtempSync(join(tmpdir(), "trellis-pinned-")));
 	TEMP_DIRS.push(root);
 	const launcherContent = overrides.launcherContent ?? CANONICAL_LAUNCHER;
 	const platformMapContent = overrides.platformMapContent ?? CANONICAL_PLATFORM_MAP;

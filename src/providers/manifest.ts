@@ -263,8 +263,9 @@ export interface PinnedToolHost {
  */
 export function detectLinuxLibc(
 	getReport: () => unknown = () => process.report?.getReport(),
+	platform: NodeJS.Platform = process.platform,
 ): "glibc" | "musl" | undefined {
-	if (process.platform !== "linux") return undefined;
+	if (platform !== "linux") return undefined;
 	try {
 		const report = getReport() as { header?: { glibcVersionRuntime?: string } } | null;
 		return report?.header?.glibcVersionRuntime !== undefined ? "glibc" : "musl";

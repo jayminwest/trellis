@@ -154,7 +154,12 @@ describe("stageWorkspaceView", () => {
 				);
 				try {
 					expect(view.files).toEqual([]);
-					expect(view.readFailures[0]?.reason).toContain("could not be read");
+					expect(view.readFailures).toEqual([
+						{
+							path: "locked.ts",
+							reason: expect.stringMatching(/could not be (read|resolved).*EACCES/),
+						},
+					]);
 				} finally {
 					await view.cleanup();
 					await chmod(join(root, "locked.ts"), 0o644);
