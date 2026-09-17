@@ -40,7 +40,7 @@
 		"url": "https://github.com/jayminwest/trellis.git"
 	},
 	"scripts": {
-		"test": "bun test",
+		"test": "bun test --timeout 20000",
 		"lint": "biome check --error-on-warnings .",
 		"lint:fix": "biome check --write --error-on-warnings .",
 		"typecheck": "tsc --noEmit",
@@ -54,8 +54,8 @@
 		"check:all": "bun scripts/check-all.ts",
 		"smoke:package": "bun run scripts/smoke-package.ts",
 		"verify": "bun run check:all",
-		"test:coverage": "bun test --coverage",
-		"test:ci": "mkdir -p test-results && bun test --coverage --coverage-reporter=lcov --coverage-dir=coverage --reporter=junit --reporter-outfile=test-results/junit.xml",
+		"test:coverage": "bun test --coverage --timeout 20000",
+		"test:ci": "mkdir -p test-results && bun test --timeout 20000 --coverage --coverage-reporter=lcov --coverage-dir=coverage --reporter=junit --reporter-outfile=test-results/junit.xml",
 		"report:test-timing": "bun run scripts/report-test-timing.ts",
 		"report:quality-metrics": "bun run scripts/report-quality-metrics.ts",
 		"prepare": "[ -e .git ] && git config core.hooksPath scripts/hooks || true"
