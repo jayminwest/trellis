@@ -4,3 +4,8 @@
 # Tests are colocated as <name>.test.ts next to the unit under test. We rely on
 # Bun's default recursive discovery so both the domain core (src/) and the
 # quality ratchets (scripts/) are exercised by a bare `bun test`.
+#
+# Per-test timeout: the 5s Bun default is too tight for the CLI-subprocess
+# suites on slow/loaded runners (they spawn real `trellis audit` processes,
+# ~2-5s each); every test entry point passes `--timeout 20000` so slow
+# hardware fails on real assertions instead of spurious timeouts.

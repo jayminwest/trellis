@@ -11,8 +11,9 @@ import {
 	SCHEMA_VERSION,
 	SCORING_VERSION,
 } from "../contract/index.ts";
+import { fixtureEvidenceArea } from "../contract/report.fixtures.ts";
 import { renderAuditJson } from "../report/audit-json.ts";
-import { openStore, repoIdentity, reportVersions, type Store, storedAuditReport } from "./index.ts";
+import { openStore, repoIdentity, type Store, storedAuditReport } from "./index.ts";
 import { migrate } from "./migrate.ts";
 
 /** A minimal but §6.4-valid audit report fixture; run metadata is pinned for determinism. */
@@ -20,7 +21,6 @@ function makeAuditReport(
 	overrides: {
 		root?: string;
 		identity?: string;
-		schemaVersion?: string;
 		analyzerVersion?: string;
 		scoringVersion?: string;
 		index?: number;
@@ -28,7 +28,7 @@ function makeAuditReport(
 	} = {},
 ): AuditReport {
 	return {
-		schemaVersion: overrides.schemaVersion ?? SCHEMA_VERSION,
+		schemaVersion: SCHEMA_VERSION,
 		analyzerVersion: overrides.analyzerVersion ?? ANALYZER_VERSION,
 		scoringVersion: overrides.scoringVersion ?? SCORING_VERSION,
 		repo: {
@@ -37,6 +37,7 @@ function makeAuditReport(
 		},
 		sourceCoverage: { production: { files: 1, sloc: 10 }, test: { files: 0 } },
 		completeness: "complete",
+		evidence: fixtureEvidenceArea(["complexity.average-cc"]),
 		metrics: {
 			"complexity.average-cc": {
 				id: "complexity.average-cc",
@@ -216,9 +217,37 @@ describe("compatible run selection", () => {
 		rmSync(dir, { recursive: true, force: true });
 	});
 
-	test("latestCompatibleRun skips newer runs with incompatible versions", () => {
+	/**
+	 * Simulate a foreign `audit_runs` row carrying a schema version this
+	 * trellis can neither write nor read (a second raw connection to the
+	 * same database — insertAuditRun validates, and trellis writes only
+	 * versions it can read, §16.6): the read path must skip it, never
+	 * silently trend it.
+	 */
+	function insertForeignSchemaRun(auditedAt: string, index: number): void {
+		const db = new Database(join(dir, "trellis.db"));
+		db.query(
+			`INSERT INTO audit_runs
+			 (repo_root, repo_identity, schema_version, analyzer_version, scoring_version,
+			  sloppiness_index, partial, completeness, report_json, audited_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			"/tmp/fixture",
+			repoIdentity(dir, "fixture"),
+			"0.0.0-legacy-schema",
+			ANALYZER_VERSION,
+			SCORING_VERSION,
+			index,
+			0,
+			"complete",
+			"{}",
+			auditedAt,
+		);
+		db.close();
+	}
+
+	test("latestCompatibleRun skips newer runs with incompatible scored bases", () => {
 		const current = makeAuditReport({ root: dir });
-		const versions = reportVersions(current);
 		const identity = repoIdentity(dir, "fixture");
 
 		store.insertAuditRun(
@@ -243,45 +272,41 @@ describe("compatible run selection", () => {
 			}),
 		);
 
-		const prior = store.latestCompatibleRun(identity, versions);
+		const prior = store.latestCompatibleRun(identity, current);
 		expect(prior?.sloppinessIndex).toBe(30);
 		expect(prior?.auditedAt).toBe("2026-01-01T00:00:00.000Z");
 	});
 
-	test("compatible trends contain only same-version runs, oldest first", () => {
+	test("compatible trends contain only scored-basis-compatible runs, oldest first", () => {
 		const current = makeAuditReport({ root: dir });
-		const versions = reportVersions(current);
 		const identity = repoIdentity(dir, "fixture");
 
 		store.insertAuditRun(
 			makeAuditReport({ root: dir, auditedAt: "2026-01-01T00:00:00.000Z", index: 30 }),
 		);
+		// Newer still, but carrying a schema version this trellis can neither
+		// write nor read — a foreign row simulated with a direct insert
+		// (insertAuditRun validates; trellis writes only versions it can
+		// read, §16.6), never silently joined into a trend.
+		insertForeignSchemaRun("2026-03-01T00:00:00.000Z", 99);
 		store.insertAuditRun(
-			makeAuditReport({
-				root: dir,
-				auditedAt: "2026-02-01T00:00:00.000Z",
-				index: 99,
-				schemaVersion: "0.0.0-legacy-schema",
-			}),
-		);
-		store.insertAuditRun(
-			makeAuditReport({ root: dir, auditedAt: "2026-03-01T00:00:00.000Z", index: 10 }),
+			makeAuditReport({ root: dir, auditedAt: "2026-04-01T00:00:00.000Z", index: 10 }),
 		);
 
-		const compatible = store.compatibleAuditRuns(identity, versions);
+		const compatible = store.compatibleAuditRuns(identity, current);
 		expect(compatible.map((r) => r.sloppinessIndex)).toEqual([30, 10]);
 
-		const trend = store.sloppinessTrend(identity, versions);
+		const trend = store.sloppinessTrend(identity, current);
 		expect(trend.map((p) => p.index)).toEqual([30, 10]);
 		expect(trend.map((p) => p.auditedAt)).toEqual([
 			"2026-01-01T00:00:00.000Z",
-			"2026-03-01T00:00:00.000Z",
+			"2026-04-01T00:00:00.000Z",
 		]);
 		expect(trend.every((p) => p.partial === false && p.completeness === "complete")).toBe(true);
 
 		// The since floor applies to the compatible series too.
 		expect(
-			store.sloppinessTrend(identity, versions, "2026-02-15T00:00:00.000Z").map((p) => p.index),
+			store.sloppinessTrend(identity, current, "2026-02-15T00:00:00.000Z").map((p) => p.index),
 		).toEqual([10]);
 	});
 
@@ -304,7 +329,7 @@ describe("compatible run selection", () => {
 		const identity = repoIdentity(dir, "fixture");
 
 		// The sloppiness trend sees only the sloppiness run — readiness never enters it.
-		const trend = store.sloppinessTrend(identity, reportVersions(report));
+		const trend = store.sloppinessTrend(identity, report);
 		expect(trend).toHaveLength(1);
 		expect(trend[0]?.index).toBe(12);
 
@@ -331,9 +356,7 @@ describe("disabled persistence", () => {
 		try {
 			expect(store.auditRepos()).toEqual([]);
 			expect(store.latestAuditRun(repoIdentity(dir))).toBeNull();
-			expect(store.sloppinessTrend(repoIdentity(dir), reportVersions(makeAuditReport()))).toEqual(
-				[],
-			);
+			expect(store.sloppinessTrend(repoIdentity(dir), makeAuditReport())).toEqual([]);
 		} finally {
 			store.close();
 		}

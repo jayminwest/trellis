@@ -132,9 +132,9 @@ export type ReportQuery = ReportRunOptions;
 
 /**
  * Project the run-history dashboard from the central store: the sloppiness
- * snapshot and per-repo §3.5-compatible index series, with legacy readiness
- * history in a visibly distinct section that is never compared with the
- * sloppiness index (SPEC §10). Identical to `trellis report`.
+ * snapshot and per-repo scored-basis-compatible index series (§3.5, §16.6),
+ * with legacy readiness history in a visibly distinct section that is never
+ * compared with the sloppiness index (SPEC §10). Identical to `trellis report`.
  */
 export function report(query: ReportQuery = {}): HistoryReport {
 	return buildReport(query);

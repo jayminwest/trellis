@@ -595,10 +595,19 @@ policy:                                 # failure policy only — never mutates 
   budgets:
     duplication.density: { max: 0.05 }
   failOnNew: [import-cycle, complexity.hotspot]
+  requireEvidence: [jscpd]              # demanded provider evidence (§16.3): absent or
+                                         #   failed evidence fails the run, never the score
 ```
 
 Policy budgets gate the run; they never silently change how the index is
-computed (§7).
+computed (§7). A budget key may also name a provider's namespaced evidence
+(`provider.jscpd.pairs`) — evaluated only over that analysis's carried
+evidence, never a fabricated zero — and `requireEvidence` lists the optional
+provider analyses (§16.1 ids) whose evidence the policy demands: a required
+analysis that is unrequested, unavailable, unsupported or incomplete fails
+the run closed (§16.3) even when the native score is complete, while an
+absent optional provider with no requirement never violates policy and
+never changes the score (§16.5).
 
 ### 6.6 Provider evidence (contract — §16; lands with plan `pl-43c5`)
 
@@ -1076,6 +1085,18 @@ Rules:
 
 ### 16.3 Failure semantics and exit codes
 
+> **Delivered (trellis-68b9, plan `pl-43c5` step 7):** the declarative
+> requirement surface is `policy.requireEvidence` in `trellis.yaml` (§6.5) —
+> a list of supported analysis ids (§16.1), validated as pure data at
+> config-load time (native `trellis.*` ids and `provider.*` evidence ids are
+> rejected actionably; no command strings). `assessPolicy`
+> (`src/compare/policy.ts` + `policy-evidence.ts`) fails the run closed on
+> every unmet requirement — unrequested, unavailable, unsupported or
+> incomplete — including a located `unsupported` citation for a deferred
+> capability (§16.7), while budgets and `failOnNew` entries under the reserved
+> `provider.` namespace evaluate over that analysis's carried evidence
+> (step-6 compatibility rules apply) and never fabricate zero values.
+
 - A **requested optional-provider failure is located unavailable/incomplete
   evidence**: the report carries the provider id, state, reason, and —
   where known — the location. It never becomes a clean result and never
@@ -1120,6 +1141,16 @@ Rules:
   execution environment as safe for arbitrary untrusted code. Resource
   limits, staged input snapshots, and raw-evidence validation (steps
   `trellis-eddc`, `trellis-2fe6`) are the compensating controls.
+  > **Delivered (`trellis-ff52`, plan `pl-43c5` step 11):** the supported-
+  > tool manifest/resolver (`src/providers/manifest.ts` +
+  > `src/providers/resolve.ts`, see `docs/provider-tools.md`) pins jscpd
+  > 5.2.1 as an isolated devDependency, resolves it only from the
+  > operator-prepared local installation via trellis-owned `node_modules`
+  > discovery (never PATH/`bunx`, never at audit time), and verifies the
+  > resolved artifact against recorded digests before the process-runner
+  > registry (`src/providers/process.ts`) may run it — with honest
+  > per-platform execution records (`tested` / `research-tested` /
+  > `declared-untested`) instead of universal platform claims.
 - **Never**: target scripts, target verification, models, network
   fetches, opportunistic downloads, or credentials.
 
@@ -1191,6 +1222,17 @@ requirement on it fails closed (§16.3) — and no nonexistent analysis is
 ever reported as `complete`. A deferred outcome is a documented capability
 state (`trellis-7b99` owns the follow-through), not a claim of
 implementation.
+
+> **Decision recorded (`trellis-db3e`, plan `pl-43c5` step 25): DEFERRED.**
+> The bounded decision record is
+> [`docs/sonarjs-decision.md`](docs/sonarjs-decision.md): the pinned
+> `eslint-plugin-sonarjs` 3.0.5 distribution's `LGPL-3.0-only` package
+> metadata conflicts with its shipped SONAR Source-Available License v1.0
+> text, so no permitted distribution route is established and the research
+> diagnostic adapter is not adopted as a metric API. The typed capability
+> carrier is `src/providers/capabilities.ts` (a `sonarjs` request is known
+> configuration resolving to `unsupported` with the recorded reason); the
+> clearance prerequisite is tracked separately as `trellis-7f5d`.
 
 ---
 

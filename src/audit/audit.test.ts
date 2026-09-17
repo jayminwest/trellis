@@ -201,7 +201,7 @@ describe("auditWorkspace over unsupported and excluded source", () => {
 		const report = await auditWorkspace(repo, {
 			config: {
 				source: { exclude: [], classify: { "scripts/**": "test" } },
-				policy: { budgets: {}, failOnNew: [] },
+				policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
 			},
 		});
 		expect(report.sourceCoverage.test.files).toBe(2);

@@ -238,6 +238,7 @@ function runBunTest(repoRoot: string, emitJUnit: boolean): { exitCode: number; c
 	mkdirSync(coverageDir, { recursive: true });
 	const args = [
 		"test",
+		"--timeout=20000",
 		"--coverage",
 		"--coverage-reporter=text",
 		"--coverage-reporter=lcov",

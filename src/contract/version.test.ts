@@ -2,11 +2,20 @@ import { describe, expect, test } from "bun:test";
 import { VERSION } from "../index.ts";
 import { isRepoRelativePath, versionStringSchema } from "./primitives.ts";
 import { rollUpCompleteness } from "./states.ts";
-import { ANALYZER_VERSION, SCHEMA_VERSION, SCORING_VERSION } from "./version.ts";
+import {
+	ANALYZER_VERSION,
+	isSupportedSchemaVersion,
+	PRE_PROVIDER_SCHEMA_VERSION,
+	SCHEMA_VERSION,
+	SCORING_VERSION,
+	SUPPORTED_SCHEMA_VERSIONS,
+} from "./version.ts";
 
 describe("contract version constants", () => {
-	test("pins the schema version for the §6 contract family", () => {
-		expect(SCHEMA_VERSION).toBe("1.0.0");
+	test("pins the evidence-carrying schema version for the §6 contract family", () => {
+		// 1.1.0 (trellis-a24d) adds the per-analysis evidence area; native
+		// metric values and the scoring formula are unchanged.
+		expect(SCHEMA_VERSION).toBe("1.1.0");
 	});
 
 	test("pins the provisional scoring version from SPEC §7", () => {
@@ -15,6 +24,22 @@ describe("contract version constants", () => {
 
 	test("aliases the analyzer version from the package version", () => {
 		expect(ANALYZER_VERSION).toBe(VERSION);
+	});
+});
+
+describe("version-aware schema reading (§16.6)", () => {
+	test("reads the pre-provider version and the current version, oldest first", () => {
+		expect(SUPPORTED_SCHEMA_VERSIONS).toEqual(["1.0.0", "1.1.0"]);
+		expect(PRE_PROVIDER_SCHEMA_VERSION).toBe("1.0.0");
+	});
+
+	test("accepts exactly the supported versions", () => {
+		for (const version of ["1.0.0", "1.1.0"]) {
+			expect(isSupportedSchemaVersion(version)).toBe(true);
+		}
+		for (const version of ["0.9.0", "1.0.1", "1.2.0", "2.0.0", "", "1.1"]) {
+			expect(isSupportedSchemaVersion(version)).toBe(false);
+		}
 	});
 });
 

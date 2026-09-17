@@ -6,6 +6,8 @@ import { join } from "node:path";
 
 describe("CLI pipe output", () => {
 	for (const code of [0, 2]) {
+		// 20s budget: the child must fully drain a >1 MiB report through a slow
+		// reader; the default 5s is marginal on slow CI containers.
 		test(`drains a large JSON report to a slow reader before exit ${code}`, async () => {
 			const root = await mkdtemp(join(tmpdir(), "trellis-pipe-"));
 			try {
@@ -42,6 +44,6 @@ describe("CLI pipe output", () => {
 			} finally {
 				await rm(root, { recursive: true, force: true });
 			}
-		});
+		}, 20_000);
 	}
 });

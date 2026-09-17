@@ -3,7 +3,7 @@
  * projection behind `trellis report`. {@link buildHistory} reads the central
  * SQLite store and assembles a {@link HistoryReport} over the **sloppiness
  * audit history**: a snapshot of every repo's latest audit run, and per-repo
- * §3.5-compatible index series.
+ * scored-basis-compatible index series (§3.5, §16.6).
  *
  * **Legacy separation (SPEC §10).** Legacy readiness runs survive in the same
  * database and surface here as a visibly distinct `legacy` section — repo,
@@ -12,17 +12,22 @@
  * averaged into, or trended against sloppiness indices: the two sections
  * share no series, no scale, and no delta.
  *
- * **Compatible trends (SPEC §3.5).** A repo's index series selects only runs
- * whose schema, analyzer, and scoring versions match its latest run — a
- * scoring-version bump starts a new scale, and the dashboard never trends
- * across it. The snapshot's index delta compares the latest two compatible
- * runs (positive = worse; lower is better).
+ * **Compatible trends (SPEC §3.5, §16.6).** A repo's series anchors on its
+ * latest run and selects every stored run whose scored basis is comparable
+ * with that anchor — the step-6 verdicts reused over the stored JSON
+ * provenance, never a re-derived rule. An advisory-only provider change
+ * (added, removed, upgraded optional provider) never fragments a series; a
+ * changed scored measurement or scoring basis starts a distinct, clearly
+ * marked series (the snapshot's index move reads `new` again, and the old
+ * runs never silently join it). The snapshot's index delta compares the
+ * latest two compatible runs (positive = worse; lower is better).
  *
  * The whole report is pure over the store, so tests seed a `:memory:`/temp
  * DB and assert the projection.
  */
-import type { Completeness } from "../contract/index.ts";
+import type { AuditReport, Completeness } from "../contract/index.ts";
 import type { Store, StoredAuditRun, StoredRun } from "../store/index.ts";
+import { decodedStoredReport } from "../store/index.ts";
 
 /** One repo's headline state in the sloppiness snapshot (its most recent audit run). */
 export interface AuditSnapshotEntry {
@@ -41,7 +46,7 @@ export interface AuditSnapshotEntry {
 	indexDelta: number | null;
 }
 
-/** One point on a repo's §3.5-compatible sloppiness series. */
+/** One point on a repo's scored-basis-compatible sloppiness series. */
 export interface AuditRunPoint {
 	auditedAt: string;
 	index: number;
@@ -94,19 +99,6 @@ export interface HistoryOptions {
 	since?: string;
 }
 
-/** The §3.5 version triple stamped on a stored run row. */
-function runVersions(run: StoredAuditRun): {
-	schemaVersion: string;
-	analyzerVersion: string;
-	scoringVersion: string;
-} {
-	return {
-		schemaVersion: run.schemaVersion,
-		analyzerVersion: run.analyzerVersion,
-		scoringVersion: run.scoringVersion,
-	};
-}
-
 /** Project a {@link StoredAuditRun} onto an {@link AuditRunPoint} for the series. */
 function toRunPoint(run: StoredAuditRun): AuditRunPoint {
 	return {
@@ -120,10 +112,17 @@ function toRunPoint(run: StoredAuditRun): AuditRunPoint {
 
 /**
  * Build one repo's snapshot row: the latest run's headline plus the index
- * move against the previous §3.5-compatible run (`null` on a first run).
+ * move against the previous scored-basis-compatible run (`null` on a first
+ * run — and on a series restart: a changed scored basis never trends
+ * across the change).
  */
-function snapshotEntry(store: Store, latest: StoredAuditRun, runCount: number): AuditSnapshotEntry {
-	const compatible = store.compatibleAuditRuns(latest.repoIdentity, runVersions(latest));
+function snapshotEntry(
+	store: Store,
+	latest: StoredAuditRun,
+	anchor: AuditReport | null,
+	runCount: number,
+): AuditSnapshotEntry {
+	const compatible = anchor === null ? [] : store.compatibleAuditRuns(latest.repoIdentity, anchor);
 	const previous = compatible.length >= 2 ? compatible[compatible.length - 2] : undefined;
 	return {
 		repo: latest.repoIdentity,
@@ -141,9 +140,11 @@ function snapshotEntry(store: Store, latest: StoredAuditRun, runCount: number): 
 function repoHistory(
 	store: Store,
 	latest: StoredAuditRun,
+	anchor: AuditReport | null,
 	since: string | undefined,
 ): AuditRepoHistory | null {
-	const runs = store.compatibleAuditRuns(latest.repoIdentity, runVersions(latest), since);
+	if (anchor === null) return null;
+	const runs = store.compatibleAuditRuns(latest.repoIdentity, anchor, since);
 	if (runs.length === 0) return null;
 	return { repo: latest.repoIdentity, runs: runs.map(toRunPoint) };
 }
@@ -164,11 +165,15 @@ function legacyEntry(latest: StoredRun, runCount: number): LegacyRepoEntry {
 /**
  * Build the `trellis report` dashboard from the central history. The
  * sloppiness snapshot reflects each repo's most recent audit run overall
- * (where things stand now), while the per-repo series honor the `since`
- * window and §3.5 compatibility. A `--repo` filter narrows both sections to
- * a single repo; a repo with no run in the window is dropped from the series
- * but still shown in the snapshot if it has any latest run. Legacy readiness
- * repos surface only in the distinct `legacy` section.
+ * (where things stand now), while the per-repo series anchor on that latest
+ * run's decoded provenance and honor the `since` window and the scored-basis
+ * compatibility rules. A latest row that does not decode (a foreign writer)
+ * still headlines the snapshot but has no comparable series and no index
+ * delta — unknown provenance never implies compatibility. A `--repo` filter
+ * narrows both sections to a single repo; a repo with no run in the window is
+ * dropped from the series but still shown in the snapshot if it has any
+ * latest run. Legacy readiness repos surface only in the distinct `legacy`
+ * section.
  */
 export function buildHistory(store: Store, opts: HistoryOptions = {}): HistoryReport {
 	const auditRepos = opts.repo ? [opts.repo] : store.auditRepos();
@@ -177,8 +182,11 @@ export function buildHistory(store: Store, opts: HistoryOptions = {}): HistoryRe
 	for (const identity of auditRepos) {
 		const latest = store.latestAuditRun(identity);
 		if (!latest) continue;
-		snapshot.push(snapshotEntry(store, latest, store.auditRuns(identity, opts.since).length));
-		const detail = repoHistory(store, latest, opts.since);
+		const anchor = decodedStoredReport(latest);
+		snapshot.push(
+			snapshotEntry(store, latest, anchor, store.auditRuns(identity, opts.since).length),
+		);
+		const detail = repoHistory(store, latest, anchor, opts.since);
 		if (detail) repos.push(detail);
 	}
 

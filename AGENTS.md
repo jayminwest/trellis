@@ -174,7 +174,8 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 
 - All behavior lives in the **core** modules under `src/` (current core:
   `src/audit/`, `src/rubric/`, `src/discovery/`, `src/syntax/`, `src/detectors/`,
-  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`;
+  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`,
+  `src/providers/`;
   the target layout is SPEC §4). No business logic anywhere else.
   `src/audit/` is the deterministic audit core (trellis-ef85):
   `auditWorkspace(root)` runs discover → parse → measure → safeguards →
@@ -219,7 +220,30 @@ the digest for agents working in this repo:
   Explicitly enabled external execution may use trellis-owned isolated
   temporary storage with cleanup and never writes to the target. No target
   scripts, executable target configuration, arbitrary command strings,
-  audit-time downloads, or models — ever.
+  audit-time downloads, or models — ever. The controlled process runner
+  (`src/providers/process.ts`, trellis-eddc) is the only seam that may
+  start a provider subprocess: fixed `argv`, supported executables only,
+  explicit environment, wall-time/output limits, process-group
+  termination, scrubbed diagnostics — no shell, no success claims. The
+  staging layer (`src/providers/workspace.ts` with `src/providers/staging.ts`,
+  `src/providers/context.ts` and `src/providers/staged-run.ts`, trellis-2fe6)
+  builds the isolated view
+  that seam consumes: a content-fingerprinted, classified source snapshot
+  with opt-in declarative project context, realpath-validated containment
+  (no symlink/traversal escapes, canonical paths) and owned scratch cleanup
+  on every exit path — native audits never invoke it. The supported-tool
+  manifest/resolver (`src/providers/manifest.ts` + `src/providers/resolve.ts`,
+  trellis-ff52; see [`docs/provider-tools.md`](docs/provider-tools.md)) pins
+  the exact external artifacts (initially jscpd 5.2.1, an isolated
+  devDependency) and resolves them only from an operator-prepared local
+  installation — verified against recorded digests before use, never via
+  PATH/bunx, never installed or downloaded at audit time. The jscpd adapter
+  (`src/providers/jscpd/` — raw report schemas and validation, pinned argv
+  and identity, and per-mode plus full-adapter execution, trellis-f4e2) runs
+  the pinned exact/normalized/near modes over a staged view through that
+  runner and validates the raw JSON into typed evidence before any
+  normalization (trellis-da4c owns that); it stays unscored and outside the
+  default audit.
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as
@@ -227,7 +251,12 @@ the digest for agents working in this repo:
 - **Sonar gate.** SonarJS requires an affirmative documented
   distribution/metric-interface decision; until then it is explicitly
   deferred — a valid request resolves to `unsupported` with the reason,
-  visible and policy-testable, never claimed implementation.
+  visible and policy-testable, never claimed implementation. The decision
+  is recorded as **deferred** in
+  [`docs/sonarjs-decision.md`](docs/sonarjs-decision.md) (trellis-db3e)
+  and carried by the typed capability metadata in
+  `src/providers/capabilities.ts`; the clearance prerequisite is tracked
+  as `trellis-7f5d`.
 
 ### Test naming
 
@@ -346,5 +375,9 @@ readiness rubric" gate went with the rubric.)
 - [`docs/research/provider-spike.md`](docs/research/provider-spike.md) — the
   fixed-corpus provider research (jscpd/SonarJS/dependency-cruiser/Knip)
   behind the SPEC §16 optional-provider contract
+- [`docs/provider-tools.md`](docs/provider-tools.md) — the pinned
+  supported-tool manifest and local resolver: operator-prepared
+  installation, artifact verification, honest platform records, and
+  upgrade/identity rules (trellis-ff52)
 - `scripts/` — ratchet scripts and pre-commit hook (lands with `trellis-4ec4`)
 - `.github/workflows/` — CI + sync-labels + publish (lands with `trellis-7baf`)

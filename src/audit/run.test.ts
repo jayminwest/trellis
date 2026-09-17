@@ -3,7 +3,14 @@ import { existsSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { jscpdAnalysis } from "../compare/fixtures.ts";
 import { ReportArtifactError } from "../compare/index.ts";
+import {
+	type AuditReport,
+	auditReportSchema,
+	type EvidenceArea,
+	SCHEMA_VERSION,
+} from "../contract/index.ts";
 import { LegacyConfigError } from "../legacy.ts";
 import { seedFixtureRepo } from "../report/audit-fixtures.ts";
 import { renderAuditJson } from "../report/audit-json.ts";
@@ -21,6 +28,14 @@ import { AuditRunError, runWorkspaceAudit, type WorkspaceAuditOptions } from "./
 
 let root: string;
 let dbDir: string;
+
+/** The evidence area of a real audit's report (always schema 1.1.0, trellis-a24d). */
+function evidenceAreaOf(report: AuditReport): EvidenceArea {
+	if (report.schemaVersion !== SCHEMA_VERSION) {
+		throw new Error("expected an evidence-carrying (schema 1.1.0) report");
+	}
+	return report.evidence;
+}
 
 beforeEach(async () => {
 	root = await mkdtemp(join(tmpdir(), "trellis-run-"));
@@ -66,7 +81,10 @@ describe("runWorkspaceAudit", () => {
 
 	test("config and configPath are mutually exclusive", async () => {
 		const opts = {
-			config: { source: { exclude: [], classify: {} }, policy: { budgets: {}, failOnNew: [] } },
+			config: {
+				source: { exclude: [], classify: {} },
+				policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
+			},
 			configPath: join(root, "trellis.yaml"),
 		} satisfies WorkspaceAuditOptions;
 		await expect(runWorkspaceAudit(root, opts)).rejects.toThrow(/at most one of config/);
@@ -138,6 +156,76 @@ describe("runWorkspaceAudit", () => {
 		} finally {
 			store.close();
 		}
+	});
+
+	test("an advisory provider change between stored runs never fragments the baseline", async () => {
+		const dbPath = join(dbDir, "trellis.db");
+		const first = await runWorkspaceAudit(root); // stateless: just the report
+		// A prior stored run carrying advisory jscpd evidence alongside the
+		// same native scored analyses — the shape step 15 will record.
+		const area = evidenceAreaOf(first.report);
+		const advisory = auditReportSchema.parse({
+			...first.report,
+			evidence: {
+				...area,
+				analyses: [...area.analyses, jscpdAnalysis()].sort((a, b) =>
+					a.provider.id.localeCompare(b.provider.id),
+				),
+			},
+			run: { auditedAt: "2026-08-01T00:00:00.000Z" },
+		});
+		const seed = openStore(dbPath);
+		try {
+			seed.insertAuditRun(advisory);
+		} finally {
+			seed.close();
+		}
+
+		const second = await runWorkspaceAudit(root, { history: true, db: dbPath });
+		// The advisory difference never fragments the scored basis: the stored
+		// run is still the baseline (AC2), re-read from its stored provenance.
+		expect(second.baseline).toEqual(advisory);
+		expect(second.historyRunId).toBeDefined();
+	});
+
+	test("a changed scored measurement starts a distinct series — no stored baseline", async () => {
+		const dbPath = join(dbDir, "trellis.db");
+		const first = await runWorkspaceAudit(root);
+		// A prior stored run whose scored native analysis recorded a different
+		// pinned tool: same core versions, a different scored measurement.
+		const scored = evidenceAreaOf(first.report).analyses.find(
+			(analysis) => analysis.scoring === "scored" && analysis.provider.kind === "native",
+		);
+		if (scored === undefined) throw new Error("fixture report must carry a scored native analysis");
+		const area = evidenceAreaOf(first.report);
+		const altered = auditReportSchema.parse({
+			...first.report,
+			evidence: {
+				...area,
+				analyses: area.analyses.map((analysis) =>
+					analysis === scored
+						? {
+								...analysis,
+								provider: { ...analysis.provider, toolVersion: "9.9.9-altered" },
+							}
+						: analysis,
+				),
+			},
+			run: { auditedAt: "2026-08-01T00:00:00.000Z" },
+		});
+		const seed = openStore(dbPath);
+		try {
+			seed.insertAuditRun(altered);
+		} finally {
+			seed.close();
+		}
+
+		const second = await runWorkspaceAudit(root, { history: true, db: dbPath });
+		// Incompatible scored bases never become one trend: no baseline is
+		// resolved across the changed measurement, so baseline-dependent
+		// policies skip rather than compare a false regression.
+		expect(second.baseline).toBeUndefined();
+		expect(second.historyRunId).toBeDefined();
 	});
 
 	test("an explicit baseline wins over the stored history baseline", async () => {

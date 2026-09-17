@@ -36,11 +36,20 @@ import {
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { ANALYZER_VERSION, SCHEMA_VERSION } from "../src/contract/index.ts";
+import { PINNED_TOOLS } from "../src/providers/manifest.ts";
 
 const DEFAULT_REPO_ROOT = resolve(import.meta.dir, "..");
 
 /** Runtime dependencies the deterministic analyzer cannot boot without. */
 const REQUIRED_DEPENDENCIES = ["commander", "js-yaml", "typescript", "zod"] as const;
+
+/**
+ * Optional pinned provider tools (trellis-ff52, SPEC §16.4) that must stay
+ * OUT of the packed native runtime — they are isolated devDependencies,
+ * never native core dependencies, so the packed CLI stays offline-only and
+ * provider-free until an operator explicitly prepares one (AC5 isolation).
+ */
+const EXCLUDED_OPTIONAL_TOOLS = PINNED_TOOLS.map((entry) => entry.packageName);
 
 /** Files the packed tarball must ship for an audit to run end to end. */
 const REQUIRED_PATHS = [
@@ -103,6 +112,15 @@ export function verifyPackedMetadata(packageDir: string): void {
 	const missing = REQUIRED_DEPENDENCIES.filter((dep) => manifest.dependencies?.[dep] === undefined);
 	if (missing.length > 0) {
 		throw new Error(`packed package is missing runtime dependencies: ${missing.join(", ")}`);
+	}
+	const leaked = EXCLUDED_OPTIONAL_TOOLS.filter(
+		(tool) => manifest.dependencies?.[tool] !== undefined,
+	);
+	if (leaked.length > 0) {
+		throw new Error(
+			`packed package leaked optional provider tools into runtime dependencies: ` +
+				`${leaked.join(", ")} — pinned tools stay isolated from the native core (trellis-ff52)`,
+		);
 	}
 }
 

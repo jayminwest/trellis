@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AuditReport } from "../contract/index.ts";
+import { type AuditReport, carriedAnalyses } from "../contract/index.ts";
 import { auditFixture, type FixtureReport } from "../report/audit-fixtures.ts";
 import { renderAuditJson } from "../report/audit-json.ts";
 import { compareReports } from "./compare.ts";
@@ -55,6 +55,29 @@ describe("loadReportArtifact", () => {
 		const newKinds = comparison.findings?.new.map((finding) => finding.kind) ?? [];
 		expect(newKinds).toContain("import-cycle");
 		expect(newKinds).toContain("complexity.hotspot");
+	});
+
+	test("throws an actionable operational error for an unreadable schema version", async () => {
+		const future = { ...report("clean"), schemaVersion: "2.0.0" };
+		const path = await save("future.json", JSON.stringify(future));
+		const load = loadReportArtifact(path);
+		await expect(load).rejects.toBeInstanceOf(ReportArtifactError);
+		await load.catch((error: ReportArtifactError) => {
+			expect(error.message).toContain('unsupported report schema version "2.0.0"');
+			expect(error.message).toContain("1.0.0, 1.1.0");
+		});
+	});
+
+	test("loads pre-provider artifacts with their original interpretation", async () => {
+		// A schema-1.0.0 artifact (pre-evidence area) round-trips unchanged —
+		// never relabeled as carrying provider provenance.
+		const legacy: Record<string, unknown> = { ...report("clean") };
+		delete legacy.evidence;
+		legacy.schemaVersion = "1.0.0";
+		const path = await save("legacy.json", JSON.stringify(legacy));
+		const loaded = await loadReportArtifact(path);
+		expect(loaded.schemaVersion).toBe("1.0.0");
+		expect(carriedAnalyses(loaded)).toEqual([]);
 	});
 
 	test("throws an operational error for an unreadable path", async () => {

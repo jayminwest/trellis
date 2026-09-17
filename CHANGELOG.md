@@ -21,6 +21,76 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Changed
 
+- **Declarative policy can require provider evidence without changing
+  scoring** (trellis-68b9, step 7 of 30 of plan `pl-43c5`, SPEC §16.3): the
+  `policy` block of `trellis.yaml` gains `requireEvidence` — a list of
+  supported analysis ids (the external provider ids of the supported-provider
+  capability table). A required analysis that is unrequested, unavailable,
+  unsupported or incomplete fails the policy assessment closed (exit `2`,
+  the report still emitted) even when the native score is complete and
+  clean; an absent optional provider with no requirement never violates
+  policy and never changes the score. Requiring a capability recorded as
+  resolving to `unsupported` — the deferred SonarJS decision — yields a
+  located violation citing the recorded reason and decision record, never
+  a crash or a silent pass; unknown ids fail closed naming the supported
+  vocabulary. Metric budgets and `failOnNew` kinds under the reserved
+  `provider.` namespace now evaluate over that analysis's carried
+  evidence: only a complete analysis's emitted value is budgetable (partial
+  evidence never feeds a budget — fewer analyzed files must never pass as a
+  smaller value), a missing value fails closed when the analysis is also
+  required and is otherwise skipped with the absence stated (never a
+  fabricated zero), and new findings are claimed only over step-6
+  `comparable` evidence — a changed basis skips the check and absence on a
+  side never reads as regression churn. Configuration stays declarative
+  data: requirements are pure ids — native `trellis.*` ids, `provider.*`
+  evidence ids, and any command string are rejected at config-load time as
+  operational errors (exit `1`). Native max-index, regression, budget and
+  new-finding semantics are unchanged, and audit, saved comparison and
+  fleet consume the one `assessPolicy` (`src/compare/policy.ts` + new
+  `policy-evidence.ts`).
+- **Comparisons evaluate compatibility per measurement and scoring basis**
+  (trellis-bd0c, step 6 of 30 of plan `pl-43c5`, SPEC §16.6): `src/compare/`
+  splits the single whole-report comparability gate into two independent
+  bases. The **scored basis** (`compatibility.ts`, new) keeps the established
+  fail-closed rules — analyzer/scoring versions, scored metric catalogs
+  (pre-provider 1.0.0 artifacts still read with every metric as a score
+  input), supplied configurations — and adds per-measurement checks over the
+  recorded analysis identity: a scored analysis whose pinned tool/adapter,
+  parser, or normalized options changed is a `scored-measurement`
+  incompatibility, and a changed declared scored-analysis set is a
+  `scoring-basis` one. The **evidence basis** (`evidence.ts`, new) compares
+  each carried provider by recorded identity: producer and scope semantics
+  gate the evidence diff (changed tool/parser/options/selection is an
+  explicit noncomparable dimension with coded reasons — never fictitious
+  deltas or new/resolved finding churn), while changed content fingerprints
+  are the expected source-revision input, caveated as `input-revision-changed`.
+  Absence reads as `unrequested` on its side — never a regression — and
+  partial/unavailable evidence is never diffed. Advisory-only changes
+  (adding, removing, or upgrading an optional provider) never make two
+  otherwise-compatible reports incompatible, and never affect the native
+  score comparison or its policies. A 1.0.0 ↔ 1.1.0 artifact pair compares
+  the scored basis explicitly (`schema-span` caveat; the pre-provider
+  side's evidence reads as unrequested) instead of failing wholesale;
+  `metric-set` no longer trips on advisory metric additions (they diff with
+  a `null` side). `compare.ts` composes the bases; `diff.ts` (new) holds the
+  shared metric/finding diffs; policy assessment consumes only the scored
+  basis, so provider evidence incompatibility never trips score-regression
+  or new-finding policies.
+- **Audit orchestration consumes the registered native analyzers without
+  changing native behavior** (trellis-1e66, step 4 of 30 of plan `pl-43c5`,
+  SPEC §16): the measure phase now selects and orders analyzers through the
+  internal capability registry (trellis-cb51) and folds the selected
+  execution list's results generically — `src/audit/audit.ts` runs each
+  registered measured analyzer through its step-3 wrapper over the one
+  shared parse, feeding the cycle analyzer the exact produced graph run,
+  and `src/audit/assemble.ts` takes a generic measured-analyses list
+  instead of a hardcoded four-analyzer shape. Progress analyzer events
+  derive from the selected execution list (registry order, counts from the
+  list). Report shape, metrics, findings, ordering, score, safeguards and
+  exit behavior are byte-identical to the pre-refactor baseline — proven by
+  payload-equality tests against the pre-refactor pipeline and core/service/
+  CLI parity over dirty, non-Git workspaces; no provider is selected,
+  started, or reported, and no report field or version changed.
 - **Deterministic pivot release acceptance completed** (`pl-b2ea`,
   trellis-b12d, trellis-d03d): reconciled the legacy backlog with explicit
   keep/superseded/deferred decisions; recorded offline integration, package
@@ -38,6 +108,24 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Typed analysis results carry provider provenance and observed coverage**
+  (trellis-90d6, step 2 of 30 of plan `pl-43c5`, SPEC §16): new focused
+  contracts under `src/contract/` type what a provider analysis is before any
+  integration exists — provider identity (id, pinned tool/adapter versions,
+  mode, normalized relevant options with machine paths, timestamps and
+  durations structurally excluded as execution-only metadata), analysis
+  identity (source selection with content fingerprints, parser identity,
+  trellis-owned options) with a canonical `measurementIdentity`, observed
+  coverage (intended vs. actually analyzed files, diagnostics, unsupported
+  context), the five §16.2 states enforced as a structural state matrix where
+  empty successful output can never claim `complete`, namespaced external
+  evidence ids (`provider.<id>.…`, never colliding with native metrics or
+  finding kinds), pair/group clone evidence kept distinct with `near` matches
+  pair-only, and a minimum `analysisResultSchema` shared by native and
+  external producers. `src/analysis/` adds the internal interfaces that let
+  producers carry typed graph/clone products in-process beyond the serialized
+  minimum. Contracts only: no report, registry, execution or scoring change;
+  native analysis stays the default and authoritative.
 - **Offline public-path regression**: real CLI, SDK, and fleet audits run in
   an isolated child with no inherited credentials or executable tools,
   forbidden subprocess/fetch boundaries, and throwing executable target

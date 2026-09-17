@@ -51,6 +51,8 @@ describe("trellis fleet", () => {
 		rmSync(workDir, { recursive: true, force: true });
 	});
 
+	// Tests spawn the CLI as a subprocess (audit runs, reads); the 20s budget
+	// accommodates slow CI containers where the 5s default is marginal.
 	test("audits every target and isolates a missing path (exit 2, report still emitted)", async () => {
 		const { code, stdout, stderr } = await runCli(["fleet", "--targets", targetsFile], {
 			TRELLIS_DB: "",
@@ -62,14 +64,14 @@ describe("trellis fleet", () => {
 		expect(stdout).toContain("1 ok · 1 error · 0 policy failed");
 		expect(stdout).toContain("error: path not found");
 		expect(stderr).toContain("gone");
-	});
+	}, 20_000);
 
 	test("a fleet of healthy targets is clean (exit 0)", async () => {
 		writeFileSync(targetsFile, `targets:\n  - id: fixture\n    path: ${repoDir}\n`);
 		const { code, stdout } = await runCli(["fleet", "--targets", targetsFile], { TRELLIS_DB: "" });
 		expect(code).toBe(0);
 		expect(stdout).toContain("1 ok · 0 error · 0 policy failed");
-	});
+	}, 20_000);
 
 	test("a target's tripped declarative policy exits 2 with the reason on stderr", async () => {
 		// A sloppy repo has a non-zero index, so maxIndex: 0 trips.
@@ -86,7 +88,7 @@ describe("trellis fleet", () => {
 		expect(stdout).toContain("1 ok · 0 error · 1 policy failed");
 		expect(stderr).toContain("fixture: policy failed");
 		expect(stderr).toContain("exceeds the configured maximum");
-	});
+	}, 20_000);
 
 	test("--json emits the aggregate report with per-target entries", async () => {
 		const { code, stdout } = await runCli(["fleet", "--targets", targetsFile, "--json"], {
@@ -101,7 +103,7 @@ describe("trellis fleet", () => {
 		expect(fixture.report.score.direction).toBe("lower-is-better");
 		expect(fixture.drift.missing).toBeGreaterThan(0);
 		expect(fixture.previousIndex).toBeNull();
-	});
+	}, 20_000);
 
 	test("--history persists one audit run per scored target", async () => {
 		const { code } = await runCli(
@@ -117,20 +119,20 @@ describe("trellis fleet", () => {
 		} finally {
 			store.close();
 		}
-	});
+	}, 20_000);
 
 	test("is stateless by default — no database is created", async () => {
 		await runCli(["fleet", "--targets", targetsFile], { TRELLIS_DB: dbPath });
 		const { existsSync } = await import("node:fs");
 		expect(existsSync(dbPath)).toBe(false);
-	});
+	}, 20_000);
 
 	test("errors clearly on a malformed targets.yaml", async () => {
 		writeFileSync(targetsFile, "targets:\n  - id: a\n"); // missing required `path`
 		const { code, stderr } = await runCli(["fleet", "--targets", targetsFile], { TRELLIS_DB: "" });
 		expect(code).toBe(1);
 		expect(stderr).toContain("targets.yaml");
-	});
+	}, 20_000);
 
 	test("rejects a targets.yaml with retired defaults.investigation, actionably", async () => {
 		writeFileSync(
@@ -146,7 +148,7 @@ describe("trellis fleet", () => {
 		expect(stderr).toContain("defaults.investigation");
 		expect(stderr).toContain("no longer exists");
 		expect(stderr).toContain("Remove defaults.investigation");
-	});
+	}, 20_000);
 
 	test("rejects retired readiness skip/languages keys, actionably", async () => {
 		writeFileSync(
@@ -160,7 +162,7 @@ describe("trellis fleet", () => {
 		expect(stdout).toBe("");
 		expect(stderr).toContain("no longer exists");
 		expect(stderr).toContain("Remove target 'fixture'.skip");
-	});
+	}, 20_000);
 
 	test("--no-cache is rejected with an actionable retirement message", async () => {
 		const { code, stdout, stderr } = await runCli(
@@ -171,7 +173,7 @@ describe("trellis fleet", () => {
 		expect(stdout).toBe("");
 		expect(stderr).toContain("--no-cache no longer exists");
 		expect(stderr).toContain("Remove --no-cache");
-	});
+	}, 20_000);
 
 	test("--fail-on and --min-level are rejected with actionable migration messages", async () => {
 		const failOn = await runCli(["fleet", "--targets", targetsFile, "--fail-on", "none"], {
@@ -184,7 +186,7 @@ describe("trellis fleet", () => {
 		});
 		expect(minLevel.code).toBe(1);
 		expect(minLevel.stderr).toContain("--min-level no longer exists");
-	});
+	}, 20_000);
 
 	test("TRELLIS_PI_BIN is rejected with an actionable retirement message", async () => {
 		const { code, stdout, stderr } = await runCli(["fleet", "--targets", targetsFile], {
@@ -194,5 +196,5 @@ describe("trellis fleet", () => {
 		expect(code).toBe(1);
 		expect(stdout).toBe("");
 		expect(stderr).toContain("TRELLIS_PI_BIN no longer exists");
-	});
+	}, 20_000);
 });

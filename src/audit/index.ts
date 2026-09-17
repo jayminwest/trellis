@@ -21,10 +21,16 @@ export {
 	type AuditMeasurements,
 	assembleReport,
 	collectMetrics,
+	type MeasuredAnalysis,
+	type MeasuredAnalysisEvidence,
 	orderFindings,
 	reportCoverage,
 } from "./assemble.ts";
-export { type AuditCoreOptions, auditWorkspace } from "./audit.ts";
+export {
+	type AuditCoreOptions,
+	auditWorkspace,
+	measuredAnalysisEvidence,
+} from "./audit.ts";
 export {
 	ANALYZER_IDS,
 	type AnalyzerId,
