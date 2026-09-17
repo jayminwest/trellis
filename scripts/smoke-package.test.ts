@@ -26,7 +26,7 @@ describe("verifyPackedMetadata", () => {
 				join(dir, "package.json"),
 				JSON.stringify({
 					bin: { trellis: "./src/cli/main.ts" },
-					dependencies: { commander: "1", "js-yaml": "1", pino: "1", typescript: "1", zod: "1" },
+					dependencies: { commander: "1", "js-yaml": "1", typescript: "1", zod: "1" },
 				}),
 			);
 			expect(() => verifyPackedMetadata(dir)).not.toThrow();

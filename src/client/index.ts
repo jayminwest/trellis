@@ -15,9 +15,9 @@
  * `runWorkspaceAudit`, with canonical drift as a separate non-scoring
  * capability) and `report` → {@link buildReport} (the sloppiness history
  * dashboard, with legacy readiness runs visibly distinct and never trended
- * against the index, SPEC §10). Transitional (SPEC §14): `drift` / `rubric`
- * still wrap the legacy readiness services until the release stages retire
- * them.
+ * against the index, SPEC §10). `drift` remains a separate, non-scoring
+ * canonical-configuration capability. Readiness catalog and assessment
+ * exports were retired with the deterministic release.
  *
  * Request types mirror the core option types and response types ARE the core
  * report types — re-exported below, each annotated with its source module. No
@@ -50,26 +50,13 @@ import {
 	runFleetTargets,
 } from "../fleet/index.ts"; // Mirrors src/fleet
 import { buildReport, type HistoryReport, type ReportRunOptions } from "../history/index.ts"; // Mirrors src/history
-import {
-	type Assessment,
-	assessReport,
-	DEFAULT_MIN_LEVEL,
-	FAIL_ON_MODES,
-	type FailOnMode,
-	type FailPolicy,
-	type Report,
-} from "../report/index.ts"; // Mirrors src/report
-import { loadRubric, type Rubric, type RubricSummary, summarizeRubric } from "../rubric/index.ts"; // Mirrors src/rubric
 import { type DriftOptions, type DriftReport, driftRepo } from "../standards/index.ts"; // Mirrors src/standards
 
 /** Re-exported core report types — the SDK's response shapes (SPEC §6.4, §9). */
 export type {
-	Assessment,
 	AuditConfig,
 	AuditReport,
 	DriftReport,
-	FailOnMode,
-	FailPolicy,
 	FleetAssessment,
 	FleetReport,
 	HistoryReport,
@@ -77,22 +64,11 @@ export type {
 	PolicyReason,
 	PolicyReasonCode,
 	PolicyResult,
-	Report,
 	ReportComparison,
-	Rubric,
-	RubricSummary,
 	WorkspaceAuditResult,
 };
 /** Re-exported core services and the exit-code rules (SPEC §9, §12), so a script applies the CLI's rule. */
-export {
-	AuditRunError,
-	assessFleet,
-	assessPolicy,
-	assessReport,
-	DEFAULT_MIN_LEVEL,
-	FAIL_ON_MODES,
-	loadRubric,
-};
+export { AuditRunError, assessFleet, assessPolicy };
 
 /** Request for {@link audit}. Mirrors src/audit {@link WorkspaceAuditOptions}. */
 export type AuditRequest = WorkspaceAuditOptions;
@@ -129,7 +105,7 @@ export type DriftRequest = DriftOptions;
 /**
  * Compare one repo against the bundled canonical set and return its
  * {@link DriftReport} (SPEC §11 — a separate capability that never enters the
- * sloppiness index). Identical to `trellis drift`. Transitional legacy surface.
+ * sloppiness index). Identical to `trellis drift`.
  */
 export function drift(repoPath: string, opts: DriftRequest = {}): DriftReport {
 	return driftRepo(repoPath, opts);
@@ -162,9 +138,4 @@ export type ReportQuery = ReportRunOptions;
  */
 export function report(query: ReportQuery = {}): HistoryReport {
 	return buildReport(query);
-}
-
-/** Load + summarize the bundled rubric. Identical to `trellis rubric`. Transitional legacy surface. */
-export function rubric(): RubricSummary {
-	return summarizeRubric(loadRubric());
 }

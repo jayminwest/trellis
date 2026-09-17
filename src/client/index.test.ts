@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { auditFixture, seedFixtureRepo } from "../report/audit-fixtures.ts";
 import { renderAuditJson } from "../report/audit-json.ts";
-import { RUBRIC_VERSION } from "../rubric/version.ts";
 import * as client from "./index.ts";
 
 /**
@@ -201,7 +200,7 @@ function stripFleetClock(report: client.FleetReport): unknown {
 	);
 }
 
-describe("client SDK (transitional legacy surface)", () => {
+describe("client SDK compatibility boundaries", () => {
 	let dir: string;
 
 	beforeEach(() => {
@@ -229,11 +228,16 @@ describe("client SDK (transitional legacy surface)", () => {
 		expect(sdk).toEqual(JSON.parse(cli.stdout));
 	});
 
-	test("rubric() summarizes the bundled rubric", () => {
-		const summary = client.rubric();
-		expect(summary.rubricVersion).toBe(RUBRIC_VERSION);
-		expect(summary.criterionCount).toBe(70);
-		expect(summary.categoryCount).toBe(8);
+	test("exposes no retired readiness catalog or assessment API", () => {
+		for (const name of [
+			"rubric",
+			"loadRubric",
+			"assessReport",
+			"DEFAULT_MIN_LEVEL",
+			"FAIL_ON_MODES",
+		]) {
+			expect(Object.hasOwn(client, name)).toBe(false);
+		}
 	});
 
 	test("report() on an empty store returns an empty dashboard", () => {

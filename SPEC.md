@@ -192,7 +192,7 @@ participate in identity.
 
 ## 4. Architecture
 
-Target module layout (the current tree is transitional — see §14):
+Deterministic module layout (legacy compatibility modules omitted — see §14):
 
 ```
 trellis/
@@ -797,8 +797,9 @@ flags are hidden commander options that fail fast with actionable
 messages. The SDK's `audit`/`compare` are direct calls to the same
 services; deep-equal parity tests cover measurement and policy.
 `fleet`/`report` adapted with trellis-8366 (§11);
-`drift`/`rubric`/`standards` remain the transitional legacy surface until
-the release stages.)*
+`drift`/`standards` remain separate canonical-config capabilities. The
+release acceptance stage retired public `rubric` and SDK readiness exports;
+legacy internals remain for history compatibility and regression fixtures.)*
 
 ---
 
@@ -813,7 +814,7 @@ Unchanged from the warren/burrow stack:
 - **Validation:** zod at every external boundary (contracts, configuration).
 - **Lint/format:** Biome, `--error-on-warnings`.
 - **Storage:** `bun:sqlite` (opt-in history only).
-- **CLI:** commander; **logging:** pino.
+- **CLI:** commander; progress and handled errors write to stderr.
 - **Conventions:** kebab-case filenames, tab indent / 100-col, `.ts` import
   extensions, tests as `<name>.test.ts` beside the unit, golden fixtures
   under `__golden__/`. trellis keeps the quality-gate ratchets and audits
@@ -833,12 +834,14 @@ network API remains a deferred surface over the same core.
 
 The pivot is delivered as a **staged, forward-chained plan** (`pl-b2ea`, 23
 issues under feature `trellis-253e`). This section is the map; it describes
-sequence, not completion. Until a stage lands, the corresponding behavior
-above is **specified but unbuilt**, and the legacy implementation in `src/`
-remains the operative code.
+the delivery sequence. All 23 plan stages are complete; the final evidence
+and bounded follow-ups are recorded in
+[`docs/release-acceptance.md`](docs/release-acceptance.md). Internal legacy
+modules remain for history compatibility and regression fixtures, outside
+the public deterministic audit paths.
 
 1. **Contract** (this document) — the deterministic product contract replaces
-   the readiness specification. *(This stage.)*
+   the readiness specification.
 2. **Disconnect** — agent execution is removed from every public audit path
    (CLI, SDK, fleet, persistence defaults); legacy provider/cache flags are
    rejected with actionable errors.

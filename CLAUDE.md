@@ -14,12 +14,10 @@ audit needs neither Git nor credentials, a database, network, or installed
 project dependencies; one deterministic core serves local, fleet, and CI use
 with CLI/SDK parity.
 
-> **Breaking pivot in progress (plan `pl-b2ea`, SPEC §14).** The 90-criterion
-> agent-readiness product (rubric, maturity levels, LLM investigation layer)
-> is retired. The `src/` tree is mid-transition — legacy modules remain
-> operative until the staged plan removes or replaces them — and legacy
-> readiness scores are preserved in history as a separate quantity, never
-> compared with the sloppiness index.
+> **Deterministic pivot delivered (plan `pl-b2ea`, SPEC §14).** The public
+> readiness catalog and assessment APIs are retired. Legacy internals remain
+> for historical compatibility and fixtures; current audit surfaces never
+> call them. Legacy readiness history stays separate from sloppiness.
 
 [`SPEC.md`](SPEC.md) is the authoritative design record. [`AGENTS.md`](AGENTS.md)
 is the canonical agent guide; this file adds tool-specific conventions and the
@@ -33,7 +31,7 @@ os-eco session bootstrap.
 - **Lint/format:** Biome, `--error-on-warnings`, tab indent / 100-col.
 - **Storage:** `bun:sqlite` (opt-in run history only; audits are stateless by
   default).
-- **CLI:** commander; **logging:** pino.
+- **CLI:** commander; progress and handled errors write to stderr.
 - **Parsing:** the pinned TypeScript compiler API — one shared parse layer
   reused by all metrics within an audit. No LLM provider exists in the
   product (no-model invariant, SPEC §1).
@@ -42,8 +40,8 @@ os-eco session bootstrap.
 
 All behavior lives in one surface-agnostic **domain core**; every other surface
 is a thin pass-through, so the surfaces cannot drift out of sync. The tree
-below is the current layout; `rubric/` and `detectors/` are the remaining
-**transitional** legacy modules and leave per the SPEC §14 release stages.
+below is the current layout; `rubric/` and `detectors/` are internal legacy
+compatibility modules, excluded from the public deterministic audit path.
 
 ```
 src/
@@ -65,8 +63,8 @@ src/
   fleet/          # targets.yaml loader + multi-repo orchestration (optional, §11)
   standards/      # canonical/ (bundled files), manifest.yaml, drift.ts
                   #   (separate capability; never feeds the sloppiness index)
-  rubric/         # TRANSITIONAL legacy: readiness rubric data + schema (retires §14)
-  detectors/      # TRANSITIONAL legacy: per-language adapters (retire §14)
+  rubric/         # internal legacy rubric data + historical types/fixtures
+  detectors/      # internal legacy adapters; not called by public audits
   legacy.ts       # retired investigation-config rejection (actionable errors)
   index.ts        # public lib entry — VERSION constant only (lockstep w/ package.json)
 ```
@@ -94,7 +92,7 @@ See [`docs/architecture.mmd`](docs/architecture.mmd) for the rendered graph.
   external process boundaries; layers above run real code against goldens.
 - **Debt markers:** every `TODO`/`FIXME`/`HACK`/`XXX` carries a tracker on the
   same line — `trellis-XXXX` / `mx-XXXX` / `#NNN` / a URL.
-- **Dogfood:** once the deterministic core lands (SPEC §14), trellis audits
+- **Dogfood:** trellis audits
   itself offline; a regression in its own sloppiness index is a real failure.
   The quality-gate ratchets stay binding throughout the transition.
 

@@ -7,7 +7,7 @@
  * the analyzer needs now that the readiness rubric is retired:
  *
  *   1. **Metadata** — the `trellis` bin entry and the runtime dependencies
- *      the analyzer requires (commander, js-yaml, pino, typescript, zod).
+ *      the analyzer requires (commander, js-yaml, typescript, zod).
  *   2. **Analyzer assets** — the audit core, metrics, shared syntax layer,
  *      scoring formula, comparison/policy, configuration and report
  *      contracts, safeguard inspection, CLI/SDK surfaces, and the bundled
@@ -40,7 +40,7 @@ import { ANALYZER_VERSION, SCHEMA_VERSION } from "../src/contract/index.ts";
 const DEFAULT_REPO_ROOT = resolve(import.meta.dir, "..");
 
 /** Runtime dependencies the deterministic analyzer cannot boot without. */
-const REQUIRED_DEPENDENCIES = ["commander", "js-yaml", "pino", "typescript", "zod"] as const;
+const REQUIRED_DEPENDENCIES = ["commander", "js-yaml", "typescript", "zod"] as const;
 
 /** Files the packed tarball must ship for an audit to run end to end. */
 const REQUIRED_PATHS = [

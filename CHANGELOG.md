@@ -9,6 +9,31 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Changed
+
+- **Deterministic pivot release acceptance completed** (`pl-b2ea`,
+  trellis-b12d, trellis-d03d): reconciled the legacy backlog with explicit
+  keep/superseded/deferred decisions; recorded offline integration, package
+  smoke, corpus performance, self-audit evidence, and retained limitations
+  in `docs/release-acceptance.md`. Corrected the corpus dilution explanation:
+  the paired densities remain saturated, so unchanged score alone does not
+  prove general dilution resistance.
+- **Public readiness catalog and assessment exports retired** (trellis-a835):
+  `trellis rubric` now returns actionable migration guidance and is hidden
+  from help. The SDK no longer exports `rubric`, `loadRubric`, readiness
+  report/policy types, `assessReport`, or maturity-policy constants. Canonical
+  `drift` / `standards` and separate legacy history remain supported. The
+  now-unused Pino logger and dependency are removed; package smoke verifies
+  the four remaining runtime dependencies.
+
+### Added
+
+- **Offline public-path regression**: real CLI, SDK, and fleet audits run in
+  an isolated child with no inherited credentials or executable tools,
+  forbidden subprocess/fetch boundaries, and throwing executable target
+  configuration. Measurement payloads agree and recursive file snapshots
+  prove the workspace and surrounding scratch directory remain unchanged.
+
 ### Added
 
 - **Release documentation and portable usage examples reflect the pivot**

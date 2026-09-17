@@ -98,7 +98,9 @@ claims, so "explainable" here means "zero delta").
 
 A large clean addition (95 sloc of varied branch-free helpers against an
 80-sloc sloppy core) dilutes both densities while every absolute count
-holds — and the index does not move at all:
+holds — and the index does not move at all. Both densities remain above
+their saturation thresholds (0.15 duplication, 0.25 erosion), so their
+normalized contributions also remain constant:
 
 | metric | before | after | delta |
 |---|---|---|---|
@@ -111,11 +113,13 @@ holds — and the index does not move at all:
 
 ## Explicit reviews (acceptance criteria)
 
-- **Score dilution.** Demonstrated by the dilution pair above: the count
-  terms (eroded-count, groups) pin the index at 42 even though both
-  density terms fall by ~40–55%. A pure-density formula would have
-  improved the index by ~9 points; the blended formula improves it by 0.
-  Large clean additions cannot erase hotspot or clone weight (SPEC §3.4).
+- **Score dilution.** The dilution pair stays at 42 while both densities
+  fall by ~40–55%. Both densities remain saturated, so this example alone
+  does not prove that count terms prevent all score dilution. Count terms
+  preserve their contribution as clean code is added; unsaturated density
+  contributions can still decrease. Large-repo saturation and discrimination
+  remain provisional calibration research (`trellis-831b`), not a resolved
+  claim of size invariance.
 - **Small-repo behavior.** `clean-small` (10 production sloc) scores 0
   with `complete` completeness; empty scopes produce `not-applicable`
   ratios with complete zero counts rather than fake zeros or errors, and

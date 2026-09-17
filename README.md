@@ -270,6 +270,11 @@ is never published from partial analysis.
 - **Resolution is local-only.** Absent `node_modules` degrades import
   resolution to documented `unresolved` edges — never a network fetch — and
   incomplete graph coverage rolls cycle metrics up `incomplete`.
+- **Provisional calibration and evidence gaps.** Count terms can saturate on
+  large repositories (`trellis-831b`); aliased non-TS assets can conservatively
+  mark graph coverage incomplete (`trellis-f6b0`); indirect budget references
+  can remain only `configured` (`trellis-b412`). See the
+  [release acceptance record](docs/release-acceptance.md) for tested scope.
 - **Explicitly not in this product:** unused-code analysis, architecture
   rules beyond cycle detection, any AI feature, a web UI, hosted/scheduled
   services, automatic remediation, and rewrites in other languages
@@ -294,9 +299,11 @@ levels, LLM investigation layer) is **retired**, not reinterpreted
 - **`targets.yaml` keys retired.** Per-target `skip` and `languages` and
   `defaults.investigation` are rejected with migration errors; keep
   `id`/`path`/`config`/`canonical`.
-- **`drift` / `rubric` / `standards`** remain as transitional subcommands
-  (canonical-config drift is the one capability carried forward unchanged);
-  they retire in the release stages.
+- **`rubric` is retired.** The CLI returns migration guidance; the SDK no
+  longer exports `rubric`, `loadRubric`, or readiness assessment helpers.
+  Use `audit` and `assessPolicy` for the new report and policy contract.
+  **`drift` / `standards` remain separate, unscored capabilities.** Legacy
+  internals support historical compatibility and fixtures, not public audits.
 
 ## Architecture
 
