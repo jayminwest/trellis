@@ -297,5 +297,9 @@ readiness rubric" gate went with the rubric.)
 - [`RUNBOOK.md`](RUNBOOK.md) — release / triage / rollback procedure
 - [`docs/architecture.mmd`](docs/architecture.mmd) — module graph (pre-pivot;
   refreshed with the release docs stage, SPEC §14)
+- [`docs/corpus-validation.md`](docs/corpus-validation.md) — the fixed-corpus
+  validation record (trellis-e924): score-behavior evidence, runtime/memory
+  budgets, and the duplication-minimum calibration; corpus lives in
+  [`corpus/`](corpus/README.md), harness in `scripts/validate-corpus.ts`
 - `scripts/` — ratchet scripts and pre-commit hook (lands with `trellis-4ec4`)
 - `.github/workflows/` — CI + sync-labels + publish (lands with `trellis-7baf`)

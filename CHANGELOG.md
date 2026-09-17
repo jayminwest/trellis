@@ -11,6 +11,44 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **A fixed TypeScript corpus validates score behavior and performance**
+  (trellis-e924, SPEC §14 stage 10, stage 20 of the deterministic-pivot
+  plan `pl-b2ea`): `corpus/` holds the committed validation corpus —
+  eleven fixture workspaces (the paired refactors clone removal, branch
+  growth, cycle introduction, and clean-addition dilution, plus
+  small-repo, test-separation, and incomplete-parse singles) and the
+  trellis checkout itself — defined by `corpus/manifest.json` with
+  explicit per-entry runtime/peak-memory budgets, review checks, and
+  paired expectations. `scripts/validate-corpus.ts` audits every entry
+  through the same `auditWorkspace` core (no model, no network), measures
+  median wall time and peak RSS in fresh child processes, and enforces
+  budgets, checks, and pair expectations; `scripts/corpus-report.ts`
+  renders the record and `scripts/validate-corpus.test.ts` asserts the
+  paired expectations continuously. The measured record — environment,
+  revisions, sizes, observations, budgets, paired results, the
+  dilution/small-repo/test-separation/incomplete-analysis reviews, and
+  the calibration decision — lands in `docs/corpus-validation.md`.
+  trellis's own `trellis.yaml` now excludes `corpus/**` from discovery so
+  the intentional fixture debt stays out of the dogfood self-audit.
+
+### Changed
+
+- **Duplication minimum clone size calibrated 50 → 100 normalized tokens**
+  (trellis-e924, SPEC §5.3): at 50 tokens the corpus and the trellis
+  self-audit were dominated by idiomatic-structure matches (78 of 124
+  trellis production groups were 50–74 tokens, saturating the duplication
+  dimension); at 100 the surviving groups are true copy-paste. Because
+  measurement semantics changed, the analyzer version bumps 0.1.0 →
+  0.2.0 (stored 0.1.0 reports correctly fail §3.5 comparability). The
+  §7.1 scoring constants are unchanged — the corpus showed them producing
+  explainable, monotonic, dilution-resistant behavior — so the scoring
+  version stays `0.1.0-provisional`. The §5.3 resource budgets
+  (`DEFAULT_DUPLICATION_BUDGET`) were confirmed against the measured
+  corpus, not changed. Clone test fixtures grew to 105 tokens over 13
+  lines at CC 10 so they never leak hotspot findings.
+
+### Added
+
 - **Fleet and history are optional consumers of the deterministic core**
   (trellis-8366, SPEC §10–§11, stage 19 of the deterministic-pivot plan
   `pl-b2ea`): `trellis fleet` now runs every `targets.yaml` target through

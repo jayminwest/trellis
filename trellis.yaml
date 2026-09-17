@@ -1,0 +1,7 @@
+# trellis's own audit configuration (SPEC §6.5) — dogfooding the
+# deterministic audit. Keys stay in the schema's casing.
+source:
+  exclude:
+    # Fixed validation fixtures (trellis-e924, corpus/): intentional clones,
+    # erosion, cycles, and parse failures — audit inputs, not product source.
+    - "corpus/**"

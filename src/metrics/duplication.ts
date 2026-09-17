@@ -20,7 +20,8 @@
  *   exact (type-1) and identifier/literal-renamed (type-2) clones. Near
  *   clones (type-3) are out of scope: a divergence splits a match into
  *   maximal exact-normalized runs, each reported independently.
- * - **Minimum clone size** (provisional; trellis-e924 calibrates):
+ * - **Minimum clone size** (calibrated by trellis-e924 against the fixed
+ *   corpus in `corpus/`; see `docs/corpus-validation.md`):
  *   {@link DUPLICATION_MIN_TOKENS} normalized tokens **and**
  *   {@link DUPLICATION_MIN_LINES} lines, both required, per member.
  * - **Grouping**: a clone group is the set of ranges sharing one identical
@@ -46,9 +47,15 @@ import ts from "typescript";
 import type { Range, SourceSet } from "../contract/index.ts";
 import { type FileSyntax, positionAt } from "../syntax/index.ts";
 
-/** Minimum normalized-token run for a clone member (provisional, SPEC §5.3). */
-export const DUPLICATION_MIN_TOKENS = 50;
-/** Minimum line span for a clone member (provisional, SPEC §5.3). */
+/**
+ * Minimum normalized-token run for a clone member (SPEC §5.3). Calibrated
+ * from 50 to 100 by trellis-e924: at 50 tokens the fixed corpus and the
+ * trellis self-audit were dominated by idiomatic-structure matches (78 of
+ * 124 trellis production groups were 50–74 tokens), while at 100 tokens
+ * the surviving groups are true copy-paste — see `docs/corpus-validation.md`.
+ */
+export const DUPLICATION_MIN_TOKENS = 100;
+/** Minimum line span for a clone member (SPEC §5.3). */
 export const DUPLICATION_MIN_LINES = 3;
 
 /** Declared resource budgets for one source set's detection run (SPEC §5.3). */
@@ -60,10 +67,12 @@ export interface DuplicationBudget {
 }
 
 /**
- * Default budgets (land with trellis-6e4c; the corpus stage trellis-e924
- * tunes them). The token budget covers the largest observed corpus by an
- * order of magnitude; the work budget bounds the quadratic pair-extension
- * worst case of pathological high-multiplicity clone classes.
+ * Default budgets (land with trellis-6e4c; confirmed by the trellis-e924
+ * corpus run — the largest observed source set, trellis's own test set at
+ * ~135k tokens, keeps an order-of-magnitude headroom). The token budget
+ * covers the largest observed corpus by an order of magnitude; the work
+ * budget bounds the quadratic pair-extension worst case of pathological
+ * high-multiplicity clone classes.
  */
 export const DEFAULT_DUPLICATION_BUDGET: DuplicationBudget = {
 	maxTokens: 2_000_000,
