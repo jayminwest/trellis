@@ -1,6 +1,6 @@
 # App-scope criteria (SPEC §5, §6.1) — the WHAT layer; never names a tool.
 #
-# The 46 criteria scored once per discovered app (denominator N = app count,
+# The 40 criteria scored once per discovered app (denominator N = app count,
 # else 1; numerator = count of apps that pass). Grouped by category in §5 order.
 # Fields per SPEC §6.1:
 #   id, category, scope, level, skippable, discoveryVia,
@@ -8,8 +8,11 @@
 #   gate (reserved; exactly one per category), weight (reserved; default 1).
 # `gate`, `weight`, and a null `investigation` rely on schema defaults when
 # omitted. Clean-room authored from SPEC §5.
+#
+# Transitional (SPEC §14 stage 2): the agent-discovery criteria are retired —
+# every remaining criterion is deterministic.
 
-# --- 5.2 Code Quality (10 A of 12, all det) -------------------------------
+# --- 5.2 Code Quality (10 A) ----------------------------------------------
 
 # Linter configured with real rules.
 - id: lint_config
@@ -92,17 +95,7 @@
   skippable: false
   discoveryVia: deterministic
 
-# --- 5.3 Testing (8, all A) -----------------------------------------------
-# Area: test-layout.
-
-# Unit-test suite present.
-- id: unit_tests_exist
-  category: testing
-  scope: app
-  level: 1
-  skippable: false
-  discoveryVia: agent
-  investigation: test-layout
+# --- 5.3 Testing (2 A) ----------------------------------------------------
 
 # GATE: test command runs real tests (not a no-op).
 - id: unit_tests_runnable
@@ -121,52 +114,7 @@
   skippable: false
   discoveryVia: deterministic
 
-# Tests across a real boundary.
-- id: integration_tests_exist
-  category: testing
-  scope: app
-  level: 3
-  skippable: false
-  discoveryVia: agent
-  investigation: test-layout
-
-# Consistent discoverable naming.
-- id: test_naming_conventions
-  category: testing
-  scope: app
-  level: 3
-  skippable: false
-  discoveryVia: agent
-  investigation: test-layout
-
-# Slow-test/timing surface.
-- id: test_performance_tracking
-  category: testing
-  scope: app
-  level: 4
-  skippable: false
-  discoveryVia: agent
-  investigation: test-layout
-
-# Parallel-safe, no shared mutable state.
-- id: test_isolation
-  category: testing
-  scope: app
-  level: 4
-  skippable: false
-  discoveryVia: agent
-  investigation: test-layout
-
-# Retry/quarantine/flaky reporting.
-- id: flaky_test_detection
-  category: testing
-  scope: app
-  level: 4
-  skippable: true
-  discoveryVia: agent
-  investigation: test-layout
-
-# --- 5.5 CI, Release & Deployment (1 A of 14, det) ------------------------
+# --- 5.5 CI, Release & Deployment (1 A) -----------------------------------
 
 # Committed pre-commit hook setup.
 - id: pre_commit_hooks
@@ -176,7 +124,7 @@
   skippable: false
   discoveryVia: deterministic
 
-# --- 5.6 Observability (12, all A, all det) -------------------------------
+# --- 5.6 Observability (12 A) ---------------------------------------------
 
 # GATE: structured logging library/module.
 - id: structured_logging
@@ -275,7 +223,7 @@
   skippable: false
   discoveryVia: deterministic
 
-# --- 5.7 Security & Data (7 A of 12, all det) -----------------------------
+# --- 5.7 Security & Data (7 A) --------------------------------------------
 
 # Schema-definition files.
 - id: database_schema
@@ -334,7 +282,7 @@
   skippable: true
   discoveryVia: deterministic
 
-# --- 5.9 Locality & Contracts (8, all A, all det) -------------------------
+# --- 5.9 Locality & Contracts (8 A) ---------------------------------------
 
 # Architecture as enforced import/layering constraints.
 - id: machine_checked_architecture

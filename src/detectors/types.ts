@@ -50,14 +50,6 @@ export interface DetectionContext {
 	readFile: (rel: string) => Promise<string | null>;
 	/** Glob relative to the app root; returns repo-relative-to-app matches. */
 	glob: (pattern: string) => Promise<string[]>;
-	/**
-	 * Whether os-eco-native detectors (SPEC §8.4) apply to this repo — the
-	 * `targets.yaml` `osecoDetectors` toggle (SPEC §6.5), default on. The os-eco
-	 * adapter (trellis-7f70) reads it to decide whether to claim seeds/mulch/canopy
-	 * evidence; non-os-eco detectors ignore it. Optional so test fixtures need not
-	 * set it (absent ≡ on).
-	 */
-	osecoDetectors?: boolean;
 }
 
 /**

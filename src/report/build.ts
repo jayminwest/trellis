@@ -2,33 +2,23 @@
  * The audit pipeline (SPEC §14 milestone 3) — the core entrypoint the CLI and
  * SDK both fold. {@link auditRepo} wires the surface-agnostic stages end to end:
  * rubric → app discovery → criterion→detector resolution → per-app/-repo detector
- * runs → agent-criteria investigation (cache-or-run, SPEC §7.3) → §3.4 scoring →
- * the §6.3 {@link Report}.
+ * runs → §3.4 scoring → the §6.3 {@link Report}.
  *
- * Two N/A disciplines coexist (SPEC §3.2): a deterministic criterion with no
- * binding (or no adapter for the app's languages) flows through the registry's
- * `no-detector` stub; an **agent**-discovery criterion is graded from its area's
- * investigated facts, degrading to `no-detector` when the area is unavailable (Pi
- * missing/incompatible, or a per-area failure) or when no investigation is wired.
- * Both keep the score from lying about what trellis can actually measure.
+ * Transitional (SPEC §14 stages 2–3): the agent investigation pass is gone —
+ * disconnected from every audit path, then deleted outright. There is no route
+ * to Pi or any model from this pipeline, and the transitional catalog carries
+ * only deterministic criteria. A criterion with no binding (or no adapter for
+ * the app's languages) flows through the registry's `no-detector` stub
+ * (SPEC §3.2), keeping the score honest about what trellis can measure.
  *
- * The pipeline is deterministic given (checkout, rubric, detector set, cached
- * findings): the only wall-clock input is `scoredAt`, injectable via `opts.now`.
- * Agent findings are frozen per commit, so a same-commit re-run is byte-identical.
+ * The pipeline is deterministic given (checkout, rubric, detector set): the only
+ * wall-clock input is `scoredAt`, injectable via `opts.now`.
  */
 import { basename, resolve } from "node:path";
 import type { DetectorResult, Language } from "../detectors/index.ts";
 import { createDetectionContext, type DetectorRegistry, REGISTRY } from "../detectors/index.ts";
-import { applyOsecoOverlay } from "../detectors/oseco/overlay.ts";
 import type { App } from "../discovery/index.ts";
 import { discoverApps, toAppMap } from "../discovery/index.ts";
-import {
-	type AreaId,
-	type AreaResolution,
-	type InvestigationDeps,
-	type InvestigationEvent,
-	runInvestigation,
-} from "../investigation/index.ts";
 import { type CriterionRecord, loadRubric, RUBRIC_VERSION, type Rubric } from "../rubric/index.ts";
 import {
 	aggregateAppScope,
@@ -38,12 +28,9 @@ import {
 	scoreRun,
 } from "../scoring/index.ts";
 import { type DriftOptions, type DriftReport, driftRepo } from "../standards/index.ts";
-import { agentEntry, neededAreas } from "./agent-scope.ts";
 import { changesSinceLastRun } from "./changes.ts";
 import type { AuditProgress } from "./progress.ts";
 import type { Report } from "./types.ts";
-
-export { AGENT_NOT_WIRED } from "./agent-scope.ts";
 
 /** Options for {@link auditRepo}. All optional — defaults give a real CLI audit. */
 export interface AuditOptions {
@@ -67,40 +54,28 @@ export interface AuditOptions {
 	/** Per-detector subprocess timeout (ms). */
 	timeoutMs?: number;
 	/**
-	 * Cache + provider wiring for the agent-criteria investigation (SPEC §7.3).
-	 * Absent → agent criteria resolve to `no-detector` ({@link AGENT_NOT_WIRED})
-	 * exactly as a det-only run; present → each referenced area is investigated
-	 * (cache-or-run) once and its facts grade every criterion bound to it.
-	 */
-	investigation?: InvestigationDeps;
-	/**
 	 * Canonical-config drift wiring (SPEC §10). Present → the audit compares the
 	 * checkout against the bundled canonical set and folds the result into
 	 * `report.drift`; absent → no `drift` key is emitted (the §6.3 default).
 	 */
 	canonical?: DriftOptions;
 	/**
-	 * Repo id for the report + investigation cache + drift (SPEC §6.4/§6.5). The
-	 * fleet supplies the `targets.yaml` id so central state keys on a stable name;
-	 * defaults to the audited path's basename.
+	 * Repo id for the report + drift (SPEC §6.4/§6.5). The fleet supplies the
+	 * `targets.yaml` id so central state keys on a stable name; defaults to the
+	 * audited path's basename.
 	 */
 	repoId?: string;
 	/**
 	 * Criterion ids forced not-applicable with {@link SKIPPED_VIA_TARGETS} (SPEC
-	 * §6.5 `targets.yaml` `skip`); skips their detector/area entirely.
+	 * §6.5 `targets.yaml` `skip`); skips their detector entirely.
 	 */
 	skip?: readonly string[];
-	/**
-	 * os-eco-native detector toggle (SPEC §6.5/§8.4), surfaced on every detection
-	 * context. Default on; `false` opts a repo out of seeds/mulch/canopy evidence.
-	 */
-	osecoDetectors?: boolean;
 	/** The repo's most recent prior run (SPEC §11): present → fold a `changesSinceLastRun` delta; absent → first run. */
 	previousRun?: Report | null;
 	/**
-	 * Optional progress sink (SPEC §7.3 observability). Core emits phase
-	 * transitions, app/detector counts, and lifted investigation events; the CLI
-	 * owns rendering them to stderr. Absent → a silent, byte-identical run.
+	 * Optional progress sink. Core emits phase transitions and app/detector
+	 * counts; the CLI owns rendering them to stderr. Absent → a silent,
+	 * byte-identical run.
 	 */
 	onProgress?: AuditProgress;
 }
@@ -137,11 +112,11 @@ interface AppContext {
 }
 
 /**
- * Score one deterministic criterion via its bound detector(s): a repo-scope
- * criterion runs once at the root; an app-scope criterion runs per app and the
- * results roll up (SPEC §3.1). The registry resolution is total, so an unbound
- * criterion (or one with no adapter for the app's languages) lands as
- * `no-detector` without throwing.
+ * Score one criterion via its bound detector(s): a repo-scope criterion runs
+ * once at the root; an app-scope criterion runs per app and the results roll up
+ * (SPEC §3.1). The registry resolution is total, so an unbound criterion (or one
+ * with no adapter for the app's languages) lands as `no-detector` without
+ * throwing.
  */
 async function deterministicEntry(
 	criterion: CriterionRecord,
@@ -164,16 +139,12 @@ async function deterministicEntry(
 
 /**
  * Score every rubric criterion into its §6.2 entry, in rubric order. A `skip`ped
- * criterion is forced not-applicable (and the overlay never overrides that
- * intentional exclusion); an agent criterion is graded from its area's findings;
- * everything else runs its deterministic detector(s). os-eco-native evidence
- * (SPEC §8.4) is then folded over every non-skipped verdict (pass if either
- * passes), gated by the repo context's `osecoDetectors` toggle.
+ * criterion is forced not-applicable; everything else runs its deterministic
+ * detector(s).
  */
 async function scoreAllCriteria(
 	rubric: Rubric,
 	skip: ReadonlySet<string>,
-	resolutions: Map<AreaId, AreaResolution>,
 	registry: DetectorRegistry,
 	repoCtx: ReturnType<typeof createDetectionContext>,
 	appCtxs: readonly AppContext[],
@@ -185,15 +156,9 @@ async function scoreAllCriteria(
 	let index = 0;
 	for (const criterion of rubric.criteria) {
 		onProgress?.({ type: "detector", id: criterion.id, index: index++, total });
-		if (skip.has(criterion.id)) {
-			criteria[criterion.id] = skippedEntry(criterion.scope, appCount);
-			continue;
-		}
-		const base =
-			criterion.discoveryVia === "agent"
-				? agentEntry(criterion, appCount, resolutions)
-				: await deterministicEntry(criterion, registry, repoCtx, appCtxs);
-		criteria[criterion.id] = await applyOsecoOverlay(criterion, base, repoCtx, appCount);
+		criteria[criterion.id] = skip.has(criterion.id)
+			? skippedEntry(criterion.scope, appCount)
+			: await deterministicEntry(criterion, registry, repoCtx, appCtxs);
 	}
 	return criteria;
 }
@@ -221,9 +186,8 @@ function repoLanguages(apps: readonly App[]): Language[] {
 
 /**
  * Best-effort `HEAD` sha via the read-only context; `"unknown"` when not a git
- * repo. A dirty worktree gets a `-dirty` suffix so a cache key never claims a
- * commit it does not match (SPEC §7.3): two audits at the same sha with
- * uncommitted edits stay distinct from the clean commit.
+ * repo. A dirty worktree gets a `-dirty` suffix so the report never claims a
+ * clean commit it does not match.
  */
 async function resolveCommit(ctx: ReturnType<typeof createDetectionContext>): Promise<string> {
 	const res = await ctx.run(["git", "rev-parse", "HEAD"]);
@@ -236,13 +200,10 @@ async function resolveCommit(ctx: ReturnType<typeof createDetectionContext>): Pr
 
 /**
  * Run an audit of the repo at `repoPath` and assemble its §6.3 {@link Report}.
- * Every deterministic criterion runs its bound detector (per app for app-scope,
- * once at the root for repo-scope). Agent-discovery criteria are graded from the
- * investigation layer when `opts.investigation` is wired — each referenced area
- * is resolved once (cache-or-run, SPEC §7.3) and its facts feed the
- * deterministic grader — and resolve to `no-detector` ({@link AGENT_NOT_WIRED})
- * otherwise. `criteria` is built in rubric order so the JSON serialization is
- * byte-stable; a same-commit re-run reuses cached findings → byte-identical.
+ * Every criterion runs its bound detector (per app for app-scope, once at the
+ * root for repo-scope). `criteria` is built in rubric order so the JSON
+ * serialization is byte-stable; two runs of the same checkout with the same
+ * `now` are byte-identical.
  */
 export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Promise<Report> {
 	const root = resolve(repoPath);
@@ -250,7 +211,6 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 	const registry = opts.registry ?? REGISTRY;
 	const ctxOpts = {
 		...(opts.timeoutMs === undefined ? {} : { timeoutMs: opts.timeoutMs }),
-		...(opts.osecoDetectors === undefined ? {} : { osecoDetectors: opts.osecoDetectors }),
 	};
 	const repo = opts.repoId ?? basename(root);
 	const skip = new Set(opts.skip ?? []);
@@ -276,31 +236,10 @@ export async function auditRepo(repoPath: string, opts: AuditOptions = {}): Prom
 
 	const commit = await resolveCommit(repoCtx);
 
-	// Investigate the referenced areas once each (cache-or-run); without wiring
-	// the map is empty and agent criteria fall through to AGENT_NOT_WIRED. Bridge
-	// the investigation's own events into the audit progress sink.
-	onProgress?.({ type: "phase", phase: "investigation" });
-	const resolutions = opts.investigation
-		? await runInvestigation(
-				neededAreas(rubric),
-				{ repoPath: root, repo, commitSha: commit, createdAt: scoredAt },
-				{
-					...opts.investigation,
-					...(onProgress
-						? {
-								onProgress: (event: InvestigationEvent) =>
-									onProgress({ type: "investigation", event }),
-							}
-						: {}),
-				},
-			)
-		: new Map<AreaId, AreaResolution>();
-
 	onProgress?.({ type: "phase", phase: "detectors" });
 	const criteria = await scoreAllCriteria(
 		rubric,
 		skip,
-		resolutions,
 		registry,
 		repoCtx,
 		appCtxs,

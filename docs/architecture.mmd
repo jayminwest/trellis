@@ -1,8 +1,10 @@
 %% architecture.mmd
 %%
-%% trellis module graph (SPEC §4). The rubric (WHAT) never names a tool;
-%% detectors (HOW) are tool-specific and live in per-language adapters. That
-%% seam lets one rubric retarget TS, Swift, Python, and arbitrary repos.
+%% trellis module graph (SPEC §4) — the deterministic sloppiness audit.
+%% One-directional pipeline: discover → parse (shared inventory) → measure
+%% (metrics + safeguards) → score (pure formula) → assemble report, with
+%% rendering, baseline comparison/policy, and opt-in persistence OUTSIDE the
+%% measurement pass. No audit path spawns an agent or calls a model (§1).
 %%
 %% Render locally with `bunx @mermaid-js/mermaid-cli -i docs/architecture.mmd
 %% -o docs/architecture.png` or view inline on GitHub (mermaid renders
@@ -13,44 +15,59 @@ flowchart LR
     cli["src/cli/ (commander)"]
     sdk["src/client/ (typed SDK)"]
 
-    rubric["rubric/ — WHAT\ncategories + criteria + version"]
-    discovery["discovery/ — apps"]
-    detectors["detectors/ — HOW (deterministic)\ncommon + lang/{ts,swift,python} + oseco"]
-    investigation["investigation/ — HOW (agent)\nareas → findings → grader"]
-    scoring["scoring/ — pass-rate, clamp, bands"]
-    standards["standards/ — canonical drift (L1)"]
-    fleet["fleet/ — targets.yaml orchestration"]
-    report["report/ — terminal / JSON / MD"]
-    store["store/ — bun:sqlite history"]
-    pi["pi --mode rpc (LLM provider, §9)"]
+    audit["audit/ — deterministic core\ndiscover → parse → measure → score → assemble"]
+    config["config/ — trellis.yaml\nload + validate (declarative)"]
+    contract["contract/ — versioned zod contracts\nmetrics · findings · report · config"]
+    discovery["discovery/ — TS/TSX source sets\nproduction · test · generated · vendored"]
+    syntax["syntax/ — shared parse layer\n(pinned TS compiler API) + function inventory"]
+    metrics["metrics/ — complexity · erosion\nduplication · import graph/cycles"]
+    safeguards["safeguards/ — hook/check config\ninspection (non-scoring)"]
+    scoring["scoring/ — provisional formula (pure)"]
+    report["report/ — terminal / JSON / markdown"]
+    compare["compare/ — artifact comparison\n+ declarative failure policies"]
+    store["store/ — OPTIONAL bun:sqlite history\n(append-only; legacy runs separate)"]
+    history["history/ — dashboard projection"]
+    fleet["fleet/ — OPTIONAL targets.yaml\norchestration over the same core"]
+    standards["standards/ — canonical-config drift\n(separate capability, never scored)"]
 
     user -->|"invokes"| cli
     user -->|"imports"| sdk
-    cli --> rubric
-    sdk --> rubric
+    cli --> audit
+    sdk --> audit
 
-    rubric --> detectors
-    rubric --> investigation
-    discovery --> detectors
-    detectors --> scoring
-    investigation --> scoring
-    investigation -->|"spawns"| pi
-    rubric --> standards
-    fleet --> rubric
+    audit --> config
+    audit --> discovery
+    discovery --> syntax
+    syntax --> metrics
+    syntax --> safeguards
+    metrics --> scoring
     scoring --> report
+    safeguards --> report
+    audit --> contract
+
+    report --> compare
+    compare -->|"policy verdict (exit 0/2)"| cli
+    audit -.->|"opt-in --history"| store
+    store --> history
+    fleet --> audit
+    fleet -.-> standards
     standards --> report
-    scoring -->|"persists"| store
-    store --> report
 
     classDef component fill:#f8fafc,stroke:#0f172a,stroke-width:1px,color:#0f172a;
     classDef edge fill:#e2e8f0,stroke:#334155,stroke-width:1px,color:#0f172a;
-    class user,pi edge;
-    class cli,sdk,rubric,discovery,detectors,investigation,scoring,standards,fleet,report,store component;
+    class user edge;
+    class cli,sdk,audit,config,contract,discovery,syntax,metrics,safeguards,scoring,report,compare,store,history,fleet,standards component;
 
 %% --- Notes ----------------------------------------------------------------
 %% 1. Core (the "api") is every module under src/ except cli/ and client/.
-%%    cli/ and client/ are thin pass-throughs (SPEC §13.1) — no logic.
-%% 2. The investigation layer's grader is DETERMINISTIC; only fact-gathering
-%%    is agentic, executed by Pi in RPC mode (§9), tested against goldens.
-%% 3. store/ is the single source of run history; report/ reads it for the
-%%    dashboard and changes-since-last-run deltas (§11).
+%%    cli/ and client/ are thin pass-throughs (SPEC §13.1) — no logic; the
+%%    deep-equal tests in src/client/index.test.ts prove CLI and SDK are one
+%%    code path, measurement and policy alike.
+%% 2. Dotted edges are opt-in: the default audit is stateless — no database,
+%%    no report files — unless --history / --out ask (SPEC §8, §10).
+%% 3. Policy evaluation and persistence live OUTSIDE the measurement pass;
+%%    a measurement never touches the database or the network.
+%% 4. standards/ drift rides along on fleet as separate, non-scoring
+%%    evidence; it never enters the sloppiness index (SPEC §11).
+%% 5. The retired readiness surface (src/rubric/, src/detectors/) is
+%%    transitional (SPEC §14) and intentionally omitted from this graph.

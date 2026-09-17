@@ -1,0 +1,1088 @@
+{
+  "version": "jscpd 5.2.1",
+  "binarySha256": "272c2833e2dcff607058cdfb9a4b27db3a772759400ceaaf9ce2e67d3c764d23",
+  "platform": "darwin",
+  "arch": "arm64",
+  "date": "2026-09-17T02:58:53.637Z",
+  "baseCommit": "f3743bc0154ba032ef957a20dea678face1b3fa8",
+  "note": "Three sequential warm-cache runs, not a representative benchmark; core timings include discovery and parsing, subprocess timings include startup and JSON reporting.",
+  "datasets": [
+    {
+      "name": "exact",
+      "expectation": "Positive: byte-identical copied function, above threshold.",
+      "files": 2,
+      "parseCompleteness": "complete",
+      "trellis": {
+        "groups": 1,
+        "unionCodeLines": 28,
+        "codeLines": 28,
+        "density": 1,
+        "exhaustion": null,
+        "elapsedMs": [
+          8.585,
+          9.908,
+          1.093
+        ],
+        "repeatedEvidenceEqual": true
+      },
+      "providers": {
+        "exact": {
+          "args": [
+            "<temp>/exact",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 28,
+          "unionTrellisCodeLines": 28,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 13,
+            "duplicatedTokens": 88,
+            "lines": 28,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 46.42857142857143,
+            "percentageTokens": 50,
+            "sources": 2,
+            "tokens": 176
+          },
+          "elapsedMs": [
+            7.355,
+            6.593,
+            4.819
+          ],
+          "evidenceSha256": [
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b",
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b",
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "normalized": {
+          "args": [
+            "<temp>/exact",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 28,
+          "unionTrellisCodeLines": 28,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 13,
+            "duplicatedTokens": 88,
+            "lines": 28,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 46.42857142857143,
+            "percentageTokens": 50,
+            "sources": 2,
+            "tokens": 176
+          },
+          "elapsedMs": [
+            6.095,
+            6.953,
+            7.605
+          ],
+          "evidenceSha256": [
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b",
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b",
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "near": {
+          "args": [
+            "<temp>/exact",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals",
+            "--max-gap-lines",
+            "2",
+            "--similarity",
+            "0.85"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 28,
+          "unionTrellisCodeLines": 28,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 13,
+            "duplicatedTokens": 88,
+            "lines": 28,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 46.42857142857143,
+            "percentageTokens": 50,
+            "sources": 2,
+            "tokens": 176
+          },
+          "elapsedMs": [
+            5.605,
+            8.423,
+            6.744
+          ],
+          "evidenceSha256": [
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b",
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b",
+            "b4ad79891f2909ff865ef8a4cbf276540654974aa92959fb85f7590a2928d46b"
+          ],
+          "repeatedEvidenceEqual": true
+        }
+      }
+    },
+    {
+      "name": "renamed",
+      "expectation": "Positive type-2: renamed identifiers and numeric literal.",
+      "files": 2,
+      "parseCompleteness": "complete",
+      "trellis": {
+        "groups": 1,
+        "unionCodeLines": 28,
+        "codeLines": 28,
+        "density": 1,
+        "exhaustion": null,
+        "elapsedMs": [
+          1.042,
+          0.825,
+          0.815
+        ],
+        "repeatedEvidenceEqual": true
+      },
+      "providers": {
+        "exact": {
+          "args": [
+            "<temp>/renamed",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips"
+          ],
+          "clonePairs": 0,
+          "unionPhysicalLines": 0,
+          "unionTrellisCodeLines": 0,
+          "statistics": {
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "lines": 28,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "sources": 2,
+            "tokens": 176
+          },
+          "elapsedMs": [
+            7.082,
+            6.724,
+            7.953
+          ],
+          "evidenceSha256": [
+            "06a5ba20a51abbdd6d5776c1b738f66c7ed1988d40ae0e47002561c0debcc5d1",
+            "06a5ba20a51abbdd6d5776c1b738f66c7ed1988d40ae0e47002561c0debcc5d1",
+            "06a5ba20a51abbdd6d5776c1b738f66c7ed1988d40ae0e47002561c0debcc5d1"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "normalized": {
+          "args": [
+            "<temp>/renamed",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 28,
+          "unionTrellisCodeLines": 28,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 13,
+            "duplicatedTokens": 88,
+            "lines": 28,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 46.42857142857143,
+            "percentageTokens": 50,
+            "sources": 2,
+            "tokens": 176
+          },
+          "elapsedMs": [
+            6.779,
+            6.436,
+            6.401
+          ],
+          "evidenceSha256": [
+            "ab151b4e34a8a0e78ffab5dcb10b3e3ac5eef61fb7135a51bdf286a14b372777",
+            "ab151b4e34a8a0e78ffab5dcb10b3e3ac5eef61fb7135a51bdf286a14b372777",
+            "ab151b4e34a8a0e78ffab5dcb10b3e3ac5eef61fb7135a51bdf286a14b372777"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "near": {
+          "args": [
+            "<temp>/renamed",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals",
+            "--max-gap-lines",
+            "2",
+            "--similarity",
+            "0.85"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 28,
+          "unionTrellisCodeLines": 28,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 13,
+            "duplicatedTokens": 88,
+            "lines": 28,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 46.42857142857143,
+            "percentageTokens": 50,
+            "sources": 2,
+            "tokens": 176
+          },
+          "elapsedMs": [
+            8.936,
+            11.182,
+            6.356
+          ],
+          "evidenceSha256": [
+            "ab151b4e34a8a0e78ffab5dcb10b3e3ac5eef61fb7135a51bdf286a14b372777",
+            "ab151b4e34a8a0e78ffab5dcb10b3e3ac5eef61fb7135a51bdf286a14b372777",
+            "ab151b4e34a8a0e78ffab5dcb10b3e3ac5eef61fb7135a51bdf286a14b372777"
+          ],
+          "repeatedEvidenceEqual": true
+        }
+      }
+    },
+    {
+      "name": "near",
+      "expectation": "Positive type-3: one inserted logging statement; any surviving exact fragments are partial recall.",
+      "files": 2,
+      "parseCompleteness": "complete",
+      "trellis": {
+        "groups": 0,
+        "unionCodeLines": 0,
+        "codeLines": 29,
+        "density": 0,
+        "exhaustion": null,
+        "elapsedMs": [
+          0.812,
+          0.503,
+          0.539
+        ],
+        "repeatedEvidenceEqual": true
+      },
+      "providers": {
+        "exact": {
+          "args": [
+            "<temp>/near",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips"
+          ],
+          "clonePairs": 0,
+          "unionPhysicalLines": 0,
+          "unionTrellisCodeLines": 0,
+          "statistics": {
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "lines": 29,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "sources": 2,
+            "tokens": 183
+          },
+          "elapsedMs": [
+            7.731,
+            5.989,
+            7.184
+          ],
+          "evidenceSha256": [
+            "3b3ef4f9ff6b5f8974f6f8e61bd1d52409439459ce635d9099543b248864219b",
+            "3b3ef4f9ff6b5f8974f6f8e61bd1d52409439459ce635d9099543b248864219b",
+            "3b3ef4f9ff6b5f8974f6f8e61bd1d52409439459ce635d9099543b248864219b"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "normalized": {
+          "args": [
+            "<temp>/near",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals"
+          ],
+          "clonePairs": 0,
+          "unionPhysicalLines": 0,
+          "unionTrellisCodeLines": 0,
+          "statistics": {
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "lines": 29,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "sources": 2,
+            "tokens": 183
+          },
+          "elapsedMs": [
+            5.852,
+            5.583,
+            6.48
+          ],
+          "evidenceSha256": [
+            "3b3ef4f9ff6b5f8974f6f8e61bd1d52409439459ce635d9099543b248864219b",
+            "3b3ef4f9ff6b5f8974f6f8e61bd1d52409439459ce635d9099543b248864219b",
+            "3b3ef4f9ff6b5f8974f6f8e61bd1d52409439459ce635d9099543b248864219b"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "near": {
+          "args": [
+            "<temp>/near",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals",
+            "--max-gap-lines",
+            "2",
+            "--similarity",
+            "0.85"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 29,
+          "unionTrellisCodeLines": 29,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 13,
+            "duplicatedTokens": 87,
+            "lines": 29,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 44.827586206896555,
+            "percentageTokens": 47.540983606557376,
+            "sources": 2,
+            "tokens": 183
+          },
+          "elapsedMs": [
+            6.392,
+            7.172,
+            5.696
+          ],
+          "evidenceSha256": [
+            "a344b5e234154928d068c7738791df17506c9685b93918c23de78e307f98e6da",
+            "a344b5e234154928d068c7738791df17506c9685b93918c23de78e307f98e6da",
+            "a344b5e234154928d068c7738791df17506c9685b93918c23de78e307f98e6da"
+          ],
+          "repeatedEvidenceEqual": true
+        }
+      }
+    },
+    {
+      "name": "unrelated",
+      "expectation": "Negative: unrelated numeric accumulation vs sorted string normalization, both above 50 tokens.",
+      "files": 2,
+      "parseCompleteness": "complete",
+      "trellis": {
+        "groups": 0,
+        "unionCodeLines": 0,
+        "codeLines": 21,
+        "density": 0,
+        "exhaustion": null,
+        "elapsedMs": [
+          1.203,
+          0.607,
+          0.618
+        ],
+        "repeatedEvidenceEqual": true
+      },
+      "providers": {
+        "exact": {
+          "args": [
+            "<temp>/unrelated",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips"
+          ],
+          "clonePairs": 0,
+          "unionPhysicalLines": 0,
+          "unionTrellisCodeLines": 0,
+          "statistics": {
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "lines": 21,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "sources": 2,
+            "tokens": 183
+          },
+          "elapsedMs": [
+            6.915,
+            6.746,
+            6.228
+          ],
+          "evidenceSha256": [
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160",
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160",
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "normalized": {
+          "args": [
+            "<temp>/unrelated",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals"
+          ],
+          "clonePairs": 0,
+          "unionPhysicalLines": 0,
+          "unionTrellisCodeLines": 0,
+          "statistics": {
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "lines": 21,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "sources": 2,
+            "tokens": 183
+          },
+          "elapsedMs": [
+            6.336,
+            6.253,
+            15.154
+          ],
+          "evidenceSha256": [
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160",
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160",
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "near": {
+          "args": [
+            "<temp>/unrelated",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals",
+            "--max-gap-lines",
+            "2",
+            "--similarity",
+            "0.85"
+          ],
+          "clonePairs": 0,
+          "unionPhysicalLines": 0,
+          "unionTrellisCodeLines": 0,
+          "statistics": {
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "lines": 21,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "sources": 2,
+            "tokens": 183
+          },
+          "elapsedMs": [
+            7.882,
+            7.101,
+            6.009
+          ],
+          "evidenceSha256": [
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160",
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160",
+            "36e94287a6bf189f0c60451aea6e4bd366f77a2818f9e60e7a68a5563faec160"
+          ],
+          "repeatedEvidenceEqual": true
+        }
+      }
+    },
+    {
+      "name": "idiom",
+      "expectation": "Ambiguous structure, not a refactoring defect label: independent HTTP response vs UI notification data builders.",
+      "files": 2,
+      "parseCompleteness": "complete",
+      "trellis": {
+        "groups": 1,
+        "unionCodeLines": 22,
+        "codeLines": 22,
+        "density": 1,
+        "exhaustion": null,
+        "elapsedMs": [
+          0.925,
+          0.471,
+          0.526
+        ],
+        "repeatedEvidenceEqual": true
+      },
+      "providers": {
+        "exact": {
+          "args": [
+            "<temp>/idiom",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips"
+          ],
+          "clonePairs": 0,
+          "unionPhysicalLines": 0,
+          "unionTrellisCodeLines": 0,
+          "statistics": {
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "lines": 22,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "sources": 2,
+            "tokens": 150
+          },
+          "elapsedMs": [
+            6.45,
+            6.067,
+            5.885
+          ],
+          "evidenceSha256": [
+            "8a36fab43d6b76a6ddc6e0e1aeace08db41e631652f335d7ea94795a71e1eb78",
+            "8a36fab43d6b76a6ddc6e0e1aeace08db41e631652f335d7ea94795a71e1eb78",
+            "8a36fab43d6b76a6ddc6e0e1aeace08db41e631652f335d7ea94795a71e1eb78"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "normalized": {
+          "args": [
+            "<temp>/idiom",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 22,
+          "unionTrellisCodeLines": 22,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 10,
+            "duplicatedTokens": 75,
+            "lines": 22,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 45.45454545454545,
+            "percentageTokens": 50,
+            "sources": 2,
+            "tokens": 150
+          },
+          "elapsedMs": [
+            6.317,
+            7.816,
+            6.463
+          ],
+          "evidenceSha256": [
+            "371bd02a7560a08fe9b036dd1d2b6f94ae2daf758ffbb01bd186e0e60a6d9333",
+            "371bd02a7560a08fe9b036dd1d2b6f94ae2daf758ffbb01bd186e0e60a6d9333",
+            "371bd02a7560a08fe9b036dd1d2b6f94ae2daf758ffbb01bd186e0e60a6d9333"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "near": {
+          "args": [
+            "<temp>/idiom",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals",
+            "--max-gap-lines",
+            "2",
+            "--similarity",
+            "0.85"
+          ],
+          "clonePairs": 1,
+          "unionPhysicalLines": 22,
+          "unionTrellisCodeLines": 22,
+          "statistics": {
+            "clones": 1,
+            "duplicatedLines": 10,
+            "duplicatedTokens": 75,
+            "lines": 22,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 45.45454545454545,
+            "percentageTokens": 50,
+            "sources": 2,
+            "tokens": 150
+          },
+          "elapsedMs": [
+            6.68,
+            7.32,
+            6.86
+          ],
+          "evidenceSha256": [
+            "371bd02a7560a08fe9b036dd1d2b6f94ae2daf758ffbb01bd186e0e60a6d9333",
+            "371bd02a7560a08fe9b036dd1d2b6f94ae2daf758ffbb01bd186e0e60a6d9333",
+            "371bd02a7560a08fe9b036dd1d2b6f94ae2daf758ffbb01bd186e0e60a6d9333"
+          ],
+          "repeatedEvidenceEqual": true
+        }
+      }
+    },
+    {
+      "name": "production",
+      "expectation": "Observational corpus; no ground-truth labels. Explicit trellis production inventory copied without project config or dependencies.",
+      "files": 162,
+      "parseCompleteness": "complete",
+      "trellis": {
+        "groups": 124,
+        "unionCodeLines": 2320,
+        "codeLines": 15147,
+        "density": 0.15316564336172178,
+        "exhaustion": null,
+        "elapsedMs": [
+          152.599,
+          115.104,
+          106.058
+        ],
+        "repeatedEvidenceEqual": true
+      },
+      "providers": {
+        "exact": {
+          "args": [
+            "<temp>/production",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips"
+          ],
+          "clonePairs": 24,
+          "unionPhysicalLines": 532,
+          "unionTrellisCodeLines": 452,
+          "statistics": {
+            "clones": 24,
+            "duplicatedLines": 260,
+            "duplicatedTokens": 1819,
+            "lines": 20697,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 1.2562207083152148,
+            "percentageTokens": 1.803150308785773,
+            "sources": 154,
+            "tokens": 100879
+          },
+          "elapsedMs": [
+            28.013,
+            29.36,
+            28.004
+          ],
+          "evidenceSha256": [
+            "40e345fa5a89d82f0607c4d1e741f82f212c1b16e9e238aa36485cfcd095e1cc",
+            "40e345fa5a89d82f0607c4d1e741f82f212c1b16e9e238aa36485cfcd095e1cc",
+            "40e345fa5a89d82f0607c4d1e741f82f212c1b16e9e238aa36485cfcd095e1cc"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "normalized": {
+          "args": [
+            "<temp>/production",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals"
+          ],
+          "clonePairs": 91,
+          "unionPhysicalLines": 1807,
+          "unionTrellisCodeLines": 1565,
+          "statistics": {
+            "clones": 91,
+            "duplicatedLines": 1106,
+            "duplicatedTokens": 6915,
+            "lines": 20697,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 5.343769628448567,
+            "percentageTokens": 6.854746775840363,
+            "sources": 154,
+            "tokens": 100879
+          },
+          "elapsedMs": [
+            35.837,
+            28.989,
+            30.253
+          ],
+          "evidenceSha256": [
+            "41a55699404a846ebfd261e5c75cd5aaa34b42a30051085e1b5e2e10e5da7b97",
+            "41a55699404a846ebfd261e5c75cd5aaa34b42a30051085e1b5e2e10e5da7b97",
+            "41a55699404a846ebfd261e5c75cd5aaa34b42a30051085e1b5e2e10e5da7b97"
+          ],
+          "repeatedEvidenceEqual": true
+        },
+        "near": {
+          "args": [
+            "<temp>/production",
+            "--config",
+            "<temp>/config.json",
+            "--min-tokens",
+            "50",
+            "--min-lines",
+            "3",
+            "--mode",
+            "weak",
+            "--no-gitignore",
+            "--workers",
+            "1",
+            "--max-size",
+            "100mb",
+            "--reporters",
+            "json",
+            "--output",
+            "<temp>/output",
+            "--silent",
+            "--no-tips",
+            "--ignore-identifiers",
+            "--ignore-literals",
+            "--max-gap-lines",
+            "2",
+            "--similarity",
+            "0.85"
+          ],
+          "clonePairs": 95,
+          "unionPhysicalLines": 2055,
+          "unionTrellisCodeLines": 1813,
+          "statistics": {
+            "clones": 95,
+            "duplicatedLines": 1312,
+            "duplicatedTokens": 8288,
+            "lines": 20697,
+            "newClones": 0,
+            "newDuplicatedLines": 0,
+            "percentage": 6.33908295888293,
+            "percentageTokens": 8.215783265099773,
+            "sources": 154,
+            "tokens": 100879
+          },
+          "elapsedMs": [
+            48.657,
+            43.941,
+            42.033
+          ],
+          "evidenceSha256": [
+            "2b59551e57d8308a02c4571b29d69b8ab49a8dd9597ed88a6ee2717ed5a977fb",
+            "2b59551e57d8308a02c4571b29d69b8ab49a8dd9597ed88a6ee2717ed5a977fb",
+            "2b59551e57d8308a02c4571b29d69b8ab49a8dd9597ed88a6ee2717ed5a977fb"
+          ],
+          "repeatedEvidenceEqual": true
+        }
+      }
+    }
+  ],
+  "sharedCorpusSha256": "420cdd12431c6c4e1badeb13917c39a4d9da02a6ab6cfb2ca3e801db4379a848",
+  "productionManifestSha256": "a884538d299211bd8a52b5c1b5aba40b46ae0d206278286f63f74279d1af1c05",
+  "fixtureAssertionsPassed": true
+}

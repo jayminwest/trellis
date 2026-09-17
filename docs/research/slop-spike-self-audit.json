@@ -1,0 +1,723 @@
+{
+  "protocol": "slop-hypotheses-v1",
+  "status": "experimental-evidence-only",
+  "compilerVersion": "6.0.3",
+  "completeness": "complete",
+  "scope": {
+    "sourceSet": "production",
+    "files": 162,
+    "functions": 1129,
+    "skipped": [],
+    "diagnostics": []
+  },
+  "forwarders": [
+    {
+      "path": "scripts/check-debt-markers.ts",
+      "range": {
+        "start": {
+          "line": 132,
+          "column": 25
+        },
+        "end": {
+          "line": 132,
+          "column": 52
+        }
+      },
+      "name": "(anonymous)",
+      "target": "name.endsWith",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "scripts/check-file-sizes.ts",
+      "range": {
+        "start": {
+          "line": 106,
+          "column": 25
+        },
+        "end": {
+          "line": 106,
+          "column": 52
+        }
+      },
+      "name": "(anonymous)",
+      "target": "name.endsWith",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/common/ci-release.ts",
+      "range": {
+        "start": {
+          "line": 156,
+          "column": 46
+        },
+        "end": {
+          "line": 157,
+          "column": 50
+        }
+      },
+      "name": "(anonymous)",
+      "target": "/version.*(sync|drift|check)|syncpack/i.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/common/ci-release.ts",
+      "range": {
+        "start": {
+          "line": 168,
+          "column": 46
+        },
+        "end": {
+          "line": 169,
+          "column": 59
+        }
+      },
+      "name": "(anonymous)",
+      "target": "/(dead|stale).*flag|flag.*(lint|cleanup|audit)/i.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/common/ci-release.ts",
+      "range": {
+        "start": {
+          "line": 180,
+          "column": 32
+        },
+        "end": {
+          "line": 180,
+          "column": 50
+        }
+      },
+      "name": "(anonymous)",
+      "target": "deps.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/common/ci-release.ts",
+      "range": {
+        "start": {
+          "line": 213,
+          "column": 46
+        },
+        "end": {
+          "line": 214,
+          "column": 64
+        }
+      },
+      "name": "(anonymous)",
+      "target": "/report.*(timing|metrics|perf)|build.*(timing|perf)/i.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/common/ci-release.ts",
+      "range": {
+        "start": {
+          "line": 270,
+          "column": 46
+        },
+        "end": {
+          "line": 270,
+          "column": 87
+        }
+      },
+      "name": "(anonymous)",
+      "target": "/rollback|revert.*deploy/i.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/common/quality.ts",
+      "range": {
+        "start": {
+          "line": 63,
+          "column": 54
+        },
+        "end": {
+          "line": 63,
+          "column": 90
+        }
+      },
+      "name": "(anonymous)",
+      "target": "/core\\.hooksPath/.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/lang/typescript/locality.ts",
+      "range": {
+        "start": {
+          "line": 44,
+          "column": 16
+        },
+        "end": {
+          "line": 44,
+          "column": 56
+        }
+      },
+      "name": "(anonymous)",
+      "target": "/\\.arch\\.test\\.(ts|tsx)$/.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/lang/typescript/observability.ts",
+      "range": {
+        "start": {
+          "line": 50,
+          "column": 38
+        },
+        "end": {
+          "line": 50,
+          "column": 56
+        }
+      },
+      "name": "(anonymous)",
+      "target": "deps.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/lang/typescript/observability.ts",
+      "range": {
+        "start": {
+          "line": 58,
+          "column": 34
+        },
+        "end": {
+          "line": 58,
+          "column": 52
+        }
+      },
+      "name": "(anonymous)",
+      "target": "deps.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/lang/typescript/util.ts",
+      "range": {
+        "start": {
+          "line": 218,
+          "column": 20
+        },
+        "end": {
+          "line": 218,
+          "column": 38
+        }
+      },
+      "name": "(anonymous)",
+      "target": "deps.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/detectors/registry.ts",
+      "range": {
+        "start": {
+          "line": 223,
+          "column": 2
+        },
+        "end": {
+          "line": 225,
+          "column": 3
+        }
+      },
+      "name": "has",
+      "target": "this.bindings.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/discovery/classify.ts",
+      "range": {
+        "start": {
+          "line": 65,
+          "column": 1
+        },
+        "end": {
+          "line": 67,
+          "column": 2
+        }
+      },
+      "name": "isTypeScriptSource",
+      "target": "TS_SOURCE_RE.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/discovery/classify.ts",
+      "range": {
+        "start": {
+          "line": 101,
+          "column": 16
+        },
+        "end": {
+          "line": 101,
+          "column": 55
+        }
+      },
+      "name": "(anonymous)",
+      "target": "VENDORED_DIRS.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/discovery/classify.ts",
+      "range": {
+        "start": {
+          "line": 104,
+          "column": 16
+        },
+        "end": {
+          "line": 104,
+          "column": 56
+        }
+      },
+      "name": "(anonymous)",
+      "target": "GENERATED_DIRS.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/discovery/classify.ts",
+      "range": {
+        "start": {
+          "line": 110,
+          "column": 51
+        },
+        "end": {
+          "line": 110,
+          "column": 86
+        }
+      },
+      "name": "(anonymous)",
+      "target": "TEST_DIRS.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/metrics/analyze-duplication.ts",
+      "range": {
+        "start": {
+          "line": 122,
+          "column": 28
+        },
+        "end": {
+          "line": 122,
+          "column": 62
+        }
+      },
+      "name": "(anonymous)",
+      "target": "collectTokenStream",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/metrics/analyze.ts",
+      "range": {
+        "start": {
+          "line": 236,
+          "column": 42
+        },
+        "end": {
+          "line": 236,
+          "column": 69
+        }
+      },
+      "name": "(anonymous)",
+      "target": "measureFile",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/metrics/cycles.ts",
+      "range": {
+        "start": {
+          "line": 226,
+          "column": 59
+        },
+        "end": {
+          "line": 226,
+          "column": 90
+        }
+      },
+      "name": "(anonymous)",
+      "target": "members.has",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/research/slop-spike.ts",
+      "range": {
+        "start": {
+          "line": 26,
+          "column": 35
+        },
+        "end": {
+          "line": 26,
+          "column": 73
+        }
+      },
+      "name": "(anonymous)",
+      "target": "right.cases.includes",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/safeguards/budgets.ts",
+      "range": {
+        "start": {
+          "line": 56,
+          "column": 15
+        },
+        "end": {
+          "line": 56,
+          "column": 47
+        }
+      },
+      "name": "enforcedBy",
+      "target": "/\\bjscpd\\b/.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/safeguards/hooks.ts",
+      "range": {
+        "start": {
+          "line": 164,
+          "column": 56
+        },
+        "end": {
+          "line": 164,
+          "column": 91
+        }
+      },
+      "name": "(anonymous)",
+      "target": "PRE_COMMIT_ACTION_RE.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/standards/drift.ts",
+      "range": {
+        "start": {
+          "line": 270,
+          "column": 29
+        },
+        "end": {
+          "line": 270,
+          "column": 46
+        }
+      },
+      "name": "(anonymous)",
+      "target": "re.test",
+      "parameters": 1,
+      "isAsync": false
+    },
+    {
+      "path": "src/store/store.ts",
+      "range": {
+        "start": {
+          "line": 228,
+          "column": 3
+        },
+        "end": {
+          "line": 230,
+          "column": 4
+        }
+      },
+      "name": "insertRun",
+      "target": "insertRunTxn",
+      "parameters": 1,
+      "isAsync": false
+    }
+  ],
+  "dispatches": [
+    {
+      "path": "scripts/report-quality-metrics.ts",
+      "range": {
+        "start": {
+          "line": 58,
+          "column": 3
+        },
+        "end": {
+          "line": 75,
+          "column": 4
+        }
+      },
+      "expression": "key",
+      "cases": [
+        "string:\"FNF\"",
+        "string:\"FNH\"",
+        "string:\"LF\"",
+        "string:\"LH\""
+      ],
+      "hasDefault": false
+    },
+    {
+      "path": "src/cli/progress.ts",
+      "range": {
+        "start": {
+          "line": 48,
+          "column": 2
+        },
+        "end": {
+          "line": 63,
+          "column": 3
+        }
+      },
+      "expression": "phase",
+      "cases": [
+        "string:\"assemble\"",
+        "string:\"configure\"",
+        "string:\"discover\"",
+        "string:\"measure\"",
+        "string:\"parse\"",
+        "string:\"safeguards\"",
+        "string:\"score\""
+      ],
+      "hasDefault": false
+    },
+    {
+      "path": "src/cli/progress.ts",
+      "range": {
+        "start": {
+          "line": 68,
+          "column": 2
+        },
+        "end": {
+          "line": 92,
+          "column": 3
+        }
+      },
+      "expression": "event.type",
+      "cases": [
+        "string:\"analyzer\"",
+        "string:\"measured\"",
+        "string:\"phase\"",
+        "string:\"safeguards-inspected\"",
+        "string:\"scored\"",
+        "string:\"source-discovered\"",
+        "string:\"syntax-built\""
+      ],
+      "hasDefault": false
+    },
+    {
+      "path": "src/cli/progress.ts",
+      "range": {
+        "start": {
+          "line": 119,
+          "column": 2
+        },
+        "end": {
+          "line": 128,
+          "column": 3
+        }
+      },
+      "expression": "event.type",
+      "cases": [
+        "string:\"analyzer\"",
+        "string:\"phase\""
+      ],
+      "hasDefault": true
+    },
+    {
+      "path": "src/report/assess.ts",
+      "range": {
+        "start": {
+          "line": 46,
+          "column": 2
+        },
+        "end": {
+          "line": 57,
+          "column": 3
+        }
+      },
+      "expression": "mode",
+      "cases": [
+        "string:\"drift\"",
+        "string:\"gate\"",
+        "string:\"level\"",
+        "string:\"none\""
+      ],
+      "hasDefault": true
+    },
+    {
+      "path": "src/report/audit-fixtures.ts",
+      "range": {
+        "start": {
+          "line": 98,
+          "column": 2
+        },
+        "end": {
+          "line": 137,
+          "column": 3
+        }
+      },
+      "expression": "kind",
+      "cases": [
+        "string:\"clean\"",
+        "string:\"function-free\"",
+        "string:\"incomplete\"",
+        "string:\"mixed-language\"",
+        "string:\"sloppy\""
+      ],
+      "hasDefault": false
+    },
+    {
+      "path": "src/report/audit-format.ts",
+      "range": {
+        "start": {
+          "line": 75,
+          "column": 2
+        },
+        "end": {
+          "line": 92,
+          "column": 3
+        }
+      },
+      "expression": "metric.state",
+      "cases": [
+        "string:\"complete\"",
+        "string:\"incomplete\"",
+        "string:\"not-applicable\"",
+        "string:\"unsupported\""
+      ],
+      "hasDefault": false
+    },
+    {
+      "path": "src/report/rollup.ts",
+      "range": {
+        "start": {
+          "line": 56,
+          "column": 2
+        },
+        "end": {
+          "line": 67,
+          "column": 3
+        }
+      },
+      "expression": "disposition(entry)",
+      "cases": [
+        "string:\"counted\"",
+        "string:\"no-detector\"",
+        "string:\"not-applicable\""
+      ],
+      "hasDefault": false
+    },
+    {
+      "path": "src/scoring/score.ts",
+      "range": {
+        "start": {
+          "line": 63,
+          "column": 3
+        },
+        "end": {
+          "line": 76,
+          "column": 4
+        }
+      },
+      "expression": "disposition(entry)",
+      "cases": [
+        "string:\"counted\"",
+        "string:\"no-detector\"",
+        "string:\"not-applicable\""
+      ],
+      "hasDefault": false
+    },
+    {
+      "path": "src/standards/drift.ts",
+      "range": {
+        "start": {
+          "line": 300,
+          "column": 2
+        },
+        "end": {
+          "line": 313,
+          "column": 3
+        }
+      },
+      "expression": "matcher",
+      "cases": [
+        "string:\"exact\"",
+        "string:\"json-subset\"",
+        "string:\"template\"",
+        "string:\"text\"",
+        "string:\"yaml-subset\""
+      ],
+      "hasDefault": false
+    }
+  ],
+  "dispatchFamilies": [
+    {
+      "cases": [
+        "string:\"counted\"",
+        "string:\"no-detector\"",
+        "string:\"not-applicable\""
+      ],
+      "siteCount": 2,
+      "fileCount": 2,
+      "sites": [
+        {
+          "path": "src/report/rollup.ts",
+          "range": {
+            "start": {
+              "line": 56,
+              "column": 2
+            },
+            "end": {
+              "line": 67,
+              "column": 3
+            }
+          },
+          "expression": "disposition(entry)",
+          "cases": [
+            "string:\"counted\"",
+            "string:\"no-detector\"",
+            "string:\"not-applicable\""
+          ],
+          "hasDefault": false
+        },
+        {
+          "path": "src/scoring/score.ts",
+          "range": {
+            "start": {
+              "line": 63,
+              "column": 3
+            },
+            "end": {
+              "line": 76,
+              "column": 4
+            }
+          },
+          "expression": "disposition(entry)",
+          "cases": [
+            "string:\"counted\"",
+            "string:\"no-detector\"",
+            "string:\"not-applicable\""
+          ],
+          "hasDefault": false
+        }
+      ]
+    }
+  ],
+  "dispatchDisagreements": {
+    "state": "complete",
+    "reason": null,
+    "pairs": []
+  },
+  "sourceConfig": {
+    "exclude": [],
+    "classify": {}
+  },
+  "excluded": [],
+  "unsupported": {
+    "files": 0,
+    "byExtension": {}
+  }
+}

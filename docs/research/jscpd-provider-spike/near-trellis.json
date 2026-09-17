@@ -1,0 +1,11 @@
+{
+  "sourceSet": "production",
+  "files": 2,
+  "tokenCount": 183,
+  "codeLines": 29,
+  "duplicatedLines": 0,
+  "density": 0,
+  "groups": [],
+  "diagnosticFiles": [],
+  "exhaustion": null
+}

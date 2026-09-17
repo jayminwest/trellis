@@ -1,215 +1,197 @@
 /**
- * History dashboard (SPEC §11) — the surface-agnostic projection behind
- * `trellis report`. {@link buildHistory} reads the central SQLite store and
- * assembles a {@link HistoryReport}: a fleet snapshot of every repo's latest run,
- * and per-repo detail — the level/pass-rate/coverage series over time, the
- * latest run's embedded `changesSinceLastRun` delta, and the per-criterion trends
- * powered by `criterion_results`.
+ * History dashboard (SPEC §10, §11, trellis-8366) — the surface-agnostic
+ * projection behind `trellis report`. {@link buildHistory} reads the central
+ * SQLite store and assembles a {@link HistoryReport} over the **sloppiness
+ * audit history**: a snapshot of every repo's latest audit run, and per-repo
+ * §3.5-compatible index series.
  *
- * It computes nothing the store can't answer with a query: the fleet snapshot's
- * level delta comes straight off each latest run's embedded §11 delta (no extra
- * read), and trends are folded from the joined criterion rows. The whole thing is
- * pure over the store, so tests seed a `:memory:`/temp DB and assert the report.
+ * **Legacy separation (SPEC §10).** Legacy readiness runs survive in the same
+ * database and surface here as a visibly distinct `legacy` section — repo,
+ * run count, and the latest readiness numbers, labeled as a different
+ * product. Readiness percentages and levels are **never** compared with,
+ * averaged into, or trended against sloppiness indices: the two sections
+ * share no series, no scale, and no delta.
+ *
+ * **Compatible trends (SPEC §3.5).** A repo's index series selects only runs
+ * whose schema, analyzer, and scoring versions match its latest run — a
+ * scoring-version bump starts a new scale, and the dashboard never trends
+ * across it. The snapshot's index delta compares the latest two compatible
+ * runs (positive = worse; lower is better).
+ *
+ * The whole report is pure over the store, so tests seed a `:memory:`/temp
+ * DB and assert the projection.
  */
-import {
-	type ChangesSinceLastRun,
-	type CriterionSnapshot,
-	criterionStatus,
-} from "../report/index.ts";
-import type { Level } from "../rubric/index.ts";
-import { RUBRIC_VERSION } from "../rubric/index.ts";
-import type { NaKind } from "../scoring/index.ts";
-import { type Store, type StoredRun, storedReport, type TrendRow } from "../store/index.ts";
+import type { Completeness } from "../contract/index.ts";
+import type { Store, StoredAuditRun, StoredRun } from "../store/index.ts";
 
-/** One repo's headline state in the fleet snapshot (its most recent run). */
-export interface SnapshotEntry {
+/** One repo's headline state in the sloppiness snapshot (its most recent audit run). */
+export interface AuditSnapshotEntry {
+	/** Repository identity (`<label>#<hash>`, SPEC §10). */
 	repo: string;
-	level: Level;
-	passRate: number;
-	coverage: number;
-	rubricVersion: string;
-	commit: string;
-	scoredAt: string;
-	/** Net level move of the latest run vs its predecessor, or `null` on a first run. */
-	levelDelta: number | null;
-	/** Total runs recorded for this repo within the report's `since` window. */
+	/** The 0–100 sloppiness index (lower is better) of the latest run. */
+	index: number;
+	/** True when the latest run's headline is flagged partial (§3.4). */
+	partial: boolean;
+	completeness: Completeness;
+	scoringVersion: string;
+	auditedAt: string;
+	/** Total audit runs recorded for this repo within the report's `since` window. */
 	runs: number;
+	/** `index − previous compatible run's index` (positive = worse), or `null` on a first run. */
+	indexDelta: number | null;
 }
 
-/** One point on a repo's level/pass-rate/coverage series. */
-export interface RunPoint {
-	scoredAt: string;
-	commit: string;
-	rubricVersion: string;
-	level: Level;
-	passRate: number;
-	coverage: number;
+/** One point on a repo's §3.5-compatible sloppiness series. */
+export interface AuditRunPoint {
+	auditedAt: string;
+	index: number;
+	partial: boolean;
+	completeness: Completeness;
+	scoringVersion: string;
 }
 
-/** One point on a single criterion's trend. */
-export interface TrendPoint {
-	scoredAt: string;
-	status: CriterionSnapshot["status"];
-	numerator: number | null;
-	denominator: number;
-	naKind: NaKind | null;
-}
-
-/** A criterion that moved at least once across the window, with its full point series. */
-export interface CriterionTrend {
-	criterion: string;
-	points: TrendPoint[];
-}
-
-/** Per-repo detail: the run series, the latest §11 delta, and the moved-criterion trends. */
-export interface RepoHistory {
+/** Per-repo sloppiness detail: the compatible run series, oldest first. */
+export interface AuditRepoHistory {
 	repo: string;
-	/** Run series oldest → newest within the `since` window. */
-	runs: RunPoint[];
-	/** The latest run's embedded §11 delta, or `null` (a first run, or a det-only history). */
-	changesSinceLastRun: ChangesSinceLastRun | null;
-	/** Only criteria whose measured state changed at least once across the window. */
-	trends: CriterionTrend[];
+	runs: AuditRunPoint[];
 }
 
-/** The `trellis report` document (SPEC §11) — fleet snapshot + per-repo history. */
+/**
+ * One repo's legacy readiness history, visibly distinct (SPEC §10): a
+ * different product's numbers, never trended against the sloppiness index.
+ */
+export interface LegacyRepoEntry {
+	repo: string;
+	/** Total legacy readiness runs recorded within the report's `since` window. */
+	runs: number;
+	latestLevel: number;
+	latestPassRate: number;
+	latestCoverage: number;
+	latestRubricVersion: string;
+	latestScoredAt: string;
+}
+
+/** The `trellis report` document (SPEC §10, §11) — sloppiness history + the distinct legacy section. */
 export interface HistoryReport {
-	/** The currently-bundled rubric version (what a fresh audit would score against). */
-	rubricVersion: string;
 	/** The query scope echoed back: a single repo or all, and the `since` floor. */
 	scope: { repo: string | null; since: string | null };
-	/** Latest run per repo in scope, sorted by repo id. */
-	fleet: SnapshotEntry[];
-	/** Per-repo detail for every repo in scope that has a run in the window. */
-	repos: RepoHistory[];
+	/** Sloppiness audit history (the pivoted product). */
+	audits: {
+		/** Latest audit run per repo in scope, sorted by repo identity. */
+		snapshot: AuditSnapshotEntry[];
+		/** Per-repo compatible index series for every repo with a run in the window. */
+		repos: AuditRepoHistory[];
+	};
+	/** Legacy readiness history — a different scale, never compared (SPEC §10). */
+	legacy: LegacyRepoEntry[];
 }
 
 /** Options for {@link buildHistory} — both narrow the query (SPEC §12 flags). */
 export interface HistoryOptions {
-	/** Limit to one repo id; absent → every repo with recorded runs. */
+	/** Limit to one repo identity; absent → every repo with recorded runs. */
 	repo?: string;
-	/** Only runs scored at or after this ISO-8601 instant; absent → all history. */
+	/** Only runs audited/scored at or after this ISO-8601 instant; absent → all history. */
 	since?: string;
 }
 
-/** Project a {@link StoredRun} onto a {@link RunPoint} for the series. */
-function toRunPoint(run: StoredRun): RunPoint {
+/** The §3.5 version triple stamped on a stored run row. */
+function runVersions(run: StoredAuditRun): {
+	schemaVersion: string;
+	analyzerVersion: string;
+	scoringVersion: string;
+} {
 	return {
-		scoredAt: run.scoredAt,
-		commit: run.commit,
-		rubricVersion: run.rubricVersion,
-		level: run.level,
-		passRate: run.passRate,
-		coverage: run.coverage,
+		schemaVersion: run.schemaVersion,
+		analyzerVersion: run.analyzerVersion,
+		scoringVersion: run.scoringVersion,
 	};
 }
 
-/** The latest run's embedded §11 delta, or `null` when none was recorded. */
-function latestDelta(latest: StoredRun): ChangesSinceLastRun | null {
-	return storedReport(latest).changesSinceLastRun ?? null;
+/** Project a {@link StoredAuditRun} onto an {@link AuditRunPoint} for the series. */
+function toRunPoint(run: StoredAuditRun): AuditRunPoint {
+	return {
+		auditedAt: run.auditedAt,
+		index: run.sloppinessIndex,
+		partial: run.partial,
+		completeness: run.completeness,
+		scoringVersion: run.scoringVersion,
+	};
 }
 
-/** Build one repo's fleet-snapshot row from its latest run and windowed run count. */
-function snapshotEntry(latest: StoredRun, runCount: number): SnapshotEntry {
+/**
+ * Build one repo's snapshot row: the latest run's headline plus the index
+ * move against the previous §3.5-compatible run (`null` on a first run).
+ */
+function snapshotEntry(store: Store, latest: StoredAuditRun, runCount: number): AuditSnapshotEntry {
+	const compatible = store.compatibleAuditRuns(latest.repoIdentity, runVersions(latest));
+	const previous = compatible.length >= 2 ? compatible[compatible.length - 2] : undefined;
+	return {
+		repo: latest.repoIdentity,
+		index: latest.sloppinessIndex,
+		partial: latest.partial,
+		completeness: latest.completeness,
+		scoringVersion: latest.scoringVersion,
+		auditedAt: latest.auditedAt,
+		runs: runCount,
+		indexDelta: previous === undefined ? null : latest.sloppinessIndex - previous.sloppinessIndex,
+	};
+}
+
+/** Assemble one repo's compatible series, or `null` when it has no run in the window. */
+function repoHistory(
+	store: Store,
+	latest: StoredAuditRun,
+	since: string | undefined,
+): AuditRepoHistory | null {
+	const runs = store.compatibleAuditRuns(latest.repoIdentity, runVersions(latest), since);
+	if (runs.length === 0) return null;
+	return { repo: latest.repoIdentity, runs: runs.map(toRunPoint) };
+}
+
+/** Build one repo's legacy readiness entry from its latest legacy run (SPEC §10 — distinct scale). */
+function legacyEntry(latest: StoredRun, runCount: number): LegacyRepoEntry {
 	return {
 		repo: latest.repo,
-		level: latest.level,
-		passRate: latest.passRate,
-		coverage: latest.coverage,
-		rubricVersion: latest.rubricVersion,
-		commit: latest.commit,
-		scoredAt: latest.scoredAt,
-		levelDelta: latestDelta(latest)?.netLevelMove ?? null,
 		runs: runCount,
-	};
-}
-
-/** A trend point is two snapshots that differ in any measured field. */
-function pointsDiffer(a: TrendPoint, b: TrendPoint): boolean {
-	return (
-		a.status !== b.status ||
-		a.numerator !== b.numerator ||
-		a.denominator !== b.denominator ||
-		a.naKind !== b.naKind
-	);
-}
-
-/** Map a joined {@link TrendRow} to a {@link TrendPoint}, folding its status. */
-function toTrendPoint(row: TrendRow): TrendPoint {
-	const entry =
-		row.naKind === null
-			? { numerator: row.numerator, denominator: row.denominator, rationale: "" }
-			: {
-					numerator: row.numerator,
-					denominator: row.denominator,
-					rationale: "",
-					naKind: row.naKind,
-				};
-	return {
-		scoredAt: row.scoredAt,
-		status: criterionStatus(entry),
-		numerator: row.numerator,
-		denominator: row.denominator,
-		naKind: row.naKind,
+		latestLevel: latest.level,
+		latestPassRate: latest.passRate,
+		latestCoverage: latest.coverage,
+		latestRubricVersion: latest.rubricVersion,
+		latestScoredAt: latest.scoredAt,
 	};
 }
 
 /**
- * Fold the joined criterion rows (oldest run first, then criterion id) into
- * per-criterion trends, keeping only criteria that moved at least once. First-seen
- * criterion order is preserved so the output is deterministic.
- */
-function buildTrends(rows: TrendRow[]): CriterionTrend[] {
-	const byCriterion = new Map<string, TrendPoint[]>();
-	for (const row of rows) {
-		const points = byCriterion.get(row.criterion) ?? [];
-		points.push(toTrendPoint(row));
-		byCriterion.set(row.criterion, points);
-	}
-	const trends: CriterionTrend[] = [];
-	for (const [criterion, points] of byCriterion) {
-		const moved = points.some((p, i) => i > 0 && pointsDiffer(p, points[i - 1] as TrendPoint));
-		if (moved) trends.push({ criterion, points });
-	}
-	return trends;
-}
-
-/** Assemble one repo's detail section, or `null` when it has no run in the window. */
-function repoHistory(store: Store, repo: string, since: string | undefined): RepoHistory | null {
-	const runs = store.runs(repo, since);
-	if (runs.length === 0) return null;
-	const latest = runs[runs.length - 1] as StoredRun;
-	return {
-		repo,
-		runs: runs.map(toRunPoint),
-		changesSinceLastRun: latestDelta(latest),
-		trends: buildTrends(store.criterionTrend(repo, since)),
-	};
-}
-
-/**
- * Build the `trellis report` dashboard from the central history. The fleet
- * snapshot reflects each repo's most recent run overall (where things stand now),
- * while the per-repo run series and trends honor the `since` window. A `--repo`
- * filter narrows both to a single repo; a repo with no run in the window is
- * dropped from `repos` but still shown in the snapshot if it has any latest run.
+ * Build the `trellis report` dashboard from the central history. The
+ * sloppiness snapshot reflects each repo's most recent audit run overall
+ * (where things stand now), while the per-repo series honor the `since`
+ * window and §3.5 compatibility. A `--repo` filter narrows both sections to
+ * a single repo; a repo with no run in the window is dropped from the series
+ * but still shown in the snapshot if it has any latest run. Legacy readiness
+ * repos surface only in the distinct `legacy` section.
  */
 export function buildHistory(store: Store, opts: HistoryOptions = {}): HistoryReport {
-	const repoIds = opts.repo ? [opts.repo] : store.repos();
-
-	const fleet: SnapshotEntry[] = [];
-	const repos: RepoHistory[] = [];
-	for (const repo of repoIds) {
-		const latest = store.latestRun(repo);
-		if (latest) fleet.push(snapshotEntry(latest, store.runs(repo, opts.since).length));
-		const detail = repoHistory(store, repo, opts.since);
+	const auditRepos = opts.repo ? [opts.repo] : store.auditRepos();
+	const snapshot: AuditSnapshotEntry[] = [];
+	const repos: AuditRepoHistory[] = [];
+	for (const identity of auditRepos) {
+		const latest = store.latestAuditRun(identity);
+		if (!latest) continue;
+		snapshot.push(snapshotEntry(store, latest, store.auditRuns(identity, opts.since).length));
+		const detail = repoHistory(store, latest, opts.since);
 		if (detail) repos.push(detail);
 	}
 
+	const legacyRepos = opts.repo ? [opts.repo] : store.repos();
+	const legacy: LegacyRepoEntry[] = [];
+	for (const repo of legacyRepos) {
+		const latest = store.latestRun(repo);
+		if (latest) legacy.push(legacyEntry(latest, store.runs(repo, opts.since).length));
+	}
+
 	return {
-		rubricVersion: RUBRIC_VERSION,
 		scope: { repo: opts.repo ?? null, since: opts.since ?? null },
-		fleet,
-		repos,
+		audits: { snapshot, repos },
+		legacy,
 	};
 }
