@@ -85,6 +85,32 @@ describe("runComparison", () => {
 		expect(result.comparison.score).toBeUndefined();
 	});
 
+	test("a pre-provider artifact compares explicitly with a current one (old-new pair)", async () => {
+		const baseline = await saveArtifact("clean", "a.json");
+		// Downgrade the baseline to a pre-provider (schema 1.0.0) artifact: strip
+		// the additive evidence area — exactly the shape older trellis emitted.
+		const { readFile } = await import("node:fs/promises");
+		const legacy = JSON.parse(await readFile(baseline, "utf8")) as Record<string, unknown>;
+		delete legacy.evidence;
+		legacy.schemaVersion = "1.0.0";
+		await writeFile(baseline, JSON.stringify(legacy, null, 2));
+		const current = await saveArtifact("sloppy", "b.json");
+		const result = await runComparison(baseline, current);
+		// The scored basis compares explicitly — with the span named, never silent.
+		expect(result.comparison.compatibility.comparable).toBe(true);
+		expect(result.comparison.compatibility.caveats.map((caveat) => caveat.code)).toContain(
+			"schema-span",
+		);
+		expect(result.comparison.score?.delta).toBeGreaterThan(0);
+		// The pre-provider side's provider evidence reads as unrequested — never a regression.
+		const carried = result.comparison.evidence.providers;
+		expect(carried.length).toBeGreaterThan(0);
+		for (const provider of carried) {
+			expect(provider.status).toBe("absent-on-baseline");
+			expect(provider.reasons[0]?.message).toContain("predates the provider-evidence area");
+		}
+	});
+
 	test("an unreadable artifact is an operational error", async () => {
 		const current = await saveArtifact("sloppy", "b.json");
 		await expect(runComparison(join(dir, "absent.json"), current)).rejects.toThrow(

@@ -6,7 +6,8 @@ import {
 	type Finding,
 	type MetricValue,
 } from "../contract/index.ts";
-import { compareFindings, compareMetrics, compareReports } from "./compare.ts";
+import { compareReports } from "./compare.ts";
+import { compareFindings, compareMetrics } from "./diff.ts";
 
 function metric(id: string, value: number): MetricValue {
 	return { id, state: "complete", value, unit: "ratio" };
@@ -181,6 +182,16 @@ describe("compareReports", () => {
 		expect(delta?.baseline).toEqual({ state: "complete", value: 1 });
 		expect(delta?.current).toEqual({ state: "incomplete" });
 		expect(delta?.delta).toBeUndefined();
+	});
+
+	test("produces byte-identical results on repeated comparison", () => {
+		const baseline = baseReport();
+		const current = baseReport();
+		current.score.index = 24;
+		current.findings = [finding("import-cycle", "src/cyc-a.ts", 1)];
+		const first = compareReports(baseline, current);
+		const second = compareReports(baseline, current);
+		expect(JSON.stringify(second)).toBe(JSON.stringify(first));
 	});
 });
 
