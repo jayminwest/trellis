@@ -11,6 +11,11 @@ Optional providers are opt-in, unscored evidence; an absent tool never
 changes a native audit (a default `trellis audit` never touches this
 machinery at all).
 
+The bounded conformance and failure-regression record for the jscpd
+adapter and its normalization — expected evidence, forced failure states,
+repeat/runtime/memory observations, and retained leads — is
+[`jscpd-conformance.md`](jscpd-conformance.md) (trellis-b0ec).
+
 ## Where the manifest lives
 
 - `src/providers/manifest.ts` — the supported-tool manifest: one entry per
