@@ -25,12 +25,18 @@
  * Invariants (SPEC §8):
  *
  * - **No model, no network, no credentials** — local parsing and arithmetic
- *   only; there is nothing to connect.
+ *   only; there is nothing to connect. An explicitly requested optional
+ *   provider (§16, plan `pl-43c5` step 15) may run as a controlled local
+ *   subprocess over an isolated staged view — still offline, still never a
+ *   target command; the default audit (no provider requested) stages
+ *   nothing, launches nothing, writes nothing.
  * - **No project commands** — the target's scripts are never executed and
  *   its executable configuration is never imported.
  * - **No database, zero footprint** — the run writes nothing; persistence
  *   (trellis-424d) and policy evaluation (trellis-942c) live outside the
- *   measurement pass and consume the returned report.
+ *   measurement pass and consume the returned report. The only scratch a
+ *   run may create is trellis-owned temporary storage for an explicitly
+ *   requested provider, cleaned on every exit path (§16.4).
  * - **No Git required** — dirty worktrees and non-Git directories are
  *   analyzed exactly as they exist on disk.
  *
@@ -73,6 +79,7 @@ import {
 	type MeasuredAnalysisEvidence,
 } from "./assemble.ts";
 import { type AuditEvent, type AuditProgress, analyzerProgressId } from "./progress.ts";
+import { runProviderAnalyses } from "./providers.ts";
 
 /** Options for {@link auditWorkspace}. */
 export interface AuditCoreOptions {
@@ -92,6 +99,15 @@ export interface AuditCoreOptions {
 	 * these to stderr. Absent → a silent run with an identical report.
 	 */
 	onProgress?: AuditProgress;
+	/**
+	 * Cancellation for the optional provider analyses (§16.4): aborting stops
+	 * staging and terminates the provider process group, with owned scratch
+	 * cleaned on every exit path; the cancelled provider surfaces as located
+	 * `unavailable` evidence and the native measurement — pure and fast — is
+	 * unaffected. No provider requested (the default) ⇒ the handle is never
+	 * consulted and nothing is staged or launched.
+	 */
+	signal?: AbortSignal;
 	/** Wall-clock for `run.auditedAt` (determinism hook); defaults to now. */
 	now?: Date;
 }
@@ -257,6 +273,13 @@ export async function auditWorkspace(
 		findings: analyses.reduce((sum, analysis) => sum + analysis.findings.length, 0),
 	});
 
+	// The optional provider analyses (§16.4): only an explicitly requested
+	// provider stages a view or launches a process; the default plan is
+	// empty and this call is a no-op, keeping the native report byte-identical.
+	const providers = await runProviderAnalyses(root, source, config, {
+		...(options.signal === undefined ? {} : { signal: options.signal }),
+	});
+
 	emit({ type: "phase", phase: "safeguards" });
 	const { product: safeguards } = await runSafeguardInspection(source.root);
 	emit({
@@ -270,7 +293,13 @@ export async function auditWorkspace(
 	emit({ type: "scored", index: scoring.index, partial: scoring.partial });
 
 	emit({ type: "phase", phase: "assemble" });
-	const measurements: AuditMeasurements = { source, syntax, analyses, safeguards };
+	const measurements: AuditMeasurements = {
+		source,
+		syntax,
+		analyses,
+		...(providers.length === 0 ? {} : { providers }),
+		safeguards,
+	};
 	return assembleReport(measurements, scoring, {
 		auditedAt: (options.now ?? new Date()).toISOString(),
 		durationMs: Date.now() - startedAt,

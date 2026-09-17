@@ -587,6 +587,9 @@ source:
   exclude: ["src/generated/**"]        # additions to documented defaults
   classify:
     "scripts/tools/**": "test"          # explicit source-set overrides
+providers:                             # optional provider selection (§16.4) — additive, unscored
+  jscpd:                               #   evidence: no provider requested by default
+    mode: normalized                   #   one match mode per request (exact | normalized | near)
 policy:                                 # failure policy only — never mutates scoring weights
   maxIndex: 40
   regression:                           # score regression vs a baseline report (§9)
@@ -598,6 +601,16 @@ policy:                                 # failure policy only — never mutates 
   requireEvidence: [jscpd]              # demanded provider evidence (§16.3): absent or
                                          #   failed evidence fails the run, never the score
 ```
+
+Provider selection (§16.4, `providers`) is declarative data with the same
+rules: the block names exactly the known optional providers (an unknown id
+is invalid configuration), a delivered provider resolves per run, and a
+requested-but-undelivered or gated capability (SonarJS, §16.7) resolves to
+located `unsupported` evidence. Selection never mutates scoring (§16.5): a
+requested provider adds namespaced advisory evidence alongside the native
+duplication result and changes neither the native measurement nor the
+score; the default audit (no block) requests nothing, stages nothing and
+launches nothing.
 
 Policy budgets gate the run; they never silently change how the index is
 computed (§7). A budget key may also name a provider's namespaced evidence

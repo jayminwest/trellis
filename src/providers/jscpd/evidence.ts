@@ -12,9 +12,12 @@
  *   preserved on the finding.
  * - **Groups** — only ever built by `./normalize.ts` from a proven
  *   content-equivalence class; this module shapes the class into one
- *   group: unique members in total location order, match mode graded at
- *   the weakest relation proven for all members, contributing raw kinds
- *   and the exhibited content's line count recorded on the finding.
+ *   group: unique members in the contract's location order
+ *   (`compareCloneLocations`) — members the pinned tool reports at the same
+ *   path/start/end-line but differing only in its approximate end column
+ *   collapse to the deterministic first — match mode graded at the weakest
+ *   relation proven for all members, contributing raw kinds and the
+ *   exhibited content's line count recorded on the finding.
  * - **Metrics** — namespaced (`provider.jscpd.…`), unscored, sorted by
  *   id: affected code lines per measured source set (union count over the
  *   set's own code-classified denominator) and the separate pair/group
@@ -166,10 +169,20 @@ export function groupEntry(
 	const members = classRecords
 		.flatMap((clone) => [clone.first, clone.second])
 		.sort(compareMembersTotal);
+	// Deduplicate under the CONTRACT's location order
+	// (`compareCloneLocations` — path, start line/column, end line): the
+	// pinned tool can report two members of one content-identical class that
+	// differ only in end column (its end columns on multiline matches are
+	// approximate), and the versioned clone-evidence contract treats those
+	// as one location — a group's members must be unique and strictly
+	// ascending under that order. The total order above makes the survivor
+	// deterministic (the first, smallest end column) — the dropped span keeps
+	// its line accounting (every reported clone's members account) and is
+	// visible in the class's raw facts, never silently lost.
 	const unique: CloneLocation[] = [];
 	for (const member of members) {
 		const previous = unique[unique.length - 1];
-		if (previous === undefined || compareMembersTotal(previous, member) !== 0) {
+		if (previous === undefined || compareCloneLocations(previous, member) !== 0) {
 			unique.push(member);
 		}
 	}

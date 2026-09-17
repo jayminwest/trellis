@@ -48,10 +48,14 @@ describe("supported provider capability metadata", () => {
 		expect(capabilityDeclarationsSchema.parse(declarations)).toEqual(declarations);
 	});
 
-	test("marks every provider's evidence unscored (SPEC §16.5)", () => {
+	test("marks every provider's evidence unscored, and only delivered providers resolve per run (SPEC §16.5)", () => {
 		for (const provider of SUPPORTED_PROVIDERS) {
 			expect(provider.unscored).toBe(true);
-			expect(provider.requestState).toBe("unsupported");
+			if (provider.status === "delivered") {
+				expect(provider.requestState).toBeUndefined();
+			} else {
+				expect(provider.requestState).toBe("unsupported");
+			}
 		}
 	});
 
@@ -95,7 +99,7 @@ describe("supported provider capability metadata", () => {
 		}
 	});
 
-	test("rejects metadata that claims a scored capability or a delivered state", () => {
+	test("rejects metadata that claims a scored capability or a fixed resolution for a delivered one", () => {
 		expect(() => providerCapabilityStatusSchema.parse(entry({ unscored: false }))).toThrow(
 			/unscored/,
 		);
@@ -105,6 +109,14 @@ describe("supported provider capability metadata", () => {
 		expect(() =>
 			providerCapabilityStatusSchema.parse(entry({ requestState: "unavailable" })),
 		).toThrow(/requestState/);
+		// A delivered capability must not claim a fixed request state — its
+		// requests resolve per run — and without one the entry is valid.
+		expect(() => providerCapabilityStatusSchema.parse(entry({ status: "delivered" }))).toThrow(
+			/delivered capability resolves per run/,
+		);
+		expect(() =>
+			providerCapabilityStatusSchema.parse(entry({ status: "delivered", requestState: undefined })),
+		).not.toThrow();
 	});
 
 	test("rejects entries using the reserved native namespace", () => {
@@ -181,7 +193,7 @@ describe("supported provider capability metadata", () => {
 		).toThrow(/seeds tracker id/);
 	});
 
-	test("exposes only the two undelivered support statuses", () => {
-		expect([...PROVIDER_SUPPORT_STATUSES]).toEqual(["adapter-pending", "deferred"]);
+	test("exposes the three support statuses — delivered, and the two that cannot execute", () => {
+		expect([...PROVIDER_SUPPORT_STATUSES]).toEqual(["delivered", "adapter-pending", "deferred"]);
 	});
 });

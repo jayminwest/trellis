@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
 	ANALYZER_VERSION,
 	type AuditReport,
+	auditConfigSchema,
 	auditReportSchema,
 	findingSchema,
 	measurementPayload,
@@ -198,12 +199,10 @@ describe("auditWorkspace over unsupported and excluded source", () => {
 	test("honors a preloaded configuration over the file on disk", async () => {
 		await seedClean();
 		await put("scripts/tools/reindex.ts", "export const reindex = 1;\n");
-		const report = await auditWorkspace(repo, {
-			config: {
-				source: { exclude: [], classify: { "scripts/**": "test" } },
-				policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
-			},
+		const config = auditConfigSchema.parse({
+			source: { classify: { "scripts/**": "test" } },
 		});
+		const report = await auditWorkspace(repo, { config });
 		expect(report.sourceCoverage.test.files).toBe(2);
 		expect(report.sourceCoverage.production.files).toBe(2);
 	});

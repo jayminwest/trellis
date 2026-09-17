@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { type AuditConfig, auditConfigSchema } from "./config.ts";
+import { SUPPORTED_PROVIDERS } from "../providers/capabilities.ts";
+import { type AuditConfig, auditConfigSchema, providerSelectionSchema } from "./config.ts";
 
 /** The SPEC §6.5 example as parsed YAML data. */
 const specExample: AuditConfig = {
@@ -7,6 +8,7 @@ const specExample: AuditConfig = {
 		exclude: ["src/generated/**"],
 		classify: { "scripts/tools/**": "test" },
 	},
+	providers: {},
 	policy: {
 		maxIndex: 40,
 		budgets: { "duplication.density": { max: 0.05 } },
@@ -23,6 +25,7 @@ describe("auditConfigSchema", () => {
 	test("fills sensible defaults from an empty configuration", () => {
 		expect(auditConfigSchema.parse({})).toEqual({
 			source: { exclude: [], classify: {} },
+			providers: {},
 			policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
 		});
 	});
@@ -134,5 +137,48 @@ describe("auditConfigSchema", () => {
 
 	test("rejects empty glob strings", () => {
 		expect(auditConfigSchema.safeParse({ source: { exclude: [""] } }).success).toBe(false);
+	});
+});
+
+describe("providerSelectionSchema (§16.3–16.4 — declarative provider selection)", () => {
+	test("accepts exactly the supported provider ids — the vocabulary cannot drift from the capability table", () => {
+		const selectable = Object.keys(providerSelectionSchema.shape).sort();
+		const supported = SUPPORTED_PROVIDERS.map((entry) => entry.providerId).sort();
+		expect(selectable).toEqual(supported);
+	});
+
+	test("round-trips a jscpd request selecting one match mode", () => {
+		const config = auditConfigSchema.parse({ providers: { jscpd: { mode: "normalized" } } });
+		expect(config.providers.jscpd).toEqual({ mode: "normalized" });
+	});
+
+	test("round-trips requests for undelivered and gated providers — valid configuration carrying no options", () => {
+		for (const providerId of ["dependency-cruiser", "knip", "sonarjs"] as const) {
+			const config = auditConfigSchema.parse({ providers: { [providerId]: {} } });
+			expect(config.providers[providerId]).toEqual({});
+		}
+	});
+
+	test("rejects unknown provider ids actionably — an unknown request is invalid configuration", () => {
+		for (const providers of [{ eslint: {} }, { sonar: {} }, { jscpd2: {} }]) {
+			const parsed = auditConfigSchema.safeParse({ providers });
+			expect(parsed.success).toBe(false);
+			if (!parsed.success) {
+				// The unknown id names itself in the message at the providers block.
+				expect(parsed.error.issues[0]?.path.join(".")).toBe("providers");
+				expect(parsed.error.issues[0]?.message).toContain(Object.keys(providers)[0]);
+			}
+		}
+	});
+
+	test("rejects malformed jscpd requests — the mode is explicit, never defaulted or configurable by command", () => {
+		for (const request of [
+			{},
+			{ mode: "weak" },
+			{ mode: "exact", minTokens: 10 },
+			{ mode: "exact", command: "jscpd --min-tokens 10" },
+		]) {
+			expect(auditConfigSchema.safeParse({ providers: { jscpd: request } }).success).toBe(false);
+		}
 	});
 });

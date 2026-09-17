@@ -37,12 +37,15 @@ import {
 
 /**
  * Delivery statuses a known provider's capability set can carry in this
- * table. Both mean **no executable capability exists today**: either no
- * adapter is delivered yet (`adapter-pending`) or the capability is gated
- * by a recorded decision (`deferred`). Adapter-owning steps revise this
- * union when they deliver.
+ * table. `delivered` means an executable adapter exists and requests resolve
+ * **per run** (complete/incomplete/unavailable as the execution observes —
+ * never a fixed state). `adapter-pending` and `deferred` mean **no
+ * executable capability exists today**: either no adapter is delivered yet
+ * or the capability is gated by a recorded decision. Request surfaces read
+ * the recorded status and reason so an undelivered or gated capability is
+ * reported truthfully as `unsupported`, never as a clean result (§16.2).
  */
-export const PROVIDER_SUPPORT_STATUSES = ["adapter-pending", "deferred"] as const;
+export const PROVIDER_SUPPORT_STATUSES = ["delivered", "adapter-pending", "deferred"] as const;
 export type ProviderSupportStatus = (typeof PROVIDER_SUPPORT_STATUSES)[number];
 
 /** Seeds tracker id shape (`trellis-db3e`). */
@@ -82,8 +85,13 @@ export const providerCapabilityStatusSchema = z
 		/** SPEC §16.5, structural: this metadata cannot declare a scored capability. */
 		unscored: z.literal(true),
 		status: z.enum(PROVIDER_SUPPORT_STATUSES),
-		/** The SPEC §16.2 state a request for this provider resolves to while this entry stands. */
-		requestState: providerStateSchema,
+		/**
+		 * The SPEC §16.2 state a request for this provider resolves to while
+		 * this entry stands — required and `unsupported` for undelivered
+		 * capabilities, **absent** for `delivered` ones (their requests
+		 * resolve per run, as the execution observes, never to a fixed state).
+		 */
+		requestState: providerStateSchema.optional(),
 		/** Located reason recorded with the state (never empty; shown with `unsupported` evidence). */
 		reason: z.string().min(1),
 		/** Required for `deferred`; forbidden otherwise. */
@@ -99,7 +107,16 @@ export const providerCapabilityStatusSchema = z
 				path: ["providerId"],
 			});
 		}
-		if (entry.requestState !== "unsupported") {
+		if (entry.status === "delivered") {
+			if (entry.requestState !== undefined) {
+				ctx.addIssue({
+					code: "custom",
+					message:
+						"a delivered capability resolves per run — requestState records only capabilities whose requests cannot execute",
+					path: ["requestState"],
+				});
+			}
+		} else if (entry.requestState !== "unsupported") {
 			ctx.addIssue({
 				code: "custom",
 				message:
@@ -114,7 +131,7 @@ export const providerCapabilityStatusSchema = z
 				path: ["status"],
 			});
 		}
-		if (entry.status === "adapter-pending" && entry.decision !== undefined) {
+		if (entry.status !== "deferred" && entry.decision !== undefined) {
 			ctx.addIssue({
 				code: "custom",
 				message: "only a deferred provider carries a decision record",
@@ -138,10 +155,9 @@ export const SUPPORTED_PROVIDERS: readonly ProviderCapabilityStatus[] = (() => {
 			providerId: "jscpd",
 			capabilityIds: ["duplication.exact", "duplication.normalized", "duplication.near"],
 			unscored: true,
-			status: "adapter-pending",
-			requestState: "unsupported",
+			status: "delivered",
 			reason:
-				"duplication-evidence adapter delivered (src/providers/jscpd/, trellis-f4e2); not yet selectable through the audit surface (plan pl-43c5 steps 15+)",
+				"duplication-evidence adapter delivered (src/providers/jscpd/, trellis-f4e2) and selectable through declarative provider configuration (plan pl-43c5 step 15, trellis-15e3): requests resolve per run",
 		},
 		{
 			providerId: "dependency-cruiser",
