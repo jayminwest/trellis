@@ -33,6 +33,16 @@ Three invariants define the product (SPEC §1):
 > readiness scores are preserved separately and never compared with the
 > sloppiness index. See [`docs/release-acceptance.md`](docs/release-acceptance.md).
 
+> **Planned successor: optional quality-evidence providers (plan `pl-43c5`,
+> SPEC §16 — contract only, nothing implemented yet).** Pinned local
+> analysis tools (jscpd, dependency-cruiser, Knip; SonarJS gated) may run
+> as **explicitly opt-in, supplemental, unscored evidence** behind
+> trellis-owned controls. The contract revises the shared-parser and
+> subprocess restrictions for those optional slots without weakening the
+> no-model, no-target-command, no-audit-time-download or default-offline
+> guarantees. Native analysis stays the default and the authoritative
+> scoring basis; steps `trellis-90d6` onward own delivery.
+
 trellis is part of [os-eco](https://github.com/jayminwest/os-eco), the AI agent
 tooling ecosystem. It is the **measurement surface**: it gives the fleet an
 objective, reproducible read on structural code health. trellis mirrors the
@@ -180,7 +190,44 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
   exercise one code path.
 - The pivoted seam: deterministic analyzers over one shared syntax inventory;
   scoring is a pure function of raw metrics; safeguards never enter the
-  score. Keep that seam clean.
+  score. Keep that seam clean. The planned provider seam (SPEC §16, plan
+  `pl-43c5`) keeps native analyzers and their shared inventory authoritative
+  while optional pinned providers contribute unscored evidence through
+  controlled execution — never through the shared inventory or the score.
+
+### Provider evidence contract (planned — SPEC §16)
+
+The full contract is SPEC §16 (integration contract for plan `pl-43c5`);
+the digest for agents working in this repo:
+
+- **Native is default and authoritative.** Optional providers are
+  supplemental in this delivery; provider observations are unscored,
+  namespaced evidence. Backend promotion or provider-derived weights need a
+  separately versioned calibration — never the current scoring version.
+- **Identity and states.** Every provider result carries provider identity
+  (id, pinned tool version, adapter version, mode/options), analysis
+  identity (input snapshot + provider parser/version) and asserted observed
+  coverage — never exit-status-inferred. Allowed states: `unrequested`,
+  `unavailable`, `unsupported`, `incomplete`, `complete`. No zero-valued
+  metrics are invented for absent execution.
+- **Failure semantics.** A requested provider that fails is located
+  `unavailable`/`incomplete` evidence; a violated declarative requirement
+  on it trips policy (exit `2`). Invalid provider configuration or
+  inability to run the audit stays operational error (exit `1`). Advisory
+  failure is visible evidence, not an abort.
+- **Execution boundary.** Default native audits create no scratch files.
+  Explicitly enabled external execution may use trellis-owned isolated
+  temporary storage with cleanup and never writes to the target. No target
+  scripts, executable target configuration, arbitrary command strings,
+  audit-time downloads, or models — ever.
+- **Compatibility.** Provider changes never fragment score history; provider
+  evidence compares only on identical provider/analysis identity; older
+  artifacts without provider evidence read as `unrequested`, never as
+  regressions.
+- **Sonar gate.** SonarJS requires an affirmative documented
+  distribution/metric-interface decision; until then it is explicitly
+  deferred — a valid request resolves to `unsupported` with the reason,
+  visible and policy-testable, never claimed implementation.
 
 ### Test naming
 
@@ -296,5 +343,8 @@ readiness rubric" gate went with the rubric.)
   validation record (trellis-e924): score-behavior evidence, runtime/memory
   budgets, and the duplication-minimum calibration; corpus lives in
   [`corpus/`](corpus/README.md), harness in `scripts/validate-corpus.ts`
+- [`docs/research/provider-spike.md`](docs/research/provider-spike.md) — the
+  fixed-corpus provider research (jscpd/SonarJS/dependency-cruiser/Knip)
+  behind the SPEC §16 optional-provider contract
 - `scripts/` — ratchet scripts and pre-commit hook (lands with `trellis-4ec4`)
 - `.github/workflows/` — CI + sync-labels + publish (lands with `trellis-7baf`)
