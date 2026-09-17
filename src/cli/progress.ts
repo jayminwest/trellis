@@ -1,27 +1,28 @@
 /**
- * CLI progress rendering — the surface half of the core's progress contract.
- * The domain core ({@link auditRepo}) emits structured {@link AuditEvent}s;
- * this module turns them into human progress on **stderr**, keeping stdout
- * reserved for the machine-clean report. Rendering is a CLI concern only —
- * core never logs — so the api>cli>sdk seam stays intact.
+ * CLI progress rendering — the surface half of the deterministic audit core's
+ * progress contract (SPEC §4, trellis-9a88). The core
+ * ({@link import("../audit/index.ts").auditWorkspace}) emits structured,
+ * bounded {@link AuditEvent}s; this module turns them into human progress on
+ * **stderr**, keeping stdout reserved for the machine-clean report. Rendering
+ * is a CLI concern only — core never logs — so the api>cli>sdk seam stays
+ * intact.
  *
  * Defaults are TTY-aware. An interactive run renders a **single status line
- * that rewrites in place** (`\r`) — one line tracking the current phase plus
- * its progress (apps discovered, detector i/total) so a long run reads as live
- * activity rather than a wall of text; {@link ProgressReporter.finish} clears
- * it before the report prints. A piped run (CI) stays silent unless
- * `--verbose`, which switches to a durable line-per-event log (no in-place
- * rewrite) that also surfaces per-criterion detector lines. `--quiet` always
- * suppresses.
+ * that rewrites in place** (`\r`) — one line tracking the current pipeline
+ * phase plus the analyzer position — so a long run reads as live activity
+ * rather than a wall of text; {@link ProgressReporter.finish} clears it before
+ * the report prints. A piped run (CI) stays silent unless `--verbose`, which
+ * switches to a durable line-per-event log (no in-place rewrite) that also
+ * surfaces per-analyzer lines. `--quiet` always suppresses.
  */
 
-import type { AuditEvent, AuditPhase } from "../report/index.ts";
+import type { AuditEvent, AuditPhase } from "../audit/index.ts";
 
 /** Inputs that decide whether and how progress is rendered. */
 export interface ProgressReporterOptions {
 	/** Suppress all progress lines (`--quiet`). */
 	quiet?: boolean;
-	/** Surface per-detector detail (`--verbose`). */
+	/** Surface per-analyzer detail (`--verbose`). */
 	verbose?: boolean;
 	/** Whether the diagnostics stream is a TTY — gates the default (interactive) on. */
 	isTTY?: boolean;
@@ -30,10 +31,11 @@ export interface ProgressReporterOptions {
 }
 
 /**
- * The CLI's progress handle: an {@link AuditEvent} sink wired into `runAudit`
- * plus a {@link finish} the command calls once the run resolves — it clears the
- * in-place status line so the report prints on a clean line. `finish` is a no-op
- * for the verbose line-per-event log (nothing to clear).
+ * The CLI's progress handle: an {@link AuditEvent} sink wired into
+ * `runWorkspaceAudit` plus a {@link finish} the command calls once the run
+ * resolves — it clears the in-place status line so the report prints on a
+ * clean line. `finish` is a no-op for the verbose line-per-event log (nothing
+ * to clear).
  */
 export interface ProgressReporter {
 	onProgress: (event: AuditEvent) => void;
@@ -43,26 +45,52 @@ export interface ProgressReporter {
 /** Human label for a pipeline phase. */
 function phaseLabel(phase: AuditPhase): string {
 	switch (phase) {
-		case "discovery":
-			return "discovering apps";
-		case "detectors":
-			return "running detectors";
-		case "scoring":
+		case "configure":
+			return "loading configuration";
+		case "discover":
+			return "discovering sources";
+		case "parse":
+			return "parsing";
+		case "measure":
+			return "measuring";
+		case "safeguards":
+			return "inspecting safeguards";
+		case "score":
 			return "scoring";
+		case "assemble":
+			return "assembling report";
 	}
 }
 
-/** Render one audit event to a progress line (detector lines are verbose-only). */
+/** Render one audit event to a progress line (analyzer lines are verbose-only). */
 function render(event: AuditEvent, verbose: boolean, write: (line: string) => void): void {
 	switch (event.type) {
 		case "phase":
 			write(`trellis: ${phaseLabel(event.phase)}…\n`);
 			return;
-		case "apps-discovered":
-			write(`trellis: discovered ${event.count} app(s)\n`);
+		case "source-discovered": {
+			const extra = event.unsupported > 0 ? `, ${event.unsupported} unsupported` : "";
+			write(
+				`trellis: discovered ${event.files} file(s) across ${event.packages} package(s) (${event.excluded} excluded${extra})\n`,
+			);
 			return;
-		case "detector":
+		}
+		case "syntax-built":
+			write(`trellis: parsed ${event.files} files (${event.functions} functions)\n`);
+			return;
+		case "analyzer":
 			if (verbose) write(`trellis:   [${event.index + 1}/${event.total}] ${event.id}\n`);
+			return;
+		case "measured":
+			write(`trellis: measured ${event.metrics} metrics, ${event.findings} findings\n`);
+			return;
+		case "safeguards-inspected":
+			write(`trellis: inspected ${event.results} safeguards\n`);
+			return;
+		case "scored":
+			if (verbose) {
+				write(`trellis: sloppiness index ${event.index}/100 (lower is better)\n`);
+			}
 			return;
 	}
 }
@@ -76,29 +104,24 @@ const CLEAR_EOL = "\x1b[K";
 interface StatusState {
 	frame: number;
 	phase: AuditPhase;
-	/** Detector pass position (1-based) once detectors begin. */
-	detector?: { index: number; total: number };
-	/** Number of apps discovered, surfaced through the discovery phase. */
-	apps?: number;
+	/** Analyzer pass position (0-based) once measurement begins. */
+	analyzer?: { index: number; total: number };
+	/** Number of source files discovered, surfaced through the parse phase. */
+	files?: number;
 }
 
 /** Compose the human portion of the status line from the accumulated {@link StatusState}. */
 function statusText(s: StatusState): string {
 	switch (s.phase) {
-		case "discovery":
-			return s.apps === undefined ? "discovering apps" : `discovered ${plural(s.apps, "app")}`;
-		case "detectors":
-			return s.detector
-				? `running detectors (${s.detector.index + 1}/${s.detector.total})`
-				: "running detectors";
-		case "scoring":
-			return "scoring";
+		case "discover":
+			return s.files === undefined ? "discovering sources" : `discovered ${s.files} files`;
+		case "parse":
+			return s.files === undefined ? "parsing" : `parsing ${s.files} files`;
+		case "measure":
+			return s.analyzer ? `measuring (${s.analyzer.index + 1}/${s.analyzer.total})` : "measuring";
+		default:
+			return phaseLabel(s.phase);
 	}
-}
-
-/** `"1 app"` / `"3 apps"` — count with a naively pluralized noun. */
-function plural(n: number, noun: string): string {
-	return `${n} ${noun}${n === 1 ? "" : "s"}`;
 }
 
 /** Fold one event into {@link StatusState}, advancing the spinner each call. */
@@ -108,11 +131,13 @@ function advance(s: StatusState, event: AuditEvent): void {
 		case "phase":
 			s.phase = event.phase;
 			return;
-		case "detector":
-			s.detector = { index: event.index, total: event.total };
+		case "analyzer":
+			s.analyzer = { index: event.index, total: event.total };
 			return;
-		case "apps-discovered":
-			s.apps = event.count;
+		case "source-discovered":
+			s.files = event.files;
+			return;
+		default:
 			return;
 	}
 }
@@ -122,7 +147,7 @@ function advance(s: StatusState, event: AuditEvent): void {
  * line in place (`\r`), so the run shows live activity without scrolling.
  */
 function singleLineReporter(write: (line: string) => void): ProgressReporter {
-	const s: StatusState = { frame: 0, phase: "discovery" };
+	const s: StatusState = { frame: 0, phase: "configure" };
 	let dirty = false;
 	return {
 		onProgress(event) {

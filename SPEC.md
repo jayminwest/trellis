@@ -758,12 +758,34 @@ trellis standards              # canonical drift (separate capability, §11)
   renderer re-validates the contract at the boundary. `audit-fixtures.ts`
   audits the five render-fixture repositories — clean, sloppy,
   mixed-language, incomplete, function-free — through the real core. CLI/SDK
-  wiring lands with trellis-9a88.)*
+  wiring landed with trellis-9a88.)*
 - Retired flags (`--rubric-version`, `--min-level`, provider/model/cache
   knobs, …) fail with a useful "removed in the deterministic pivot" error,
   not a silent ignore.
 - The SDK (`src/client/`) exposes the same audit/compare/fleet/report calls
   over the same core; deep-equal tests prove CLI and SDK are one code path.
+
+*(Landed, trellis-9a88: `src/audit/run.ts` — `runWorkspaceAudit(root)` is the
+one composed service the CLI (`trellis audit`) and SDK (`audit()`) both fold:
+configure (root discovery or an explicit `--config` file) → the pure
+`auditWorkspace` measurement pass → optional `--baseline` artifact comparison
+→ the declarative §6.5 policy assessment → opt-in `--history` persistence.
+The default audit is stateless (§8): no database without `--history`, no
+report file without `--out`. `trellis compare <a.json> <b.json>` compares two
+saved artifacts with no audit (`src/compare/load.ts` `compareArtifacts`);
+`src/report/comparison.ts` renders comparisons and policy assessments for the
+terminal/Markdown views while JSON stdout stays the pure §6.4 report so it
+can feed a later `--baseline`. Exit codes follow §9: `0` clean, `2` when the
+declarative policy trips (report on stdout, reasons on stderr; `compare`
+exits `2` on an incompatible pair), `1` on operational errors (invalid
+config/baseline artifact). Retired readiness-era flags — `--rubric-version`,
+`--rubric-dir`, `--canonical`, `--fail-on`, `--min-level`, `--no-persist`,
+`--output`/`--no-output`, `--no-cache`, `TRELLIS_PI_BIN` — fail with
+actionable "removed in the deterministic pivot" errors, and the SDK service
+rejects the same retired option keys (`src/legacy.ts`
+`rejectRetiredAuditOptions`). Deep-equal tests prove the CLI and SDK share
+one measurement and policy code path. The legacy `fleet`/`report`/`rubric`/
+`drift` commands remain operative until trellis-8366 adapts them.)*
 
 ---
 

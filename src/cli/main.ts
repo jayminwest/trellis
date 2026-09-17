@@ -11,6 +11,7 @@
 import { Command } from "commander";
 import { VERSION } from "../index.ts";
 import { registerAudit } from "./audit.ts";
+import { registerCompare } from "./compare.ts";
 import { registerDrift } from "./drift.ts";
 import { registerFleet } from "./fleet.ts";
 import {
@@ -30,12 +31,13 @@ export function buildProgram(): Command {
 
 	program
 		.name("trellis")
-		.description("Agentic-readiness audit & sync for code repositories")
+		.description("Deterministic TypeScript sloppiness audit (offline, no model)")
 		.version(VERSION)
 		.option("--json", "emit machine-readable JSON")
 		.option("--md", "emit a markdown report");
 
 	registerAudit(program);
+	registerCompare(program);
 	registerDrift(program);
 	registerFleet(program);
 	registerReport(program);

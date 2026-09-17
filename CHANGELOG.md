@@ -11,6 +11,33 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **CLI and SDK expose the same simplified deterministic audit** (trellis-9a88,
+  SPEC §12, stage 18 of the deterministic-pivot plan `pl-b2ea`): `trellis audit
+  <path>` now runs the deterministic core end to end — `runWorkspaceAudit(root)`
+  in `src/audit/run.ts` is the one composed service the CLI and the SDK's
+  `audit()` both fold (configure → the pure `auditWorkspace` measurement pass →
+  optional `--baseline` artifact comparison → the declarative §6.5 policy
+  assessment → opt-in `--history` persistence). The default audit is stateless
+  (SPEC §8): no database without `--history` (`--db` overrides the location),
+  no report file without `--out <file>`. The new `trellis compare
+  <baseline.json> <current.json>` compares two saved report artifacts with no
+  audit (`compareArtifacts` in `src/compare/load.ts`), exiting `2` when the
+  pair is not comparable; `src/report/comparison.ts` renders comparisons and
+  policy assessments for the terminal/Markdown views while JSON stdout stays
+  the pure §6.4 report so it can feed a later `--baseline`. Exit codes follow
+  SPEC §9: `0` clean, `2` when the trellis.yaml policy trips (report on
+  stdout, structured reasons on stderr), `1` on operational errors (invalid
+  config or baseline artifact). Retired readiness-era flags —
+  `--rubric-version`, `--rubric-dir`, `--canonical`, `--fail-on`,
+  `--min-level`, `--no-persist`, `--output`/`--no-output`, `--no-cache`,
+  `TRELLIS_PI_BIN` — fail with actionable "removed in the deterministic
+  pivot" errors, and the SDK rejects the same retired option keys
+  (`rejectRetiredAuditOptions` in `src/legacy.ts`). Deep-equal tests prove the
+  CLI and SDK share one measurement and policy code path; a non-Git temp
+  project audits with no credentials or installed project tools. The legacy
+  `fleet`/`report`/`rubric`/`drift` commands remain operative until
+  trellis-8366 adapts them.
+
 - **The deterministic audit core assembles the new report** (trellis-ef85,
   SPEC §4, stage 14 of the deterministic-pivot plan `pl-b2ea`):
   `auditWorkspace(root)` in `src/audit/audit.ts` is the one core call that

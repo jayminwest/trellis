@@ -37,3 +37,45 @@ export function rejectLegacyOptions(opts: object): void {
 		if (key in opts) throw new LegacyConfigError(legacyConfigMessage(`option '${key}'`));
 	}
 }
+
+/**
+ * Option-bag keys retired with the readiness product itself (SPEC §14,
+ * trellis-9a88): the rubric, maturity levels, the gate/drift `--fail-on`
+ * policy, the persist-by-default history, and canonical drift folded into the
+ * audit all left with the deterministic pivot.
+ */
+const RETIRED_AUDIT_SURFACE_KEYS = [
+	"rubric",
+	"rubricVersion",
+	"rubricDir",
+	"canonical",
+	"minLevel",
+	"failOn",
+	"persist",
+	"repoId",
+] as const;
+
+/** The actionable rejection message for one retired readiness-audit knob. */
+export function retiredAuditSurfaceMessage(name: string): string {
+	return (
+		`${name} no longer exists: the deterministic pivot (SPEC §14) replaced the ` +
+		"readiness audit — there is no rubric, level, gate/drift policy, or " +
+		"persist-by-default history to configure. Failure policies are declarative " +
+		"in trellis.yaml (SPEC §6.5), persistence is the explicit `history` option " +
+		`(SPEC §10), and canonical drift is the separate \`trellis drift\` capability. ` +
+		`Remove ${name} and re-run.`
+	);
+}
+
+/**
+ * Reject retired readiness-audit keys on the deterministic audit's options bag
+ * (SDK callers of {@link import("./audit/run.ts").runWorkspaceAudit}). Includes
+ * the investigation keys ({@link rejectLegacyOptions}); throws
+ * {@link LegacyConfigError} naming the first retired key found.
+ */
+export function rejectRetiredAuditOptions(opts: object): void {
+	rejectLegacyOptions(opts);
+	for (const key of RETIRED_AUDIT_SURFACE_KEYS) {
+		if (key in opts) throw new LegacyConfigError(retiredAuditSurfaceMessage(`option '${key}'`));
+	}
+}

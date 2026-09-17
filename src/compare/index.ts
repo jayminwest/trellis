@@ -10,7 +10,7 @@
  *   (max index, metric budgets, score regression, new findings) with
  *   structured reason codes.
  *
- * CLI (`trellis compare`, `--baseline`) and SDK wiring lands with
+ * CLI (`trellis compare`, `--baseline`) and SDK wiring landed with
  * trellis-9a88; history persistence consumes these artifacts with
  * trellis-424d.
  */
@@ -28,7 +28,7 @@ export {
 	type ReportComparison,
 	type ScoreDelta,
 } from "./compare.ts";
-export { loadReportArtifact, ReportArtifactError } from "./load.ts";
+export { compareArtifacts, loadReportArtifact, ReportArtifactError } from "./load.ts";
 export {
 	type AssessPolicyOptions,
 	assessPolicy,

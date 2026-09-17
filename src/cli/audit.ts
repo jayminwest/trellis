@@ -1,31 +1,53 @@
 /**
- * `trellis audit <repo-path>` — the end-to-end audit (SPEC §12, §13.1). Thin per
- * SPEC §13.1: it loads the rubric once, calls the core {@link runAudit} service
- * (store lifecycle + the audit pipeline + persistence), shapes the three output
- * variants, then applies the {@link assessReport} exit-code policy. It computes
- * nothing itself — the level, scores, per-criterion entries, and the pass/fail
- * verdict all come from core.
+ * `trellis audit <path>` — the deterministic sloppiness audit (SPEC §12,
+ * trellis-9a88). Thin per SPEC §13.1: it parses flags, calls the core
+ * {@link runWorkspaceAudit} service (configure → measure → baseline compare →
+ * policy → optional history), shapes the three output variants, then maps the
+ * policy assessment onto the exit code. It computes nothing itself — the
+ * index, metrics, findings, comparison, and policy verdict all come from core.
  *
- * Transitional (SPEC §14 stage 2): the audit is fully deterministic — there is
- * no route to Pi or any model. The retired investigation knobs are rejected
- * with an actionable error: `--no-cache` and `TRELLIS_PI_BIN` no longer exist.
- * Each run persists to the central SQLite history (SPEC §6.4) unless
- * `--no-persist` is given; `--db` overrides the DB location. `--canonical <v>`
- * opts the run into canonical-config drift (SPEC §10), folded into
- * `report.drift`.
+ * The audit is fully deterministic and offline (SPEC §8): no model, no
+ * network, no Git, no project commands, and **stateless by default** — without
+ * `--history` it opens no database, and without `--out` it writes no file.
  *
- * Exit codes (SPEC §12): `0` clean; `2` when `--fail-on` trips (default: a gate
- * criterion fails OR drift is detected); `1` on an operational error. `--fail-on
- * level` compares `report.level` against `--min-level` (default 3).
+ * Flags (SPEC §12):
+ *
+ * - `--baseline <report.json>` — compare against a saved report (§9);
+ * - `--config <trellis.yaml>` — explicit audit configuration (§6.5);
+ * - `--history` / `--db <path>` — opt-in persistence (§10);
+ * - `--out <file>` — write the report to a file (format from the extension,
+ *   overridable by `--json`/`--md`);
+ * - `--quiet` / `--verbose` — progress on stderr.
+ *
+ * Retired readiness-era flags (`--rubric-version`, `--min-level`, `--fail-on`,
+ * `--canonical`, `--no-persist`, `--output`, provider/model/cache knobs, …)
+ * fail with an actionable "removed in the deterministic pivot" error (SPEC
+ * §12), never a silent ignore.
+ *
+ * Exit codes (SPEC §9): `0` clean; `2` when the declarative policy (§6.5)
+ * trips — the report is still emitted to stdout, the reasons go to stderr;
+ * `1` on an operational error (unreadable root, invalid config or baseline).
  */
-import { accessSync, constants, existsSync, mkdirSync, statSync } from "node:fs";
+import { accessSync, constants, existsSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { Command } from "commander";
 import { Option } from "commander";
-import { legacyConfigMessage } from "../legacy.ts";
-import { assessReport, renderMarkdown, renderTerminal, runAudit } from "../report/index.ts";
-import { loadRubric, type Rubric, RubricError } from "../rubric/index.ts";
-import { failPolicy } from "./fail-on.ts";
+import {
+	type AuditProgress,
+	runWorkspaceAudit,
+	type WorkspaceAuditResult,
+} from "../audit/index.ts";
+import { ReportArtifactError } from "../compare/index.ts";
+import { AuditConfigError } from "../config/index.ts";
+import { LegacyConfigError, legacyConfigMessage } from "../legacy.ts";
+import {
+	renderAuditMarkdown,
+	renderAuditTerminal,
+	renderComparisonMarkdown,
+	renderComparisonTerminal,
+	renderPolicyMarkdown,
+	renderPolicyTerminal,
+} from "../report/index.ts";
 import {
 	CliError,
 	EXIT,
@@ -43,157 +65,241 @@ import { createProgressReporter } from "./progress.ts";
 interface AuditCliOptions {
 	json?: boolean;
 	md?: boolean;
-	/** Retired (`--no-cache`): kept as a hidden flag so passing it errors actionably. */
-	cache?: boolean;
-	rubricVersion?: string;
-	canonical?: string;
-	/** SQLite history path; defaults to `TRELLIS_DB` env or `~/.trellis/trellis.db`. */
+	/** A saved JSON report to compare against (SPEC §9). */
+	baseline?: string;
+	/** Explicit audit configuration file (§6.5); default discovers trellis.yaml at the root. */
+	config?: string;
+	/** Opt-in history persistence (SPEC §10). */
+	history?: boolean;
+	/** SQLite history path; only meaningful with `--history`. */
 	db?: string;
-	/** Skip persisting this run to the central history. */
-	persist?: boolean;
-	/** Exit-code policy (SPEC §12). */
-	failOn?: string;
-	minLevel?: string;
-	/**
-	 * Report file target: a `string` path (`--output <path>`), `false`
-	 * (`--no-output`, skip writing), or `undefined` (default — write a timestamped
-	 * markdown report under `.trellis/`). Format is inferred from an explicit
-	 * path's extension, overridable by `--json`/`--md`.
-	 */
-	output?: string | false;
+	/** Report file target (`--out <path>`); absent → no file is written (stateless, §8). */
+	out?: string;
 	/** Suppress progress lines on stderr. */
 	quiet?: boolean;
-	/** Per-detector progress detail on stderr. */
+	/** Per-analyzer progress detail on stderr. */
 	verbose?: boolean;
-	/** Hidden: load an alternate rubric directory (used by tests/fixtures). */
+	/* Retired readiness-era flags — kept as hidden options so passing one errors actionably. */
+	cache?: boolean;
+	rubricVersion?: string;
 	rubricDir?: string;
+	canonical?: string;
+	persist?: boolean;
+	failOn?: string;
+	minLevel?: string;
+	output?: string | false;
 }
 
 /** Register the `audit` subcommand on `program`. */
 export function registerAudit(program: Command): void {
 	program
 		.command("audit")
-		.argument("<repo-path>", "path to the repository to score")
-		.description("score one repo; print scorecard")
-		.addOption(new Option("--no-cache", "retired: no investigation pass remains").hideHelp())
-		.option("--rubric-version <v>", "pin the rubric version (informational)")
-		.option("--canonical <v>", "pin the canonical standards version")
-		.option("--db <path>", "SQLite history path (default: $TRELLIS_DB or ~/.trellis/trellis.db)")
-		.option("--no-persist", "do not write this run to the central history")
-		.addOption(
-			new Option(
-				"--fail-on <mode>",
-				"exit non-zero on: gate|drift|level|none (default: gate or drift)",
-			).choices(["gate", "drift", "level", "none"]),
-		)
-		.option("--min-level <n>", "minimum level for --fail-on level (1–5, default 3)")
+		.argument("<path>", "path to the workspace to audit")
+		.description("measure + score TypeScript sloppiness; print the report")
+		.option("--baseline <report.json>", "compare against a saved audit report (SPEC §9)")
+		.option("--config <trellis.yaml>", "explicit audit configuration file (SPEC §6.5)")
+		.option("--history", "persist this run to the SQLite history (opt-in, SPEC §10)")
 		.option(
-			"--output <path>",
+			"--db <path>",
+			"SQLite history path (with --history; default: $TRELLIS_DB or ~/.trellis/trellis.db)",
+		)
+		.option(
+			"--out <file>",
 			"write the report to this file (.json/.md inferred; --json/--md override)",
 		)
-		.option("--no-output", "do not write a report file (default writes .trellis/audit-<ts>.md)")
 		.option("--quiet", "suppress progress output on stderr")
-		.option("--verbose", "show per-detector progress on stderr")
-		.addOption(new Option("--rubric-dir <path>", "load an alternate rubric directory").hideHelp())
+		.option("--verbose", "show per-analyzer progress on stderr")
+		.addOption(new Option("--no-cache", "retired: no investigation pass remains").hideHelp())
+		.addOption(new Option("--rubric-version <v>", "retired: the rubric is gone").hideHelp())
+		.addOption(new Option("--rubric-dir <path>", "retired: the rubric is gone").hideHelp())
+		.addOption(new Option("--canonical <v>", "retired: use trellis drift").hideHelp())
+		.addOption(new Option("--no-persist", "retired: audits are stateless by default").hideHelp())
+		.addOption(new Option("--fail-on <mode>", "retired: policy lives in trellis.yaml").hideHelp())
+		.addOption(new Option("--min-level <n>", "retired: levels are gone").hideHelp())
+		.addOption(new Option("--output <path>", "retired: renamed to --out").hideHelp())
+		.addOption(new Option("--no-output", "retired: the default writes no file").hideHelp())
 		.action(function (this: Command, repoPath: string) {
 			return runAuditCommand(repoPath, this.optsWithGlobals() as AuditCliOptions);
 		});
 }
 
-/** Load the rubric, run the core audit, emit the report, then apply the exit-code policy. */
-async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise<void> {
-	const format = resolveFormat(opts);
-	const policy = failPolicy(opts);
-	const rubric = loadRubricOrThrow(opts.rubricDir);
-	// Retired investigation knobs fail fast with an actionable message (SPEC §14
-	// stage 2) — before any detector work runs.
+/** `removed in the deterministic pivot` error for one retired flag, with replacement guidance. */
+function retiredFlag(name: string, guidance: string): CliError {
+	return new CliError(
+		`${name} was removed in the deterministic pivot (SPEC §14). ${guidance}`,
+		EXIT.ERROR,
+	);
+}
+
+/** Fail fast with an actionable error when a retired readiness-era flag was passed (SPEC §12). */
+function rejectRetiredFlags(opts: AuditCliOptions): void {
 	if (opts.cache === false) throw new CliError(legacyConfigMessage("--no-cache"));
 	if (process.env.TRELLIS_PI_BIN?.trim()) {
 		throw new CliError(legacyConfigMessage("TRELLIS_PI_BIN"));
 	}
-	// Validate the report target up front so a bad `--output` fails immediately,
-	// before the detector pass runs.
-	const reportPlan = planReportTarget(repoPath, opts.output, format);
+	if (opts.rubricVersion !== undefined || opts.rubricDir !== undefined) {
+		const name = opts.rubricVersion !== undefined ? "--rubric-version" : "--rubric-dir";
+		throw retiredFlag(
+			name,
+			"There is no rubric to pin or load — the sloppiness audit measures TypeScript structure directly. Remove it and re-run.",
+		);
+	}
+	if (opts.canonical !== undefined) {
+		throw retiredFlag(
+			"--canonical",
+			"Canonical drift no longer folds into the audit (SPEC §11) — run `trellis drift <path>` for the separate standards capability. Remove it and re-run.",
+		);
+	}
+	if (opts.failOn !== undefined || opts.minLevel !== undefined) {
+		const name = opts.failOn !== undefined ? "--fail-on" : "--min-level";
+		throw retiredFlag(
+			name,
+			"The gate/drift/level policy is gone — failure policies are declarative in trellis.yaml (SPEC §6.5: maxIndex, budgets, regression, failOnNew) and a tripped policy exits 2. Remove it and re-run.",
+		);
+	}
+	if (opts.persist === false) {
+		throw retiredFlag(
+			"--no-persist",
+			"Audits are stateless by default (SPEC §8) — nothing is persisted unless --history is given. Remove it and re-run.",
+		);
+	}
+	if (opts.output !== undefined) {
+		throw retiredFlag(
+			opts.output === false ? "--no-output" : "--output",
+			"Use --out <file> to write a report file — the default audit writes no file (SPEC §8).",
+		);
+	}
+}
+
+/** Run the core audit service, mapping operational failures onto {@link CliError}. */
+async function auditOrThrow(
+	repoPath: string,
+	opts: AuditCliOptions,
+	onProgress: AuditProgress | undefined,
+): Promise<WorkspaceAuditResult> {
+	try {
+		return await runWorkspaceAudit(repoPath, {
+			...(opts.config ? { configPath: opts.config } : {}),
+			...(opts.baseline ? { baselinePath: opts.baseline } : {}),
+			...(opts.history ? { history: { ...(opts.db ? { db: opts.db } : {}) } } : {}),
+			...(onProgress ? { onProgress } : {}),
+		});
+	} catch (error) {
+		if (
+			error instanceof ReportArtifactError ||
+			error instanceof AuditConfigError ||
+			error instanceof LegacyConfigError
+		) {
+			throw new CliError(error.message, EXIT.ERROR);
+		}
+		throw error;
+	}
+}
+
+/**
+ * The baseline-comparison and policy appendix for the human/Markdown views
+ * (JSON stdout stays the pure §6.4 report so it can feed a later `--baseline`).
+ * Empty when no baseline was given and no policies are configured.
+ */
+function appendix(result: WorkspaceAuditResult, format: "human" | "md"): string {
+	const blocks: string[] = [];
+	if (result.comparison) {
+		blocks.push(
+			format === "md"
+				? `## Baseline comparison\n\n${renderComparisonMarkdown(result.comparison)}`
+				: `baseline comparison\n-------------------\n${renderComparisonTerminal(result.comparison)}`,
+		);
+	}
+	if (result.policy.results.length > 0) {
+		blocks.push(
+			format === "md"
+				? `## Policy\n\n${renderPolicyMarkdown(result.policy)}`
+				: renderPolicyTerminal(result.policy),
+		);
+	}
+	return blocks.length === 0 ? "" : `\n\n${blocks.join("\n\n")}`;
+}
+
+/** The failure reasons of a tripped policy, flattened for the stderr contract (SPEC §9). */
+function failureReasons(result: WorkspaceAuditResult): string[] {
+	return result.policy.results
+		.filter((entry) => entry.status === "fail")
+		.flatMap((entry) => entry.reasons.map((reason) => reason.message));
+}
+
+/** Load config, run the core audit, emit the report, then apply the policy exit code. */
+async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise<void> {
+	const format = resolveFormat(opts);
+	// Retired readiness-era knobs fail fast with an actionable message (SPEC §12)
+	// — before any measurement work runs.
+	rejectRetiredFlags(opts);
+	if (opts.db !== undefined && opts.history !== true) {
+		throw new CliError(
+			"--db only applies with --history: audits are stateless by default (SPEC §8). Add --history to persist this run.",
+			EXIT.ERROR,
+		);
+	}
+	// Validate the report target up front so a bad `--out` fails immediately,
+	// before the measurement pass runs.
+	const reportPlan = planReportTarget(opts.out, format);
 	const quiet = opts.quiet === true;
 	const reporter = createProgressReporter({
 		quiet,
 		verbose: opts.verbose === true,
 		isTTY: Boolean(process.stderr.isTTY),
 	});
-	const report = await runAudit(repoPath, {
-		rubric,
-		...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),
-		...(opts.canonical ? { canonical: opts.canonical } : {}),
-		...(opts.db ? { db: opts.db } : {}),
-		...(opts.persist === false ? { persist: false } : {}),
-		...(reporter ? { onProgress: reporter.onProgress } : {}),
-	});
+	const result = await auditOrThrow(repoPath, opts, reporter?.onProgress);
 	reporter?.finish();
 	const rendered = {
-		human: renderTerminal(report, rubric),
-		json: report,
-		md: renderMarkdown(report, rubric),
+		human: renderAuditTerminal(result.report) + appendix(result, "human"),
+		json: result.report,
+		md: renderAuditMarkdown(result.report) + appendix(result, "md"),
 	} satisfies Rendered;
 	// stdout always honours --json/--md (default human) so piping stays stable;
-	// the report file is a separate artifact. `--no-output` (plan === null) skips
-	// it; an explicit file path uses its extension/override; a directory target
-	// (incl. the default `.trellis/`) gets a timestamped report so history is kept.
+	// the report file is a separate artifact written only when --out asks for it.
 	if (reportPlan) {
-		const path = finalizeReportPath(reportPlan, report.scoredAt);
+		const path = finalizeReportPath(reportPlan, result.report.run?.auditedAt);
 		writeReportFile(path, reportPlan.format, rendered);
 		if (!quiet) process.stderr.write(`trellis: report written to ${path}\n`);
 	}
 	emit(format, rendered);
-	const assessment = assessReport(report, rubric, policy);
-	if (assessment.failed) throw new FailOnExit(assessment.reasons);
+	if (result.policy.failed) throw new FailOnExit(failureReasons(result));
 }
 
 /**
  * A validated report destination resolved *before* the audit runs: either a
  * fixed file `path`, or a `dir` to drop a timestamped report into (an explicit
- * directory target, or the default `.trellis/`). The concrete filename for a
- * `dir` plan is finalized later (it needs the run's `scoredAt`).
+ * directory target). The concrete filename for a `dir` plan is finalized later
+ * (it needs the run's `auditedAt`).
  */
 type ReportPlan =
 	| { kind: "file"; path: string; format: OutputFormat }
 	| { kind: "dir"; dir: string; format: OutputFormat };
 
 /**
- * Resolve and validate where the report file will be written, *before* the
- * expensive audit pass. `--no-output` ({@link output} `=== false`) returns
- * `null`. An explicit path that names an existing directory becomes a directory
- * target (so `--output .` drops a timestamped report there instead of failing
- * with `EISDIR`); otherwise it is a file path whose parent directory must
- * already exist and be writable. With no flag, a timestamped markdown report
- * lands under the **audited repo's** `.trellis/` (anchored to `repoPath`, never
- * the process cwd — a report about repo X belongs with repo X). Throws
- * {@link CliError} up front on an unwritable target so the failure costs no
- * detector time.
+ * Resolve and validate where `--out` will write, *before* the measurement
+ * pass. No `--out` returns `null` — the default audit is stateless (SPEC §8)
+ * and writes no file. An explicit path that names an existing directory
+ * becomes a directory target (so `--out .` drops a timestamped report there
+ * instead of failing with `EISDIR`); otherwise it is a file path whose parent
+ * directory must already exist and be writable. Throws {@link CliError} up
+ * front on an unwritable target so the failure costs no measurement time.
  */
-function planReportTarget(
-	repoPath: string,
-	output: string | false | undefined,
-	format: OutputFormat,
-): ReportPlan | null {
-	if (output === false) return null;
-	if (typeof output === "string") {
-		if (isDirectory(output)) {
-			assertWritableDir(output, output);
-			return { kind: "dir", dir: output, format: format === "json" ? "json" : "md" };
-		}
-		assertWritableDir(dirname(output) || ".", output);
-		return { kind: "file", path: output, format: formatForPath(output, format) };
+function planReportTarget(out: string | undefined, format: OutputFormat): ReportPlan | null {
+	if (out === undefined) return null;
+	if (isDirectory(out)) {
+		assertWritableDir(out, out);
+		return { kind: "dir", dir: out, format: format === "json" ? "json" : "md" };
 	}
-	const dir = join(repoPath, ".trellis");
-	mkdirSync(dir, { recursive: true });
-	return { kind: "dir", dir, format: "md" };
+	assertWritableDir(dirname(out) || ".", out);
+	return { kind: "file", path: out, format: formatForPath(out, format) };
 }
 
 /** Turn a validated {@link ReportPlan} into the concrete file path to write. */
-function finalizeReportPath(plan: ReportPlan, scoredAt: string): string {
+function finalizeReportPath(plan: ReportPlan, auditedAt: string | undefined): string {
 	if (plan.kind === "file") return plan.path;
 	const ext = plan.format === "json" ? "json" : "md";
-	return join(plan.dir, `audit-${fileStamp(scoredAt)}.${ext}`);
+	return join(plan.dir, `audit-${fileStamp(auditedAt ?? new Date().toISOString())}.${ext}`);
 }
 
 /** Whether `path` exists and is a directory (an `EISDIR` write target). */
@@ -218,21 +324,9 @@ function assertWritableDir(dir: string, target: string): void {
 }
 
 /** Turn an ISO timestamp into a filesystem-safe stamp (`2026-06-07T16-30-59`). */
-function fileStamp(scoredAt: string): string {
-	return scoredAt
+function fileStamp(auditedAt: string): string {
+	return auditedAt
 		.replace(/:/g, "-")
 		.replace(/\.\d+Z$/, "")
 		.replace(/Z$/, "");
-}
-
-/** Load the rubric, converting a loader {@link RubricError} into a {@link CliError}. */
-function loadRubricOrThrow(dir: string | undefined): Rubric {
-	try {
-		return loadRubric(dir);
-	} catch (error) {
-		if (error instanceof RubricError) {
-			throw new CliError(error.message, EXIT.ERROR, { id: error.id, file: error.file });
-		}
-		throw error;
-	}
 }

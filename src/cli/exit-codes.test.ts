@@ -1,12 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 /**
- * The CLI exit-code contract (SPEC §12): `0` clean, `2` when a `--fail-on`
- * policy trips (the report is still emitted), `1` on an operational error. The
- * default policy (no `--fail-on`) fails on a gate criterion OR canonical drift.
+ * The CLI exit-code contract (SPEC §9, §12): `0` clean, `2` when the
+ * declarative failure policy (trellis.yaml §6.5) trips — the report is still
+ * emitted to stdout and the reasons go to stderr — and `1` on an operational
+ * error (the audit could not run). Policy failure and operational failure are
+ * always distinguishable.
  */
 
 /** Absolute path to the CLI entrypoint, resolved relative to this test file. */
@@ -30,81 +32,121 @@ async function runCli(
 	return { code, stdout, stderr };
 }
 
-describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
+/** An over-threshold function (CC 12 > 10): a `complexity.hotspot` finding. */
+const TANGLED = `export function tangled(n: number): number {
+	let out = 0;
+	if (n > 0) out += 1;
+	if (n > 1) out += 2;
+	if (n > 2) out += 3;
+	if (n > 3) out += 4;
+	if (n > 4) out += 5;
+	if (n > 5) out += 6;
+	if (n > 6) out += 7;
+	if (n > 7) out += 8;
+	if (n > 8) out += 9;
+	if (n > 9) out += 10;
+	if (n > 10) out += 11;
+	return out;
+}
+`;
+
+describe("trellis audit exit-code contract (SPEC §9)", () => {
 	let dir: string;
-	let dbDir: string;
-	let dbPath: string;
 
 	beforeEach(() => {
-		// A minimal fixture: real but sparse, so deterministic gate criteria fail.
+		// A non-Git fixture with one over-threshold hotspot → a non-zero index.
 		dir = mkdtempSync(join(tmpdir(), "trellis-cli-exit-"));
-		writeFileSync(join(dir, "README.md"), "# fixture\n");
-		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", main: "./i.ts" }));
-		writeFileSync(join(dir, ".gitignore"), "node_modules\n");
-		dbDir = mkdtempSync(join(tmpdir(), "trellis-cli-exit-db-"));
-		dbPath = join(dbDir, "trellis.db");
+		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", version: "1.0.0" }));
+		mkdirSync(join(dir, "src"));
+		writeFileSync(join(dir, "src", "tangled.ts"), TANGLED);
 	});
 
 	afterEach(() => {
 		rmSync(dir, { recursive: true, force: true });
-		rmSync(dbDir, { recursive: true, force: true });
 	});
 
-	/** Run `trellis audit` with the shared env + extra args. */
-	function auditCli(extra: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
-		// `--no-output`: these assert exit codes, not artifacts — never write a report file.
-		return runCli(["audit", dir, "--db", dbPath, "--no-persist", "--no-output", ...extra], {
-			TRELLIS_DB: "",
-		});
-	}
+	test("no configured policy exits 0", async () => {
+		const { code, stdout } = await runCli(["audit", dir, "--json"]);
+		expect(code).toBe(0);
+		expect(JSON.parse(stdout).score.index).toBeGreaterThan(0);
+	});
 
-	test("audit defaults to failing on a gate criterion (exit 2), still emitting the report", async () => {
-		const { code, stdout, stderr } = await auditCli(["--json"]);
+	test("a tripped maxIndex policy exits 2, still emitting the report", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
+		const { code, stdout, stderr } = await runCli(["audit", dir, "--json"]);
 		expect(code).toBe(2);
 		// The full report is still on stdout — the policy trips *after* emitting.
-		expect(Object.keys(JSON.parse(stdout).criteria)).toHaveLength(70);
-		expect(stderr).toContain("gate criterion failed");
+		expect(JSON.parse(stdout).score.index).toBeGreaterThan(0);
+		expect(stderr).toContain("exceeds the configured maximum");
 	});
 
-	test("--fail-on none always exits 0", async () => {
-		const { code } = await auditCli(["--fail-on", "none"]);
+	test("a satisfied maxIndex policy exits 0", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 100\n");
+		const { code } = await runCli(["audit", dir]);
 		expect(code).toBe(0);
 	});
 
-	test("--fail-on gate trips on a failing gate (exit 2)", async () => {
-		const { code, stderr } = await auditCli(["--fail-on", "gate"]);
+	test("a baseline regression trips the regression policy (exit 2)", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  regression:\n    maxIncrease: 0\n");
+		// Baseline: the clean workspace (no hotspot yet).
+		const clean = join(dir, "clean");
+		mkdirSync(clean);
+		writeFileSync(join(clean, "package.json"), JSON.stringify({ name: "fixture" }));
+		mkdirSync(join(clean, "src"));
+		writeFileSync(
+			join(clean, "src", "add.ts"),
+			"export function add(a: number, b: number): number {\n\treturn a + b;\n}\n",
+		);
+		const baselinePath = join(dir, "baseline.json");
+		const saved = await runCli(["audit", clean, "--out", baselinePath]);
+		expect(saved.code).toBe(0);
+
+		const { code, stdout, stderr } = await runCli(["audit", dir, "--baseline", baselinePath]);
 		expect(code).toBe(2);
-		expect(stderr).toContain("gate criterion failed");
+		expect(stdout).toContain("baseline comparison");
+		expect(stdout).toContain("policy: FAILED");
+		expect(stderr).toContain("index rose");
 	});
 
-	test("--fail-on drift without --canonical is clean (no drift computed)", async () => {
-		const { code } = await auditCli(["--fail-on", "drift"]);
-		expect(code).toBe(0);
-	});
+	test("an incompatible baseline fails closed on baseline-dependent policies (exit 2)", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  regression:\n    maxIncrease: 5\n");
+		const saved = await runCli(["audit", dir, "--out", join(dir, "baseline.json")]);
+		expect(saved.code).toBe(0);
+		const tampered = JSON.parse(readFileSync(join(dir, "baseline.json"), "utf8")) as {
+			scoringVersion: string;
+		};
+		tampered.scoringVersion = "0.0.0";
+		writeFileSync(join(dir, "baseline.json"), JSON.stringify(tampered, null, 2));
 
-	test("--fail-on drift with --canonical trips on missing canonical files (exit 2)", async () => {
-		const { code, stderr } = await auditCli(["--canonical", "1.0.0", "--fail-on", "drift"]);
+		const { code, stderr } = await runCli(["audit", dir, "--baseline", join(dir, "baseline.json")]);
 		expect(code).toBe(2);
-		expect(stderr).toContain("canonical drift detected");
+		expect(stderr).toContain("not comparable");
 	});
 
-	test("--fail-on level clears a low threshold but trips a high one", async () => {
-		const low = await auditCli(["--fail-on", "level", "--min-level", "1"]);
-		expect(low.code).toBe(0);
-		const high = await auditCli(["--fail-on", "level", "--min-level", "5"]);
-		expect(high.code).toBe(2);
-		expect(high.stderr).toContain("below minimum L5");
-	});
-
-	test("an out-of-range --min-level is an operational error (exit 1)", async () => {
-		const { code, stderr } = await auditCli(["--fail-on", "level", "--min-level", "9"]);
+	test("an invalid trellis.yaml is an operational error (exit 1)", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 9000\n");
+		const { code, stdout, stderr } = await runCli(["audit", dir]);
 		expect(code).toBe(1);
-		expect(stderr).toContain("--min-level");
+		expect(stdout).toBe("");
+		expect(stderr).toContain("invalid trellis.yaml");
 	});
 
-	test("an invalid --fail-on value is rejected by commander (exit non-zero)", async () => {
-		const { code } = await auditCli(["--fail-on", "bogus"]);
-		expect(code).not.toBe(0);
+	test("an unreadable baseline artifact is an operational error (exit 1)", async () => {
+		const { code, stdout, stderr } = await runCli([
+			"audit",
+			dir,
+			"--baseline",
+			join(dir, "missing.json"),
+		]);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
+		expect(stderr).toContain("cannot read report artifact");
+	});
+
+	test("a missing workspace root is an operational error (exit 1)", async () => {
+		const { code, stdout } = await runCli(["audit", join(dir, "no-such-place")]);
+		expect(code).toBe(1);
+		expect(stdout).toBe("");
 	});
 
 	test("drift defaults to failing when drift is detected (exit 2)", async () => {
@@ -119,23 +161,27 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 	});
 
 	test("a fleet with an unauditable target trips a non-zero exit by default", async () => {
-		const targets = join(dbDir, "targets.yaml");
+		const targets = join(dir, "targets.yaml");
 		writeFileSync(
 			targets,
 			`targets:\n  - id: fixture\n    path: ${dir}\n    languages: [typescript]\n` +
-				`  - id: gone\n    path: ${join(dbDir, "missing")}\n`,
+				`  - id: gone\n    path: ${join(dir, "missing")}\n`,
 		);
-		const fail = await runCli(["fleet", "--targets", targets, "--db", dbPath], {
-			TRELLIS_DB: "",
-		});
-		expect(fail.code).toBe(2);
-		expect(fail.stderr).toContain("gone");
-		const clean = await runCli(
-			["fleet", "--targets", targets, "--db", dbPath, "--fail-on", "none"],
-			{
+		const dbDir = mkdtempSync(join(tmpdir(), "trellis-cli-exit-db-"));
+		try {
+			const dbPath = join(dbDir, "trellis.db");
+			const fail = await runCli(["fleet", "--targets", targets, "--db", dbPath], {
 				TRELLIS_DB: "",
-			},
-		);
-		expect(clean.code).toBe(0);
+			});
+			expect(fail.code).toBe(2);
+			expect(fail.stderr).toContain("gone");
+			const cleanRun = await runCli(
+				["fleet", "--targets", targets, "--db", dbPath, "--fail-on", "none"],
+				{ TRELLIS_DB: "" },
+			);
+			expect(cleanRun.code).toBe(0);
+		} finally {
+			rmSync(dbDir, { recursive: true, force: true });
+		}
 	});
 });

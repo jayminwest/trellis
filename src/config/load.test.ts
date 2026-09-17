@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONFIG_FILENAMES, loadAuditConfig } from "./load.ts";
+import {
+	AuditConfigError,
+	CONFIG_FILENAMES,
+	loadAuditConfig,
+	loadAuditConfigFile,
+} from "./load.ts";
 
 let repo: string;
 
@@ -56,5 +61,28 @@ describe("loadAuditConfig", () => {
 	test("invalid values name the offending key", async () => {
 		await writeFile(join(repo, "trellis.yaml"), "policy:\n  maxIndex: 400\n");
 		await expect(loadAuditConfig(repo)).rejects.toThrow(/policy\.maxIndex/);
+	});
+});
+
+describe("loadAuditConfigFile", () => {
+	test("loads and validates an explicitly named file", async () => {
+		const path = join(repo, "custom.yaml");
+		await writeFile(path, "policy:\n  maxIndex: 25\n");
+		const config = await loadAuditConfigFile(path);
+		expect(config.policy.maxIndex).toBe(25);
+		expect(config.source.exclude).toEqual([]);
+	});
+
+	test("a missing file is an operational error (no defaults fallback)", async () => {
+		const path = join(repo, "gone.yaml");
+		await expect(loadAuditConfigFile(path)).rejects.toThrow(AuditConfigError);
+		await expect(loadAuditConfigFile(path)).rejects.toThrow(/cannot read config file/);
+	});
+
+	test("an invalid file names the path and the offending key", async () => {
+		const path = join(repo, "bad.yaml");
+		await writeFile(path, "policy:\n  budgets:\n    - not-a-map\n");
+		await expect(loadAuditConfigFile(path)).rejects.toThrow(AuditConfigError);
+		await expect(loadAuditConfigFile(path)).rejects.toThrow(/invalid .*bad\.yaml/);
 	});
 });

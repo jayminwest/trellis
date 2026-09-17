@@ -36,7 +36,7 @@
  * policy-failure information. Operational errors — an unreadable or invalid
  * baseline artifact — are thrown by `load.ts` before assessment, so the CLI
  * can keep `1` (operational) distinct from `2` (policy tripped) and `0`
- * (clean). CLI/SDK wiring lands with trellis-9a88.
+ * (clean). CLI/SDK wiring landed with trellis-9a88 (`src/audit/run.ts`).
  */
 import type { AuditReport, MetricValue, PolicyConfig } from "../contract/index.ts";
 import { type CompareOptions, compareReports, type ReportComparison } from "./compare.ts";

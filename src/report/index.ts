@@ -52,6 +52,13 @@ export { type AuditMarkdownOptions, renderAuditMarkdown } from "./audit-markdown
 export { type AuditTerminalOptions, renderAuditTerminal } from "./audit-terminal.ts";
 export { type AuditOptions, auditRepo, SKIPPED_VIA_TARGETS } from "./build.ts";
 export { changesSinceLastRun, criterionStatus, snapshot } from "./changes.ts";
+export {
+	DEFAULT_DELTA_LIMIT,
+	renderComparisonMarkdown,
+	renderComparisonTerminal,
+	renderPolicyMarkdown,
+	renderPolicyTerminal,
+} from "./comparison.ts";
 export { renderJson } from "./json.ts";
 export { renderMarkdown } from "./markdown.ts";
 export type { AuditEvent, AuditPhase, AuditProgress } from "./progress.ts";

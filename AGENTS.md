@@ -62,39 +62,50 @@ trellis ships a CLI (`trellis`, bin `./src/cli/main.ts`). The current
 transitional subcommands (SPEC §14; the target surface is SPEC §12):
 
 ```bash
-trellis audit <repo-path>     # score one repo; print scorecard
-trellis drift <repo-path>     # L1 canonical-config drift only
-trellis fleet                 # audit every target in targets.yaml
-trellis report                # render history/dashboard from SQLite
-trellis rubric [--validate]   # print the loaded rubric (and validate its invariants)
+trellis audit <path>          # measure + score; print the §6.4 report
+                              #   [--baseline r.json] [--config t.yaml] [--history] [--out f]
+trellis compare <a> <b>       # compare two saved audit reports (no audit)
+trellis drift <repo-path>     # L1 canonical-config drift only (legacy surface)
+trellis fleet                 # audit every target in targets.yaml (legacy surface)
+trellis report                # render history/dashboard from SQLite (legacy surface)
+trellis rubric [--validate]   # print the loaded rubric (legacy surface)
 trellis standards             # show canonical manifest + versions
 ```
+
+`audit` and `compare` are the deterministic surface (trellis-9a88); the rest
+still wrap the legacy readiness core until trellis-8366 adapts them. The
+default audit is stateless — no database without `--history`, no report file
+without `--out` — and retired readiness-era flags (`--fail-on`, `--min-level`,
+`--rubric-version`, `--no-persist`, provider/cache knobs, …) fail with an
+actionable "removed in the deterministic pivot" error.
 
 `--json` / `--md` switch terminal output to machine/report shapes.
 
 ### Exit codes (SPEC §9)
 
-Every command exits `0` clean, `2` when a `--fail-on` policy trips (the report
+Every command exits `0` clean, `2` when a failure policy trips (the report
 is still emitted to stdout; the reason goes to stderr), or `1` on an operational
-error (the command could not run). This 0/1/2 convention carries forward into
-the pivoted product; the transitional policy below (gate criterion / canonical
-drift) is replaced by metric-budget and regression policies per SPEC §9. The default policy (flag omitted) fails on a
-**gate** criterion failing **or** canonical **drift**; `--fail-on
-gate|drift|level|none` narrows it to one dimension (or disables it), and
-`--fail-on level` compares the audited level against `--min-level` (default
-`3`). `EXIT` lives in `src/cli/output.ts`; the assessment is core
-(`assessReport` in `src/report/assess.ts`, `assessFleet` in
-`src/fleet/assess.ts`), so the CLI and SDK gate identically.
+error (the command could not run). On the deterministic surface the policy is
+declarative in `trellis.yaml` (SPEC §6.5: `maxIndex`, metric `budgets`,
+baseline `regression`, `failOnNew`) and evaluated by `assessPolicy` in
+`src/compare/policy.ts`; `trellis compare` exits `2` when the artifact pair is
+not comparable. The legacy commands keep the transitional `--fail-on
+gate|drift|level|none` policy (`assessReport` in `src/report/assess.ts`,
+`assessFleet` in `src/fleet/assess.ts`) until trellis-8366. `EXIT` lives in
+`src/cli/output.ts`; the assessment is core, so the CLI and SDK gate
+identically.
 
 ### Programmatic SDK (`src/client/`)
 
-`src/client/index.ts` exposes `audit` / `drift` / `fleet` / `report` / `rubric`
-plus the `assessReport` / `assessFleet` exit-code rule. Each is a direct call to
-the same core service the CLI folds (`runAudit`, `driftRepo`, `runFleetTargets`,
-`buildReport`, `summarizeRubric`) — **no logic beyond type shaping**. Request
-types mirror the core option types (`// Mirrors src/<x>`); responses are the core
-report shapes. The deep-equal test in `src/client/index.test.ts` proves a CLI
-audit and an SDK audit are one code path.
+`src/client/index.ts` exposes `audit` / `compare` (the deterministic surface)
+plus `drift` / `fleet` / `report` / `rubric` (legacy, until trellis-8366) and
+the `assessPolicy` / `assessReport` / `assessFleet` exit-code rules. Each is a
+direct call to the same core service the CLI folds (`runWorkspaceAudit`,
+`compareArtifacts`, `driftRepo`, `runFleetTargets`, `buildReport`,
+`summarizeRubric`) — **no logic beyond type shaping**. Request types mirror
+the core option types (`// Mirrors src/<x>`); responses are the core report
+shapes. The deep-equal test in `src/client/index.test.ts` proves a CLI audit
+and an SDK audit are one measurement and policy code path.
 
 ### Quality gates
 

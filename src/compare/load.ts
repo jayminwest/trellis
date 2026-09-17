@@ -15,6 +15,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { type AuditReport, auditReportSchema } from "../contract/index.ts";
+import { type CompareOptions, compareReports, type ReportComparison } from "./compare.ts";
 
 /** An operational failure to load a saved report artifact. */
 export class ReportArtifactError extends Error {
@@ -60,4 +61,21 @@ export async function loadReportArtifact(path: string): Promise<AuditReport> {
 		throw new ReportArtifactError(path, `invalid audit report: ${details}`);
 	}
 	return parsed.data;
+}
+
+/**
+ * Load two saved report artifacts and compare them (SPEC §9, §12) — the whole
+ * `trellis compare <baseline> <current>` operation and the SDK's `compare()`.
+ * The baseline is the first path, the current report the second. Artifact
+ * failures throw {@link ReportArtifactError} (operational); an incompatible
+ * pair is reported on the returned comparison, never thrown.
+ */
+export async function compareArtifacts(
+	baselinePath: string,
+	currentPath: string,
+	options: CompareOptions = {},
+): Promise<ReportComparison> {
+	const baseline = await loadReportArtifact(baselinePath);
+	const current = await loadReportArtifact(currentPath);
+	return compareReports(baseline, current, options);
 }
