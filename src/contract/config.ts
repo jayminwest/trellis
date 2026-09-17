@@ -14,6 +14,7 @@
 import { z } from "zod";
 import { SOURCE_SETS } from "./coverage.ts";
 import { dottedIdSchema, finiteNumberSchema } from "./primitives.ts";
+import { EVIDENCE_NAMESPACE, NATIVE_NAMESPACE } from "./provider.ts";
 
 /**
  * Source handling: `exclude` adds glob exclusions to the documented defaults;
@@ -55,15 +56,59 @@ export const regressionPolicySchema = z.strictObject({
 export type RegressionPolicy = z.infer<typeof regressionPolicySchema>;
 
 /**
+ * A required optional-provider analysis id (SPEC §16.3 — plan `pl-43c5` step 7,
+ * trellis-68b9). `requireEvidence` *demands* provider evidence: a required
+ * analysis that is unrequested, unavailable, unsupported or incomplete fails
+ * the policy closed (exit `2`, report still emitted) even when the native
+ * score is complete and clean — while an absent optional provider with no
+ * requirement never violates policy and never touches the score (§16.5).
+ *
+ * The values are **supported analysis ids** — the external provider ids of the
+ * supported-provider capability table (`src/providers/capabilities.ts`). Two
+ * near-miss vocabularies are rejected here, at parse time, as actionable
+ * configuration errors (operational exit `1`, SPEC §16.3):
+ *
+ * - native analyzer ids (`trellis.*`) — native analyzers always run; their
+ *   gaps are governed by metric budgets and the score's own completeness,
+ *   never by evidence requirements;
+ * - namespaced evidence ids (`provider.<id>.<metric>`) — those name a
+ *   provider's *evidence*, not the analysis itself; `budgets` is the surface
+ *   that consumes them.
+ *
+ * A requirement is declarative data only: it never selects scoring weights,
+ * never executes a provider implicitly, and accepts no command strings.
+ */
+const requiredAnalysisIdSchema = dottedIdSchema.superRefine((id, ctx) => {
+	if (id === NATIVE_NAMESPACE || id.startsWith(`${NATIVE_NAMESPACE}.`)) {
+		ctx.addIssue({
+			code: "custom",
+			message:
+				"policy requirements demand optional provider evidence — native analyzers always run and are governed by metric budgets, never by requireEvidence",
+		});
+	}
+	if (id.startsWith(`${EVIDENCE_NAMESPACE}.`)) {
+		ctx.addIssue({
+			code: "custom",
+			message:
+				'policy requirements name an analysis id ("jscpd"), not a namespaced evidence id ("provider.jscpd.pairs") — budgets consume evidence ids',
+		});
+	}
+});
+
+/**
  * Failure policy only — never mutates scoring weights (SPEC §6.5, §7).
  * `failOnNew` lists finding kinds whose appearance relative to a baseline
- * fails the run (§9).
+ * fails the run (§9). `budgets` may name native metric ids or a provider's
+ * namespaced evidence ids (`provider.<id>.<metric>`, evaluated only over that
+ * analysis's carried evidence); `requireEvidence` lists the optional provider
+ * analyses whose evidence the policy demands (§16.3).
  */
 export const policyConfigSchema = z.strictObject({
 	maxIndex: finiteNumberSchema.min(0).max(100).optional(),
 	regression: regressionPolicySchema.optional(),
 	budgets: z.record(dottedIdSchema, metricBudgetSchema).default({}),
 	failOnNew: z.array(dottedIdSchema).default([]),
+	requireEvidence: z.array(requiredAnalysisIdSchema).default([]),
 });
 
 export type PolicyConfig = z.infer<typeof policyConfigSchema>;

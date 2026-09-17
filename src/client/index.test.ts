@@ -156,9 +156,14 @@ describe("client SDK (deterministic surface)", () => {
 			maxIndex: 0,
 			budgets: {},
 			failOnNew: [],
+			requireEvidence: [],
 		});
 		expect(tripped.failed).toBe(true);
-		const clean = client.assessPolicy(sdk.report, { budgets: {}, failOnNew: [] });
+		const clean = client.assessPolicy(sdk.report, {
+			budgets: {},
+			failOnNew: [],
+			requireEvidence: [],
+		});
 		expect(clean.failed).toBe(false);
 	});
 

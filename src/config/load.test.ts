@@ -18,7 +18,7 @@ describe("loadAuditConfig", () => {
 	test("a repo without a config file yields the documented defaults", async () => {
 		expect(await loadAuditConfig(repo)).toEqual({
 			source: { exclude: [], classify: {} },
-			policy: { budgets: {}, failOnNew: [] },
+			policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
 		});
 	});
 
@@ -29,7 +29,7 @@ describe("loadAuditConfig", () => {
 		);
 		expect(await loadAuditConfig(repo)).toEqual({
 			source: { exclude: ["src/generated/**"], classify: { "scripts/tools/**": "test" } },
-			policy: { maxIndex: 40, budgets: {}, failOnNew: [] },
+			policy: { maxIndex: 40, budgets: {}, failOnNew: [], requireEvidence: [] },
 		});
 	});
 
@@ -44,7 +44,7 @@ describe("loadAuditConfig", () => {
 		await writeFile(join(repo, "trellis.yaml"), "");
 		expect(await loadAuditConfig(repo)).toEqual({
 			source: { exclude: [], classify: {} },
-			policy: { budgets: {}, failOnNew: [] },
+			policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
 		});
 	});
 
@@ -65,7 +65,7 @@ describe("loadAuditConfigFile", () => {
 		await writeFile(path, "policy:\n  maxIndex: 25\n");
 		expect(await loadAuditConfigFile(path)).toEqual({
 			source: { exclude: [], classify: {} },
-			policy: { maxIndex: 25, budgets: {}, failOnNew: [] },
+			policy: { maxIndex: 25, budgets: {}, failOnNew: [], requireEvidence: [] },
 		});
 	});
 
