@@ -237,7 +237,13 @@ the digest for agents working in this repo:
   the exact external artifacts (initially jscpd 5.2.1, an isolated
   devDependency) and resolves them only from an operator-prepared local
   installation — verified against recorded digests before use, never via
-  PATH/bunx, never installed or downloaded at audit time.
+  PATH/bunx, never installed or downloaded at audit time. The jscpd adapter
+  (`src/providers/jscpd/` — raw report schemas and validation, pinned argv
+  and identity, and per-mode plus full-adapter execution, trellis-f4e2) runs
+  the pinned exact/normalized/near modes over a staged view through that
+  runner and validates the raw JSON into typed evidence before any
+  normalization (trellis-da4c owns that); it stays unscored and outside the
+  default audit.
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as
