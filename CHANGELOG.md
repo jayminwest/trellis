@@ -21,6 +21,33 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Changed
 
+- **Declarative policy can require provider evidence without changing
+  scoring** (trellis-68b9, step 7 of 30 of plan `pl-43c5`, SPEC §16.3): the
+  `policy` block of `trellis.yaml` gains `requireEvidence` — a list of
+  supported analysis ids (the external provider ids of the supported-provider
+  capability table). A required analysis that is unrequested, unavailable,
+  unsupported or incomplete fails the policy assessment closed (exit `2`,
+  the report still emitted) even when the native score is complete and
+  clean; an absent optional provider with no requirement never violates
+  policy and never changes the score. Requiring a capability recorded as
+  resolving to `unsupported` — the deferred SonarJS decision — yields a
+  located violation citing the recorded reason and decision record, never
+  a crash or a silent pass; unknown ids fail closed naming the supported
+  vocabulary. Metric budgets and `failOnNew` kinds under the reserved
+  `provider.` namespace now evaluate over that analysis's carried
+  evidence: only a complete analysis's emitted value is budgetable (partial
+  evidence never feeds a budget — fewer analyzed files must never pass as a
+  smaller value), a missing value fails closed when the analysis is also
+  required and is otherwise skipped with the absence stated (never a
+  fabricated zero), and new findings are claimed only over step-6
+  `comparable` evidence — a changed basis skips the check and absence on a
+  side never reads as regression churn. Configuration stays declarative
+  data: requirements are pure ids — native `trellis.*` ids, `provider.*`
+  evidence ids, and any command string are rejected at config-load time as
+  operational errors (exit `1`). Native max-index, regression, budget and
+  new-finding semantics are unchanged, and audit, saved comparison and
+  fleet consume the one `assessPolicy` (`src/compare/policy.ts` + new
+  `policy-evidence.ts`).
 - **Comparisons evaluate compatibility per measurement and scoring basis**
   (trellis-bd0c, step 6 of 30 of plan `pl-43c5`, SPEC §16.6): `src/compare/`
   splits the single whole-report comparability gate into two independent

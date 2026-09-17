@@ -41,7 +41,7 @@ function baseReport(index = 20): AuditReport {
 }
 
 function policy(overrides: Partial<PolicyConfig> = {}): PolicyConfig {
-	return { budgets: {}, failOnNew: [], ...overrides };
+	return { budgets: {}, failOnNew: [], requireEvidence: [], ...overrides };
 }
 
 describe("assessPolicy max-index", () => {

@@ -11,6 +11,7 @@ const specExample: AuditConfig = {
 		maxIndex: 40,
 		budgets: { "duplication.density": { max: 0.05 } },
 		failOnNew: ["import-cycle", "complexity.hotspot"],
+		requireEvidence: ["jscpd"],
 	},
 };
 
@@ -22,7 +23,7 @@ describe("auditConfigSchema", () => {
 	test("fills sensible defaults from an empty configuration", () => {
 		expect(auditConfigSchema.parse({})).toEqual({
 			source: { exclude: [], classify: {} },
-			policy: { budgets: {}, failOnNew: [] },
+			policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
 		});
 	});
 
@@ -91,6 +92,44 @@ describe("auditConfigSchema", () => {
 		expect(auditConfigSchema.safeParse({ policy: { failOnNew: ["Import Cycle"] } }).success).toBe(
 			false,
 		);
+	});
+
+	test("round-trips provider-evidence requirements over supported analysis ids", () => {
+		const policy = { ...specExample.policy, requireEvidence: ["jscpd", "sonarjs"] };
+		expect(auditConfigSchema.parse({ policy }).policy.requireEvidence).toEqual([
+			"jscpd",
+			"sonarjs",
+		]);
+	});
+
+	test("rejects native analyzer ids and evidence ids as requirements, actionably", () => {
+		for (const id of ["trellis.complexity", "trellis.duplication", "provider.jscpd.pairs"]) {
+			const parsed = auditConfigSchema.safeParse({ policy: { requireEvidence: [id] } });
+			expect(parsed.success).toBe(false);
+			if (!parsed.success) {
+				expect(parsed.error.issues[0]?.path.join(".")).toBe("policy.requireEvidence.0");
+				expect(parsed.error.issues[0]?.message).toMatch(/requireEvidence|analysis id/);
+			}
+		}
+	});
+
+	test("rejects command strings and executable requirement objects — requirements are ids, never code", () => {
+		for (const id of [
+			"jscpd --min-tokens 50",
+			"npm install jscpd",
+			"./run-jscpd.sh",
+			"",
+			"Jscpd",
+		]) {
+			expect(auditConfigSchema.safeParse({ policy: { requireEvidence: [id] } }).success).toBe(
+				false,
+			);
+		}
+		expect(
+			auditConfigSchema.safeParse({
+				policy: { requireEvidence: [{ id: "jscpd", command: "jscpd --min-tokens 50" }] },
+			}).success,
+		).toBe(false);
 	});
 
 	test("rejects empty glob strings", () => {

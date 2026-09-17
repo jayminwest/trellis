@@ -1,5 +1,7 @@
 /**
- * Failure-policy assessment over a §6.4 report (SPEC §6.5, §9, trellis-942c).
+ * Failure-policy assessment over a §6.4 report (SPEC §6.5, §9, trellis-942c;
+ * provider-evidence requirements — SPEC §16.3, plan `pl-43c5` step 7,
+ * trellis-68b9).
  *
  * {@link assessPolicy} is a pure function: given the current report, the
  * declarative {@link import("../contract/index.ts").PolicyConfig}, and an
@@ -9,7 +11,7 @@
  * index cannot hide a configured new-cycle or new-hotspot failure (§9);
  * `failed` is the OR of the individual results.
  *
- * The four policy families:
+ * The five policy families:
  *
  * - `max-index` — `policy.maxIndex`: the current index must not exceed it.
  * - `metric-budget` — each `policy.budgets` entry: the current raw metric
@@ -18,6 +20,16 @@
  *   configuration mistake); a budget over a metric without a value
  *   (`incomplete`/`unsupported`/`not-applicable`) is `skipped` with
  *   `budget-metric-unevaluable` — the partial headline already flags the run.
+ *   A budget key under the reserved `provider.` namespace names a provider's
+ *   namespaced evidence instead and is routed to `policy-evidence.ts`:
+ *   evaluated only over that analysis's carried evidence, never a fabricated
+ *   zero (§16.3).
+ * - `evidence-requirement` — `policy.requireEvidence`: each named optional
+ *   provider analysis must be carried `complete` (§16.3). An unrequested,
+ *   unavailable, unsupported or incomplete required analysis fails closed
+ *   even when the native score is complete and clean; an absent optional
+ *   provider with no requirement never violates policy and never changes the
+ *   score (§16.5). Evaluated in `policy-evidence.ts`.
  * - `score-regression` — `policy.regression`, requires a baseline. The
  *   **absolute** knob `maxIncrease` bounds the index increase in points; the
  *   **relative** knob `maxIncreasePercent` bounds it as a percentage of the
@@ -25,6 +37,9 @@
  *   configured ⇒ exceeding either fails; neither configured ⇒ zero tolerance.
  * - `new-findings` — `policy.failOnNew` kinds, requires a baseline: any
  *   baseline-relative **new** finding of a listed kind fails (`new-finding`).
+ *   A kind under the reserved `provider.` namespace names a provider's
+ *   namespaced finding kind and is routed to `policy-evidence.ts`, evaluated
+ *   over the step-6 per-provider evidence comparison (§16.6).
  *
  * Baseline-dependent policies (`score-regression`, `new-findings`): no
  * baseline at all ⇒ `skipped` with `baseline-absent` (a first run has nothing
@@ -42,11 +57,23 @@
 import type { AuditReport, MetricValue, PolicyConfig } from "../contract/index.ts";
 import { compareReports, type ReportComparison } from "./compare.ts";
 import type { CompareOptions } from "./compatibility.ts";
+import {
+	assessEvidenceRequirement,
+	assessProviderEvidenceBudget,
+	assessProviderNewFindings,
+	type EvidencePolicyReasonCode,
+	isProviderEvidenceId,
+} from "./policy-evidence.ts";
 
 /** The policy families {@link assessPolicy} evaluates. */
-export type PolicyKind = "max-index" | "metric-budget" | "score-regression" | "new-findings";
+export type PolicyKind =
+	| "max-index"
+	| "metric-budget"
+	| "evidence-requirement"
+	| "score-regression"
+	| "new-findings";
 
-/** Machine-readable reason codes (see the module docblock). */
+/** Machine-readable reason codes (see the module docblock and `policy-evidence.ts`). */
 export type PolicyReasonCode =
 	| "index-exceeds-max"
 	| "budget-exceeded"
@@ -56,7 +83,8 @@ export type PolicyReasonCode =
 	| "regression-exceeds-relative"
 	| "new-finding"
 	| "baseline-absent"
-	| "baseline-incompatible";
+	| "baseline-incompatible"
+	| EvidencePolicyReasonCode;
 
 /** A structured policy reason: a stable code plus a human message. */
 export interface PolicyReason {
@@ -211,6 +239,7 @@ function assessRegression(
 }
 
 function assessNewFindings(kind: string, comparison: ReportComparison): PolicyResult {
+	if (isProviderEvidenceId(kind)) return assessProviderNewFindings(kind, comparison);
 	const result: PolicyResult = {
 		policy: "new-findings",
 		subject: kind,
@@ -234,12 +263,25 @@ function assessNewFindings(kind: string, comparison: ReportComparison): PolicyRe
 
 /** Every configured metric budget, in sorted metric-id order (deterministic). */
 function assessBudgets(report: AuditReport, policy: PolicyConfig): PolicyResult[] {
+	const requiredAnalyses = new Set(policy.requireEvidence);
 	const results: PolicyResult[] = [];
 	for (const id of Object.keys(policy.budgets).sort()) {
 		const budget = policy.budgets[id];
-		if (budget !== undefined) results.push(assessBudget(report, id, budget.max));
+		if (budget === undefined) continue;
+		results.push(
+			isProviderEvidenceId(id)
+				? assessProviderEvidenceBudget(report, id, budget.max, requiredAnalyses)
+				: assessBudget(report, id, budget.max),
+		);
 	}
 	return results;
+}
+
+/** Every configured evidence requirement, in sorted analysis-id order (deterministic, duplicates collapsed). */
+function assessRequirements(report: AuditReport, policy: PolicyConfig): PolicyResult[] {
+	return [...new Set(policy.requireEvidence)]
+		.sort()
+		.map((analysisId) => assessEvidenceRequirement(report, analysisId));
 }
 
 /** The baseline-dependent policies: score regression and failOnNew kinds. */
@@ -281,6 +323,7 @@ export function assessPolicy(
 	const results: PolicyResult[] = [];
 	if (policy.maxIndex !== undefined) results.push(assessMaxIndex(report, policy.maxIndex));
 	results.push(...assessBudgets(report, policy));
+	results.push(...assessRequirements(report, policy));
 	results.push(...assessBaselinePolicies(report, policy, options));
 	return { failed: results.some((result) => result.status === "fail"), results };
 }

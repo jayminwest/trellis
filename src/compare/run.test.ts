@@ -130,7 +130,10 @@ describe("runComparison", () => {
 		const current = await saveArtifact("sloppy", "b.json");
 		await expect(
 			runComparison(baseline, current, {
-				config: { source: { exclude: [], classify: {} }, policy: { budgets: {}, failOnNew: [] } },
+				config: {
+					source: { exclude: [], classify: {} },
+					policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
+				},
 				configPath: join(dir, "trellis.yaml"),
 			}),
 		).rejects.toThrow(/at most one of config/);

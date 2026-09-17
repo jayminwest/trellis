@@ -66,7 +66,10 @@ describe("runWorkspaceAudit", () => {
 
 	test("config and configPath are mutually exclusive", async () => {
 		const opts = {
-			config: { source: { exclude: [], classify: {} }, policy: { budgets: {}, failOnNew: [] } },
+			config: {
+				source: { exclude: [], classify: {} },
+				policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
+			},
 			configPath: join(root, "trellis.yaml"),
 		} satisfies WorkspaceAuditOptions;
 		await expect(runWorkspaceAudit(root, opts)).rejects.toThrow(/at most one of config/);

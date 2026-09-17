@@ -20,6 +20,11 @@
  * - `policy.ts` — pure, independent evaluation of the §6.5 failure policy
  *   (max index, metric budgets, score regression, new findings) with
  *   structured reason codes.
+ * - `policy-evidence.ts` — the provider-evidence policy routes (§16.3):
+ *   `requireEvidence` demands, budgets and `failOnNew` kinds under the
+ *   reserved `provider.` namespace, evaluated over carried evidence and the
+ *   step-6 per-provider comparison — never a fabricated zero, never a change
+ *   to scoring.
  * - `run.ts` — the `trellis compare` service (trellis-9a88): load two
  *   artifacts, compare them, and evaluate a supplied configuration's policy.
  *   The CLI and SDK both fold it — one code path.
