@@ -76,12 +76,13 @@ describe("assessPolicy evidence requirements", () => {
 	});
 
 	test("fails closed when the required analysis is not carried and cannot be requested", () => {
-		// The jscpd adapter exists but is not yet selectable through the audit
-		// surface (plan pl-43c5 steps 15+) — the capability table records that.
-		const assessment = assessPolicy(report(), policy({ requireEvidence: ["jscpd"] }));
+		// A capability with no delivered adapter cannot be requested at all — the
+		// capability table records that; jscpd is delivered and selectable since
+		// step 15, so requiring it unselected reads as unrequested instead.
+		const assessment = assessPolicy(report(), policy({ requireEvidence: ["knip"] }));
 		expect(assessment.failed).toBe(true);
 		expect(assessment.results[0]?.reasons[0]?.code).toBe("requirement-evidence-unsupported");
-		expect(assessment.results[0]?.reasons[0]?.message).toContain("not yet selectable");
+		expect(assessment.results[0]?.reasons[0]?.message).toContain("no adapter delivered yet");
 	});
 
 	test("requiring the deferred sonarjs capability is a located unsupported violation", () => {
@@ -133,8 +134,9 @@ describe("assessPolicy evidence requirements", () => {
 
 	test("fails closed on a pre-provider report that cannot carry the analysis", () => {
 		// A schema 1.0.0 report predates the evidence area: the required
-		// analysis reads as not carried, never as satisfied (§16.6).
-		const assessment = assessPolicy(preProviderReport(), policy({ requireEvidence: ["jscpd"] }));
+		// analysis reads as not carried, never as satisfied (§16.6) — and a
+		// capability that cannot be requested stays an unsupported violation.
+		const assessment = assessPolicy(preProviderReport(), policy({ requireEvidence: ["knip"] }));
 		expect(assessment.failed).toBe(true);
 		expect(assessment.results[0]?.reasons[0]?.code).toBe("requirement-evidence-unsupported");
 	});
@@ -182,7 +184,7 @@ describe("assessPolicy budgets over provider evidence", () => {
 		);
 		expect(assessment.failed).toBe(true);
 		const codes = assessment.results.map((result) => result.reasons[0]?.code);
-		expect(codes).toContain("requirement-evidence-unsupported");
+		expect(codes).toContain("requirement-analysis-unrequested");
 		expect(codes).toContain("budget-evidence-missing");
 	});
 
@@ -304,7 +306,9 @@ describe("evidence-requirement exit contract through the audit service", () => {
 		expect(result.policy.failed).toBe(true); // …that the requirement fails anyway
 		const failed = result.policy.results.find((r) => r.status === "fail");
 		expect(failed?.policy).toBe("evidence-requirement");
-		expect(failed?.reasons[0]?.code).toBe("requirement-evidence-unsupported");
+		// jscpd is delivered and selectable since step 15: required but not
+		// selected reads as an unrequested requirement — still exit 2.
+		expect(failed?.reasons[0]?.code).toBe("requirement-analysis-unrequested");
 	});
 
 	test("an invalid requirement configuration is an operational error (exit 1)", async () => {

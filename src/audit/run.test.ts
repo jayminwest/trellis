@@ -83,6 +83,7 @@ describe("runWorkspaceAudit", () => {
 		const opts = {
 			config: {
 				source: { exclude: [], classify: {} },
+				providers: {},
 				policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
 			},
 			configPath: join(root, "trellis.yaml"),

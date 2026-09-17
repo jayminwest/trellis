@@ -99,6 +99,15 @@ export interface AuditMeasurements {
 	syntax: SyntaxInventory;
 	/** The measured analyzers' evidence contributions, in execution order (the selected execution list). */
 	analyses: readonly MeasuredAnalysisEvidence[];
+	/**
+	 * The external provider analyses' contract results (§6.6, §16.5): the
+	 * validated external analysis results — namespaced, advisory, unscored.
+	 * Absent (or empty) for the default native audit, whose report is
+	 * byte-identical to the provider-less pipeline; assembly carries each
+	 * result's evidence inside its entry and never into the report's metrics
+	 * map or findings list.
+	 */
+	providers?: readonly AnalysisResult[];
 	safeguards: SafeguardInspection;
 }
 
@@ -228,19 +237,32 @@ function evidenceEntry(analysis: MeasuredAnalysisEvidence): ReportAnalysis {
 }
 
 /**
- * Assemble the evidence area (§6.6): the measured analyses' entries — unique,
- * in provider-id order — plus the overall evidence completeness rolled up
- * from the analysis states and the native metric states. Independent from
- * score completeness by construction (§16.2): the rollup never reads the
- * score.
+ * One external provider analysis's evidence entry (§6.6): the contract
+ * result as-is — advisory (never a scored input, §16.5), owning no native
+ * metric ids, with its namespaced metrics, findings and clone evidence
+ * carried inside the entry, never in the report's own areas.
+ */
+function providerEvidenceEntry(result: AnalysisResult): ReportAnalysis {
+	return { scoring: "advisory", metricIds: [], ...result };
+}
+
+/**
+ * Assemble the evidence area (§6.6): the measured analyses' entries plus the
+ * external provider entries — unique, in provider-id order — plus the overall
+ * evidence completeness rolled up from the analysis states and the native
+ * metric states. Independent from score completeness by construction
+ * (§16.2): the rollup never reads the score. Provider states degrade the
+ * overall evidence completeness without ever flipping a complete native
+ * score partial (the report contract cross-checks that split).
  */
 function assembleEvidence(
 	analyses: readonly MeasuredAnalysisEvidence[],
+	providers: readonly AnalysisResult[],
 	metrics: readonly MetricValue[],
 ): EvidenceArea {
-	const entries = analyses
-		.map(evidenceEntry)
-		.sort((a, b) => (a.provider.id < b.provider.id ? -1 : a.provider.id > b.provider.id ? 1 : 0));
+	const entries = [...analyses.map(evidenceEntry), ...providers.map(providerEvidenceEntry)].sort(
+		(a, b) => (a.provider.id < b.provider.id ? -1 : a.provider.id > b.provider.id ? 1 : 0),
+	);
 	return {
 		completeness: rollUpEvidenceCompleteness(entries, metrics),
 		analyses: entries,
@@ -277,7 +299,7 @@ export function assembleReport(
 		repo: repoMetadata(measurements.source),
 		sourceCoverage: reportCoverage(measurements.source, measurements.syntax),
 		completeness: rollUpCompleteness(metrics.map((metric) => metric.state)),
-		evidence: assembleEvidence(measurements.analyses, metrics),
+		evidence: assembleEvidence(measurements.analyses, measurements.providers ?? [], metrics),
 		metrics: Object.fromEntries(metrics.map((metric) => [metric.id, metric])),
 		score: scoring.score,
 		findings,

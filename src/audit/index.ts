@@ -39,6 +39,12 @@ export {
 	type AuditProgress,
 } from "./progress.ts";
 export {
+	type ProviderAnalysisOptions,
+	type ProviderAnalysisPlanEntry,
+	providerExecutionPlan,
+	runProviderAnalyses,
+} from "./providers.ts";
+export {
 	AuditRunError,
 	runWorkspaceAudit,
 	type WorkspaceAuditOptions,

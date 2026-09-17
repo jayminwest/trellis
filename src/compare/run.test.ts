@@ -132,6 +132,7 @@ describe("runComparison", () => {
 			runComparison(baseline, current, {
 				config: {
 					source: { exclude: [], classify: {} },
+					providers: {},
 					policy: { budgets: {}, failOnNew: [], requireEvidence: [] },
 				},
 				configPath: join(dir, "trellis.yaml"),

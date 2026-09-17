@@ -1,17 +1,31 @@
 /**
- * Audit configuration contract (SPEC §6.5) — declarative data, never code.
+ * Audit configuration contract (SPEC §6.5, §16.3 — plan `pl-43c5` step 15,
+ * trellis-15e3) — declarative data, never code.
  *
  * Per-repo configuration (`trellis.yaml`, optional; sensible defaults without
- * it) describes source exclusions/classification and the failure policy. It
- * contains **no executable hooks**: the schema is pure data (strings, numbers,
- * lists, maps), and strict objects reject any unknown key — including any
- * attempt to smuggle in hook commands or to override scoring weights. Policy
- * budgets gate the run (§9); they never mutate how the index is computed (§7).
+ * it) describes source exclusions/classification, optional provider
+ * selection, and the failure policy. It contains **no executable hooks**: the
+ * schema is pure data (strings, numbers, lists, maps), and strict objects
+ * reject any unknown key — including any attempt to smuggle in hook commands
+ * or to override scoring weights. Policy budgets gate the run (§9); they
+ * never mutate how the index is computed (§7).
+ *
+ * **Provider selection (§16.4)** is the `providers` block: a strict map of
+ * known optional-provider ids to per-provider request data. Selection is
+ * *additive evidence only* — a requested provider never changes the native
+ * measurement or the score (§16.5), and an absent block (the default)
+ * requests nothing, so the default audit stays offline, no-write and
+ * byte-identical to the native-only pipeline. Unknown provider ids are
+ * rejected by the schema itself (an unknown request is invalid configuration,
+ * an operational error, §16.3 — never a silently ignored key); requesting a
+ * provider whose adapter is not delivered (or is gated, like SonarJS §16.7)
+ * is *valid* configuration and resolves to located `unsupported` evidence.
  *
  * Loading/discovery of the config file itself lives in `src/config/load.ts`
  * (trellis-6003); this module defines only the contract.
  */
 import { z } from "zod";
+import { CLONE_MATCH_MODES } from "./clone-evidence.ts";
 import { SOURCE_SETS } from "./coverage.ts";
 import { dottedIdSchema, finiteNumberSchema } from "./primitives.ts";
 import { EVIDENCE_NAMESPACE, NATIVE_NAMESPACE } from "./provider.ts";
@@ -96,6 +110,54 @@ const requiredAnalysisIdSchema = dottedIdSchema.superRefine((id, ctx) => {
 });
 
 /**
+ * One jscpd duplication-evidence request (§16.1, §16.2): the match mode the
+ * analysis runs — the provider identity's mode and the option set that
+ * distinguish its evidence (§16.6). Exactly one mode per request: the report
+ * carries one evidence entry per provider id, and the per-mode normalized
+ * metrics share ids, so two modes of the same provider can never be folded
+ * into one honest entry — a different mode is a different analysis identity,
+ * never a silent reconfiguration of the same evidence.
+ *
+ * The pinned detection thresholds are not configurable here: they are the
+ * conformance-validated calibration (`src/providers/jscpd/invocation.ts`),
+ * part of the analysis identity, and changing them is a separately versioned
+ * decision — never an audit-time knob.
+ */
+export const jscpdProviderRequestSchema = z.strictObject({
+	mode: z.enum(CLONE_MATCH_MODES),
+});
+
+export type JscpdProviderRequest = z.infer<typeof jscpdProviderRequestSchema>;
+
+/**
+ * A request for a provider whose adapter is not delivered (or is gated, like
+ * SonarJS §16.7): valid configuration — the id is known — carrying no
+ * options, because no executable capability exists to configure. It
+ * resolves to located `unsupported` evidence with the capability table's
+ * recorded reason (`src/providers/capabilities.ts`). Adapter-owning steps
+ * replace this shape with their own request schema when they deliver.
+ */
+export const undeliveredProviderRequestSchema = z.strictObject({});
+
+export type UndeliveredProviderRequest = z.infer<typeof undeliveredProviderRequestSchema>;
+
+/**
+ * Optional provider selection (§16.4): exactly the requestable provider ids,
+ * each with its own request shape — an unknown id is an unrecognized key, so
+ * the schema itself keeps the vocabulary honest (§16.3). The key set is
+ * cross-checked against the supported-provider capability table by the
+ * contract tests; keep both in sync when a provider ships.
+ */
+export const providerSelectionSchema = z.strictObject({
+	jscpd: jscpdProviderRequestSchema.optional(),
+	"dependency-cruiser": undeliveredProviderRequestSchema.optional(),
+	knip: undeliveredProviderRequestSchema.optional(),
+	sonarjs: undeliveredProviderRequestSchema.optional(),
+});
+
+export type ProviderSelection = z.infer<typeof providerSelectionSchema>;
+
+/**
  * Failure policy only — never mutates scoring weights (SPEC §6.5, §7).
  * `failOnNew` lists finding kinds whose appearance relative to a baseline
  * fails the run (§9). `budgets` may name native metric ids or a provider's
@@ -115,6 +177,7 @@ export type PolicyConfig = z.infer<typeof policyConfigSchema>;
 
 export const auditConfigSchema = z.strictObject({
 	source: sourceConfigSchema.prefault({}),
+	providers: providerSelectionSchema.prefault({}),
 	policy: policyConfigSchema.prefault({}),
 });
 
