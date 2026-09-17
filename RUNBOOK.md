@@ -20,6 +20,11 @@ Key facts:
   `src/index.ts` `export const VERSION`
 - **Changelog:** `CHANGELOG.md`
 - **Tracker prefix:** `trellis-`
+- **Package smoke test:** `bun run smoke:package`
+  (`scripts/smoke-package.ts`) — packs the tarball and confirms the
+  deterministic analyzer ships complete after the readiness rubric's
+  retirement: bin entry, runtime dependencies, analyzer assets, and a real
+  audit of a fixture workspace through the packed CLI.
 
 ## Pre-flight (do once per machine)
 
@@ -94,9 +99,13 @@ bun run lint
 bun run typecheck
 bun test
 bun run check:all
+bun run smoke:package
 ```
 
-All must exit 0. If any fails, **stop** — fix locally and re-run.
+All must exit 0. If any fails, **stop** — fix locally and re-run. The smoke
+test is the last line of defense against shipping a tarball that omits an
+analyzer asset or dependency (it packs, unpacks, and audits a fixture
+through the packed CLI — offline, no registry involved).
 
 ### 1.5 Push to main
 
@@ -127,13 +136,20 @@ gh release view vX.Y.Z               # confirm release page renders
 npm view @os-eco/trellis-cli version # confirm the published version
 ```
 
-Smoke-install in a clean dir:
+Smoke-install in a clean dir and run a real audit — the published package
+must measure a workspace, not just boot:
 
 ```bash
 mkdir /tmp/trellis-smoke && cd /tmp/trellis-smoke
 bun install @os-eco/trellis-cli
 bunx @os-eco/trellis-cli --version
+mkdir fixture && printf 'export const x: number = 1;\n' > fixture/x.ts
+bunx @os-eco/trellis-cli audit fixture --json | head -20
 ```
+
+The audit must exit `0` and print a §6.4 report whose `analyzerVersion`
+matches the release. (The audit is offline and stateless — no Git, network,
+or database needed, so a clean-dir smoke is a faithful install check.)
 
 ## 2. Triage of a failed publish
 
@@ -247,6 +263,7 @@ gh run rerun <run-id> --failed
 - [ ] `package.json` + `src/index.ts` updated to X.Y.Z and in agreement.
 - [ ] `CHANGELOG.md` has a dated `[X.Y.Z]` section.
 - [ ] `bun run check:all` exits 0 locally.
+- [ ] `bun run smoke:package` exits 0 (packed tarball ships the analyzer).
 - [ ] `gh run watch` confirmed the release workflow succeeded.
 - [ ] `npm view @os-eco/trellis-cli version` reports X.Y.Z.
 - [ ] Smoke install in a clean dir succeeds.

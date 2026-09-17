@@ -295,8 +295,8 @@ readiness rubric" gate went with the rubric.)
 - [`CLAUDE.md`](CLAUDE.md) — tool-specific conventions for agents
 - [`CHANGELOG.md`](CHANGELOG.md) — release history
 - [`RUNBOOK.md`](RUNBOOK.md) — release / triage / rollback procedure
-- [`docs/architecture.mmd`](docs/architecture.mmd) — module graph (pre-pivot;
-  refreshed with the release docs stage, SPEC §14)
+- [`docs/architecture.mmd`](docs/architecture.mmd) — module graph of the
+  deterministic core (SPEC §4)
 - [`docs/corpus-validation.md`](docs/corpus-validation.md) — the fixed-corpus
   validation record (trellis-e924): score-behavior evidence, runtime/memory
   budgets, and the duplication-minimum calibration; corpus lives in

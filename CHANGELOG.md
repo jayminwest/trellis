@@ -11,6 +11,44 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Release documentation and portable usage examples reflect the pivot**
+  (trellis-7203, SPEC §14 stage 11, stage 21 of the deterministic-pivot plan
+  `pl-b2ea`): `README.md` is rewritten for the deterministic sloppiness
+  audit — the three invariants, the implemented CLI surface (`audit` /
+  `compare` / `fleet` / `report` / `standards` with their real flags), the
+  0/1/2 exit-code contract, and portable examples that run with no hosted
+  service: local refactor review over saved report artifacts, opt-in
+  fleet/history, and a GitHub Actions gate that pins the analyzer version,
+  retains the report artifact, and branches exit `2` (policy) from exit `1`
+  (operational). The metric catalog and provisional formula weights are
+  documented, alongside known limitations (TS/TSX only, no type-3 clones,
+  configuration inspection never execution), unsupported-language coverage,
+  and migration guidance from readiness reports and configuration.
+- **Install/package smoke test** (`bun run smoke:package`,
+  `scripts/smoke-package.ts`): packs the tarball with `bun pm pack`, unpacks
+  it, and confirms the rubric's retirement did not omit required analyzer
+  assets or dependencies — the `trellis` bin entry, the five runtime
+  dependencies, the audit core/metrics/syntax/scoring/compare/config/
+  contract/safeguards modules plus the bundled standards canonical set —
+  then audits a fixture workspace through the packed CLI and validates the
+  §6.4 report (schema and analyzer versions, in-range index). Runs offline
+  against the repo's own `node_modules`.
+
+### Changed
+
+- **Package metadata and architecture documentation pivoted** (trellis-7203):
+  `package.json` description and keywords now describe the deterministic
+  TypeScript sloppiness audit (no readiness/rubric wording);
+  `docs/architecture.mmd` renders the deterministic module graph
+  (discover → parse → measure → score → assemble, with policy/persistence
+  outside the measurement pass); `CLAUDE.md`'s module tree reflects the
+  current `src/` layout with `rubric/` and `detectors/` marked transitional;
+  `RUNBOOK.md` wires `smoke:package` into the release gate, the
+  post-publish smoke install (which now audits a fixture, not just boots),
+  and the pre-publish checklist.
+
+### Added
+
 - **A fixed TypeScript corpus validates score behavior and performance**
   (trellis-e924, SPEC §14 stage 10, stage 20 of the deterministic-pivot
   plan `pl-b2ea`): `corpus/` holds the committed validation corpus —

@@ -42,24 +42,32 @@ os-eco session bootstrap.
 
 All behavior lives in one surface-agnostic **domain core**; every other surface
 is a thin pass-through, so the surfaces cannot drift out of sync. The tree
-below is the **transitional** layout (what exists today); the target layout is
-SPEC §4 and lands stage by stage per SPEC §14.
+below is the current layout; `rubric/` and `detectors/` are the remaining
+**transitional** legacy modules and leave per the SPEC §14 release stages.
 
 ```
 src/
   cli/            # THIN commander entrypoints; parse args, call core, shape output
   client/         # typed SDK; request/response types MIRROR the core (// Mirrors src/<x>)
-  rubric/         # LEGACY (leaves per SPEC §14): readiness rubric data + schema
-  discovery/      # app discovery today; becomes TS/TSX source-set inventory
-  detectors/      # LEGACY per-language adapters; safeguard inspection (§5.5)
-                  #   is the carried-forward subset
-  scoring/        # today: readiness pass-rate; target: pure sloppiness formula
-  standards/      # canonical/ (bundled files), manifest.yaml, drift.ts
-                  #   (separate capability; never feeds the sloppiness index)
-  fleet/          # targets.yaml loader + multi-repo orchestration (optional)
+  audit/          # deterministic core: auditWorkspace + runWorkspaceAudit service
+  config/         # declarative audit configuration (trellis.yaml, SPEC §6.5)
+  contract/       # versioned zod contracts: metrics, findings, report, config (§6)
+  discovery/      # TS/TSX source discovery → classified source-set inventory (§3.1)
+  syntax/         # shared parse layer (pinned TS compiler API) + function inventory
+  metrics/        # complexity, erosion, duplication, import graph/cycles (§5)
+  safeguards/     # hook/check configuration inspection (non-scoring, §5.5)
+  scoring/        # pure provisional sloppiness formula (§7)
+  report/         # terminal / JSON / markdown renderers
+  compare/        # artifact comparison + declarative failure policies (§9)
   store/          # schema.sql + migrations/ (opt-in history; legacy runs kept
                   #   separate, SPEC §10)
-  report/         # terminal / JSON / markdown renderers
+  history/        # sloppiness dashboard projection over the store
+  fleet/          # targets.yaml loader + multi-repo orchestration (optional, §11)
+  standards/      # canonical/ (bundled files), manifest.yaml, drift.ts
+                  #   (separate capability; never feeds the sloppiness index)
+  rubric/         # TRANSITIONAL legacy: readiness rubric data + schema (retires §14)
+  detectors/      # TRANSITIONAL legacy: per-language adapters (retire §14)
+  legacy.ts       # retired investigation-config rejection (actionable errors)
   index.ts        # public lib entry — VERSION constant only (lockstep w/ package.json)
 ```
 
