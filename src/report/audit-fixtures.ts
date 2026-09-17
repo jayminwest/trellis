@@ -63,13 +63,23 @@ function tangledFunction(name: string): string {
 	return `export function ${name}(n: number): number {\n\tlet out = 0;\n${branches}\n\treturn out;\n}\n`;
 }
 
-/** 63 normalized tokens over 7 lines — above the clone minimums (SPEC §5.3). */
+/**
+ * 105 normalized tokens over 13 lines — above the clone minimums (SPEC
+ * §5.3) — with cyclomatic complexity 10, below the erosion threshold, so
+ * clone fixtures never leak hotspot findings.
+ */
 const CLONE_FN =
 	"export function alpha(a: number, b: number) {\n" +
 	"\tconst s = a + b;\n" +
-	"\tif (a > 0 && b > 0) return 1;\n" +
-	"\tif (a > 1 && b > 1) return 2;\n" +
-	"\tif (a > 2 && b > 2) return 3;\n" +
+	"\tif (a > 0) return 1;\n" +
+	"\tif (a > 1) return 2;\n" +
+	"\tif (a > 2) return 3;\n" +
+	"\tif (a > 3) return 4;\n" +
+	"\tif (a > 4) return 5;\n" +
+	"\tif (a > 5) return 6;\n" +
+	"\tif (a > 6) return 7;\n" +
+	"\tif (a > 7) return 8;\n" +
+	"\tif (a > 8) return 9;\n" +
 	"\treturn s;\n" +
 	"}\n";
 

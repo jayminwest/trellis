@@ -317,8 +317,11 @@ Semantics fixed by this decision:
   maximal exact-normalized runs, each reported independently if above the
   minimum size. (jscpd 5’s `--similarity` AST mode is the noted direction if
   type-3 is ever revisited.)
-- **Minimum clone size** (provisional; the corpus stage, trellis-e924, owns
-  final calibration): **50 normalized tokens and 3 lines**, both required.
+- **Minimum clone size** (calibrated by the corpus stage, trellis-e924 —
+  see `docs/corpus-validation.md`: at 50 tokens the corpus and the trellis
+  self-audit were dominated by idiomatic-structure matches; at 100 the
+  surviving groups are true copy-paste): **100 normalized tokens and 3
+  lines**, both required.
 - **Grouping**: a clone group is the set of ranges sharing one identical
   normalized token sequence (content identity), with at least two members
   after dropping same-file token-contained members; there is no transitive
@@ -337,8 +340,9 @@ Semantics fixed by this decision:
 - **Bounded feasibility**: declared token-count and match-work budgets are
   checked as the analysis runs; on exhaustion the metric is `incomplete`
   with the reason — never a silent clean result. Landed with the
-  implementation (trellis-6e4c; the corpus stage tunes them): a **token
-  budget** of 2,000,000 normalized tokens per source set and a
+  implementation (trellis-6e4c; confirmed by the trellis-e924 corpus run —
+  the largest observed source set keeps an order-of-magnitude headroom):
+  a **token budget** of 2,000,000 normalized tokens per source set and a
   **match-work budget** of 100,000,000 token comparisons per source set
   (`DEFAULT_DUPLICATION_BUDGET` in `src/metrics/duplication.ts`).
 
