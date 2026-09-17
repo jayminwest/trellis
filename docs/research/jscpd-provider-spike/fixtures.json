@@ -1,0 +1,42 @@
+[
+  {
+    "name": "exact",
+    "expectation": "Positive: byte-identical copied function, above threshold.",
+    "files": {
+      "a.ts": "export function total(items: number[], limit: number): number {\n let subtotal = 0;\n let accepted = 0;\n for (const item of items) {\n  if (item > limit) {\n   subtotal += item * 2;\n   accepted += 1;\n  } else {\n   subtotal += item;\n  }\n }\n const result = subtotal / Math.max(accepted, 1);\n return Math.round(result * 100) / 100;\n}\n",
+      "b.ts": "export function total(items: number[], limit: number): number {\n let subtotal = 0;\n let accepted = 0;\n for (const item of items) {\n  if (item > limit) {\n   subtotal += item * 2;\n   accepted += 1;\n  } else {\n   subtotal += item;\n  }\n }\n const result = subtotal / Math.max(accepted, 1);\n return Math.round(result * 100) / 100;\n}\n"
+    }
+  },
+  {
+    "name": "renamed",
+    "expectation": "Positive type-2: renamed identifiers and numeric literal.",
+    "files": {
+      "a.ts": "export function total(items: number[], limit: number): number {\n let subtotal = 0;\n let accepted = 0;\n for (const item of items) {\n  if (item > limit) {\n   subtotal += item * 2;\n   accepted += 1;\n  } else {\n   subtotal += item;\n  }\n }\n const result = subtotal / Math.max(accepted, 1);\n return Math.round(result * 100) / 100;\n}\n",
+      "b.ts": "export function balance(entries: number[], maximum: number): number {\n let subbalance = 0;\n let counted = 0;\n for (const entry of entries) {\n  if (entry > maximum) {\n   subbalance += entry * 2;\n   counted += 1;\n  } else {\n   subbalance += entry;\n  }\n }\n const output = subbalance / Math.max(counted, 1);\n return Math.round(output * 1000) / 1000;\n}\n"
+    }
+  },
+  {
+    "name": "near",
+    "expectation": "Positive type-3: one inserted logging statement; any surviving exact fragments are partial recall.",
+    "files": {
+      "a.ts": "export function total(items: number[], limit: number): number {\n let subtotal = 0;\n let accepted = 0;\n for (const item of items) {\n  if (item > limit) {\n   subtotal += item * 2;\n   accepted += 1;\n  } else {\n   subtotal += item;\n  }\n }\n const result = subtotal / Math.max(accepted, 1);\n return Math.round(result * 100) / 100;\n}\n",
+      "b.ts": "export function total(items: number[], limit: number): number {\n let subtotal = 0;\n let accepted = 0;\n for (const item of items) {\n  if (item > limit) {\n   subtotal += item * 2;\n   console.log(item);\n   accepted += 1;\n  } else {\n   subtotal += item;\n  }\n }\n const result = subtotal / Math.max(accepted, 1);\n return Math.round(result * 100) / 100;\n}\n"
+    }
+  },
+  {
+    "name": "unrelated",
+    "expectation": "Negative: unrelated numeric accumulation vs sorted string normalization, both above 50 tokens.",
+    "files": {
+      "a.ts": "export function total(items: number[], limit: number): number {\n let subtotal = 0;\n let accepted = 0;\n for (const item of items) {\n  if (item > limit) {\n   subtotal += item * 2;\n   accepted += 1;\n  } else {\n   subtotal += item;\n  }\n }\n const result = subtotal / Math.max(accepted, 1);\n return Math.round(result * 100) / 100;\n}\n",
+      "b.ts": "export function joinWords(values: string[]): string {\n const sorted = values.map(value => value.trim().toLowerCase()).sort();\n const unique = new Set(sorted);\n const selected = Array.from(unique).filter(value => value.length > 2);\n const joined = selected.join(\",\");\n return joined.slice(0, 200).replaceAll(\" \", \"_\");\n}\n"
+    }
+  },
+  {
+    "name": "idiom",
+    "expectation": "Ambiguous structure, not a refactoring defect label: independent HTTP response vs UI notification data builders.",
+    "files": {
+      "a.ts": "export function httpResponse(status: number, message: string, requestId: string) {\n const response = {\n  status: status,\n  message: message,\n  requestId: requestId,\n  created: Date.now(),\n  version: 1,\n };\n const result = JSON.stringify(response);\n return { content: result, size: result.length, encoding: \"utf8\" };\n}\n",
+      "b.ts": "export function notification(priority: number, title: string, recipient: string) {\n const notice = {\n  priority: priority,\n  title: title,\n  recipient: recipient,\n  created: Date.now(),\n  version: 2,\n };\n const display = JSON.stringify(notice);\n return { text: display, length: display.length, charset: \"utf8\" };\n}\n"
+    }
+  }
+]

@@ -1,0 +1,241 @@
+{
+	"$comment": "The fixed TypeScript corpus (SPEC \u00a714 stage 10, trellis-e924). Fixtures are committed mini-workspaces; trellis-self is the enclosing repo at the recorded revision. Budgets are the explicit runtime/peak-memory targets chosen from the measured corpus (docs/corpus-validation.md); scripts/validate-corpus.ts enforces them. Paths are relative to this file.",
+	"version": 1,
+	"runs": 3,
+	"entries": [
+		{
+			"id": "clean-small",
+			"path": "fixtures/clean-small",
+			"role": "single",
+			"review": "small-repo behavior",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			},
+			"checks": {
+				"index": {
+					"eq": 0
+				},
+				"partial": {
+					"eq": false
+				},
+				"completeness": {
+					"eq": "complete"
+				}
+			}
+		},
+		{
+			"id": "clone-base",
+			"path": "fixtures/clone-base",
+			"role": "pair-before",
+			"pair": "clone-removal",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "clone-removed",
+			"path": "fixtures/clone-removed",
+			"role": "pair-after",
+			"pair": "clone-removal",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "branch-base",
+			"path": "fixtures/branch-base",
+			"role": "pair-before",
+			"pair": "branch-growth",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "branch-grown",
+			"path": "fixtures/branch-grown",
+			"role": "pair-after",
+			"pair": "branch-growth",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "acyclic",
+			"path": "fixtures/acyclic",
+			"role": "pair-before",
+			"pair": "cycle-introduction",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "cyclic",
+			"path": "fixtures/cyclic",
+			"role": "pair-after",
+			"pair": "cycle-introduction",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "dilution-base",
+			"path": "fixtures/dilution-base",
+			"role": "pair-before",
+			"pair": "dilution",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "dilution-grown",
+			"path": "fixtures/dilution-grown",
+			"role": "pair-after",
+			"pair": "dilution",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			}
+		},
+		{
+			"id": "test-separation",
+			"path": "fixtures/test-separation",
+			"role": "single",
+			"review": "test separation",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			},
+			"checks": {
+				"index": {
+					"eq": 0
+				},
+				"duplication.density.test": {
+					"gt": 0.4
+				},
+				"erosion.eroded-count.test": {
+					"eq": 1
+				},
+				"duplication.groups.production": {
+					"eq": 0
+				}
+			}
+		},
+		{
+			"id": "incomplete-parse",
+			"path": "fixtures/incomplete-parse",
+			"role": "single",
+			"review": "incomplete-analysis handling",
+			"budget": {
+				"maxMedianMs": 2000,
+				"maxPeakRssMb": 512
+			},
+			"checks": {
+				"completeness": {
+					"eq": "incomplete"
+				},
+				"partial": {
+					"eq": true
+				},
+				"complexity.functions.production": {
+					"state": "incomplete"
+				},
+				"index": {
+					"eq": 100
+				}
+			}
+		},
+		{
+			"id": "trellis-self",
+			"path": "..",
+			"role": "single",
+			"review": "real checkout (dogfood)",
+			"budget": {
+				"maxMedianMs": 10000,
+				"maxPeakRssMb": 1024
+			}
+		}
+	],
+	"pairs": [
+		{
+			"id": "clone-removal",
+			"before": "clone-base",
+			"after": "clone-removed",
+			"expectDecrease": [
+				"duplication.density.production",
+				"duplication.groups.production",
+				"duplication.duplicated-lines.production"
+			],
+			"expectUnchanged": [
+				"complexity.cc.max.production",
+				"erosion.eroded-count.production",
+				"import-cycle.groups"
+			],
+			"indexDelta": {
+				"max": 0
+			}
+		},
+		{
+			"id": "branch-growth",
+			"before": "branch-base",
+			"after": "branch-grown",
+			"expectIncrease": [
+				"complexity.cc.max.production",
+				"erosion.eroded-count.production",
+				"erosion.eroded-share.production"
+			],
+			"expectUnchanged": [
+				"duplication.groups.production",
+				"duplication.duplicated-lines.production",
+				"import-cycle.groups"
+			],
+			"indexDelta": {
+				"min": 1
+			}
+		},
+		{
+			"id": "cycle-introduction",
+			"before": "acyclic",
+			"after": "cyclic",
+			"expectIncrease": [
+				"import-cycle.density",
+				"import-cycle.groups",
+				"import-cycle.modules"
+			],
+			"expectUnchanged": [
+				"complexity.cc.max.production",
+				"erosion.eroded-count.production",
+				"duplication.groups.production"
+			],
+			"indexDelta": {
+				"min": 1
+			}
+		},
+		{
+			"id": "dilution",
+			"before": "dilution-base",
+			"after": "dilution-grown",
+			"expectDecrease": [
+				"duplication.density.production",
+				"erosion.eroded-share.production"
+			],
+			"expectUnchanged": [
+				"complexity.cc.max.production",
+				"erosion.eroded-count.production",
+				"duplication.groups.production",
+				"duplication.duplicated-lines.production"
+			],
+			"indexDelta": {
+				"min": -2,
+				"max": 2
+			}
+		}
+	]
+}

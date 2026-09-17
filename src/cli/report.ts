@@ -1,11 +1,12 @@
 /**
  * `trellis report` — render the run-history dashboard from the central SQLite
- * store (SPEC §11, §12). Thin per SPEC §13.1: open the store, call the core
- * {@link buildReport} (fleet snapshot + per-repo series, the latest §11 delta,
- * and per-criterion trends), then shape the three output variants. `--repo`
- * narrows to one target; `--since` floors the run window; `--db` overrides the
- * central DB location. Exit is always `0` here (read-only history has no
- * `--fail-on` gate) — only a usage error exits non-zero.
+ * store (SPEC §10, §11, §12). Thin per SPEC §13.1: open the store, call the
+ * core {@link buildReport} (the sloppiness snapshot + per-repo compatible
+ * index series, with legacy readiness runs in a visibly distinct section that
+ * is never trended against the sloppiness index), then shape the three output
+ * variants. `--repo` narrows to one repo identity; `--since` floors the run
+ * window; `--db` overrides the central DB location. Exit is always `0` here
+ * (read-only history has no policy gate) — only a usage error exits non-zero.
  */
 import type { Command } from "commander";
 import { Option } from "commander";

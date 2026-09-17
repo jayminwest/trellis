@@ -1,0 +1,618 @@
+{
+  "modules": [
+    {
+      "source": "src/cycle-a.ts",
+      "dependencies": [
+        {
+          "dynamic": false,
+          "module": "./cycle-b.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/cycle-b.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": true,
+          "cycle": [
+            {
+              "name": "src/cycle-b.ts",
+              "dependencyTypes": [
+                "local",
+                "import"
+              ]
+            },
+            {
+              "name": "src/cycle-a.ts",
+              "dependencyTypes": [
+                "local",
+                "import"
+              ]
+            }
+          ],
+          "valid": false,
+          "rules": [
+            {
+              "severity": "error",
+              "name": "no-cycles"
+            }
+          ]
+        }
+      ],
+      "dependents": [
+        "src/cycle-b.ts",
+        "src/main.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/cycle-b.ts",
+      "dependencies": [
+        {
+          "dynamic": false,
+          "module": "./cycle-a.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/cycle-a.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": true,
+          "cycle": [
+            {
+              "name": "src/cycle-a.ts",
+              "dependencyTypes": [
+                "local",
+                "import"
+              ]
+            },
+            {
+              "name": "src/cycle-b.ts",
+              "dependencyTypes": [
+                "local",
+                "import"
+              ]
+            }
+          ],
+          "valid": false,
+          "rules": [
+            {
+              "severity": "error",
+              "name": "no-cycles"
+            }
+          ]
+        }
+      ],
+      "dependents": [
+        "src/cycle-a.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/dead.ts",
+      "dependencies": [],
+      "dependents": [],
+      "orphan": true,
+      "valid": true
+    },
+    {
+      "source": "src/domain/bad.ts",
+      "dependencies": [
+        {
+          "dynamic": false,
+          "module": "../ui/view.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/ui/view.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": false,
+          "rules": [
+            {
+              "severity": "error",
+              "name": "domain-must-not-import-ui"
+            }
+          ]
+        }
+      ],
+      "dependents": [
+        "src/main.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/ui/view.ts",
+      "dependencies": [],
+      "dependents": [
+        "src/domain/bad.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/domain/good.ts",
+      "dependencies": [
+        {
+          "dynamic": false,
+          "module": "../shared/util.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/shared/util.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [
+        "src/main.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/shared/util.ts",
+      "dependencies": [],
+      "dependents": [
+        "src/domain/good.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/lazy.ts",
+      "dependencies": [],
+      "dependents": [
+        "src/main.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/live.ts",
+      "dependencies": [],
+      "dependents": [
+        "src/main.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/main.ts",
+      "dependencies": [
+        {
+          "dynamic": false,
+          "module": "./cycle-a.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/cycle-a.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "dynamic": false,
+          "module": "./domain/bad.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/domain/bad.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "dynamic": false,
+          "module": "./domain/good.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/domain/good.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "dynamic": true,
+          "module": "./lazy.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "dynamic-import"
+          ],
+          "resolved": "src/lazy.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "dynamic": false,
+          "module": "./live.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "import"
+          ],
+          "resolved": "src/live.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "dynamic": false,
+          "module": "./missing.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "unknown"
+          ],
+          "resolved": "./missing.ts",
+          "coreModule": false,
+          "followable": false,
+          "couldNotResolve": true,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": false,
+          "rules": [
+            {
+              "severity": "error",
+              "name": "no-unresolved"
+            }
+          ]
+        },
+        {
+          "dynamic": false,
+          "module": "./type-a.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "type-only",
+            "import"
+          ],
+          "resolved": "src/type-a.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "./missing.ts",
+      "followable": false,
+      "coreModule": false,
+      "couldNotResolve": true,
+      "matchesDoNotFollow": false,
+      "dependencyTypes": [
+        "unknown"
+      ],
+      "dependencies": [],
+      "dependents": [
+        "src/main.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/type-a.ts",
+      "dependencies": [
+        {
+          "dynamic": false,
+          "module": "./type-b.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "type-only",
+            "import"
+          ],
+          "resolved": "src/type-b.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": true,
+          "cycle": [
+            {
+              "name": "src/type-b.ts",
+              "dependencyTypes": [
+                "local",
+                "type-only",
+                "import"
+              ]
+            },
+            {
+              "name": "src/type-a.ts",
+              "dependencyTypes": [
+                "local",
+                "type-only",
+                "import"
+              ]
+            }
+          ],
+          "valid": false,
+          "rules": [
+            {
+              "severity": "error",
+              "name": "no-cycles"
+            }
+          ]
+        }
+      ],
+      "dependents": [
+        "src/main.ts",
+        "src/type-b.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/type-b.ts",
+      "dependencies": [
+        {
+          "dynamic": false,
+          "module": "./type-a.ts",
+          "moduleSystem": "es6",
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "type-only",
+            "import"
+          ],
+          "resolved": "src/type-a.ts",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": true,
+          "cycle": [
+            {
+              "name": "src/type-a.ts",
+              "dependencyTypes": [
+                "local",
+                "type-only",
+                "import"
+              ]
+            },
+            {
+              "name": "src/type-b.ts",
+              "dependencyTypes": [
+                "local",
+                "type-only",
+                "import"
+              ]
+            }
+          ],
+          "valid": false,
+          "rules": [
+            {
+              "severity": "error",
+              "name": "no-cycles"
+            }
+          ]
+        }
+      ],
+      "dependents": [
+        "src/type-a.ts"
+      ],
+      "orphan": false,
+      "valid": true
+    }
+  ],
+  "summary": {
+    "violations": [
+      {
+        "type": "dependency",
+        "from": "src/domain/bad.ts",
+        "to": "src/ui/view.ts",
+        "rule": {
+          "severity": "error",
+          "name": "domain-must-not-import-ui"
+        }
+      },
+      {
+        "type": "cycle",
+        "from": "src/cycle-a.ts",
+        "to": "src/cycle-b.ts",
+        "rule": {
+          "severity": "error",
+          "name": "no-cycles"
+        },
+        "cycle": [
+          {
+            "name": "src/cycle-b.ts",
+            "dependencyTypes": [
+              "local",
+              "import"
+            ]
+          },
+          {
+            "name": "src/cycle-a.ts",
+            "dependencyTypes": [
+              "local",
+              "import"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "cycle",
+        "from": "src/type-a.ts",
+        "to": "src/type-b.ts",
+        "rule": {
+          "severity": "error",
+          "name": "no-cycles"
+        },
+        "cycle": [
+          {
+            "name": "src/type-b.ts",
+            "dependencyTypes": [
+              "local",
+              "type-only",
+              "import"
+            ]
+          },
+          {
+            "name": "src/type-a.ts",
+            "dependencyTypes": [
+              "local",
+              "type-only",
+              "import"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "dependency",
+        "from": "src/main.ts",
+        "to": "./missing.ts",
+        "rule": {
+          "severity": "error",
+          "name": "no-unresolved"
+        }
+      }
+    ],
+    "error": 4,
+    "warn": 0,
+    "info": 0,
+    "ignore": 0,
+    "totalCruised": 13,
+    "totalDependenciesCruised": 13,
+    "optionsUsed": {
+      "baseDir": "<temp>/fixture",
+      "combinedDependencies": false,
+      "detectJSDocImports": false,
+      "detectProcessBuiltinModuleCalls": false,
+      "doNotFollow": {
+        "path": "node_modules"
+      },
+      "enhancedResolveOptions": {
+        "extensions": [
+          ".ts",
+          ".tsx",
+          ".js",
+          ".json"
+        ],
+        "conditionNames": [
+          "import",
+          "require",
+          "node",
+          "default"
+        ]
+      },
+      "exclude": {
+        "path": "\\.test\\.ts$"
+      },
+      "exoticRequireStrings": [],
+      "externalModuleResolutionStrategy": "node_modules",
+      "metrics": false,
+      "moduleSystems": [
+        "es6",
+        "cjs",
+        "tsd",
+        "amd"
+      ],
+      "outputTo": "-",
+      "outputType": "json",
+      "preserveSymlinks": false,
+      "rulesFile": "<temp>/fixture-cruise.json",
+      "skipAnalysisNotInRules": false,
+      "tsConfig": {
+        "fileName": "<temp>/fixture/tsconfig.json"
+      },
+      "tsPreCompilationDeps": true,
+      "args": "src"
+    },
+    "ruleSetUsed": {
+      "forbidden": [
+        {
+          "name": "no-cycles",
+          "severity": "error",
+          "from": {},
+          "to": {
+            "circular": true
+          },
+          "scope": "module"
+        },
+        {
+          "name": "no-unresolved",
+          "severity": "error",
+          "from": {},
+          "to": {
+            "couldNotResolve": true
+          },
+          "scope": "module"
+        },
+        {
+          "name": "domain-must-not-import-ui",
+          "severity": "error",
+          "from": {
+            "path": "^src/domain/"
+          },
+          "to": {
+            "path": "^src/ui/"
+          },
+          "scope": "module"
+        }
+      ]
+    }
+  }
+}

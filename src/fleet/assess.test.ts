@@ -1,81 +1,78 @@
 import { describe, expect, test } from "bun:test";
-import type { DriftState } from "../standards/index.ts";
+import type { PolicyAssessment } from "../compare/index.ts";
+import type { AuditReport } from "../contract/index.ts";
 import { assessFleet } from "./assess.ts";
 import type { FleetEntry, FleetReport } from "./orchestrate.ts";
-
-/** Zeroed per-state drift counts, optionally overridden. */
-function drift(over: Partial<Record<DriftState, number>> = {}): Record<DriftState, number> {
-	return { match: 0, "allowed-delta": 0, drift: 0, missing: 0, extra: 0, ...over };
-}
 
 /** Build a fleet report from raw entries. */
 function fleet(entries: FleetEntry[]): FleetReport {
 	return {
-		scoredAt: "2026-06-06T00:00:00.000Z",
-		rubricVersion: "0.1.0",
-		canonicalVersion: "1.0.0",
+		auditedAt: "2026-06-06T00:00:00.000Z",
 		entries,
-		summary: { ok: entries.filter((e) => e.ok).length, error: entries.filter((e) => !e.ok).length },
+		summary: {
+			ok: entries.filter((e) => e.ok).length,
+			error: entries.filter((e) => !e.ok).length,
+			policyFailed: entries.filter((e) => e.ok && e.policy.failed).length,
+		},
 	};
 }
 
-/** A scored target entry with sensible defaults. */
-function ok(id: string, over: Partial<Extract<FleetEntry, { ok: true }>> = {}): FleetEntry {
+/** A minimal scored entry; only the fields the assessment reads are real. */
+function ok(id: string, policy: PolicyAssessment = { failed: false, results: [] }): FleetEntry {
 	return {
 		id,
 		path: `/abs/${id}`,
 		ok: true,
-		level: 4,
-		passRate: 0.8,
-		coverage: 1,
-		drift: drift(),
-		gateFailures: 0,
-		previousLevel: null,
-		levelDelta: null,
-		...over,
+		report: { score: { index: 12 } } as unknown as AuditReport,
+		policy,
+		drift: { match: 0, "allowed-delta": 0, drift: 3, missing: 1, extra: 0 },
+		driftError: null,
+		previousIndex: null,
+		indexDelta: null,
 	};
 }
+
+/** A tripped max-index policy assessment. */
+const TRIPPED: PolicyAssessment = {
+	failed: true,
+	results: [
+		{
+			policy: "max-index",
+			status: "fail",
+			reasons: [
+				{
+					code: "index-exceeds-max",
+					message: "sloppiness index 12 exceeds the configured maximum 0",
+				},
+			],
+		},
+	],
+};
 
 const ERR: FleetEntry = { id: "gone", path: "/abs/gone", ok: false, error: "path not found" };
 
 describe("assessFleet", () => {
-	test("a clean fleet does not fail under the default policy", () => {
-		expect(assessFleet(fleet([ok("a"), ok("b")])).failed).toBe(false);
+	test("a clean fleet does not fail", () => {
+		expect(assessFleet(fleet([ok("a"), ok("b")]))).toEqual({ failed: false, reasons: [] });
 	});
 
-	test("an errored target fails under any active policy", () => {
+	test("an errored target fails with its error as the reason", () => {
 		const a = assessFleet(fleet([ok("a"), ERR]));
 		expect(a.failed).toBe(true);
 		expect(a.reasons.join(" ")).toContain("gone: path not found");
 	});
 
-	test("none is always clean, even with errors and gate failures", () => {
-		const report = fleet([ok("a", { gateFailures: 3 }), ERR]);
-		expect(assessFleet(report, { mode: "none" })).toEqual({ failed: false, reasons: [] });
-	});
-
-	test("default trips on a target's gate failures", () => {
-		const a = assessFleet(fleet([ok("a", { gateFailures: 2 })]));
+	test("a target's tripped declarative policy fails with the policy reasons", () => {
+		const a = assessFleet(fleet([ok("a", TRIPPED), ok("b")]));
 		expect(a.failed).toBe(true);
-		expect(a.reasons[0]).toContain("a: 2 gate criterion failure(s)");
-	});
-
-	test("default trips on a target's canonical drift", () => {
-		const a = assessFleet(fleet([ok("a", { drift: drift({ missing: 1 }) })]));
-		expect(a.failed).toBe(true);
-		expect(a.reasons[0]).toContain("a: canonical drift detected");
-	});
-
-	test("level mode compares each target against the threshold", () => {
-		const report = fleet([ok("a", { level: 2 }), ok("b", { level: 5 })]);
-		const a = assessFleet(report, { mode: "level", minLevel: 3 });
-		expect(a.failed).toBe(true);
-		expect(a.reasons.join(" ")).toContain("a: level L2 below minimum L3");
+		expect(a.reasons).toHaveLength(1);
+		expect(a.reasons[0]).toContain("a: policy failed");
+		expect(a.reasons[0]).toContain("sloppiness index 12 exceeds the configured maximum 0");
 		expect(a.reasons.join(" ")).not.toContain("b:");
 	});
 
-	test("gate mode ignores drift", () => {
-		const report = fleet([ok("a", { drift: drift({ drift: 1 }), gateFailures: 0 })]);
-		expect(assessFleet(report, { mode: "gate" }).failed).toBe(false);
+	test("canonical drift never gates the fleet (a separate, non-scoring capability)", () => {
+		// The ok() entries above carry failing drift states; the fleet stays clean.
+		expect(assessFleet(fleet([ok("a")])).failed).toBe(false);
 	});
 });

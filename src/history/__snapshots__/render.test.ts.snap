@@ -1,81 +1,54 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`renderHistoryTerminal renders the full dashboard 1`] = `
-"trellis report · rubric 0.2.0
+exports[`renderHistoryTerminal renders the dashboard 1`] = `
+"trellis report · sloppiness history
 scope: all repos · all time
 
-fleet snapshot (2)
-  repo    level   pass    cov  Δ     runs  scored
-  burrow  L3       60%    80%  new      1  2026-06-02T00:00:00.000Z
-  warren  L4       75%    90%  +2       2  2026-06-02T00:00:00.000Z
+sloppiness snapshot (2) · index 0–100, lower is better
+  repo                   index  state     Δ     runs  scoring           audited
+  fixture#abc123def456  14/100  complete  +4       2  0.1.0-provisional  2026-06-06T00:00:00.000Z
+  partial#999888777666  41/100  partial   new      1  0.1.0-provisional  2026-06-05T00:00:00.000Z
 
-warren · 2 runs
-  scored                    level   pass    cov  rubric
-  2026-06-01T00:00:00.000Z  L2       50%    85%  0.2.0
-  2026-06-02T00:00:00.000Z  L4       75%    90%  0.2.0
+fixture#abc123def456 · 2 runs
+  audited                    index  state     scoring
+  2026-06-01T00:00:00.000Z  10/100  complete  0.1.0-provisional
+  2026-06-06T00:00:00.000Z  14/100  complete  0.1.0-provisional
+  trend: 10 → 14
 
-  changes since 2026-06-01T00:00:00.000Z (code change)
-    net level +2
-    [fail-to-pass] ci_present: 0/1 → 1/1
-    [pass-to-fail] tests_pass: 2/2 → 1/2
-    [na-kind] lint_clean: no-detector → 1/1
-    [added] fresh: — → 1/1
-
-  trends (1 moved)
-    tests_pass: 2/2 → 1/2"
+legacy readiness history (a different product — never compared with the sloppiness index)
+  repo    level   pass    cov  runs  rubric    scored
+  warren  L4       80%    90%     3  1.0.0     2026-05-01T00:00:00.000Z"
 `;
 
-exports[`renderHistoryTerminal renders an empty store 1`] = `
-"trellis report · rubric 0.2.0
-scope: warren · since 2026-01-01T00:00:00.000Z
-
-fleet snapshot (0)
-  (no runs recorded)"
-`;
-
-exports[`renderHistoryMarkdown renders the full dashboard 1`] = `
+exports[`renderHistoryMarkdown renders the dashboard 1`] = `
 "# Trellis history
 
-rubric 0.2.0 · scope: all repos · all time
+scope: all repos · all time
 
-## Fleet snapshot (2)
+## Sloppiness snapshot (2)
 
-| Repo | Level | Pass | Coverage | Δ | Runs | Scored |
+Index 0–100, **lower is better**; Δ is the index move vs the previous compatible run (positive = worse).
+
+| Repo | Index | State | Δ | Runs | Scoring | Audited |
 | --- | --- | --- | --- | --- | --- | --- |
-| \`burrow\` | L3 | 60% | 80% | new | 1 | 2026-06-02T00:00:00.000Z |
-| \`warren\` | L4 | 75% | 90% | +2 | 2 | 2026-06-02T00:00:00.000Z |
+| \`fixture#abc123def456\` | 14/100 | complete | +4 | 2 | 0.1.0-provisional | 2026-06-06T00:00:00.000Z |
+| \`partial#999888777666\` | 41/100 | partial | new | 1 | 0.1.0-provisional | 2026-06-05T00:00:00.000Z |
 
-## \`warren\` · 2 runs
+## \`fixture#abc123def456\` · 2 runs
 
-| Scored | Level | Pass | Coverage | Rubric |
-| --- | --- | --- | --- | --- |
-| 2026-06-01T00:00:00.000Z | L2 | 50% | 85% | 0.2.0 |
-| 2026-06-02T00:00:00.000Z | L4 | 75% | 90% | 0.2.0 |
-
-### Changes since 2026-06-01T00:00:00.000Z
-
-Net level **+2** · code change
-
-| Criterion | Kind | Before | After |
+| Audited | Index | State | Scoring |
 | --- | --- | --- | --- |
-| \`ci_present\` | fail-to-pass | 0/1 | 1/1 |
-| \`tests_pass\` | pass-to-fail | 2/2 | 1/2 |
-| \`lint_clean\` | na-kind | no-detector | 1/1 |
-| \`fresh\` | added | — | 1/1 |
+| 2026-06-01T00:00:00.000Z | 10/100 | complete | 0.1.0-provisional |
+| 2026-06-06T00:00:00.000Z | 14/100 | complete | 0.1.0-provisional |
 
-### Trends (1 moved)
+Trend: 10 → 14
 
-- \`tests_pass\`: 2/2 → 1/2
-"
-`;
+## Legacy readiness history
 
-exports[`renderHistoryMarkdown renders an empty store 1`] = `
-"# Trellis history
+_A different product: readiness percentages and levels are never compared with, averaged into, or trended against the sloppiness index._
 
-rubric 0.2.0 · scope: all repos · all time
-
-## Fleet snapshot (0)
-
-_no runs recorded_
+| Repo | Level | Pass | Coverage | Runs | Rubric | Scored |
+| --- | --- | --- | --- | --- | --- | --- |
+| \`warren\` | L4 | 80% | 90% | 3 | 1.0.0 | 2026-05-01T00:00:00.000Z |
 "
 `;

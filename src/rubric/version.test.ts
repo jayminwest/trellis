@@ -3,7 +3,7 @@ import { comparable, RUBRIC_VERSION } from "./version.ts";
 
 describe("RUBRIC_VERSION", () => {
 	test("is the SPEC §6.1 pinned version", () => {
-		expect(RUBRIC_VERSION).toBe("0.2.0");
+		expect(RUBRIC_VERSION).toBe("0.3.0");
 	});
 
 	test("is a valid X.Y.Z string", () => {

@@ -1,0 +1,44 @@
+{
+  "sourceSet": "production",
+  "files": 2,
+  "tokenCount": 176,
+  "codeLines": 28,
+  "duplicatedLines": 28,
+  "density": 1,
+  "groups": [
+    {
+      "id": "clone-group-1",
+      "tokenCount": 88,
+      "members": [
+        {
+          "path": "a.ts",
+          "range": {
+            "start": {
+              "line": 1
+            },
+            "end": {
+              "line": 14
+            }
+          },
+          "tokenCount": 88,
+          "lineCount": 14
+        },
+        {
+          "path": "b.ts",
+          "range": {
+            "start": {
+              "line": 1
+            },
+            "end": {
+              "line": 14
+            }
+          },
+          "tokenCount": 88,
+          "lineCount": 14
+        }
+      ]
+    }
+  ],
+  "diagnosticFiles": [],
+  "exhaustion": null
+}

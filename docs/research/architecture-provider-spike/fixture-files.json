@@ -1,0 +1,16 @@
+{
+  "package.json": "{\"name\":\"architecture-controls\",\"type\":\"module\",\"exports\":\"./src/main.ts\"}",
+  "tsconfig.json": "{\"compilerOptions\":{\"module\":\"ESNext\",\"moduleResolution\":\"Bundler\",\"allowImportingTsExtensions\":true},\"include\":[\"src/**/*.ts\"]}",
+  "src/main.ts": "import { used } from \"./live.ts\";\nimport { first } from \"./cycle-a.ts\";\nimport \"./domain/bad.ts\";\nimport \"./domain/good.ts\";\nimport \"./missing.ts\";\nimport type { A } from \"./type-a.ts\";\nexport const publicApi = (x: A) => [used, first, x];\nexport const lazy = () => import(\"./lazy.ts\");\n",
+  "src/live.ts": "export const used = 1;\nexport const unused = 2;\n",
+  "src/dead.ts": "export const orphan = 0;\n",
+  "src/lazy.ts": "export const lazyValue = 3;\n",
+  "src/cycle-a.ts": "import { second } from \"./cycle-b.ts\";\nexport const first = () => second();\n",
+  "src/cycle-b.ts": "import { first } from \"./cycle-a.ts\";\nexport const second = () => first;\n",
+  "src/domain/bad.ts": "import { view } from \"../ui/view.ts\";\nexport const bad = view;\n",
+  "src/domain/good.ts": "import { util } from \"../shared/util.ts\";\nexport const good = util;\n",
+  "src/ui/view.ts": "export const view = 1;\n",
+  "src/shared/util.ts": "export const util = 2;\n",
+  "src/type-a.ts": "import type { B } from \"./type-b.ts\";\nexport interface A { b?: B }\n",
+  "src/type-b.ts": "import type { A } from \"./type-a.ts\";\nexport interface B { a?: A }\n"
+}

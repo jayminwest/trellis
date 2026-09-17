@@ -71,7 +71,7 @@ describe("migrate", () => {
 		db.close();
 	});
 
-	test("creates exactly the SPEC §6.4 tables", () => {
+	test("creates exactly the SPEC §6.4 tables, including the append-only history", () => {
 		const db = new Database(":memory:");
 		migrate(db);
 		const names = db
@@ -80,6 +80,8 @@ describe("migrate", () => {
 			.map((r) => r.name);
 		expect(names).toContain("runs");
 		expect(names).toContain("criterion_results");
+		// Historical migrations stay append-only (SPEC §14 stage 3): the retired
+		// cache table still lands on fresh DBs; the store simply has no API for it.
 		expect(names).toContain("investigation_cache");
 		db.close();
 	});
@@ -214,19 +216,6 @@ describe("openStore", () => {
 		const latest = store.latestRun("fixture");
 		expect(latest).not.toBeNull();
 		if (latest) expect(storedReport(latest)).toEqual(report);
-	});
-
-	test("getCache misses before a put, hits after, and upserts on conflict", () => {
-		expect(store.getCache("fixture", "abc123", "documentation")).toBeNull();
-
-		store.putCache("fixture", "abc123", "documentation", '{"v":1}', "2026-06-06T00:00:00.000Z");
-		const hit = store.getCache("fixture", "abc123", "documentation");
-		expect(hit?.findingsJson).toBe('{"v":1}');
-		expect(hit?.createdAt).toBe("2026-06-06T00:00:00.000Z");
-
-		// Same key → upsert, not a duplicate.
-		store.putCache("fixture", "abc123", "documentation", '{"v":2}', "2026-06-07T00:00:00.000Z");
-		expect(store.getCache("fixture", "abc123", "documentation")?.findingsJson).toBe('{"v":2}');
 	});
 
 	test("migrate-on-open survives reopening an existing DB", () => {
