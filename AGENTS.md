@@ -224,7 +224,14 @@ the digest for agents working in this repo:
   (`src/providers/process.ts`, trellis-eddc) is the only seam that may
   start a provider subprocess: fixed `argv`, supported executables only,
   explicit environment, wall-time/output limits, process-group
-  termination, scrubbed diagnostics — no shell, no success claims.
+  termination, scrubbed diagnostics — no shell, no success claims. The
+  staging layer (`src/providers/workspace.ts` with `src/providers/staging.ts`,
+  `src/providers/context.ts` and `src/providers/staged-run.ts`, trellis-2fe6)
+  builds the isolated view
+  that seam consumes: a content-fingerprinted, classified source snapshot
+  with opt-in declarative project context, realpath-validated containment
+  (no symlink/traversal escapes, canonical paths) and owned scratch cleanup
+  on every exit path — native audits never invoke it.
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as
