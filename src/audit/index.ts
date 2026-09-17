@@ -21,6 +21,7 @@ export {
 	type AuditMeasurements,
 	assembleReport,
 	collectMetrics,
+	type MeasuredAnalysis,
 	orderFindings,
 	reportCoverage,
 } from "./assemble.ts";

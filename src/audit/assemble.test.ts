@@ -7,12 +7,6 @@ import {
 	type SourceSet,
 } from "../contract/index.ts";
 import type { SourceInventory } from "../discovery/index.ts";
-import type {
-	ComplexityAnalysis,
-	CycleAnalysis,
-	DependencyGraphAnalysis,
-	DuplicationAnalysis,
-} from "../metrics/index.ts";
 import type { SafeguardInspection } from "../safeguards/index.ts";
 import { scoreSloppiness } from "../scoring/index.ts";
 import { countLines, type FileSyntax, parseSource, type SyntaxInventory } from "../syntax/index.ts";
@@ -95,14 +89,10 @@ function requiredMetrics(): MetricValue[] {
 
 /** Minimal analysis stubs carrying only what assembly consumes. */
 function fakeMeasurements(metrics: MetricValue[], findings: Finding[] = []): AuditMeasurements {
-	const empty = { metrics: [], findings: [] };
 	return {
 		source: fakeSource(),
 		syntax: fakeSyntax([]),
-		complexity: { metrics, findings } as unknown as ComplexityAnalysis,
-		duplication: empty as unknown as DuplicationAnalysis,
-		graph: empty as unknown as DependencyGraphAnalysis,
-		cycles: empty as unknown as CycleAnalysis,
+		analyses: [{ metrics, findings }],
 		safeguards: { results: [], findings: [] } satisfies SafeguardInspection,
 	};
 }
