@@ -1192,6 +1192,17 @@ ever reported as `complete`. A deferred outcome is a documented capability
 state (`trellis-7b99` owns the follow-through), not a claim of
 implementation.
 
+> **Decision recorded (`trellis-db3e`, plan `pl-43c5` step 25): DEFERRED.**
+> The bounded decision record is
+> [`docs/sonarjs-decision.md`](docs/sonarjs-decision.md): the pinned
+> `eslint-plugin-sonarjs` 3.0.5 distribution's `LGPL-3.0-only` package
+> metadata conflicts with its shipped SONAR Source-Available License v1.0
+> text, so no permitted distribution route is established and the research
+> diagnostic adapter is not adopted as a metric API. The typed capability
+> carrier is `src/providers/capabilities.ts` (a `sonarjs` request is known
+> configuration resolving to `unsupported` with the recorded reason); the
+> clearance prerequisite is tracked separately as `trellis-7f5d`.
+
 ---
 
 ## Appendix A — provenance
