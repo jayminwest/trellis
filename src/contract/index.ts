@@ -12,6 +12,32 @@
  */
 export * from "./analysis.ts";
 export * from "./analysis-result.ts";
+export {
+	ARCHITECTURE_ALLOWANCES,
+	ARCHITECTURE_POLICY_VERSION,
+	type ArchitectureAllowance,
+	type ArchitectureBoundaryRule,
+	type ArchitectureCycleRule,
+	type ArchitecturePathPattern,
+	type ArchitectureRule,
+	type ArchitectureScopeSelector,
+	type ArchitectureUnresolvedRule,
+	architectureAllowanceSchema,
+	architectureBoundaryRuleSchema,
+	architectureCycleRuleSchema,
+	architecturePathPatternSchema,
+	architectureRuleSchema,
+	architectureScopeSelectorSchema,
+	architectureUnresolvedRuleSchema,
+	DEPENDENCY_EDGE_KINDS,
+	type DependencyCruiserProviderRequest,
+	type DependencyEdgeKind,
+	dependencyCruiserProviderRequestSchema,
+	dependencyEdgeKindSchema,
+	MAX_ARCHITECTURE_PATTERN_LENGTH,
+	MAX_ARCHITECTURE_RULE_NAME_LENGTH,
+	MAX_ARCHITECTURE_RULES,
+} from "./architecture-policy.ts";
 export * from "./clone-evidence.ts";
 export {
 	type AuditConfig,
