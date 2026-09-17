@@ -108,6 +108,31 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Reachability configuration records entries, public API and test
+  participation** (trellis-5da5, step 23 of 30 of plan `pl-43c5`,
+  SPEC §16.1/§16.4): a `knip` request in the `providers` block now
+  carries a declarative reachability context — inline data only, never
+  an executable `knip` config and never an entry guess. Three keys:
+  `entries` (explicit application/script entry files — reachability
+  roots), `public` (exported public surfaces, optionally narrowed to one
+  named export) and `tests` (whether the measured test files participate
+  as reachability roots; default `excluded`). Plugin vocabulary is not
+  declarable at all — framework/tool plugin discovery is disabled
+  outright, and any future plugin support requires a separately declared
+  trust boundary. The pure compilation and context preparation
+  (`src/providers/knip/`) resolve the declaration against the audit's
+  measured production/test classification: test participation and
+  declared test entries supply reachability evidence while staying
+  classified test — never scored as production, never diluting a
+  production denominator — and a barrel re-export stays a distinct
+  surface from the implementation it exposes. Omitted entries,
+  unresolvable declarations and missing dependency context become
+  recorded contextual assumptions: undefined reachability, never
+  confirmed dead code. The normalized configuration digest rides the
+  §16.2 provider options through the existing step-6 compatibility seam,
+  so a changed declared context is a changed measurement — noncomparable
+  evidence, never candidate churn. No adapter yet: requests still
+  resolve to located `unsupported` evidence until trellis-8ebc delivers.
 - **dependency-cruiser supplies coverage-checked architecture evidence**
   (trellis-adbf, step 22 of 30 of plan `pl-43c5`, SPEC §16.2–§16.5): a
   `dependency-cruiser` request now runs the pinned tool over a staged source

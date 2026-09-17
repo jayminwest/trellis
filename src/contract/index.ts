@@ -108,6 +108,22 @@ export {
 	providerStateSchema,
 } from "./provider.ts";
 export {
+	type KnipProviderRequest,
+	knipProviderRequestSchema,
+	MAX_REACHABILITY_ENTRY_FILES,
+	MAX_REACHABILITY_EXPORT_NAME_LENGTH,
+	MAX_REACHABILITY_PATH_LENGTH,
+	MAX_REACHABILITY_PUBLIC_SURFACES,
+	REACHABILITY_POLICY_VERSION,
+	REACHABILITY_TEST_MODES,
+	type ReachabilityPublicSurface,
+	type ReachabilityTestMode,
+	reachabilityExportNameSchema,
+	reachabilityPathSchema,
+	reachabilityPublicSurfaceSchema,
+	reachabilityTestModeSchema,
+} from "./reachability-policy.ts";
+export {
 	type AuditReport,
 	auditReportSchema,
 	carriedAnalyses,
