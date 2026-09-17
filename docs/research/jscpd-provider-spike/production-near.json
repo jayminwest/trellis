@@ -1,0 +1,3693 @@
+{
+  "duplicates": [
+    {
+      "firstFile": {
+        "end": 44,
+        "endLoc": {
+          "column": 35,
+          "line": 44,
+          "position": 1859
+        },
+        "name": "scripts/check-all.ts",
+        "start": 38,
+        "startLoc": {
+          "column": 1,
+          "line": 38,
+          "position": 1560
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t{ name: \"lint\", conditional: false },\n\t{ name: \"typecheck\", conditional: false },\n\t{ name: \"check:agents\", conditional: false },\n\t{ name: \"check:dups\", conditional: false },\n\t{ name: \"check:deps\", conditional: false },\n\t{ name: \"check:size\", conditional: false },\n\t{ name: \"check:debt\", conditional: false },",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 7,
+      "secondFile": {
+        "end": 45,
+        "endLoc": {
+          "column": 42,
+          "line": 45,
+          "position": 1911
+        },
+        "name": "scripts/check-all.ts",
+        "start": 39,
+        "startLoc": {
+          "column": 1,
+          "line": 39,
+          "position": 1599
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 66,
+        "endLoc": {
+          "column": 60,
+          "line": 66,
+          "position": 2736
+        },
+        "name": "scripts/check-all.ts",
+        "start": 54,
+        "startLoc": {
+          "column": 0,
+          "line": 54,
+          "position": 2180
+        }
+      },
+      "format": "typescript",
+      "fragment": "export function loadScripts(packageJsonPath: string = PACKAGE_JSON): Record<string, string> {\n\tif (!existsSync(packageJsonPath)) return {};\n\tconst pkg = JSON.parse(readFileSync(packageJsonPath, \"utf8\")) as PackageJson;\n\treturn pkg.scripts ?? {};\n}\n\n/**\n * Resolve the host repo's gate manifest: every core gate (whether or\n * not the repo defines it — a missing core gate must fail loudly, not\n * silently narrow the manifest) plus each conditional gate the repo's\n * package.json defines.\n */\nexport function resolveGates(scripts: Record<string, string>): string[] {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 13,
+      "secondFile": {
+        "end": 84,
+        "endLoc": {
+          "column": 32,
+          "line": 84,
+          "position": 3460
+        },
+        "name": "scripts/check-ci-parity.ts",
+        "start": 72,
+        "startLoc": {
+          "column": 0,
+          "line": 72,
+          "position": 2952
+        }
+      },
+      "tokens": 68
+    },
+    {
+      "firstFile": {
+        "end": 272,
+        "endLoc": {
+          "column": 35,
+          "line": 272,
+          "position": 9089
+        },
+        "name": "scripts/check-coverage.ts",
+        "start": 267,
+        "startLoc": {
+          "column": 44,
+          "line": 267,
+          "position": 8931
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tconst out: ParsedArgs = { emitJUnit: false };\n\tfor (let i = 0; i < argv.length; i++) {\n\t\tconst a = argv[i];\n\t\tif (a === \"--budget\") {\n\t\t\tout.budgetsPath = argv[++i];\n\t\t} else if (a === \"--repo-root\") {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 6,
+      "secondFile": {
+        "end": 219,
+        "endLoc": {
+          "column": 30,
+          "line": 219,
+          "position": 6912
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 214,
+        "startLoc": {
+          "column": 41,
+          "line": 214,
+          "position": 6760
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 286,
+        "endLoc": {
+          "column": 76,
+          "line": 286,
+          "position": 9514
+        },
+        "name": "scripts/check-coverage.ts",
+        "start": 267,
+        "startLoc": {
+          "column": 44,
+          "line": 267,
+          "position": 8931
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tconst out: ParsedArgs = { emitJUnit: false };\n\tfor (let i = 0; i < argv.length; i++) {\n\t\tconst a = argv[i];\n\t\tif (a === \"--budget\") {\n\t\t\tout.budgetsPath = argv[++i];\n\t\t} else if (a === \"--repo-root\") {\n\t\t\tout.repoRoot = argv[++i];\n\t\t} else if (a === \"--parse\") {\n\t\t\tout.parseFile = argv[++i];\n\t\t} else if (a === \"--junit\") {\n\t\t\tout.emitJUnit = true;\n\t\t}\n\t}\n\treturn out;\n}\n\nasync function main(): Promise<void> {\n\tconst args = parseArgs(process.argv.slice(2));\n\tconst budgetsPath = args.budgetsPath ? resolve(args.budgetsPath) : DEFAULT_BUDGETS_PATH;\n\tconst repoRoot = args.repoRoot ? resolve(args.repoRoot) : DEFAULT_REPO_ROOT;",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 20,
+      "method": "gap",
+      "secondFile": {
+        "end": 255,
+        "endLoc": {
+          "column": 66,
+          "line": 255,
+          "position": 8099
+        },
+        "name": "scripts/report-quality-metrics.ts",
+        "start": 240,
+        "startLoc": {
+          "column": 26,
+          "line": 240,
+          "position": 7662
+        }
+      },
+      "similarity": 0.788,
+      "tokens": 126
+    },
+    {
+      "firstFile": {
+        "end": 36,
+        "endLoc": {
+          "column": 50,
+          "line": 36,
+          "position": 1751
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 27,
+        "startLoc": {
+          "column": 0,
+          "line": 27,
+          "position": 1235
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { existsSync, readdirSync, readFileSync, statSync } from \"node:fs\";\nimport { join, relative, resolve } from \"node:path\";\n\nconst SCRIPT_DIR = import.meta.dir;\nconst DEFAULT_REPO_ROOT = resolve(SCRIPT_DIR, \"..\");\nconst DEFAULT_BUDGET_PATH = resolve(SCRIPT_DIR, \"debt-markers-budget.json\");\nconst DEFAULT_SCAN_ROOTS = [\"src\", \"scripts\"] as const;\nconst EXTENSIONS = [\".ts\", \".tsx\"] as const;\nconst EXCLUDE_DIR_SEGMENTS = [\"node_modules\", \"__golden__\"] as const;\nconst DEFAULT_EXCLUDE_PATH_PREFIXES = [] as const;",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 10,
+      "secondFile": {
+        "end": 34,
+        "endLoc": {
+          "column": 50,
+          "line": 34,
+          "position": 1545
+        },
+        "name": "scripts/check-file-sizes.ts",
+        "start": 25,
+        "startLoc": {
+          "column": 0,
+          "line": 25,
+          "position": 1030
+        }
+      },
+      "tokens": 94
+    },
+    {
+      "firstFile": {
+        "end": 129,
+        "endLoc": {
+          "column": 1,
+          "line": 129,
+          "position": 4308
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 114,
+        "startLoc": {
+          "column": 46,
+          "line": 114,
+          "position": 3930
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn { trackerRegexes, allowlist: entries, rawAllowlist };\n}\n\nfunction* walk(dir: string): Generator<string> {\n\tif (!existsSync(dir)) return;\n\tfor (const entry of readdirSync(dir)) {\n\t\tif ((EXCLUDE_DIR_SEGMENTS as readonly string[]).includes(entry)) continue;\n\t\tconst full = join(dir, entry);\n\t\tconst st = statSync(full);\n\t\tif (st.isDirectory()) {\n\t\t\tyield* walk(full);\n\t\t} else if (st.isFile()) {\n\t\t\tyield full;\n\t\t}\n\t}\n}",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 16,
+      "secondFile": {
+        "end": 92,
+        "endLoc": {
+          "column": 1,
+          "line": 92,
+          "position": 3102
+        },
+        "name": "scripts/check-file-sizes.ts",
+        "start": 77,
+        "startLoc": {
+          "column": 30,
+          "line": 77,
+          "position": 2726
+        }
+      },
+      "tokens": 108
+    },
+    {
+      "firstFile": {
+        "end": 147,
+        "endLoc": {
+          "column": 6,
+          "line": 147,
+          "position": 4915
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 139,
+        "startLoc": {
+          "column": 13,
+          "line": 139,
+          "position": 4571
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn false;\n}\n\nexport function scan(options: ScanOptions = {}): ScanResult {\n\tconst repoRoot = options.repoRoot ?? DEFAULT_REPO_ROOT;\n\tconst budgetPath = options.budgetPath ?? DEFAULT_BUDGET_PATH;\n\tconst scanRoots = options.scanRoots ?? DEFAULT_SCAN_ROOTS;\n\tconst excludePathPrefixes = options.excludePathPrefixes ?? DEFAULT_EXCLUDE_PATH_PREFIXES;\n\tconst selfExclude = options.selfExclude ?? SELF_EXCLUDE;",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 9,
+      "secondFile": {
+        "end": 115,
+        "endLoc": {
+          "column": 6,
+          "line": 115,
+          "position": 3825
+        },
+        "name": "scripts/check-file-sizes.ts",
+        "start": 106,
+        "startLoc": {
+          "column": 52,
+          "line": 106,
+          "position": 3477
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 164,
+        "endLoc": {
+          "column": 2,
+          "line": 164,
+          "position": 5475
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 155,
+        "startLoc": {
+          "column": 2,
+          "line": 155,
+          "position": 5230
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tfor (const prefix of excludePathPrefixes) {\n\t\t\tif (relPath.startsWith(prefix)) return true;\n\t\t}\n\t\treturn false;\n\t};\n\n\tconst allFiles: string[] = [];\n\tfor (const r of scanRoots) {\n\t\tfor (const f of walk(resolve(repoRoot, r))) allFiles.push(f);\n\t}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 10,
+      "secondFile": {
+        "end": 129,
+        "endLoc": {
+          "column": 2,
+          "line": 129,
+          "position": 4252
+        },
+        "name": "scripts/check-file-sizes.ts",
+        "start": 120,
+        "startLoc": {
+          "column": 2,
+          "line": 120,
+          "position": 4007
+        }
+      },
+      "tokens": 67
+    },
+    {
+      "firstFile": {
+        "end": 248,
+        "endLoc": {
+          "column": 28,
+          "line": 248,
+          "position": 7869
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 204,
+        "startLoc": {
+          "column": 21,
+          "line": 204,
+          "position": 6526
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn { untracked, staleAllowlistEntries, allowedSilenced };\n}\n\ninterface ParsedArgs {\n\tbudgetPath?: string;\n\trepoRoot?: string;\n\tscanRoots: string[];\n}\n\nfunction parseArgs(argv: readonly string[]): ParsedArgs {\n\tconst out: ParsedArgs = { scanRoots: [] };\n\tfor (let i = 0; i < argv.length; i++) {\n\t\tconst a = argv[i];\n\t\tif (a === \"--budget\") {\n\t\t\tout.budgetPath = argv[++i];\n\t\t} else if (a === \"--root\") {\n\t\t\tconst v = argv[++i];\n\t\t\tif (v) out.scanRoots.push(v);\n\t\t} else if (a === \"--repo-root\") {\n\t\t\tout.repoRoot = argv[++i];\n\t\t}\n\t}\n\treturn out;\n}\n\nfunction main(): void {\n\tconst args = parseArgs(process.argv.slice(2));\n\tconst options: ScanOptions = {};\n\tif (args.budgetPath) options.budgetPath = resolve(args.budgetPath);\n\tif (args.repoRoot) options.repoRoot = resolve(args.repoRoot);\n\tif (args.scanRoots.length > 0) options.scanRoots = args.scanRoots;\n\n\tconst { untracked, staleAllowlistEntries } = scan(options);\n\n\tif (staleAllowlistEntries.length > 0) {\n\t\tconsole.error(\"debt-markers allowlist has entries that no longer match an untracked marker:\");\n\t\tfor (const k of staleAllowlistEntries) console.error(`  - ${k}`);\n\t\tconsole.error(\"Remove these entries — the ratchet only goes down.\");\n\t\tconsole.error(\"\");\n\t}\n\n\tif (untracked.length > 0) {\n\t\tconsole.error(\"Untracked debt markers found:\");\n\t\tfor (const m of untracked) {\n\t\t\tconsole.error(`  ${m.path}:${m.line}  ${m.marker}: ${m.text}`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 45,
+      "secondFile": {
+        "end": 207,
+        "endLoc": {
+          "column": 28,
+          "line": 207,
+          "position": 6444
+        },
+        "name": "scripts/check-file-sizes.ts",
+        "start": 163,
+        "startLoc": {
+          "column": 10,
+          "line": 163,
+          "position": 5145
+        }
+      },
+      "tokens": 322
+    },
+    {
+      "firstFile": {
+        "end": 233,
+        "endLoc": {
+          "column": 18,
+          "line": 233,
+          "position": 7251
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 214,
+        "startLoc": {
+          "column": 27,
+          "line": 214,
+          "position": 6746
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tconst out: ParsedArgs = { scanRoots: [] };\n\tfor (let i = 0; i < argv.length; i++) {\n\t\tconst a = argv[i];\n\t\tif (a === \"--budget\") {\n\t\t\tout.budgetPath = argv[++i];\n\t\t} else if (a === \"--root\") {\n\t\t\tconst v = argv[++i];\n\t\t\tif (v) out.scanRoots.push(v);\n\t\t} else if (a === \"--repo-root\") {\n\t\t\tout.repoRoot = argv[++i];\n\t\t}\n\t}\n\treturn out;\n}\n\nfunction main(): void {\n\tconst args = parseArgs(process.argv.slice(2));\n\tconst options: ScanOptions = {};\n\tif (args.budgetPath) options.budgetPath = resolve(args.budgetPath);\n\tif (args.repoRoot) options.repoRoot = resolve(args.repoRoot);",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 20,
+      "method": "gap",
+      "secondFile": {
+        "end": 194,
+        "endLoc": {
+          "column": 17,
+          "line": 194,
+          "position": 5985
+        },
+        "name": "scripts/validate-agents-md.ts",
+        "start": 174,
+        "startLoc": {
+          "column": 40,
+          "line": 174,
+          "position": 5444
+        }
+      },
+      "similarity": 0.875,
+      "tokens": 147
+    },
+    {
+      "firstFile": {
+        "end": 103,
+        "endLoc": {
+          "column": 73,
+          "line": 103,
+          "position": 3992
+        },
+        "name": "src/audit/assemble.ts",
+        "start": 94,
+        "startLoc": {
+          "column": 1,
+          "line": 94,
+          "position": 3594
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn metrics.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));\n}\n\n/**\n * Order findings deterministically (SPEC §3.2): grouped by kind in\n * lexicographic order, with each producer's internal order preserved within\n * its kind (a stable sort — analyzer rankings such as hotspot mass are\n * never scrambled).\n */\nexport function orderFindings(sources: readonly FindingSource[]): Finding[] {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 10,
+      "secondFile": {
+        "end": 185,
+        "endLoc": {
+          "column": 54,
+          "line": 185,
+          "position": 6366
+        },
+        "name": "src/discovery/discover.ts",
+        "start": 178,
+        "startLoc": {
+          "column": 1,
+          "line": 178,
+          "position": 6122
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 163,
+        "endLoc": {
+          "column": 4,
+          "line": 163,
+          "position": 7202
+        },
+        "name": "src/audit/run.ts",
+        "start": 160,
+        "startLoc": {
+          "column": 2,
+          "line": 160,
+          "position": 7011
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t...(opts.duplicationBudget ? { duplicationBudget: opts.duplicationBudget } : {}),\n\t\t...(opts.onProgress ? { onProgress: opts.onProgress } : {}),\n\t\t...(opts.now ? { now: opts.now } : {}),\n\t});",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 4,
+      "secondFile": {
+        "end": 46,
+        "endLoc": {
+          "column": 4,
+          "line": 46,
+          "position": 1989
+        },
+        "name": "src/cli/report.ts",
+        "start": 43,
+        "startLoc": {
+          "column": 2,
+          "line": 43,
+          "position": 1855
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 102,
+        "endLoc": {
+          "column": 1,
+          "line": 102,
+          "position": 4829
+        },
+        "name": "src/audit/run.ts",
+        "start": 86,
+        "startLoc": {
+          "column": 0,
+          "line": 86,
+          "position": 4102
+        }
+      },
+      "format": "typescript",
+      "fragment": "] as const;\n\n/**\n * Reject retired knobs on the public options bag. TypeScript callers get a\n * compile error from the narrowed option type; this guard gives untyped\n * callers the same actionable failure instead of a silent ignore — the\n * investigation-era keys via {@link legacyConfigMessage}, the readiness-era\n * keys via {@link retiredReadinessMessage}.\n */\nfunction rejectRetiredOptions(opts: object): void {\n\tfor (const key of [\"noCache\", \"piBin\", \"investigation\", \"provider\", \"model\"]) {\n\t\tif (key in opts) throw new LegacyConfigError(legacyConfigMessage(`option '${key}'`));\n\t}\n\tfor (const key of RETIRED_READINESS_KEYS) {\n\t\tif (key in opts) throw new AuditRunError(retiredReadinessMessage(`option '${key}'`));\n\t}\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 17,
+      "secondFile": {
+        "end": 50,
+        "endLoc": {
+          "column": 1,
+          "line": 50,
+          "position": 2616
+        },
+        "name": "src/fleet/run.ts",
+        "start": 34,
+        "startLoc": {
+          "column": 88,
+          "line": 34,
+          "position": 1889
+        }
+      },
+      "tokens": 79
+    },
+    {
+      "firstFile": {
+        "end": 162,
+        "endLoc": {
+          "column": 41,
+          "line": 162,
+          "position": 7197
+        },
+        "name": "src/audit/run.ts",
+        "start": 159,
+        "startLoc": {
+          "column": 8,
+          "line": 159,
+          "position": 7007
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tconfig,\n\t\t...(opts.duplicationBudget ? { duplicationBudget: opts.duplicationBudget } : {}),\n\t\t...(opts.onProgress ? { onProgress: opts.onProgress } : {}),\n\t\t...(opts.now ? { now: opts.now } : {}),",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 4,
+      "secondFile": {
+        "end": 65,
+        "endLoc": {
+          "column": 42,
+          "line": 65,
+          "position": 3331
+        },
+        "name": "src/report/run.ts",
+        "start": 62,
+        "startLoc": {
+          "column": 50,
+          "line": 62,
+          "position": 3153
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 103,
+        "endLoc": {
+          "column": 13,
+          "line": 103,
+          "position": 5198
+        },
+        "name": "src/cli/audit.ts",
+        "start": 93,
+        "startLoc": {
+          "column": 61,
+          "line": 93,
+          "position": 4373
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t.option(\"--verbose\", \"show per-analyzer progress on stderr\")\n\t\t// Retired flags: hidden, and each fails fast with an actionable error.\n\t\t.addOption(new Option(\"--no-cache\", \"retired: no investigation pass remains\").hideHelp())\n\t\t.addOption(new Option(\"--no-persist\", \"retired: audits are stateless by default\").hideHelp())\n\t\t.addOption(new Option(\"--output <path>\", \"retired: renamed --out\").hideHelp())\n\t\t.addOption(new Option(\"--no-output\", \"retired: no default report file remains\").hideHelp())\n\t\t.addOption(new Option(\"--rubric-version <v>\", \"retired: the rubric is gone\").hideHelp())\n\t\t.addOption(new Option(\"--rubric-dir <path>\", \"retired: the rubric is gone\").hideHelp())\n\t\t.addOption(new Option(\"--canonical <v>\", \"retired: drift is a separate capability\").hideHelp())\n\t\t.addOption(new Option(\"--fail-on <mode>\", \"retired: policy is declarative now\").hideHelp())\n\t\t.addOption(new Option(\"--min-level <n>\", \"retired: levels are gone\").hideHelp())",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 11,
+      "secondFile": {
+        "end": 104,
+        "endLoc": {
+          "column": 10,
+          "line": 104,
+          "position": 5278
+        },
+        "name": "src/cli/audit.ts",
+        "start": 95,
+        "startLoc": {
+          "column": 90,
+          "line": 95,
+          "position": 4539
+        }
+      },
+      "tokens": 124
+    },
+    {
+      "firstFile": {
+        "end": 136,
+        "endLoc": {
+          "column": 31,
+          "line": 136,
+          "position": 6492
+        },
+        "name": "src/cli/audit.ts",
+        "start": 118,
+        "startLoc": {
+          "column": 27,
+          "line": 118,
+          "position": 5837
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tif (opts.persist === false) {\n\t\tthrow new CliError(\n\t\t\t\"--no-persist no longer exists: audits are stateless by default now (SPEC §8, §10) — \" +\n\t\t\t\t\"drop the flag, or pass --history to record the run.\",\n\t\t);\n\t}\n\tif (opts.output !== undefined) {\n\t\tthrow new CliError(\n\t\t\t\"--output/--no-output no longer exist: audits write no report file by default now — \" +\n\t\t\t\t\"use --out <file> to request one.\",\n\t\t);\n\t}\n\tif (opts.canonical !== undefined) {\n\t\tthrow new CliError(\n\t\t\t\"--canonical no longer exists on audit: canonical drift is a separate capability \" +\n\t\t\t\t\"that never enters the sloppiness index (SPEC §11) — use `trellis drift`.\",\n\t\t);\n\t}\n\tif (opts.failOn !== undefined) {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 19,
+      "secondFile": {
+        "end": 142,
+        "endLoc": {
+          "column": 38,
+          "line": 142,
+          "position": 6743
+        },
+        "name": "src/cli/audit.ts",
+        "start": 124,
+        "startLoc": {
+          "column": 30,
+          "line": 124,
+          "position": 6056
+        }
+      },
+      "tokens": 61
+    },
+    {
+      "firstFile": {
+        "end": 195,
+        "endLoc": {
+          "column": 2,
+          "line": 195,
+          "position": 8812
+        },
+        "name": "src/cli/audit.ts",
+        "start": 189,
+        "startLoc": {
+          "column": 7,
+          "line": 189,
+          "position": 8568
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\t...(reporter ? { onProgress: reporter.onProgress } : {}),\n\t\t});\n\t} catch (error) {\n\t\tif (error instanceof CliError) throw error;\n\t\tconst message = error instanceof Error ? error.message : String(error);\n\t\tthrow new CliError(message, EXIT.ERROR);\n\t} finally {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 7,
+      "secondFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 2,
+          "line": 88,
+          "position": 3750
+        },
+        "name": "src/cli/compare.ts",
+        "start": 80,
+        "startLoc": {
+          "column": 12,
+          "line": 80,
+          "position": 3376
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 10,
+          "line": 88,
+          "position": 3912
+        },
+        "name": "src/cli/audit.ts",
+        "start": 76,
+        "startLoc": {
+          "column": 19,
+          "line": 76,
+          "position": 3486
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tcanonical?: string;\n\tfailOn?: string;\n\tminLevel?: string;\n}\n\n/** Register the `audit` subcommand on `program`. */\nexport function registerAudit(program: Command): void {\n\tprogram\n\t\t.command(\"audit\")\n\t\t.argument(\"<path>\", \"path to the TypeScript workspace to measure\")\n\t\t.description(\"measure + score one workspace; print the sloppiness report\")\n\t\t.option(\"--out <file>\", \"write the report artifact to this file (.json/.md inferred)\")\n\t\t.option(\"--baseline <report.json>\", \"compare against a saved report artifact (SPEC §9)\")",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 13,
+      "secondFile": {
+        "end": 41,
+        "endLoc": {
+          "column": 13,
+          "line": 41,
+          "position": 1491
+        },
+        "name": "src/cli/drift.ts",
+        "start": 29,
+        "startLoc": {
+          "column": 13,
+          "line": 29,
+          "position": 1115
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 118,
+        "endLoc": {
+          "column": 17,
+          "line": 118,
+          "position": 5827
+        },
+        "name": "src/cli/audit.ts",
+        "start": 92,
+        "startLoc": {
+          "column": 57,
+          "line": 92,
+          "position": 4310
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t.option(\"--quiet\", \"suppress progress output on stderr\")\n\t\t.option(\"--verbose\", \"show per-analyzer progress on stderr\")\n\t\t// Retired flags: hidden, and each fails fast with an actionable error.\n\t\t.addOption(new Option(\"--no-cache\", \"retired: no investigation pass remains\").hideHelp())\n\t\t.addOption(new Option(\"--no-persist\", \"retired: audits are stateless by default\").hideHelp())\n\t\t.addOption(new Option(\"--output <path>\", \"retired: renamed --out\").hideHelp())\n\t\t.addOption(new Option(\"--no-output\", \"retired: no default report file remains\").hideHelp())\n\t\t.addOption(new Option(\"--rubric-version <v>\", \"retired: the rubric is gone\").hideHelp())\n\t\t.addOption(new Option(\"--rubric-dir <path>\", \"retired: the rubric is gone\").hideHelp())\n\t\t.addOption(new Option(\"--canonical <v>\", \"retired: drift is a separate capability\").hideHelp())\n\t\t.addOption(new Option(\"--fail-on <mode>\", \"retired: policy is declarative now\").hideHelp())\n\t\t.addOption(new Option(\"--min-level <n>\", \"retired: levels are gone\").hideHelp())\n\t\t.action(function (this: Command, repoPath: string) {\n\t\t\treturn runAuditCommand(repoPath, this.optsWithGlobals() as AuditCliOptions);\n\t\t});\n}\n\n/**\n * Fail fast on retired flags (SPEC §14): each names its replacement instead\n * of being silently ignored. Runs before any measurement work.\n */\nfunction rejectRetiredFlags(opts: AuditCliOptions): void {\n\tif (opts.cache === false) throw new CliError(legacyConfigMessage(\"--no-cache\"));\n\tif (process.env.TRELLIS_PI_BIN?.trim()) {\n\t\tthrow new CliError(legacyConfigMessage(\"TRELLIS_PI_BIN\"));\n\t}\n\tif (opts.persist === false) {",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 27,
+      "method": "gap",
+      "secondFile": {
+        "end": 77,
+        "endLoc": {
+          "column": 16,
+          "line": 77,
+          "position": 3523
+        },
+        "name": "src/cli/fleet.ts",
+        "start": 60,
+        "startLoc": {
+          "column": 63,
+          "line": 60,
+          "position": 2610
+        }
+      },
+      "similarity": 0.629,
+      "tokens": 146
+    },
+    {
+      "firstFile": {
+        "end": 93,
+        "endLoc": {
+          "column": 23,
+          "line": 93,
+          "position": 4214
+        },
+        "name": "src/cli/fleet.ts",
+        "start": 86,
+        "startLoc": {
+          "column": 46,
+          "line": 86,
+          "position": 4033
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t...(opts.history === true ? { history: true } : {}),\n\t\t...(opts.db ? { db: opts.db } : {}),\n\t});\n\temit(format, {\n\t\thuman: renderFleetTerminal(report),\n\t\tjson: report,\n\t\tmd: renderFleetMarkdown(report),\n\t} satisfies Rendered);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 8,
+      "secondFile": {
+        "end": 51,
+        "endLoc": {
+          "column": 23,
+          "line": 51,
+          "position": 2122
+        },
+        "name": "src/cli/report.ts",
+        "start": 44,
+        "startLoc": {
+          "column": 36,
+          "line": 44,
+          "position": 1928
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 42,
+        "endLoc": {
+          "column": 28,
+          "line": 42,
+          "position": 1851
+        },
+        "name": "src/cli/report.ts",
+        "start": 31,
+        "startLoc": {
+          "column": 25,
+          "line": 31,
+          "position": 1380
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t.option(\"--repo <id>\", \"limit to one target\")\n\t\t.option(\"--since <date>\", \"only runs since this date (ISO-8601)\")\n\t\t.addOption(new Option(\"--db <path>\", \"SQLite history path\").hideHelp())\n\t\t.action(function (this: Command) {\n\t\t\trunReportCommand(this.optsWithGlobals() as ReportCliOptions);\n\t\t});\n}\n\n/** Build the dashboard via core and emit the chosen output variant. */\nfunction runReportCommand(opts: ReportCliOptions): void {\n\tconst format = resolveFormat(opts);\n\tconst report = buildReport({",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 12,
+      "secondFile": {
+        "end": 40,
+        "endLoc": {
+          "column": 29,
+          "line": 40,
+          "position": 1703
+        },
+        "name": "src/cli/rubric.ts",
+        "start": 29,
+        "startLoc": {
+          "column": 15,
+          "line": 29,
+          "position": 1220
+        }
+      },
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 45,
+        "endLoc": {
+          "column": 47,
+          "line": 45,
+          "position": 1984
+        },
+        "name": "src/cli/report.ts",
+        "start": 42,
+        "startLoc": {
+          "column": 28,
+          "line": 42,
+          "position": 1851
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tconst report = buildReport({\n\t\t...(opts.db ? { db: opts.db } : {}),\n\t\t...(opts.repo ? { repo: opts.repo } : {}),\n\t\t...(opts.since ? { since: opts.since } : {}),",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 4,
+      "secondFile": {
+        "end": 64,
+        "endLoc": {
+          "column": 72,
+          "line": 64,
+          "position": 3288
+        },
+        "name": "src/report/run.ts",
+        "start": 61,
+        "startLoc": {
+          "column": 37,
+          "line": 61,
+          "position": 3101
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 38,
+        "endLoc": {
+          "column": 27,
+          "line": 38,
+          "position": 1475
+        },
+        "name": "src/cli/standards.ts",
+        "start": 30,
+        "startLoc": {
+          "column": 0,
+          "line": 30,
+          "position": 1217
+        }
+      },
+      "format": "typescript",
+      "fragment": "}\n\n/** Right-pad `s` to `width` for fixed-width columns. */\nfunction pad(s: string, width: number): string {\n\treturn s.length >= width ? s : s + \" \".repeat(width - s.length);\n}\n\nfunction humanManifest(manifest: Manifest): string {\n\tconst pathWidth = Math.max(4, ...manifest.files.map((f) => f.path.length));",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 9,
+      "secondFile": {
+        "end": 40,
+        "endLoc": {
+          "column": 25,
+          "line": 40,
+          "position": 1510
+        },
+        "name": "src/standards/drift-report.ts",
+        "start": 31,
+        "startLoc": {
+          "column": 0,
+          "line": 31,
+          "position": 1159
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 60,
+        "endLoc": {
+          "column": 32,
+          "line": 60,
+          "position": 2231
+        },
+        "name": "src/compare/load.ts",
+        "start": 55,
+        "startLoc": {
+          "column": 1,
+          "line": 55,
+          "position": 1995
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tconst parsed = auditReportSchema.safeParse(data);\n\tif (!parsed.success) {\n\t\tconst details = parsed.error.issues\n\t\t\t.map((issue) => `${issue.path.join(\".\") || \"<root>\"}: ${issue.message}`)\n\t\t\t.join(\"; \");\n\t\tthrow new ReportArtifactError(path, `invalid audit report: ${details}`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 6,
+      "secondFile": {
+        "end": 24,
+        "endLoc": {
+          "column": 18,
+          "line": 24,
+          "position": 1133
+        },
+        "name": "src/config/load.ts",
+        "start": 19,
+        "startLoc": {
+          "column": 1,
+          "line": 19,
+          "position": 911
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 52,
+        "endLoc": {
+          "column": 44,
+          "line": 52,
+          "position": 2309
+        },
+        "name": "src/contract/config.ts",
+        "start": 31,
+        "startLoc": {
+          "column": 24,
+          "line": 31,
+          "position": 1403
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tmax: finiteNumberSchema.nonnegative(),\n});\n\nexport type MetricBudget = z.infer<typeof metricBudgetSchema>;\n\n/**\n * Score-regression tolerance against a baseline report (SPEC §9). The two\n * knobs are independent bounds, documented by kind:\n *\n * - `maxIncrease` — **absolute** tolerance in index points (0–100 scale):\n *   the run fails when `current.index - baseline.index` exceeds it.\n * - `maxIncreasePercent` — **relative** tolerance as a percentage of the\n *   baseline index: the run fails when the increase exceeds\n *   `baseline.index × maxIncreasePercent / 100`.\n *\n * When both are set, exceeding either bound fails. A `regression` block with\n * neither knob tolerates zero increase. Evaluation lives in\n * `src/compare/policy.ts` (trellis-942c).\n */\nexport const regressionPolicySchema = z.strictObject({\n\tmaxIncrease: finiteNumberSchema.min(0).max(100).optional(),\n\tmaxIncreasePercent: finiteNumberSchema.min(0).optional(),",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 22,
+      "secondFile": {
+        "end": 64,
+        "endLoc": {
+          "column": 45,
+          "line": 64,
+          "position": 2738
+        },
+        "name": "src/contract/config.ts",
+        "start": 52,
+        "startLoc": {
+          "column": 46,
+          "line": 52,
+          "position": 2311
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 154,
+        "endLoc": {
+          "column": 37,
+          "line": 154,
+          "position": 6083
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 143,
+        "startLoc": {
+          "column": 8,
+          "line": 143,
+          "position": 5695
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn fail(\"no automated release/deploy pipeline found in CI workflows\");\n};\n\n/** `version_drift_detection` (R/L3, S): cross-package version-sync tooling. */\nexport const versionDriftDetection: Detector = async (ctx) => {\n\tconst configs = await globHits(ctx, [\n\t\t\".changeset/config.json\",\n\t\t\".syncpackrc\",\n\t\t\".syncpackrc.json\",\n\t\t\"syncpack.config.js\",\n\t]);\n\tif (configs.length > 0) return pass(`version-sync tooling config: ${configs.join(\", \")}`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 12,
+      "secondFile": {
+        "end": 249,
+        "endLoc": {
+          "column": 14,
+          "line": 249,
+          "position": 10222
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 237,
+        "startLoc": {
+          "column": 4,
+          "line": 237,
+          "position": 9833
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 168,
+        "endLoc": {
+          "column": 51,
+          "line": 168,
+          "position": 6778
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 160,
+        "startLoc": {
+          "column": 1,
+          "line": 160,
+          "position": 6398
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn notApplicable(\n\t\t\"no cross-package version-sync tooling; single-version repo (skippable → N/A)\",\n\t);\n};\n\n/** `dead_feature_flag_detection` (R/L3, S): stale-flag detection tooling. */\nexport const deadFeatureFlagDetection: Detector = async (ctx) => {\n\tconst scripts = packageScripts(await readJson(ctx, \"package.json\"));\n\tconst scriptHit = Object.keys(scripts).find((k) =>",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 9,
+      "secondFile": {
+        "end": 213,
+        "endLoc": {
+          "column": 51,
+          "line": 213,
+          "position": 8823
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 205,
+        "startLoc": {
+          "column": 1,
+          "line": 205,
+          "position": 8425
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 132,
+        "endLoc": {
+          "column": 4,
+          "line": 132,
+          "position": 5278
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 115,
+        "startLoc": {
+          "column": 75,
+          "line": 115,
+          "position": 4700
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\t/changelog|release[- ]?notes|release-please|semantic-release|changeset/i,\n\t\t)\n\t) {\n\t\treturn pass(\"a CI workflow generates changelog/release notes\");\n\t}\n\treturn fail(\"no changelog/release-notes automation (changesets/semantic-release/release-please)\");\n};\n\n/** `release_automation` (R/L3): an automated release/publish/deploy pipeline. */\nexport const releaseAutomation: Detector = async (ctx) => {\n\tconst named = await globHits(ctx, [\n\t\t\".github/workflows/publish.yml\",\n\t\t\".github/workflows/publish.yaml\",\n\t\t\".github/workflows/release.yml\",\n\t\t\".github/workflows/release.yaml\",\n\t\t\".github/workflows/deploy.yml\",\n\t\t\".github/workflows/deploy.yaml\",\n\t]);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 18,
+      "secondFile": {
+        "end": 82,
+        "endLoc": {
+          "column": 4,
+          "line": 82,
+          "position": 3065
+        },
+        "name": "src/detectors/common/process.ts",
+        "start": 65,
+        "startLoc": {
+          "column": 69,
+          "line": 65,
+          "position": 2523
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 181,
+        "endLoc": {
+          "column": 39,
+          "line": 181,
+          "position": 7510
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 173,
+        "startLoc": {
+          "column": 87,
+          "line": 173,
+          "position": 7112
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tif (configs.length > 0) return pass(`stale-flag tooling config: ${configs.join(\", \")}`);\n\treturn notApplicable(\"no stale feature-flag detection tooling (skippable → N/A)\");\n};\n\n/** `feature_flag_infrastructure` (R/L4): a feature-flag system is configured. */\nexport const featureFlagInfrastructure: Detector = async (ctx) => {\n\tconst deps = packageDeps(await readJson(ctx, \"package.json\"));\n\tconst depHit = FLAG_DEPS.find((d) => deps.has(d));\n\tif (depHit !== undefined) return pass(`feature-flag SDK dependency: '${depHit}'`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 9,
+      "secondFile": {
+        "end": 59,
+        "endLoc": {
+          "column": 36,
+          "line": 59,
+          "position": 2000
+        },
+        "name": "src/detectors/lang/typescript/observability.ts",
+        "start": 51,
+        "startLoc": {
+          "column": 83,
+          "line": 51,
+          "position": 1603
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 181,
+        "endLoc": {
+          "column": 39,
+          "line": 181,
+          "position": 7510
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 175,
+        "startLoc": {
+          "column": 1,
+          "line": 175,
+          "position": 7202
+        }
+      },
+      "format": "typescript",
+      "fragment": "};\n\n/** `feature_flag_infrastructure` (R/L4): a feature-flag system is configured. */\nexport const featureFlagInfrastructure: Detector = async (ctx) => {\n\tconst deps = packageDeps(await readJson(ctx, \"package.json\"));\n\tconst depHit = FLAG_DEPS.find((d) => deps.has(d));\n\tif (depHit !== undefined) return pass(`feature-flag SDK dependency: '${depHit}'`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 7,
+      "secondFile": {
+        "end": 51,
+        "endLoc": {
+          "column": 36,
+          "line": 51,
+          "position": 1556
+        },
+        "name": "src/detectors/lang/typescript/observability.ts",
+        "start": 45,
+        "startLoc": {
+          "column": 10,
+          "line": 45,
+          "position": 1256
+        }
+      },
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 44,
+        "endLoc": {
+          "column": 6,
+          "line": 44,
+          "position": 1575
+        },
+        "name": "src/detectors/common/util.ts",
+        "start": 33,
+        "startLoc": {
+          "column": 1,
+          "line": 33,
+          "position": 1307
+        }
+      },
+      "format": "typescript",
+      "fragment": "\ttry {\n\t\tconst parsed = JSON.parse(text);\n\t\treturn typeof parsed === \"object\" && parsed !== null && !Array.isArray(parsed)\n\t\t\t? (parsed as Record<string, unknown>)\n\t\t\t: null;\n\t} catch {\n\t\treturn null;\n\t}\n}\n\n/** A discovered CI/workflow file plus its contents. */\nexport interface WorkflowFile {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 12,
+      "secondFile": {
+        "end": 63,
+        "endLoc": {
+          "column": 6,
+          "line": 63,
+          "position": 2464
+        },
+        "name": "src/detectors/lang/swift/util.ts",
+        "start": 48,
+        "startLoc": {
+          "column": 1,
+          "line": 48,
+          "position": 2039
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 44,
+        "endLoc": {
+          "column": 6,
+          "line": 44,
+          "position": 1575
+        },
+        "name": "src/detectors/common/util.ts",
+        "start": 32,
+        "startLoc": {
+          "column": 31,
+          "line": 32,
+          "position": 1304
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tif (text === null) return null;\n\ttry {\n\t\tconst parsed = JSON.parse(text);\n\t\treturn typeof parsed === \"object\" && parsed !== null && !Array.isArray(parsed)\n\t\t\t? (parsed as Record<string, unknown>)\n\t\t\t: null;\n\t} catch {\n\t\treturn null;\n\t}\n}\n\n/** A discovered CI/workflow file plus its contents. */\nexport interface WorkflowFile {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 13,
+      "secondFile": {
+        "end": 32,
+        "endLoc": {
+          "column": 6,
+          "line": 32,
+          "position": 1536
+        },
+        "name": "src/detectors/lang/typescript/util.ts",
+        "start": 20,
+        "startLoc": {
+          "column": 61,
+          "line": 20,
+          "position": 1218
+        }
+      },
+      "tokens": 53
+    },
+    {
+      "firstFile": {
+        "end": 77,
+        "endLoc": {
+          "column": 3,
+          "line": 77,
+          "position": 3733
+        },
+        "name": "src/detectors/lang/python/locality.ts",
+        "start": 38,
+        "startLoc": {
+          "column": 1,
+          "line": 38,
+          "position": 1947
+        }
+      },
+      "format": "typescript",
+      "fragment": "};\n\n/**\n * `explicit_any_detection` (A/L3, S): N/A for Python per the SPEC §8.3 table,\n * which lists this alongside the TypeScript-specific export criteria. Python's\n * gradual typing has no hard-error `any`-escape-hatch convention; the strictness\n * tier it does have (mypy `--strict`) is already graded by `strict_typing`.\n */\nexport const explicitAnyDetection: Detector = async () =>\n\tnotApplicable(\n\t\t\"no Python analogue (SPEC §8.3 N/A): no hard-error `any`-escape-hatch convention; mypy --strict is graded by strict_typing\",\n\t);\n\n/**\n * `greppable_exports` (A/L3, S): no Python analogue. Python has no export\n * statements; a module's public surface is governed by `__all__` and the\n * leading-underscore convention, not by named/default exports to grep for.\n */\nexport const greppableExports: Detector = async () =>\n\tnotApplicable(\n\t\t\"no Python analogue: Python uses `__all__` / underscore convention, not named/default exports\",\n\t);\n\n/**\n * `barrel_file_reexport_detection` (A/L4, S): no Python analogue. Python has no\n * `export *` / barrel-file re-export construct; an `__init__.py` re-imports\n * symbols explicitly, so wildcard-reexport barrels cannot exist.\n */\nexport const barrelFileReexportDetection: Detector = async () =>\n\tnotApplicable(\"no Python analogue: Python has no `export *` / barrel-file re-export construct\");\n\n/**\n * `strictest_type_checking` (A/L4, S): N/A for Python. `mypy --strict` is the\n * strictest standard tier and is already graded by `strict_typing`; there is no\n * beyond-strict standard preset (unlike TS's noUncheckedIndexedAccess et al.).\n */\nexport const strictestTypeChecking: Detector = async () =>\n\tnotApplicable(\n\t\t\"no Python analogue: mypy --strict is the strictest standard tier (graded by strict_typing); no beyond-strict preset\",\n\t);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 40,
+      "secondFile": {
+        "end": 52,
+        "endLoc": {
+          "column": 3,
+          "line": 52,
+          "position": 2535
+        },
+        "name": "src/detectors/lang/swift/locality.ts",
+        "start": 14,
+        "startLoc": {
+          "column": 76,
+          "line": 14,
+          "position": 905
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 24,
+        "endLoc": {
+          "column": 15,
+          "line": 24,
+          "position": 1363
+        },
+        "name": "src/detectors/lang/python/testing.ts",
+        "start": 13,
+        "startLoc": {
+          "column": 0,
+          "line": 13,
+          "position": 721
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { SPAWN_FAILURE_EXIT } from \"../../context.ts\";\nimport { type Detector, fail, noDetector, pass } from \"../../types.ts\";\nimport { firstPresent, gatherToolingText, toolingMentions } from \"./util.ts\";\n\n/**\n * Best-effort parse of pytest's summary line, e.g. `===== 1 failed, 4 passed in\n * 0.1s =====` or `===== 3 passed =====`. `passed`/`failed`/`error` counts are\n * summed into the executed total. `executed` is 0 for an explicit empty run\n * (`no tests ran` / `collected 0 items`) and `null` when nothing is parseable.\n */\nexport function parsePytestCount(output: string): { executed: number | null; failed: number } {\n\tconst passed = output.match(/(\\d+)\\s+passed/);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 12,
+      "secondFile": {
+        "end": 24,
+        "endLoc": {
+          "column": 11,
+          "line": 24,
+          "position": 1355
+        },
+        "name": "src/detectors/lang/swift/testing.ts",
+        "start": 14,
+        "startLoc": {
+          "column": 0,
+          "line": 14,
+          "position": 815
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 55,
+        "endLoc": {
+          "column": 24,
+          "line": 55,
+          "position": 2858
+        },
+        "name": "src/detectors/lang/python/testing.ts",
+        "start": 49,
+        "startLoc": {
+          "column": 37,
+          "line": 49,
+          "position": 2560
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\t: fail(`\\`pytest\\` failed (exit ${result.exitCode}) with no parseable test count`);\n\t}\n\tif (executed === 0) return fail(\"`pytest` is a no-op: 0 tests executed\");\n\tif (failed > 0 || result.exitCode !== 0) {\n\t\treturn fail(`${executed} test(s) ran but ${failed || \"some\"} failed (exit ${result.exitCode})`);\n\t}\n\treturn pass(`${executed} test(s) executed and passed via \\`pytest\\``);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 7,
+      "secondFile": {
+        "end": 56,
+        "endLoc": {
+          "column": 24,
+          "line": 56,
+          "position": 2740
+        },
+        "name": "src/detectors/lang/swift/testing.ts",
+        "start": 50,
+        "startLoc": {
+          "column": 41,
+          "line": 50,
+          "position": 2438
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 55,
+        "endLoc": {
+          "column": 24,
+          "line": 55,
+          "position": 2858
+        },
+        "name": "src/detectors/lang/python/testing.ts",
+        "start": 40,
+        "startLoc": {
+          "column": 40,
+          "line": 40,
+          "position": 2093
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tconst result = await ctx.run([\"pytest\"]);\n\tif (result.timedOut) return noDetector(\"`pytest` timed out before completing\");\n\tif (result.exitCode === SPAWN_FAILURE_EXIT) {\n\t\treturn noDetector(\"`pytest` could not be executed (toolchain unavailable)\");\n\t}\n\tconst { executed, failed } = parsePytestCount(`${result.stdout}\\n${result.stderr}`);\n\tif (executed === null) {\n\t\treturn result.exitCode === 0\n\t\t\t? noDetector(\"`pytest` exited 0 but produced no parseable test count\")\n\t\t\t: fail(`\\`pytest\\` failed (exit ${result.exitCode}) with no parseable test count`);\n\t}\n\tif (executed === 0) return fail(\"`pytest` is a no-op: 0 tests executed\");\n\tif (failed > 0 || result.exitCode !== 0) {\n\t\treturn fail(`${executed} test(s) ran but ${failed || \"some\"} failed (exit ${result.exitCode})`);\n\t}\n\treturn pass(`${executed} test(s) executed and passed via \\`pytest\\``);",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 16,
+      "method": "gap",
+      "secondFile": {
+        "end": 63,
+        "endLoc": {
+          "column": 24,
+          "line": 63,
+          "position": 3106
+        },
+        "name": "src/detectors/lang/typescript/testing.ts",
+        "start": 48,
+        "startLoc": {
+          "column": 34,
+          "line": 48,
+          "position": 2331
+        }
+      },
+      "similarity": 0.992,
+      "tokens": 125
+    },
+    {
+      "firstFile": {
+        "end": 36,
+        "endLoc": {
+          "column": 1,
+          "line": 36,
+          "position": 1722
+        },
+        "name": "src/detectors/lang/python/util.ts",
+        "start": 16,
+        "startLoc": {
+          "column": 0,
+          "line": 16,
+          "position": 984
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { readWorkflows } from \"../../common/util.ts\";\nimport type { DetectionContext } from \"../../types.ts\";\n\n/** The PEP 621 project manifest — discovery tags an app `python` on its presence. */\nexport const MANIFEST = \"pyproject.toml\";\n\n/** Read the project manifest text, or `null` when there is no `pyproject.toml`. */\nexport async function readManifest(ctx: DetectionContext): Promise<string | null> {\n\treturn ctx.readFile(MANIFEST);\n}\n\n/** The first present file among `rels` (in order), or `null` if none exist. */\nexport async function firstPresent(\n\tctx: DetectionContext,\n\trels: readonly string[],\n): Promise<string | null> {\n\tfor (const rel of rels) {\n\t\tif ((await ctx.readFile(rel)) !== null) return rel;\n\t}\n\treturn null;\n}",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 21,
+      "secondFile": {
+        "end": 35,
+        "endLoc": {
+          "column": 1,
+          "line": 35,
+          "position": 1581
+        },
+        "name": "src/detectors/lang/swift/util.ts",
+        "start": 15,
+        "startLoc": {
+          "column": 0,
+          "line": 15,
+          "position": 837
+        }
+      },
+      "tokens": 102
+    },
+    {
+      "firstFile": {
+        "end": 137,
+        "endLoc": {
+          "column": 1,
+          "line": 137,
+          "position": 5297
+        },
+        "name": "src/detectors/lang/python/util.ts",
+        "start": 105,
+        "startLoc": {
+          "column": 10,
+          "line": 105,
+          "position": 4047
+        }
+      },
+      "format": "typescript",
+      "fragment": "] as const;\n\n/** Cap on swept script/requirement files — keeps the sweep bounded/deterministic. */\nconst MAX_SCRIPT_FILES = 50;\n\n/**\n * Concatenate the text of the places a Python repo wires a tool — the manifest,\n * INI configs, build glue (Make/nox/just), requirement sets, pre-commit, and CI\n * workflows — into one blob a config-first detector can grep with a regex. Missing\n * files are skipped; the script sweep is capped and sorted for determinism.\n */\nexport async function gatherToolingText(ctx: DetectionContext): Promise<string> {\n\tconst chunks: string[] = [];\n\tfor (const rel of TOOLING_FILES) {\n\t\tconst text = await ctx.readFile(rel);\n\t\tif (text !== null) chunks.push(text);\n\t}\n\tfor (const wf of await readWorkflows(ctx)) chunks.push(wf.text);\n\tconst scripts = new Set<string>();\n\tfor (const pattern of SCRIPT_GLOBS) {\n\t\tfor (const hit of await ctx.glob(pattern)) scripts.add(hit);\n\t}\n\tfor (const rel of [...scripts].sort().slice(0, MAX_SCRIPT_FILES)) {\n\t\tconst text = await ctx.readFile(rel);\n\t\tif (text !== null) chunks.push(text);\n\t}\n\treturn chunks.join(\"\\n\");\n}\n\n/** True if `re` matches anywhere in the gathered tooling text. */\nexport function toolingMentions(toolingText: string, re: RegExp): boolean {\n\treturn re.test(toolingText);\n}",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 33,
+      "secondFile": {
+        "end": 139,
+        "endLoc": {
+          "column": 1,
+          "line": 139,
+          "position": 5216
+        },
+        "name": "src/detectors/lang/swift/util.ts",
+        "start": 107,
+        "startLoc": {
+          "column": 96,
+          "line": 107,
+          "position": 3970
+        }
+      },
+      "tokens": 204
+    },
+    {
+      "firstFile": {
+        "end": 89,
+        "endLoc": {
+          "column": 12,
+          "line": 89,
+          "position": 4248
+        },
+        "name": "src/detectors/lang/swift/code-quality.ts",
+        "start": 81,
+        "startLoc": {
+          "column": 1,
+          "line": 81,
+          "position": 3843
+        }
+      },
+      "format": "typescript",
+      "fragment": "};\n\n/** `naming_consistency` (A/L3): naming conventions enforced (SwiftLint naming rules). */\nexport const namingConsistency: Detector = async (ctx) => {\n\tconst swiftlint = await findSwiftlintConfig(ctx);\n\tif (swiftlint !== null) {\n\t\tconst idName = swiftlintDefaultRuleEnabled(swiftlint.config, \"identifier_name\");\n\t\tconst typeName = swiftlintDefaultRuleEnabled(swiftlint.config, \"type_name\");\n\t\tif (idName || typeName) {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 9,
+      "secondFile": {
+        "end": 137,
+        "endLoc": {
+          "column": 11,
+          "line": 137,
+          "position": 6661
+        },
+        "name": "src/detectors/lang/swift/code-quality.ts",
+        "start": 129,
+        "startLoc": {
+          "column": 2,
+          "line": 129,
+          "position": 6229
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 103,
+        "endLoc": {
+          "column": 31,
+          "line": 103,
+          "position": 4964
+        },
+        "name": "src/detectors/lang/swift/code-quality.ts",
+        "start": 94,
+        "startLoc": {
+          "column": 67,
+          "line": 94,
+          "position": 4504
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tif (toolingMentions(await gatherToolingText(ctx), /\\bswiftlint\\b/i)) {\n\t\treturn pass(\"SwiftLint wired via build tooling (default identifier_name/type_name rules)\");\n\t}\n\treturn fail(\"no naming-convention enforcement (SwiftLint identifier_name/type_name)\");\n};\n\n/** `dead_code_detection` (A/L3): an unused-declaration analyzer (periphery). */\nexport const deadCodeDetection: Detector = async (ctx) => {\n\tconst cfg = await firstPresent(ctx, [\".periphery.yml\", \".periphery.yaml\", \"periphery.yml\"]);\n\tif (cfg !== null) return pass(`periphery configured in '${cfg}'`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 10,
+      "secondFile": {
+        "end": 113,
+        "endLoc": {
+          "column": 31,
+          "line": 113,
+          "position": 5494
+        },
+        "name": "src/detectors/lang/swift/code-quality.ts",
+        "start": 104,
+        "startLoc": {
+          "column": 67,
+          "line": 104,
+          "position": 5068
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 63,
+        "endLoc": {
+          "column": 63,
+          "line": 63,
+          "position": 2521
+        },
+        "name": "src/detectors/lang/swift/util.ts",
+        "start": 49,
+        "startLoc": {
+          "column": 8,
+          "line": 49,
+          "position": 2053
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tconst doc = yaml.load(text);\n\t\treturn typeof doc === \"object\" && doc !== null && !Array.isArray(doc)\n\t\t\t? (doc as Record<string, unknown>)\n\t\t\t: null;\n\t} catch {\n\t\treturn null;\n\t}\n}\n\n/**\n * Find and parse the repo's SwiftLint config. An empty-but-present config parses\n * to `{}` (SwiftLint still applies its default rules), so callers distinguish\n * \"no config\" (`null`) from \"config with defaults\" (`{}`).\n */\nexport async function findSwiftlintConfig(ctx: DetectionContext): Promise<SwiftlintConfig | null> {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 15,
+      "secondFile": {
+        "end": 33,
+        "endLoc": {
+          "column": 22,
+          "line": 33,
+          "position": 1585
+        },
+        "name": "src/detectors/lang/typescript/util.ts",
+        "start": 22,
+        "startLoc": {
+          "column": 8,
+          "line": 22,
+          "position": 1235
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 121,
+        "endLoc": {
+          "column": 55,
+          "line": 121,
+          "position": 5479
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 108,
+        "startLoc": {
+          "column": 1,
+          "line": 108,
+          "position": 4739
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t}\n\treturn fail(\"tsconfig does not enable `strict` (nor noImplicitAny + strictNullChecks)\");\n};\n\n/** `naming_consistency` (A/L3): naming conventions enforced (Biome filenaming/naming or ESLint). */\nexport const namingConsistency: Detector = async (ctx) => {\n\tconst biome = await findBiomeConfig(ctx);\n\tif (biome !== null && biomeLinterEnabled(biome.config)) {\n\t\tconst fileLevel = biomeRuleLevel(biome.config, \"style\", \"useFilenamingConvention\");\n\t\tconst nameLevel = biomeRuleLevel(biome.config, \"style\", \"useNamingConvention\");\n\t\tif (fileLevel !== null && fileLevel !== \"off\")\n\t\t\treturn pass(\"Biome enforces `useFilenamingConvention`\");\n\t\tif (nameLevel !== null && nameLevel !== \"off\")\n\t\t\treturn pass(\"Biome enforces `useNamingConvention`\");",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 14,
+      "secondFile": {
+        "end": 219,
+        "endLoc": {
+          "column": 86,
+          "line": 219,
+          "position": 9980
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 208,
+        "startLoc": {
+          "column": 1,
+          "line": 208,
+          "position": 9268
+        }
+      },
+      "tokens": 104
+    },
+    {
+      "firstFile": {
+        "end": 155,
+        "endLoc": {
+          "column": 49,
+          "line": 155,
+          "position": 7008
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 132,
+        "startLoc": {
+          "column": 1,
+          "line": 132,
+          "position": 5869
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn fail(\"no naming-convention enforcement (Biome useNaming/Filenaming or ESLint rule)\");\n};\n\n/** `dead_code_detection` (A/L3): an unused-export/unreachable analyzer (knip / ts-prune). */\nexport const deadCodeDetection: Detector = async (ctx) => {\n\tconst pkg = await readJson(ctx, \"package.json\");\n\tconst deps = packageDeps(pkg);\n\tconst scripts = packageScripts(pkg);\n\tif (\n\t\tdepsHasAny(deps, [\"knip\", \"ts-prune\", \"ts-unused-exports\"]) ||\n\t\tscriptMatches(scripts, /knip|ts-prune|ts-unused/i)\n\t) {\n\t\treturn pass(\"dead-code analyzer configured (knip / ts-prune)\");\n\t}\n\tfor (const rel of [\"knip.json\", \"knip.jsonc\", \"knip.config.ts\", \"knip.config.js\", \".knip.json\"]) {\n\t\tif ((await ctx.readFile(rel)) !== null) return pass(`knip configured in '${rel}'`);\n\t}\n\tif (pkg?.knip !== undefined) return pass(\"knip configured via package.json `knip` key\");\n\treturn fail(\"no dead-code/unused-export analyzer configured (knip / ts-prune)\");\n};\n\n/** `duplicate_code_detection` (A/L3): a copy-paste detector under a threshold (jscpd). */\nexport const duplicateCodeDetection: Detector = async (ctx) => {\n\tconst pkg = await readJson(ctx, \"package.json\");",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 24,
+      "method": "gap",
+      "secondFile": {
+        "end": 186,
+        "endLoc": {
+          "column": 49,
+          "line": 186,
+          "position": 8523
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 166,
+        "startLoc": {
+          "column": 1,
+          "line": 166,
+          "position": 7445
+        }
+      },
+      "similarity": 0.939,
+      "tokens": 153
+    },
+    {
+      "firstFile": {
+        "end": 155,
+        "endLoc": {
+          "column": 49,
+          "line": 155,
+          "position": 7008
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 147,
+        "startLoc": {
+          "column": 77,
+          "line": 147,
+          "position": 6615
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tif ((await ctx.readFile(rel)) !== null) return pass(`knip configured in '${rel}'`);\n\t}\n\tif (pkg?.knip !== undefined) return pass(\"knip configured via package.json `knip` key\");\n\treturn fail(\"no dead-code/unused-export analyzer configured (knip / ts-prune)\");\n};\n\n/** `duplicate_code_detection` (A/L3): a copy-paste detector under a threshold (jscpd). */\nexport const duplicateCodeDetection: Detector = async (ctx) => {\n\tconst pkg = await readJson(ctx, \"package.json\");",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 9,
+      "secondFile": {
+        "end": 171,
+        "endLoc": {
+          "column": 49,
+          "line": 171,
+          "position": 7736
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 163,
+        "startLoc": {
+          "column": 78,
+          "line": 163,
+          "position": 7339
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 172,
+        "endLoc": {
+          "column": 31,
+          "line": 172,
+          "position": 7768
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 163,
+        "startLoc": {
+          "column": 81,
+          "line": 163,
+          "position": 7342
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tif ((await ctx.readFile(rel)) !== null) return pass(`jscpd configured in '${rel}'`);\n\t}\n\tif (pkg?.jscpd !== undefined) return pass(\"jscpd configured via package.json `jscpd` key\");\n\treturn fail(\"no copy-paste/duplicate-code detector configured (jscpd)\");\n};\n\n/** `unused_dependencies_detection` (A/L3): unused declared deps flagged (knip / depcheck). */\nexport const unusedDependenciesDetection: Detector = async (ctx) => {\n\tconst pkg = await readJson(ctx, \"package.json\");\n\tconst deps = packageDeps(pkg);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 10,
+      "secondFile": {
+        "end": 187,
+        "endLoc": {
+          "column": 31,
+          "line": 187,
+          "position": 8555
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 178,
+        "startLoc": {
+          "column": 80,
+          "line": 178,
+          "position": 8155
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 116,
+        "endLoc": {
+          "column": 85,
+          "line": 116,
+          "position": 5183
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 109,
+        "startLoc": {
+          "column": 1,
+          "line": 109,
+          "position": 4742
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn fail(\"tsconfig does not enable `strict` (nor noImplicitAny + strictNullChecks)\");\n};\n\n/** `naming_consistency` (A/L3): naming conventions enforced (Biome filenaming/naming or ESLint). */\nexport const namingConsistency: Detector = async (ctx) => {\n\tconst biome = await findBiomeConfig(ctx);\n\tif (biome !== null && biomeLinterEnabled(biome.config)) {\n\t\tconst fileLevel = biomeRuleLevel(biome.config, \"style\", \"useFilenamingConvention\");",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 8,
+      "secondFile": {
+        "end": 82,
+        "endLoc": {
+          "column": 76,
+          "line": 82,
+          "position": 3778
+        },
+        "name": "src/detectors/lang/typescript/locality.ts",
+        "start": 75,
+        "startLoc": {
+          "column": 1,
+          "line": 75,
+          "position": 3377
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 155,
+        "endLoc": {
+          "column": 31,
+          "line": 155,
+          "position": 6990
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 132,
+        "startLoc": {
+          "column": 91,
+          "line": 132,
+          "position": 5959
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn fail(\"no naming-convention enforcement (Biome useNaming/Filenaming or ESLint rule)\");\n};\n\n/** `dead_code_detection` (A/L3): an unused-export/unreachable analyzer (knip / ts-prune). */\nexport const deadCodeDetection: Detector = async (ctx) => {\n\tconst pkg = await readJson(ctx, \"package.json\");\n\tconst deps = packageDeps(pkg);\n\tconst scripts = packageScripts(pkg);\n\tif (\n\t\tdepsHasAny(deps, [\"knip\", \"ts-prune\", \"ts-unused-exports\"]) ||\n\t\tscriptMatches(scripts, /knip|ts-prune|ts-unused/i)\n\t) {\n\t\treturn pass(\"dead-code analyzer configured (knip / ts-prune)\");\n\t}\n\tfor (const rel of [\"knip.json\", \"knip.jsonc\", \"knip.config.ts\", \"knip.config.js\", \".knip.json\"]) {\n\t\tif ((await ctx.readFile(rel)) !== null) return pass(`knip configured in '${rel}'`);\n\t}\n\tif (pkg?.knip !== undefined) return pass(\"knip configured via package.json `knip` key\");\n\treturn fail(\"no dead-code/unused-export analyzer configured (knip / ts-prune)\");\n};\n\n/** `duplicate_code_detection` (A/L3): a copy-paste detector under a threshold (jscpd). */\nexport const duplicateCodeDetection: Detector = async (ctx) => {\n\tconst pkg = await readJson(ctx, \"package.json\");",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 24,
+      "method": "gap",
+      "secondFile": {
+        "end": 80,
+        "endLoc": {
+          "column": 40,
+          "line": 80,
+          "position": 3640
+        },
+        "name": "src/detectors/lang/typescript/locality.ts",
+        "start": 57,
+        "startLoc": {
+          "column": 60,
+          "line": 57,
+          "position": 2599
+        }
+      },
+      "similarity": 0.994,
+      "tokens": 154
+    },
+    {
+      "firstFile": {
+        "end": 144,
+        "endLoc": {
+          "column": 41,
+          "line": 144,
+          "position": 6416
+        },
+        "name": "src/detectors/lang/typescript/locality.ts",
+        "start": 132,
+        "startLoc": {
+          "column": 72,
+          "line": 132,
+          "position": 5909
+        }
+      },
+      "format": "typescript",
+      "fragment": "const WILDCARD_REEXPORT_RE = /^\\s*export\\s+\\*\\s+(?:as\\s+\\w+\\s+)?from\\b/m;\n\n/** `greppable_exports` (A/L3, S): named exports only — no default exports. */\nexport const greppableExports: Detector = async (ctx) => {\n\tconst files = await tsSources(ctx);\n\tif (files.length === 0)\n\t\treturn notApplicable(\"no TypeScript sources to analyze for default exports\");\n\tconst offenders: string[] = [];\n\tfor (const file of files) {\n\t\tconst text = await ctx.readFile(file);\n\t\tif (text !== null && DEFAULT_EXPORT_RE.test(text)) offenders.push(file);\n\t}\n\tif (offenders.length === 0) return pass(`no default exports across ${files.length} module(s)`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 13,
+      "secondFile": {
+        "end": 161,
+        "endLoc": {
+          "column": 14,
+          "line": 161,
+          "position": 7114
+        },
+        "name": "src/detectors/lang/typescript/locality.ts",
+        "start": 148,
+        "startLoc": {
+          "column": 1,
+          "line": 148,
+          "position": 6588
+        }
+      },
+      "tokens": 97
+    },
+    {
+      "firstFile": {
+        "end": 91,
+        "endLoc": {
+          "column": 33,
+          "line": 91,
+          "position": 4914
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 57,
+        "startLoc": {
+          "column": 1,
+          "line": 57,
+          "position": 2844
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tenv_template: commonBinding(common.envTemplate),\n\tgitignore_comprehensive: commonBinding(common.gitignoreComprehensive),\n\tdeps_pinned: commonBinding(common.depsPinned),\n\tdevcontainer: commonBinding(common.devcontainer),\n\t// §5.5 CI, Release & Deployment\n\tvcs_cli_tools: commonBinding(common.vcsCliTools),\n\tmonorepo_tooling: commonBinding(common.monorepoTooling),\n\tdependency_update_automation: commonBinding(common.dependencyUpdateAutomation),\n\trelease_notes_automation: commonBinding(common.releaseNotesAutomation),\n\trelease_automation: commonBinding(common.releaseAutomation),\n\tversion_drift_detection: commonBinding(common.versionDriftDetection),\n\tdead_feature_flag_detection: commonBinding(common.deadFeatureFlagDetection),\n\tfeature_flag_infrastructure: commonBinding(common.featureFlagInfrastructure),\n\tfast_ci_feedback: commonBinding(common.fastCiFeedback),\n\tbuild_performance_tracking: commonBinding(common.buildPerformanceTracking),\n\tdeployment_frequency: commonBinding(common.deploymentFrequency),\n\tprogressive_rollout: commonBinding(common.progressiveRollout),\n\trollback_automation: commonBinding(common.rollbackAutomation),\n\t// §5.7 Security & Data\n\tbranch_protection: commonBinding(common.branchProtection),\n\tautomated_security_review: commonBinding(common.automatedSecurityReview),\n\tsecret_scanning: commonBinding(common.secretScanning),\n\tmin_release_age: commonBinding(common.minReleaseAge),\n\tprivacy_compliance: commonBinding(common.privacyCompliance),\n\t// §5.8 Process & Collaboration\n\tcodeowners: commonBinding(common.codeowners),\n\tissue_templates: commonBinding(common.issueTemplates),\n\tissue_labeling_system: commonBinding(common.issueLabelingSystem),\n\tpr_templates: commonBinding(common.prTemplates),\n\tautomated_pr_review: commonBinding(common.automatedPrReview),\n\tbacklog_health: commonBinding(common.backlogHealth),\n\t// §5.2 Code Quality (language-agnostic hygiene) + §5.5 pre-commit\n\tlarge_file_detection: commonBinding(common.largeFileDetection),\n\ttech_debt_tracking: commonBinding(common.techDebtTracking),\n\tpre_commit_hooks: commonBinding(common.preCommitHooks),",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 35,
+      "secondFile": {
+        "end": 94,
+        "endLoc": {
+          "column": 30,
+          "line": 94,
+          "position": 5069
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 58,
+        "startLoc": {
+          "column": 1,
+          "line": 58,
+          "position": 2894
+        }
+      },
+      "tokens": 274
+    },
+    {
+      "firstFile": {
+        "end": 130,
+        "endLoc": {
+          "column": 44,
+          "line": 130,
+          "position": 6092
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 91,
+        "startLoc": {
+          "column": 54,
+          "line": 91,
+          "position": 4935
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tpre_commit_hooks: commonBinding(common.preCommitHooks),\n\n\t// §5.2 Code Quality — TypeScript (trellis-299e) + Swift (trellis-3d67) + Python (trellis-89b4)\n\tlint_config: languageBinding({\n\t\ttypescript: ts.lintConfig,\n\t\tswift: swift.lintConfig,\n\t\tpython: python.lintConfig,\n\t}),\n\ttype_check: languageBinding({\n\t\ttypescript: ts.typeCheck,\n\t\tswift: swift.typeCheck,\n\t\tpython: python.typeCheck,\n\t}),\n\tformatter: languageBinding({\n\t\ttypescript: ts.formatter,\n\t\tswift: swift.formatter,\n\t\tpython: python.formatter,\n\t}),\n\tstrict_typing: languageBinding({\n\t\ttypescript: ts.strictTyping,\n\t\tswift: swift.strictTyping,\n\t\tpython: python.strictTyping,\n\t}),\n\tnaming_consistency: languageBinding({\n\t\ttypescript: ts.namingConsistency,\n\t\tswift: swift.namingConsistency,\n\t\tpython: python.namingConsistency,\n\t}),\n\tdead_code_detection: languageBinding({\n\t\ttypescript: ts.deadCodeDetection,\n\t\tswift: swift.deadCodeDetection,\n\t\tpython: python.deadCodeDetection,\n\t}),\n\tduplicate_code_detection: languageBinding({\n\t\ttypescript: ts.duplicateCodeDetection,\n\t\tswift: swift.duplicateCodeDetection,\n\t\tpython: python.duplicateCodeDetection,\n\t}),\n\tunused_dependencies_detection: languageBinding({\n\t\ttypescript: ts.unusedDependenciesDetection,",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 40,
+      "secondFile": {
+        "end": 134,
+        "endLoc": {
+          "column": 73,
+          "line": 134,
+          "position": 6262
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 98,
+        "startLoc": {
+          "column": 2,
+          "line": 98,
+          "position": 5158
+        }
+      },
+      "tokens": 194
+    },
+    {
+      "firstFile": {
+        "end": 113,
+        "endLoc": {
+          "column": 4,
+          "line": 113,
+          "position": 5525
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 96,
+        "startLoc": {
+          "column": 2,
+          "line": 96,
+          "position": 5102
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tswift: swift.lintConfig,\n\t\tpython: python.lintConfig,\n\t}),\n\ttype_check: languageBinding({\n\t\ttypescript: ts.typeCheck,\n\t\tswift: swift.typeCheck,\n\t\tpython: python.typeCheck,\n\t}),\n\tformatter: languageBinding({\n\t\ttypescript: ts.formatter,\n\t\tswift: swift.formatter,\n\t\tpython: python.formatter,\n\t}),\n\tstrict_typing: languageBinding({\n\t\ttypescript: ts.strictTyping,\n\t\tswift: swift.strictTyping,\n\t\tpython: python.strictTyping,\n\t}),",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 18,
+      "method": "gap",
+      "secondFile": {
+        "end": 189,
+        "endLoc": {
+          "column": 4,
+          "line": 189,
+          "position": 8387
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 163,
+        "startLoc": {
+          "column": 2,
+          "line": 163,
+          "position": 7533
+        }
+      },
+      "similarity": 0.669,
+      "tokens": 93
+    },
+    {
+      "firstFile": {
+        "end": 115,
+        "endLoc": {
+          "column": 34,
+          "line": 115,
+          "position": 5599
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 98,
+        "startLoc": {
+          "column": 1,
+          "line": 98,
+          "position": 5157
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t}),\n\ttype_check: languageBinding({\n\t\ttypescript: ts.typeCheck,\n\t\tswift: swift.typeCheck,\n\t\tpython: python.typeCheck,\n\t}),\n\tformatter: languageBinding({\n\t\ttypescript: ts.formatter,\n\t\tswift: swift.formatter,\n\t\tpython: python.formatter,\n\t}),\n\tstrict_typing: languageBinding({\n\t\ttypescript: ts.strictTyping,\n\t\tswift: swift.strictTyping,\n\t\tpython: python.strictTyping,\n\t}),\n\tnaming_consistency: languageBinding({\n\t\ttypescript: ts.namingConsistency,",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 18,
+      "secondFile": {
+        "end": 152,
+        "endLoc": {
+          "column": 71,
+          "line": 152,
+          "position": 6953
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 134,
+        "startLoc": {
+          "column": 74,
+          "line": 134,
+          "position": 6263
+        }
+      },
+      "tokens": 91
+    },
+    {
+      "firstFile": {
+        "end": 143,
+        "endLoc": {
+          "column": 33,
+          "line": 143,
+          "position": 6609
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 126,
+        "startLoc": {
+          "column": 9,
+          "line": 126,
+          "position": 5922
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tswift: swift.duplicateCodeDetection,\n\t\tpython: python.duplicateCodeDetection,\n\t}),\n\tunused_dependencies_detection: languageBinding({\n\t\ttypescript: ts.unusedDependenciesDetection,\n\t\tswift: swift.unusedDependenciesDetection,\n\t\tpython: python.unusedDependenciesDetection,\n\t}),\n\tcode_modularization: languageBinding({ typescript: ts.codeModularization }),\n\tcyclomatic_complexity: languageBinding({\n\t\ttypescript: ts.cyclomaticComplexity,\n\t\tswift: swift.cyclomaticComplexity,\n\t\tpython: python.cyclomaticComplexity,\n\t}),\n\t// §5.3 Testing — deterministic TypeScript + Swift + Python subset\n\tunit_tests_runnable: languageBinding({\n\t\ttypescript: ts.unitTestsRunnable,\n\t\tswift: swift.unitTestsRunnable,",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 18,
+      "method": "gap",
+      "secondFile": {
+        "end": 164,
+        "endLoc": {
+          "column": 39,
+          "line": 164,
+          "position": 7610
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 143,
+        "startLoc": {
+          "column": 9,
+          "line": 143,
+          "position": 6585
+        }
+      },
+      "similarity": 0.785,
+      "tokens": 95
+    },
+    {
+      "firstFile": {
+        "end": 173,
+        "endLoc": {
+          "column": 39,
+          "line": 173,
+          "position": 7902
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 156,
+        "startLoc": {
+          "column": 91,
+          "line": 156,
+          "position": 7320
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tmachine_checked_architecture: languageBinding({ typescript: ts.machineCheckedArchitecture }),\n\timport_cycle_detection: languageBinding({\n\t\ttypescript: ts.importCycleDetection,\n\t\tswift: swift.importCycleDetection,\n\t\tpython: python.importCycleDetection,\n\t}),\n\torphan_module_detection: languageBinding({\n\t\ttypescript: ts.orphanModuleDetection,\n\t\tpython: python.orphanModuleDetection,\n\t}),\n\texplicit_any_detection: languageBinding({\n\t\ttypescript: ts.explicitAnyDetection,\n\t\tswift: swift.explicitAnyDetection,\n\t\tpython: python.explicitAnyDetection,\n\t}),\n\tstrictest_type_checking: languageBinding({\n\t\ttypescript: ts.strictestTypeChecking,\n\t\tpython: python.strictestTypeChecking,",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 18,
+      "secondFile": {
+        "end": 182,
+        "endLoc": {
+          "column": 43,
+          "line": 182,
+          "position": 8194
+        },
+        "name": "src/detectors/registry.ts",
+        "start": 165,
+        "startLoc": {
+          "column": 1,
+          "line": 165,
+          "position": 7612
+        }
+      },
+      "tokens": 92
+    },
+    {
+      "firstFile": {
+        "end": 95,
+        "endLoc": {
+          "column": 3,
+          "line": 95,
+          "position": 3882
+        },
+        "name": "src/detectors/types.ts",
+        "start": 79,
+        "startLoc": {
+          "column": 48,
+          "line": 79,
+          "position": 3465
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\trationale: z.string().min(1).max(MAX_RATIONALE),\n\t})\n\t.superRefine((r, ctx) => {\n\t\tif (r.numerator === null && r.naKind === undefined) {\n\t\t\tctx.addIssue({\n\t\t\t\tcode: \"custom\",\n\t\t\t\tmessage: \"naKind is required when numerator is null (N/A)\",\n\t\t\t\tpath: [\"naKind\"],\n\t\t\t});\n\t\t}\n\t\tif (r.numerator !== null && r.naKind !== undefined) {\n\t\t\tctx.addIssue({\n\t\t\t\tcode: \"custom\",\n\t\t\t\tmessage: \"naKind must be absent when numerator is non-null\",\n\t\t\t\tpath: [\"naKind\"],\n\t\t\t});\n\t\t}",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 17,
+      "secondFile": {
+        "end": 56,
+        "endLoc": {
+          "column": 3,
+          "line": 56,
+          "position": 2088
+        },
+        "name": "src/scoring/entry.ts",
+        "start": 40,
+        "startLoc": {
+          "column": 36,
+          "line": 40,
+          "position": 1651
+        }
+      },
+      "tokens": 90
+    },
+    {
+      "firstFile": {
+        "end": 27,
+        "endLoc": {
+          "column": 21,
+          "line": 27,
+          "position": 1282
+        },
+        "name": "src/fleet/report.ts",
+        "start": 14,
+        "startLoc": {
+          "column": 38,
+          "line": 14,
+          "position": 799
+        }
+      },
+      "format": "typescript",
+      "fragment": "import type { FleetEntry, FleetReport } from \"./orchestrate.ts\";\n\n/** Right-pad `s` to `width` for fixed-width columns. */\nfunction pad(s: string, width: number): string {\n\treturn s.length >= width ? s : s + \" \".repeat(width - s.length);\n}\n\n/** Left-pad `s` to `width` for right-aligned numeric columns. */\nfunction padStart(s: string, width: number): string {\n\treturn s.length >= width ? s : \" \".repeat(width - s.length) + s;\n}\n\n/** The sloppiness index `12/100`, or `—` for an errored target. */\nfunction indexCell(e: FleetEntry): string {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 14,
+      "secondFile": {
+        "end": 36,
+        "endLoc": {
+          "column": 30,
+          "line": 36,
+          "position": 1495
+        },
+        "name": "src/history/render.ts",
+        "start": 23,
+        "startLoc": {
+          "column": 0,
+          "line": 23,
+          "position": 978
+        }
+      },
+      "tokens": 83
+    },
+    {
+      "firstFile": {
+        "end": 27,
+        "endLoc": {
+          "column": 41,
+          "line": 27,
+          "position": 1302
+        },
+        "name": "src/fleet/report.ts",
+        "start": 17,
+        "startLoc": {
+          "column": 0,
+          "line": 17,
+          "position": 884
+        }
+      },
+      "format": "typescript",
+      "fragment": "function pad(s: string, width: number): string {\n\treturn s.length >= width ? s : s + \" \".repeat(width - s.length);\n}\n\n/** Left-pad `s` to `width` for right-aligned numeric columns. */\nfunction padStart(s: string, width: number): string {\n\treturn s.length >= width ? s : \" \".repeat(width - s.length) + s;\n}\n\n/** The sloppiness index `12/100`, or `—` for an errored target. */\nfunction indexCell(e: FleetEntry): string {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 11,
+      "secondFile": {
+        "end": 50,
+        "endLoc": {
+          "column": 49,
+          "line": 50,
+          "position": 1881
+        },
+        "name": "src/report/audit-terminal.ts",
+        "start": 40,
+        "startLoc": {
+          "column": 0,
+          "line": 40,
+          "position": 1434
+        }
+      },
+      "tokens": 83
+    },
+    {
+      "firstFile": {
+        "end": 24,
+        "endLoc": {
+          "column": 1,
+          "line": 24,
+          "position": 1189
+        },
+        "name": "src/fleet/report.ts",
+        "start": 14,
+        "startLoc": {
+          "column": 26,
+          "line": 14,
+          "position": 787
+        }
+      },
+      "format": "typescript",
+      "fragment": "import type { FleetEntry, FleetReport } from \"./orchestrate.ts\";\n\n/** Right-pad `s` to `width` for fixed-width columns. */\nfunction pad(s: string, width: number): string {\n\treturn s.length >= width ? s : s + \" \".repeat(width - s.length);\n}\n\n/** Left-pad `s` to `width` for right-aligned numeric columns. */\nfunction padStart(s: string, width: number): string {\n\treturn s.length >= width ? s : \" \".repeat(width - s.length) + s;\n}",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 11,
+      "secondFile": {
+        "end": 20,
+        "endLoc": {
+          "column": 1,
+          "line": 20,
+          "position": 919
+        },
+        "name": "src/report/terminal.ts",
+        "start": 10,
+        "startLoc": {
+          "column": 14,
+          "line": 10,
+          "position": 528
+        }
+      },
+      "tokens": 79
+    },
+    {
+      "firstFile": {
+        "end": 96,
+        "endLoc": {
+          "column": 16,
+          "line": 96,
+          "position": 4239
+        },
+        "name": "src/fleet/report.ts",
+        "start": 86,
+        "startLoc": {
+          "column": 215,
+          "line": 86,
+          "position": 3992
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\t`  ${pad(e.id, idWidth)}  ${padStart(indexCell(e), 6)}  ${pad(stateCell(e), 8)}  ${padStart(findingsCell(e), 8)}  ${pad(policyCell(e), 6)}  ${pad(driftCell(e), driftWidth)}  ${pad(deltaCell(e), 4)}  ${noteCell(e)}`.trimEnd(),\n\t\t);\n\t}\n\tlines.push(\"\");\n\tlines.push(headline(report));\n\treturn lines.join(\"\\n\");\n}\n\n/** Render a fleet report as a PR/issue-ready markdown table. */\nexport function renderFleetMarkdown(report: FleetReport): string {\n\tconst lines = [",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 11,
+      "secondFile": {
+        "end": 65,
+        "endLoc": {
+          "column": 16,
+          "line": 65,
+          "position": 2478
+        },
+        "name": "src/standards/drift-report.ts",
+        "start": 55,
+        "startLoc": {
+          "column": 104,
+          "line": 55,
+          "position": 2228
+        }
+      },
+      "tokens": 50
+    },
+    {
+      "firstFile": {
+        "end": 169,
+        "endLoc": {
+          "column": 2,
+          "line": 169,
+          "position": 7106
+        },
+        "name": "src/fleet/targets.ts",
+        "start": 161,
+        "startLoc": {
+          "column": 25,
+          "line": 161,
+          "position": 6820
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\tthrow new TargetsError(\"source file not found or unreadable\");\n\t}\n\n\tconst result = targetsSchema.safeParse(raw);\n\tif (!result.success) {\n\t\tconst issue = result.error.issues[0];\n\t\tconst where = issue?.path.join(\".\") || \"<root>\";\n\t\tthrow new TargetsError(issue?.message ?? \"schema validation failed\", where);\n\t}",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 9,
+      "secondFile": {
+        "end": 143,
+        "endLoc": {
+          "column": 2,
+          "line": 143,
+          "position": 5772
+        },
+        "name": "src/standards/manifest.ts",
+        "start": 135,
+        "startLoc": {
+          "column": 65,
+          "line": 135,
+          "position": 5519
+        }
+      },
+      "tokens": 62
+    },
+    {
+      "firstFile": {
+        "end": 72,
+        "endLoc": {
+          "column": 136,
+          "line": 72,
+          "position": 3044
+        },
+        "name": "src/history/render.ts",
+        "start": 65,
+        "startLoc": {
+          "column": 88,
+          "line": 65,
+          "position": 2736
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tlines.push(`sloppiness snapshot (${snapshot.length}) · index 0–100, lower is better`);\n\tif (snapshot.length === 0) {\n\t\tlines.push(\"  (no audit runs recorded)\");\n\t\treturn;\n\t}\n\tconst idWidth = Math.max(4, ...snapshot.map((e) => e.repo.length));\n\tlines.push(\n\t\t`  ${pad(\"repo\", idWidth)}  ${padStart(\"index\", 6)}  ${pad(\"state\", 8)}  ${pad(\"Δ\", 4)}  ${padStart(\"runs\", 4)}  ${pad(\"scoring\", 16)}  audited`,",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 8,
+      "secondFile": {
+        "end": 107,
+        "endLoc": {
+          "column": 139,
+          "line": 107,
+          "position": 4548
+        },
+        "name": "src/history/render.ts",
+        "start": 100,
+        "startLoc": {
+          "column": 1,
+          "line": 100,
+          "position": 4240
+        }
+      },
+      "tokens": 93
+    },
+    {
+      "firstFile": {
+        "end": 151,
+        "endLoc": {
+          "column": 22,
+          "line": 151,
+          "position": 6069
+        },
+        "name": "src/history/render.ts",
+        "start": 136,
+        "startLoc": {
+          "column": 57,
+          "line": 136,
+          "position": 5644
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tlines.push(`## Sloppiness snapshot (${snapshot.length})`, \"\");\n\tlines.push(\n\t\t\"Index 0–100, **lower is better**; Δ is the index move vs the previous compatible run (positive = worse).\",\n\t\t\"\",\n\t);\n\tif (snapshot.length === 0) {\n\t\tlines.push(\"_no audit runs recorded_\", \"\");\n\t\treturn;\n\t}\n\tlines.push(\n\t\t\"| Repo | Index | State | Δ | Runs | Scoring | Audited |\",\n\t\t\"| --- | --- | --- | --- | --- | --- | --- |\",\n\t);\n\tfor (const e of snapshot) {\n\t\tlines.push(\n\t\t\t`| \\`${cell(e.repo)}\\` | ${e.index}/100 | ${stateCell(e)} | ${deltaCell(e.indexDelta)} | ${e.runs} | ${e.scoringVersion} | ${e.auditedAt} |`,",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 16,
+      "secondFile": {
+        "end": 187,
+        "endLoc": {
+          "column": 22,
+          "line": 187,
+          "position": 7441
+        },
+        "name": "src/history/render.ts",
+        "start": 172,
+        "startLoc": {
+          "column": 41,
+          "line": 172,
+          "position": 6987
+        }
+      },
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 188,
+        "endLoc": {
+          "column": 29,
+          "line": 188,
+          "position": 7402
+        },
+        "name": "src/metrics/analyze-cycles.ts",
+        "start": 174,
+        "startLoc": {
+          "column": 57,
+          "line": 174,
+          "position": 7008
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t: `dependency graph incomplete: ${distinct.join(\"; \")}`;\n}\n\n/** State + partial value under the documented state rules. */\nfunction stateAndValue(\n\tvalue: number,\n\treason: string | undefined,\n): Pick<MetricValue, \"state\" | \"value\" | \"reason\"> {\n\treturn reason === undefined\n\t\t? { state: \"complete\", value }\n\t\t: { state: \"incomplete\", value, reason };\n}\n\n/** The density over the compatible denominator (graph nodes). */\nfunction densityMetric(nodes: number, affected: number, reason: string | undefined): MetricValue {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 15,
+      "secondFile": {
+        "end": 92,
+        "endLoc": {
+          "column": 28,
+          "line": 92,
+          "position": 3837
+        },
+        "name": "src/metrics/analyze-graph.ts",
+        "start": 78,
+        "startLoc": {
+          "column": 57,
+          "line": 78,
+          "position": 3435
+        }
+      },
+      "tokens": 57
+    },
+    {
+      "firstFile": {
+        "end": 187,
+        "endLoc": {
+          "column": 59,
+          "line": 187,
+          "position": 7232
+        },
+        "name": "src/metrics/analyze-duplication.ts",
+        "start": 156,
+        "startLoc": {
+          "column": 1,
+          "line": 156,
+          "position": 6170
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tconst n = scope.diagnosticFiles.length;\n\treturn n === 0\n\t\t? undefined\n\t\t: `${n} ${scope.sourceSet} file(s) produced parse diagnostics; values are partial`;\n}\n\n/** One metric's state + optional value under the documented state rules. */\nfunction stateAndValue(\n\tvalue: number | null,\n\treason: string | undefined,\n): Pick<MetricValue, \"state\" | \"value\" | \"reason\"> {\n\tif (reason !== undefined) {\n\t\treturn value === null\n\t\t\t? { state: \"incomplete\", reason }\n\t\t\t: { state: \"incomplete\", value, reason };\n\t}\n\treturn value === null ? { state: \"not-applicable\" } : { state: \"complete\", value };\n}\n\n/** Build one contract metric from a computed (nullable) value. */\nfunction metric(\n\tid: string,\n\tunit: string,\n\tvalue: number | null,\n\treason: string | undefined,\n\textra?: Partial<Pick<MetricValue, \"numerator\" | \"denominator\" | \"detail\">>,\n): MetricValue {\n\treturn { id, unit, ...stateAndValue(value, reason), ...extra };\n}\n\n/** Emit the per-scope metric set: ids carry the source set as their last segment. */\nfunction scopeMetrics(scope: DuplicationScope): MetricValue[] {",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 32,
+      "secondFile": {
+        "end": 158,
+        "endLoc": {
+          "column": 53,
+          "line": 158,
+          "position": 5507
+        },
+        "name": "src/metrics/analyze.ts",
+        "start": 127,
+        "startLoc": {
+          "column": 1,
+          "line": 127,
+          "position": 4469
+        }
+      },
+      "tokens": 176
+    },
+    {
+      "firstFile": {
+        "end": 271,
+        "endLoc": {
+          "column": 3,
+          "line": 271,
+          "position": 9864
+        },
+        "name": "src/metrics/analyze-duplication.ts",
+        "start": 266,
+        "startLoc": {
+          "column": 9,
+          "line": 266,
+          "position": 9709
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\tbudget,\n\t\t),\n\t};\n\tconst metrics = [...scopeMetrics(scopes.production), ...scopeMetrics(scopes.test)].sort((a, b) =>\n\t\ta.id < b.id ? -1 : a.id > b.id ? 1 : 0,\n\t);",
+      "isNew": false,
+      "kind": "exact",
+      "lines": 6,
+      "secondFile": {
+        "end": 251,
+        "endLoc": {
+          "column": 3,
+          "line": 251,
+          "position": 9100
+        },
+        "name": "src/metrics/analyze.ts",
+        "start": 246,
+        "startLoc": {
+          "column": 52,
+          "line": 246,
+          "position": 8945
+        }
+      },
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 50,
+        "endLoc": {
+          "column": 27,
+          "line": 50,
+          "position": 2590
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 41,
+        "startLoc": {
+          "column": 69,
+          "line": 41,
+          "position": 2272
+        }
+      },
+      "format": "typescript",
+      "fragment": "import { type FunctionFacts, walkOwnNodes } from \"../syntax/index.ts\";\n\n/** Node kinds that each contribute one CC decision (see the module table). */\nconst BRANCH_KINDS: ReadonlySet<ts.SyntaxKind> = new Set([\n\tts.SyntaxKind.IfStatement,\n\tts.SyntaxKind.ForStatement,\n\tts.SyntaxKind.ForInStatement,\n\tts.SyntaxKind.ForOfStatement,\n\tts.SyntaxKind.WhileStatement,\n\tts.SyntaxKind.DoStatement,",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 10,
+      "secondFile": {
+        "end": 63,
+        "endLoc": {
+          "column": 43,
+          "line": 63,
+          "position": 3071
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 54,
+        "startLoc": {
+          "column": 2,
+          "line": 54,
+          "position": 2686
+        }
+      },
+      "tokens": 51
+    },
+    {
+      "firstFile": {
+        "end": 54,
+        "endLoc": {
+          "column": 3,
+          "line": 54,
+          "position": 2687
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 44,
+        "startLoc": {
+          "column": 6,
+          "line": 44,
+          "position": 2360
+        }
+      },
+      "format": "typescript",
+      "fragment": "const BRANCH_KINDS: ReadonlySet<ts.SyntaxKind> = new Set([\n\tts.SyntaxKind.IfStatement,\n\tts.SyntaxKind.ForStatement,\n\tts.SyntaxKind.ForInStatement,\n\tts.SyntaxKind.ForOfStatement,\n\tts.SyntaxKind.WhileStatement,\n\tts.SyntaxKind.DoStatement,\n\tts.SyntaxKind.CaseClause,\n\tts.SyntaxKind.CatchClause,\n\tts.SyntaxKind.ConditionalExpression,\n]);",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 11,
+      "method": "gap",
+      "secondFile": {
+        "end": 76,
+        "endLoc": {
+          "column": 3,
+          "line": 76,
+          "position": 3462
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 67,
+        "startLoc": {
+          "column": 6,
+          "line": 67,
+          "position": 3166
+        }
+      },
+      "similarity": 0.914,
+      "tokens": 64
+    },
+    {
+      "firstFile": {
+        "end": 63,
+        "endLoc": {
+          "column": 43,
+          "line": 63,
+          "position": 3071
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 48,
+        "startLoc": {
+          "column": 1,
+          "line": 48,
+          "position": 2502
+        }
+      },
+      "format": "typescript",
+      "fragment": "\tts.SyntaxKind.ForOfStatement,\n\tts.SyntaxKind.WhileStatement,\n\tts.SyntaxKind.DoStatement,\n\tts.SyntaxKind.CaseClause,\n\tts.SyntaxKind.CatchClause,\n\tts.SyntaxKind.ConditionalExpression,\n]);\n\n/** Binary operator tokens that short-circuit and therefore each add one CC decision. */\nconst LOGICAL_OPERATORS: ReadonlySet<ts.SyntaxKind> = new Set([\n\tts.SyntaxKind.AmpersandAmpersandToken,\n\tts.SyntaxKind.BarBarToken,\n\tts.SyntaxKind.QuestionQuestionToken,\n\tts.SyntaxKind.AmpersandAmpersandEqualsToken,\n\tts.SyntaxKind.BarBarEqualsToken,\n\tts.SyntaxKind.QuestionQuestionEqualsToken,",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 16,
+      "secondFile": {
+        "end": 73,
+        "endLoc": {
+          "column": 27,
+          "line": 73,
+          "position": 3397
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 58,
+        "startLoc": {
+          "column": 1,
+          "line": 58,
+          "position": 2843
+        }
+      },
+      "tokens": 89
+    },
+    {
+      "firstFile": {
+        "end": 57,
+        "endLoc": {
+          "column": 23,
+          "line": 57,
+          "position": 2801
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 44,
+        "startLoc": {
+          "column": 56,
+          "line": 44,
+          "position": 2410
+        }
+      },
+      "format": "typescript",
+      "fragment": "const BRANCH_KINDS: ReadonlySet<ts.SyntaxKind> = new Set([\n\tts.SyntaxKind.IfStatement,\n\tts.SyntaxKind.ForStatement,\n\tts.SyntaxKind.ForInStatement,\n\tts.SyntaxKind.ForOfStatement,\n\tts.SyntaxKind.WhileStatement,\n\tts.SyntaxKind.DoStatement,\n\tts.SyntaxKind.CaseClause,\n\tts.SyntaxKind.CatchClause,\n\tts.SyntaxKind.ConditionalExpression,\n]);\n\n/** Binary operator tokens that short-circuit and therefore each add one CC decision. */\nconst LOGICAL_OPERATORS: ReadonlySet<ts.SyntaxKind> = new Set([",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 14,
+      "method": "gap",
+      "secondFile": {
+        "end": 139,
+        "endLoc": {
+          "column": 25,
+          "line": 139,
+          "position": 6023
+        },
+        "name": "src/metrics/duplication.ts",
+        "start": 127,
+        "startLoc": {
+          "column": 44,
+          "line": 127,
+          "position": 5642
+        }
+      },
+      "similarity": 0.902,
+      "tokens": 55
+    },
+    {
+      "firstFile": {
+        "end": 76,
+        "endLoc": {
+          "column": 3,
+          "line": 76,
+          "position": 3462
+        },
+        "name": "src/metrics/complexity.ts",
+        "start": 67,
+        "startLoc": {
+          "column": 58,
+          "line": 67,
+          "position": 3218
+        }
+      },
+      "format": "typescript",
+      "fragment": "const NESTING_KINDS: ReadonlySet<ts.SyntaxKind> = new Set([\n\tts.SyntaxKind.IfStatement,\n\tts.SyntaxKind.ForStatement,\n\tts.SyntaxKind.ForInStatement,\n\tts.SyntaxKind.ForOfStatement,\n\tts.SyntaxKind.WhileStatement,\n\tts.SyntaxKind.DoStatement,\n\tts.SyntaxKind.SwitchStatement,\n\tts.SyntaxKind.TryStatement,\n]);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 10,
+      "secondFile": {
+        "end": 136,
+        "endLoc": {
+          "column": 3,
+          "line": 136,
+          "position": 5915
+        },
+        "name": "src/metrics/duplication.ts",
+        "start": 127,
+        "startLoc": {
+          "column": 45,
+          "line": 127,
+          "position": 5643
+        }
+      },
+      "tokens": 52
+    },
+    {
+      "firstFile": {
+        "end": 63,
+        "endLoc": {
+          "column": 47,
+          "line": 63,
+          "position": 2978
+        },
+        "name": "src/metrics/cycles.ts",
+        "start": 34,
+        "startLoc": {
+          "column": 14,
+          "line": 34,
+          "position": 1839
+        }
+      },
+      "format": "typescript",
+      "fragment": "import type { DependencyGraph } from \"./graph-types.ts\";\n\n/** The versioned cycle policy (SPEC §5.4 \"fixed by the (versioned) graph policy\"). */\nexport const CYCLE_POLICY_VERSION = \"1.0.0\";\n\nexport const CYCLE_POLICY = {\n\tversion: CYCLE_POLICY_VERSION,\n\t/**\n\t * Runtime and type-only edges form separate subgraphs; groups keep their\n\t * class and the two classes are scored separately (weighted downstream).\n\t */\n\tedgeClasses: \"runtime-and-type-only-separate\",\n\t/** A self-import is a size-1 cyclic group whose representative path is `[p, p]`. */\n\tselfEdges: \"size-1-groups\",\n\t/**\n\t * Ids `cycle-<n>` follow (smallest member, class) order; the representative\n\t * path is the shortest cycle from the smallest member over sorted adjacency.\n\t */\n\tidentity: \"sorted-members-shortest-path\",\n\t/**\n\t * Cross-package groups keep one id across package views; module counts stay\n\t * per-package so repo totals never double-count a cross-package group.\n\t */\n\tpackageView: \"shared-ids-per-package-modules\",\n} as const;\n\nexport type CyclePolicy = typeof CYCLE_POLICY;\n\n/** The edge subgraph a cycle group lives in. */\nexport type EdgeClass = \"runtime\" | \"type-only\";",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 30,
+      "secondFile": {
+        "end": 60,
+        "endLoc": {
+          "column": 45,
+          "line": 60,
+          "position": 3346
+        },
+        "name": "src/metrics/graph-types.ts",
+        "start": 40,
+        "startLoc": {
+          "column": 57,
+          "line": 40,
+          "position": 2439
+        }
+      },
+      "tokens": 54
+    },
+    {
+      "firstFile": {
+        "end": 95,
+        "endLoc": {
+          "column": 30,
+          "line": 95,
+          "position": 3177
+        },
+        "name": "src/metrics/duplication-detect.ts",
+        "start": 82,
+        "startLoc": {
+          "column": 12,
+          "line": 82,
+          "position": 2846
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn true;\n}\n\n/** Count how far the match extends toward lower token indices (`null` on exhaustion). */\nfunction extendLeft(\n\tdata: Concatenated,\n\tp: number,\n\tq: number,\n\twork: WorkState,\n\tbudget: DuplicationBudget,\n): number | null {\n\tconst { kinds, fileOf, fileStart } = data;\n\tconst fileP = fileOf[p] ?? 0;\n\tconst fileQ = fileOf[q] ?? 0;",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 14,
+      "secondFile": {
+        "end": 115,
+        "endLoc": {
+          "column": 30,
+          "line": 115,
+          "position": 3744
+        },
+        "name": "src/metrics/duplication-detect.ts",
+        "start": 102,
+        "startLoc": {
+          "column": 12,
+          "line": 102,
+          "position": 3413
+        }
+      },
+      "tokens": 62
+    },
+    {
+      "firstFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 7,
+          "line": 88,
+          "position": 3178
+        },
+        "name": "src/metrics/duplication-groups.ts",
+        "start": 81,
+        "startLoc": {
+          "column": 2,
+          "line": 81,
+          "position": 2880
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t);\n}\n\n/** Deterministic member order: path, then start line, then end line. */\nfunction byMember(a: CloneMember, b: CloneMember): number {\n\tif (a.path !== b.path) return a.path < b.path ? -1 : 1;\n\tif (a.range.start.line !== b.range.start.line) return a.range.start.line - b.range.start.line;\n\treturn a.range.end.line - b.range.end.line;",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 8,
+      "secondFile": {
+        "end": 65,
+        "endLoc": {
+          "column": 7,
+          "line": 65,
+          "position": 2793
+        },
+        "name": "src/syntax/inventory.ts",
+        "start": 58,
+        "startLoc": {
+          "column": 2,
+          "line": 58,
+          "position": 2488
+        }
+      },
+      "tokens": 76
+    },
+    {
+      "firstFile": {
+        "end": 123,
+        "endLoc": {
+          "column": 85,
+          "line": 123,
+          "position": 4747
+        },
+        "name": "src/report/audit-fixtures.ts",
+        "start": 112,
+        "startLoc": {
+          "column": 27,
+          "line": 112,
+          "position": 4320
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\tawait seedCleanBase(root, \"fixture-mixed-language\");\n\t\t\tawait put(root, \"lib/tool.py\", \"def tool():\\n    return 1\\n\");\n\t\t\tawait put(root, \"lib/tool.go\", \"package main\\n\\nfunc tool() int {\\n\\treturn 1\\n}\\n\");\n\t\t\treturn;\n\t\t}\n\t\tcase \"incomplete\": {\n\t\t\tawait put(\n\t\t\t\troot,\n\t\t\t\t\"package.json\",\n\t\t\t\tJSON.stringify({ name: \"fixture-incomplete\", version: \"1.0.0\" }),\n\t\t\t);\n\t\t\tawait put(root, \"src/a.ts\", 'import { b } from \"./b.ts\";\\nexport const a = b;\\n');",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 12,
+      "secondFile": {
+        "end": 134,
+        "endLoc": {
+          "column": 78,
+          "line": 134,
+          "position": 5140
+        },
+        "name": "src/report/audit-fixtures.ts",
+        "start": 123,
+        "startLoc": {
+          "column": 29,
+          "line": 123,
+          "position": 4691
+        }
+      },
+      "tokens": 65
+    },
+    {
+      "firstFile": {
+        "end": 159,
+        "endLoc": {
+          "column": 26,
+          "line": 159,
+          "position": 6500
+        },
+        "name": "src/report/compare-render.ts",
+        "start": 143,
+        "startLoc": {
+          "column": 45,
+          "line": 143,
+          "position": 6028
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\t`${findings.persistent.length} persistent`,\n\t\t...findingLines(\"new\", findings.new, limit),\n\t\t...findingLines(\"resolved\", findings.resolved, limit),\n\t];\n}\n\n/**\n * Render a {@link ReportComparison} as plain terminal text (no ANSI — pipes\n * and CI logs stay clean). Pure: every number comes from the comparison.\n */\nexport function renderComparisonTerminal(\n\tcomparison: ReportComparison,\n\tbaseline: AuditReport,\n\tcurrent: AuditReport,\n\toptions: ComparisonRenderOptions = {},\n): string {\n\tconst lines: string[] = [",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 17,
+      "secondFile": {
+        "end": 234,
+        "endLoc": {
+          "column": 26,
+          "line": 234,
+          "position": 9239
+        },
+        "name": "src/report/compare-render.ts",
+        "start": 217,
+        "startLoc": {
+          "column": 4,
+          "line": 217,
+          "position": 8723
+        }
+      },
+      "tokens": 63
+    },
+    {
+      "firstFile": {
+        "end": 160,
+        "endLoc": {
+          "column": 26,
+          "line": 160,
+          "position": 6374
+        },
+        "name": "src/report/markdown.ts",
+        "start": 147,
+        "startLoc": {
+          "column": 8,
+          "line": 147,
+          "position": 5896
+        }
+      },
+      "format": "typescript",
+      "fragment": "\treturn lines;\n}\n\n/**\n * Render a report as the full, persisted markdown audit document. The headline\n * and per-category summary table mirror the terminal view; everything below it\n * (gates, criteria detail, drift, changes) is detail the terminal view omits.\n */\nexport function renderMarkdown(report: Report, rubric: Rubric): string {\n\tconst rollups = rollupByCategory(report, rubric);\n\tconst t = tally(report);\n\tconst appPaths = Object.keys(report.apps);\n\n\tconst lines: string[] = [",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 14,
+      "secondFile": {
+        "end": 28,
+        "endLoc": {
+          "column": 26,
+          "line": 28,
+          "position": 1215
+        },
+        "name": "src/report/terminal.ts",
+        "start": 19,
+        "startLoc": {
+          "column": 63,
+          "line": 19,
+          "position": 915
+        }
+      },
+      "tokens": 56
+    },
+    {
+      "firstFile": {
+        "end": 66,
+        "endLoc": {
+          "column": 51,
+          "line": 66,
+          "position": 3383
+        },
+        "name": "src/report/run.ts",
+        "start": 62,
+        "startLoc": {
+          "column": 19,
+          "line": 62,
+          "position": 3122
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\t...(opts.rubric ? { rubric: opts.rubric } : {}),\n\t\t\t...(opts.rubricDir ? { rubricDir: opts.rubricDir } : {}),\n\t\t\t...(opts.rubricVersion ? { rubricVersion: opts.rubricVersion } : {}),\n\t\t\t...(opts.now ? { now: opts.now } : {}),\n\t\t\t...(opts.repoId ? { repoId: opts.repoId } : {}),",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 5,
+      "secondFile": {
+        "end": 67,
+        "endLoc": {
+          "column": 63,
+          "line": 67,
+          "position": 3447
+        },
+        "name": "src/report/run.ts",
+        "start": 63,
+        "startLoc": {
+          "column": 22,
+          "line": 63,
+          "position": 3177
+        }
+      },
+      "tokens": 85
+    },
+    {
+      "firstFile": {
+        "end": 140,
+        "endLoc": {
+          "column": 29,
+          "line": 140,
+          "position": 5208
+        },
+        "name": "src/safeguards/hooks.ts",
+        "start": 126,
+        "startLoc": {
+          "column": 70,
+          "line": 126,
+          "position": 4795
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t\tnotes: [\"declarative 'husky' key in package.json (husky v4 config)\"],\n\t\t\tfindings: [],\n\t\t};\n\t}\n\treturn null;\n}\n\n/** lefthook YAML config (declarative; wired via a `lefthook install|run` reference). */\nasync function inspectLefthook(ctx: SafeguardContext): Promise<SurfaceEvidence | null> {\n\tfor (const rel of LEFTHOOK_CONFIGS) {\n\t\tconst text = await ctx.readText(rel);\n\t\tif (text === null) continue;\n\t\tconst parse = tryYamlMap(text);\n\t\tif (!parse.ok)\n\t\t\treturn unknownSurface(rel, `lefthook config is not parseable YAML: ${parse.error}`);",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 15,
+      "secondFile": {
+        "end": 163,
+        "endLoc": {
+          "column": 29,
+          "line": 163,
+          "position": 5999
+        },
+        "name": "src/safeguards/hooks.ts",
+        "start": 149,
+        "startLoc": {
+          "column": 3,
+          "line": 149,
+          "position": 5575
+        }
+      },
+      "tokens": 77
+    },
+    {
+      "firstFile": {
+        "end": 87,
+        "endLoc": {
+          "column": 4,
+          "line": 87,
+          "position": 3487
+        },
+        "name": "src/scoring/formula.ts",
+        "start": 72,
+        "startLoc": {
+          "column": 2,
+          "line": 72,
+          "position": 3010
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t\t{\n\t\t\tdimension: \"complexity-erosion\",\n\t\t\tweight: 0.5,\n\t\t\tterms: [\n\t\t\t\t{ metricId: \"erosion.eroded-count.production\", saturatesAt: 20, share: 0.5 },\n\t\t\t\t{ metricId: \"erosion.eroded-share.production\", saturatesAt: 0.25, share: 0.5 },\n\t\t\t],\n\t\t},\n\t\t{\n\t\t\tdimension: \"duplication\",\n\t\t\tweight: 0.3,\n\t\t\tterms: [\n\t\t\t\t{ metricId: \"duplication.density.production\", saturatesAt: 0.15, share: 0.5 },\n\t\t\t\t{ metricId: \"duplication.groups.production\", saturatesAt: 15, share: 0.5 },\n\t\t\t],\n\t\t},",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 16,
+      "secondFile": {
+        "end": 95,
+        "endLoc": {
+          "column": 4,
+          "line": 95,
+          "position": 3701
+        },
+        "name": "src/scoring/formula.ts",
+        "start": 80,
+        "startLoc": {
+          "column": 2,
+          "line": 80,
+          "position": 3255
+        }
+      },
+      "tokens": 88
+    },
+    {
+      "firstFile": {
+        "end": 35,
+        "endLoc": {
+          "column": 45,
+          "line": 35,
+          "position": 1933
+        },
+        "name": "src/syntax/functions.ts",
+        "start": 30,
+        "startLoc": {
+          "column": 1,
+          "line": 30,
+          "position": 1626
+        }
+      },
+      "format": "typescript",
+      "fragment": "\t[ts.SyntaxKind.FunctionDeclaration, \"function-declaration\"],\n\t[ts.SyntaxKind.FunctionExpression, \"function-expression\"],\n\t[ts.SyntaxKind.ArrowFunction, \"arrow-function\"],\n\t[ts.SyntaxKind.MethodDeclaration, \"method\"],\n\t[ts.SyntaxKind.Constructor, \"constructor\"],\n\t[ts.SyntaxKind.GetAccessor, \"get-accessor\"],",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 6,
+      "secondFile": {
+        "end": 36,
+        "endLoc": {
+          "column": 45,
+          "line": 36,
+          "position": 1979
+        },
+        "name": "src/syntax/functions.ts",
+        "start": 31,
+        "startLoc": {
+          "column": 1,
+          "line": 31,
+          "position": 1688
+        }
+      },
+      "tokens": 60
+    },
+    {
+      "firstFile": {
+        "end": 261,
+        "endLoc": {
+          "column": 1,
+          "line": 261,
+          "position": 8230
+        },
+        "name": "scripts/check-debt-markers.ts",
+        "start": 229,
+        "startLoc": {
+          "column": 0,
+          "line": 229,
+          "position": 7058
+        }
+      },
+      "format": "typescript",
+      "fragment": "function main(): void {\n\tconst args = parseArgs(process.argv.slice(2));\n\tconst options: ScanOptions = {};\n\tif (args.budgetPath) options.budgetPath = resolve(args.budgetPath);\n\tif (args.repoRoot) options.repoRoot = resolve(args.repoRoot);\n\tif (args.scanRoots.length > 0) options.scanRoots = args.scanRoots;\n\n\tconst { untracked, staleAllowlistEntries } = scan(options);\n\n\tif (staleAllowlistEntries.length > 0) {\n\t\tconsole.error(\"debt-markers allowlist has entries that no longer match an untracked marker:\");\n\t\tfor (const k of staleAllowlistEntries) console.error(`  - ${k}`);\n\t\tconsole.error(\"Remove these entries — the ratchet only goes down.\");\n\t\tconsole.error(\"\");\n\t}\n\n\tif (untracked.length > 0) {\n\t\tconsole.error(\"Untracked debt markers found:\");\n\t\tfor (const m of untracked) {\n\t\t\tconsole.error(`  ${m.path}:${m.line}  ${m.marker}: ${m.text}`);\n\t\t}\n\t\tconsole.error(\"\");\n\t\tconsole.error(\n\t\t\t\"Pair each marker with a tracker reference on the same line, remove it, \" +\n\t\t\t\t\"or — only with justification — add it to the budget's allowlist.\",\n\t\t);\n\t\tprocess.exit(1);\n\t}\n\n\tif (staleAllowlistEntries.length > 0) process.exit(1);\n\n\tconsole.log(\"Debt-marker guard ok.\");\n}",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 33,
+      "method": "ast",
+      "secondFile": {
+        "end": 219,
+        "endLoc": {
+          "column": 1,
+          "line": 219,
+          "position": 6739
+        },
+        "name": "scripts/check-file-sizes.ts",
+        "start": 188,
+        "startLoc": {
+          "column": 0,
+          "line": 188,
+          "position": 5669
+        }
+      },
+      "similarity": 0.92,
+      "tokens": 227
+    },
+    {
+      "firstFile": {
+        "end": 37,
+        "endLoc": {
+          "column": 1,
+          "line": 37,
+          "position": 1654
+        },
+        "name": "src/cli/report.ts",
+        "start": 27,
+        "startLoc": {
+          "column": 7,
+          "line": 27,
+          "position": 1220
+        }
+      },
+      "format": "typescript",
+      "fragment": "export function registerReport(program: Command): void {\n\tprogram\n\t\t.command(\"report\")\n\t\t.description(\"render history/dashboard from SQLite\")\n\t\t.option(\"--repo <id>\", \"limit to one target\")\n\t\t.option(\"--since <date>\", \"only runs since this date (ISO-8601)\")\n\t\t.addOption(new Option(\"--db <path>\", \"SQLite history path\").hideHelp())\n\t\t.action(function (this: Command) {\n\t\t\trunReportCommand(this.optsWithGlobals() as ReportCliOptions);\n\t\t});\n}",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 11,
+      "method": "ast",
+      "secondFile": {
+        "end": 35,
+        "endLoc": {
+          "column": 1,
+          "line": 35,
+          "position": 1512
+        },
+        "name": "src/cli/rubric.ts",
+        "start": 26,
+        "startLoc": {
+          "column": 7,
+          "line": 26,
+          "position": 1125
+        }
+      },
+      "similarity": 0.914,
+      "tokens": 68
+    },
+    {
+      "firstFile": {
+        "end": 144,
+        "endLoc": {
+          "column": 1,
+          "line": 144,
+          "position": 5764
+        },
+        "name": "src/detectors/common/ci-release.ts",
+        "start": 124,
+        "startLoc": {
+          "column": 43,
+          "line": 124,
+          "position": 5009
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const releaseAutomation: Detector = async (ctx) => {\n\tconst named = await globHits(ctx, [\n\t\t\".github/workflows/publish.yml\",\n\t\t\".github/workflows/publish.yaml\",\n\t\t\".github/workflows/release.yml\",\n\t\t\".github/workflows/release.yaml\",\n\t\t\".github/workflows/deploy.yml\",\n\t\t\".github/workflows/deploy.yaml\",\n\t]);\n\tif (named.length > 0) return pass(`release/deploy workflow present: ${named.join(\", \")}`);\n\tconst workflows = await readWorkflows(ctx);\n\tif (\n\t\tanyWorkflowMatches(\n\t\t\tworkflows,\n\t\t\t/npm publish|bun publish|pnpm publish|yarn publish|gh release|action-gh-release|cargo publish|twine upload|pypi|on:\\s+release|release:\\s*\\n/i,\n\t\t)\n\t) {\n\t\treturn pass(\"a CI workflow runs an automated release/publish step\");\n\t}\n\treturn fail(\"no automated release/deploy pipeline found in CI workflows\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 21,
+      "method": "ast",
+      "secondFile": {
+        "end": 114,
+        "endLoc": {
+          "column": 1,
+          "line": 114,
+          "position": 4640
+        },
+        "name": "src/detectors/common/security.ts",
+        "start": 98,
+        "startLoc": {
+          "column": 49,
+          "line": 98,
+          "position": 4069
+        }
+      },
+      "similarity": 0.891,
+      "tokens": 77
+    },
+    {
+      "firstFile": {
+        "end": 71,
+        "endLoc": {
+          "column": 1,
+          "line": 71,
+          "position": 2691
+        },
+        "name": "src/detectors/common/process.ts",
+        "start": 54,
+        "startLoc": {
+          "column": 45,
+          "line": 54,
+          "position": 2165
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const issueLabelingSystem: Detector = async (ctx) => {\n\tconst cfg = await firstHit(ctx, [\n\t\t\".github/labels.yml\",\n\t\t\".github/labels.yaml\",\n\t\t\".github/labeler.yml\",\n\t]);\n\tif (cfg !== null) return pass(`labeling scheme committed: '${cfg}'`);\n\tconst workflows = await readWorkflows(ctx);\n\tif (\n\t\tanyWorkflowMatches(\n\t\t\tworkflows,\n\t\t\t/sync-labels|crazy-max\\/ghaction-github-labeler|actions\\/labeler/i,\n\t\t)\n\t) {\n\t\treturn pass(\"a CI workflow syncs a deliberate label set\");\n\t}\n\treturn fail(\"no committed labeling scheme (.github/labels.yml or a label-sync workflow)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 18,
+      "method": "ast",
+      "secondFile": {
+        "end": 105,
+        "endLoc": {
+          "column": 1,
+          "line": 105,
+          "position": 3882
+        },
+        "name": "src/detectors/common/process.ts",
+        "start": 89,
+        "startLoc": {
+          "column": 43,
+          "line": 89,
+          "position": 3336
+        }
+      },
+      "similarity": 0.957,
+      "tokens": 72
+    },
+    {
+      "firstFile": {
+        "end": 71,
+        "endLoc": {
+          "column": 1,
+          "line": 71,
+          "position": 2691
+        },
+        "name": "src/detectors/common/process.ts",
+        "start": 54,
+        "startLoc": {
+          "column": 45,
+          "line": 54,
+          "position": 2165
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const issueLabelingSystem: Detector = async (ctx) => {\n\tconst cfg = await firstHit(ctx, [\n\t\t\".github/labels.yml\",\n\t\t\".github/labels.yaml\",\n\t\t\".github/labeler.yml\",\n\t]);\n\tif (cfg !== null) return pass(`labeling scheme committed: '${cfg}'`);\n\tconst workflows = await readWorkflows(ctx);\n\tif (\n\t\tanyWorkflowMatches(\n\t\t\tworkflows,\n\t\t\t/sync-labels|crazy-max\\/ghaction-github-labeler|actions\\/labeler/i,\n\t\t)\n\t) {\n\t\treturn pass(\"a CI workflow syncs a deliberate label set\");\n\t}\n\treturn fail(\"no committed labeling scheme (.github/labels.yml or a label-sync workflow)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 18,
+      "method": "ast",
+      "secondFile": {
+        "end": 120,
+        "endLoc": {
+          "column": 1,
+          "line": 120,
+          "position": 4536
+        },
+        "name": "src/detectors/common/process.ts",
+        "start": 108,
+        "startLoc": {
+          "column": 39,
+          "line": 108,
+          "position": 4014
+        }
+      },
+      "similarity": 0.935,
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 105,
+        "endLoc": {
+          "column": 1,
+          "line": 105,
+          "position": 3882
+        },
+        "name": "src/detectors/common/process.ts",
+        "start": 89,
+        "startLoc": {
+          "column": 43,
+          "line": 89,
+          "position": 3336
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const automatedPrReview: Detector = async (ctx) => {\n\tconst cfg = await firstHit(ctx, [\n\t\t\".coderabbit.yaml\",\n\t\t\".coderabbit.yml\",\n\t\t\"dangerfile.js\",\n\t\t\"dangerfile.ts\",\n\t\t\"Dangerfile\",\n\t]);\n\tif (cfg !== null) return pass(`automated PR-review config present: '${cfg}'`);\n\tconst workflows = await readWorkflows(ctx);\n\tif (\n\t\tanyWorkflowMatches(workflows, /coderabbit|reviewdog|danger|pull_request_review|review-bot/i)\n\t) {\n\t\treturn pass(\"a CI workflow performs an automated first-pass PR review\");\n\t}\n\treturn notApplicable(\"no automated PR-review bot/workflow (skippable → N/A)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 17,
+      "method": "ast",
+      "secondFile": {
+        "end": 120,
+        "endLoc": {
+          "column": 1,
+          "line": 120,
+          "position": 4536
+        },
+        "name": "src/detectors/common/process.ts",
+        "start": 108,
+        "startLoc": {
+          "column": 39,
+          "line": 108,
+          "position": 4014
+        }
+      },
+      "similarity": 0.896,
+      "tokens": 69
+    },
+    {
+      "firstFile": {
+        "end": 29,
+        "endLoc": {
+          "column": 1,
+          "line": 29,
+          "position": 1364
+        },
+        "name": "src/detectors/common/quality.ts",
+        "start": 14,
+        "startLoc": {
+          "column": 44,
+          "line": 14,
+          "position": 674
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const largeFileDetection: Detector = async (ctx) => {\n\tconst scripts = packageScripts(await readJson(ctx, \"package.json\"));\n\tconst re = /file.?size|filesize|max.?lines|loc.?budget/i;\n\tconst scriptHit = Object.entries(scripts).find(([k, v]) => re.test(k) || re.test(v));\n\tif (scriptHit !== undefined)\n\t\treturn pass(`file-size budget enforced via script '${scriptHit[0]}'`);\n\tconst files = await globHits(ctx, [\n\t\t\"scripts/*file*size*\",\n\t\t\"scripts/check-file-sizes.*\",\n\t\t\"**/file-size-budget*.json\",\n\t\t\"**/file-size-budgets*.json\",\n\t]);\n\tif (files.length > 0)\n\t\treturn pass(`file-size ratchet/budget present: ${files.slice(0, 2).join(\", \")}`);\n\treturn fail(\"no enforced file-size budget (ratchet script or budget file) found\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 16,
+      "method": "ast",
+      "secondFile": {
+        "end": 46,
+        "endLoc": {
+          "column": 1,
+          "line": 46,
+          "position": 2147
+        },
+        "name": "src/detectors/common/quality.ts",
+        "start": 32,
+        "startLoc": {
+          "column": 42,
+          "line": 32,
+          "position": 1493
+        }
+      },
+      "similarity": 1,
+      "tokens": 132
+    },
+    {
+      "firstFile": {
+        "end": 30,
+        "endLoc": {
+          "column": 1,
+          "line": 30,
+          "position": 1679
+        },
+        "name": "src/detectors/lang/python/code-quality.ts",
+        "start": 21,
+        "startLoc": {
+          "column": 36,
+          "line": 21,
+          "position": 1292
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const lintConfig: Detector = async (ctx) => {\n\tconst where = await locateTool(ctx, {\n\t\tfiles: [\"ruff.toml\", \".ruff.toml\", \".flake8\", \".pylintrc\", \"pylintrc\"],\n\t\tconfigRe: /\\[tool\\.ruff\\b|\\[tool\\.flake8\\]|\\[flake8\\]|\\[tool\\.pylint|\\[pylint\\b/,\n\t\tmention: /\\b(ruff|flake8|pylint)\\b/,\n\t});\n\treturn where !== null\n\t\t? pass(`a linter is configured (${where})`)\n\t\t: fail(\"no linter configured (ruff / flake8 / pylint)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 10,
+      "method": "ast",
+      "secondFile": {
+        "end": 120,
+        "endLoc": {
+          "column": 1,
+          "line": 120,
+          "position": 5565
+        },
+        "name": "src/detectors/lang/python/code-quality.ts",
+        "start": 111,
+        "startLoc": {
+          "column": 48,
+          "line": 111,
+          "position": 5111
+        }
+      },
+      "similarity": 1,
+      "tokens": 58
+    },
+    {
+      "firstFile": {
+        "end": 81,
+        "endLoc": {
+          "column": 1,
+          "line": 81,
+          "position": 3843
+        },
+        "name": "src/detectors/lang/swift/code-quality.ts",
+        "start": 74,
+        "startLoc": {
+          "column": 35,
+          "line": 74,
+          "position": 3452
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const formatter: Detector = async (ctx) => {\n\tconst cfg = await firstPresent(ctx, FORMATTER_CONFIGS);\n\tif (cfg !== null) return pass(`autoformatter configured in '${cfg}'`);\n\tif (toolingMentions(await gatherToolingText(ctx), /\\bswift-?format\\b/i)) {\n\t\treturn pass(\"an autoformatter (swift-format / SwiftFormat) is wired via build tooling\");\n\t}\n\treturn fail(\"no autoformatter configured (swift-format / SwiftFormat)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 8,
+      "method": "ast",
+      "secondFile": {
+        "end": 65,
+        "endLoc": {
+          "column": 1,
+          "line": 65,
+          "position": 3203
+        },
+        "name": "src/detectors/lang/swift/locality.ts",
+        "start": 58,
+        "startLoc": {
+          "column": 41,
+          "line": 58,
+          "position": 2819
+        }
+      },
+      "similarity": 1,
+      "tokens": 59
+    },
+    {
+      "firstFile": {
+        "end": 108,
+        "endLoc": {
+          "column": 1,
+          "line": 108,
+          "position": 5231
+        },
+        "name": "src/detectors/lang/swift/code-quality.ts",
+        "start": 101,
+        "startLoc": {
+          "column": 43,
+          "line": 101,
+          "position": 4822
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const deadCodeDetection: Detector = async (ctx) => {\n\tconst cfg = await firstPresent(ctx, [\".periphery.yml\", \".periphery.yaml\", \"periphery.yml\"]);\n\tif (cfg !== null) return pass(`periphery configured in '${cfg}'`);\n\tif (toolingMentions(await gatherToolingText(ctx), /\\bperiphery\\b/i)) {\n\t\treturn pass(\"periphery (dead-code analyzer) wired via build tooling\");\n\t}\n\treturn fail(\"no dead-code/unused-declaration analyzer configured (periphery)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 8,
+      "method": "ast",
+      "secondFile": {
+        "end": 118,
+        "endLoc": {
+          "column": 1,
+          "line": 118,
+          "position": 5743
+        },
+        "name": "src/detectors/lang/swift/code-quality.ts",
+        "start": 111,
+        "startLoc": {
+          "column": 48,
+          "line": 111,
+          "position": 5355
+        }
+      },
+      "similarity": 1,
+      "tokens": 65
+    },
+    {
+      "firstFile": {
+        "end": 133,
+        "endLoc": {
+          "column": 1,
+          "line": 133,
+          "position": 5963
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 113,
+        "startLoc": {
+          "column": 43,
+          "line": 113,
+          "position": 4979
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const namingConsistency: Detector = async (ctx) => {\n\tconst biome = await findBiomeConfig(ctx);\n\tif (biome !== null && biomeLinterEnabled(biome.config)) {\n\t\tconst fileLevel = biomeRuleLevel(biome.config, \"style\", \"useFilenamingConvention\");\n\t\tconst nameLevel = biomeRuleLevel(biome.config, \"style\", \"useNamingConvention\");\n\t\tif (fileLevel !== null && fileLevel !== \"off\")\n\t\t\treturn pass(\"Biome enforces `useFilenamingConvention`\");\n\t\tif (nameLevel !== null && nameLevel !== \"off\")\n\t\t\treturn pass(\"Biome enforces `useNamingConvention`\");\n\t\tif (biomeRecommended(biome.config))\n\t\t\treturn pass(\"Biome `recommended` enforces `useNamingConvention`\");\n\t}\n\tconst eslint = await findEslintConfig(ctx);\n\tif (eslint !== null) {\n\t\tconst text = (await ctx.readFile(eslint)) ?? \"\";\n\t\tif (/naming-convention|unicorn\\/filename-case|filename/i.test(text)) {\n\t\t\treturn pass(`ESLint config '${eslint}' enforces a naming/filename rule`);\n\t\t}\n\t}\n\treturn fail(\"no naming-convention enforcement (Biome useNaming/Filenaming or ESLint rule)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 21,
+      "method": "ast",
+      "secondFile": {
+        "end": 229,
+        "endLoc": {
+          "column": 1,
+          "line": 229,
+          "position": 10376
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 213,
+        "startLoc": {
+          "column": 46,
+          "line": 213,
+          "position": 9494
+        }
+      },
+      "similarity": 0.914,
+      "tokens": 148
+    },
+    {
+      "firstFile": {
+        "end": 182,
+        "endLoc": {
+          "column": 1,
+          "line": 182,
+          "position": 8331
+        },
+        "name": "src/detectors/lang/typescript/code-quality.ts",
+        "start": 170,
+        "startLoc": {
+          "column": 53,
+          "line": 170,
+          "position": 7670
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const unusedDependenciesDetection: Detector = async (ctx) => {\n\tconst pkg = await readJson(ctx, \"package.json\");\n\tconst deps = packageDeps(pkg);\n\tconst scripts = packageScripts(pkg);\n\tif (depsHasAny(deps, [\"knip\", \"depcheck\"]) || scriptMatches(scripts, /knip|depcheck/i)) {\n\t\treturn pass(\"unused-dependency analyzer configured (knip / depcheck)\");\n\t}\n\tfor (const rel of [\"knip.json\", \"knip.jsonc\", \"knip.config.ts\", \"knip.config.js\", \".knip.json\"]) {\n\t\tif ((await ctx.readFile(rel)) !== null) return pass(`knip configured in '${rel}'`);\n\t}\n\tif (pkg?.knip !== undefined) return pass(\"knip configured via package.json `knip` key\");\n\treturn fail(\"no unused-dependency analyzer configured (knip / depcheck)\");\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 13,
+      "method": "ast",
+      "secondFile": {
+        "end": 76,
+        "endLoc": {
+          "column": 1,
+          "line": 76,
+          "position": 3463
+        },
+        "name": "src/detectors/lang/typescript/locality.ts",
+        "start": 61,
+        "startLoc": {
+          "column": 47,
+          "line": 61,
+          "position": 2751
+        }
+      },
+      "similarity": 0.964,
+      "tokens": 123
+    },
+    {
+      "firstFile": {
+        "end": 148,
+        "endLoc": {
+          "column": 1,
+          "line": 148,
+          "position": 6588
+        },
+        "name": "src/detectors/lang/typescript/locality.ts",
+        "start": 135,
+        "startLoc": {
+          "column": 42,
+          "line": 135,
+          "position": 6035
+        }
+      },
+      "format": "typescript",
+      "fragment": "export const greppableExports: Detector = async (ctx) => {\n\tconst files = await tsSources(ctx);\n\tif (files.length === 0)\n\t\treturn notApplicable(\"no TypeScript sources to analyze for default exports\");\n\tconst offenders: string[] = [];\n\tfor (const file of files) {\n\t\tconst text = await ctx.readFile(file);\n\t\tif (text !== null && DEFAULT_EXPORT_RE.test(text)) offenders.push(file);\n\t}\n\tif (offenders.length === 0) return pass(`no default exports across ${files.length} module(s)`);\n\treturn fail(\n\t\t`default export(s) found in ${offenders.length} file(s): ${offenders.slice(0, 3).join(\", \")}`,\n\t);\n};",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 14,
+      "method": "ast",
+      "secondFile": {
+        "end": 165,
+        "endLoc": {
+          "column": 1,
+          "line": 165,
+          "position": 7298
+        },
+        "name": "src/detectors/lang/typescript/locality.ts",
+        "start": 151,
+        "startLoc": {
+          "column": 53,
+          "line": 151,
+          "position": 6727
+        }
+      },
+      "similarity": 1,
+      "tokens": 123
+    },
+    {
+      "firstFile": {
+        "end": 79,
+        "endLoc": {
+          "column": 1,
+          "line": 79,
+          "position": 3315
+        },
+        "name": "src/history/render.ts",
+        "start": 64,
+        "startLoc": {
+          "column": 0,
+          "line": 64,
+          "position": 2560
+        }
+      },
+      "format": "typescript",
+      "fragment": "function pushSnapshot(lines: string[], snapshot: readonly AuditSnapshotEntry[]): void {\n\tlines.push(`sloppiness snapshot (${snapshot.length}) · index 0–100, lower is better`);\n\tif (snapshot.length === 0) {\n\t\tlines.push(\"  (no audit runs recorded)\");\n\t\treturn;\n\t}\n\tconst idWidth = Math.max(4, ...snapshot.map((e) => e.repo.length));\n\tlines.push(\n\t\t`  ${pad(\"repo\", idWidth)}  ${padStart(\"index\", 6)}  ${pad(\"state\", 8)}  ${pad(\"Δ\", 4)}  ${padStart(\"runs\", 4)}  ${pad(\"scoring\", 16)}  audited`,\n\t);\n\tfor (const e of snapshot) {\n\t\tlines.push(\n\t\t\t`  ${pad(e.repo, idWidth)}  ${padStart(`${e.index}/100`, 6)}  ${pad(stateCell(e), 8)}  ${pad(deltaCell(e.indexDelta), 4)}  ${padStart(`${e.runs}`, 4)}  ${pad(e.scoringVersion, 16)}  ${e.auditedAt}`,\n\t\t);\n\t}\n}",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 16,
+      "method": "ast",
+      "secondFile": {
+        "end": 114,
+        "endLoc": {
+          "column": 1,
+          "line": 114,
+          "position": 4840
+        },
+        "name": "src/history/render.ts",
+        "start": 97,
+        "startLoc": {
+          "column": 0,
+          "line": 97,
+          "position": 4048
+        }
+      },
+      "similarity": 0.869,
+      "tokens": 208
+    },
+    {
+      "firstFile": {
+        "end": 88,
+        "endLoc": {
+          "column": 1,
+          "line": 88,
+          "position": 3320
+        },
+        "name": "src/metrics/graph-imports.ts",
+        "start": 73,
+        "startLoc": {
+          "column": 0,
+          "line": 73,
+          "position": 2880
+        }
+      },
+      "format": "typescript",
+      "fragment": "function importEqualsSite(\n\tsourceFile: ts.SourceFile,\n\tnode: ts.ImportEqualsDeclaration,\n): LocatedSite | null {\n\tconst ref = node.moduleReference;\n\tif (!ts.isExternalModuleReference(ref) || !ts.isStringLiteralLike(ref.expression)) return null;\n\treturn {\n\t\tstart: node.getStart(),\n\t\tsite: {\n\t\t\tkind: \"import\",\n\t\t\ttypeOnly: node.isTypeOnly,\n\t\t\tspecifier: ref.expression.text,\n\t\t\trange: specifierRange(sourceFile, ref.expression),\n\t\t},\n\t};\n}",
+      "isNew": false,
+      "kind": "similar",
+      "lines": 16,
+      "method": "ast",
+      "secondFile": {
+        "end": 138,
+        "endLoc": {
+          "column": 1,
+          "line": 138,
+          "position": 4967
+        },
+        "name": "src/metrics/graph-imports.ts",
+        "start": 126,
+        "startLoc": {
+          "column": 0,
+          "line": 126,
+          "position": 4553
+        }
+      },
+      "similarity": 0.878,
+      "tokens": 95
+    }
+  ],
+  "statistics": {
+    "detectionDate": "2026-09-17T02:58:54.703Z",
+    "formats": {
+      "typescript": {
+        "clones": 95,
+        "duplicatedLines": 1312,
+        "duplicatedTokens": 8288,
+        "lines": 20697,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 6.33908295888293,
+        "percentageTokens": 8.215783265099773,
+        "sources": 154,
+        "tokens": 100879
+      }
+    },
+    "total": {
+      "clones": 95,
+      "duplicatedLines": 1312,
+      "duplicatedTokens": 8288,
+      "lines": 20697,
+      "newClones": 0,
+      "newDuplicatedLines": 0,
+      "percentage": 6.33908295888293,
+      "percentageTokens": 8.215783265099773,
+      "sources": 154,
+      "tokens": 100879
+    }
+  }
+}

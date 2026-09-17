@@ -1,0 +1,71 @@
+{
+  "duplicates": [
+    {
+      "firstFile": {
+        "end": 11,
+        "endLoc": {
+          "column": 1,
+          "line": 11,
+          "position": 317
+        },
+        "name": "a.ts",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "format": "typescript",
+      "fragment": "export function httpResponse(status: number, message: string, requestId: string) {\n const response = {\n  status: status,\n  message: message,\n  requestId: requestId,\n  created: Date.now(),\n  version: 1,\n };\n const result = JSON.stringify(response);\n return { content: result, size: result.length, encoding: \"utf8\" };\n}",
+      "isNew": false,
+      "kind": "renamed",
+      "lines": 11,
+      "secondFile": {
+        "end": 11,
+        "endLoc": {
+          "column": 1,
+          "line": 11,
+          "position": 314
+        },
+        "name": "b.ts",
+        "start": 1,
+        "startLoc": {
+          "column": 0,
+          "line": 1,
+          "position": 0
+        }
+      },
+      "tokens": 75
+    }
+  ],
+  "statistics": {
+    "detectionDate": "2026-09-17T02:58:54.001Z",
+    "formats": {
+      "typescript": {
+        "clones": 1,
+        "duplicatedLines": 10,
+        "duplicatedTokens": 75,
+        "lines": 22,
+        "newClones": 0,
+        "newDuplicatedLines": 0,
+        "percentage": 45.45454545454545,
+        "percentageTokens": 50,
+        "sources": 2,
+        "tokens": 150
+      }
+    },
+    "total": {
+      "clones": 1,
+      "duplicatedLines": 10,
+      "duplicatedTokens": 75,
+      "lines": 22,
+      "newClones": 0,
+      "newDuplicatedLines": 0,
+      "percentage": 45.45454545454545,
+      "percentageTokens": 50,
+      "sources": 2,
+      "tokens": 150
+    }
+  }
+}
