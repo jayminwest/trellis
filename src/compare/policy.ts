@@ -28,9 +28,10 @@
  *
  * Baseline-dependent policies (`score-regression`, `new-findings`): no
  * baseline at all ⇒ `skipped` with `baseline-absent` (a first run has nothing
- * to regress against); a baseline whose comparison is **incompatible** (§9
- * semantics) ⇒ `fail` with `baseline-incompatible` — a gate that cannot be
- * evaluated never silently passes.
+ * to regress against); a baseline whose **scored-basis** comparison is
+ * incompatible (§9, §16.6 semantics) ⇒ `fail` with `baseline-incompatible`
+ * — a gate that cannot be evaluated never silently passes. Advisory-only
+ * evidence incompatibility never trips these policies (§16.6).
  *
  * Exit-code distinction (SPEC §9): this module returns only success /
  * policy-failure information. Operational errors — an unreadable or invalid
@@ -39,7 +40,8 @@
  * (clean). CLI/SDK wiring lands with trellis-9a88.
  */
 import type { AuditReport, MetricValue, PolicyConfig } from "../contract/index.ts";
-import { type CompareOptions, compareReports, type ReportComparison } from "./compare.ts";
+import { compareReports, type ReportComparison } from "./compare.ts";
+import type { CompareOptions } from "./compatibility.ts";
 
 /** The policy families {@link assessPolicy} evaluates. */
 export type PolicyKind = "max-index" | "metric-budget" | "score-regression" | "new-findings";

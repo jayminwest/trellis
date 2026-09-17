@@ -13,7 +13,8 @@
  */
 import { loadAuditConfigFile } from "../config/index.ts";
 import type { AuditConfig, AuditReport } from "../contract/index.ts";
-import { type CompareOptions, compareReports, type ReportComparison } from "./compare.ts";
+import { compareReports, type ReportComparison } from "./compare.ts";
+import type { CompareOptions } from "./compatibility.ts";
 import { loadReportArtifact } from "./load.ts";
 import { assessPolicy, type PolicyAssessment } from "./policy.ts";
 

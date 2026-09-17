@@ -166,7 +166,9 @@ export const observedCoverageSchema = z
 export type ObservedCoverage = z.infer<typeof observedCoverageSchema>;
 
 /** Options with sorted keys, so the same option set always serializes identically. */
-function canonicalOptions(options: ProviderOptions): Record<string, string | number | boolean> {
+export function canonicalOptions(
+	options: ProviderOptions,
+): Record<string, string | number | boolean> {
 	const sorted: Record<string, string | number | boolean> = {};
 	for (const key of Object.keys(options).sort()) {
 		const value = options[key];

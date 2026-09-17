@@ -21,6 +21,34 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Changed
 
+- **Comparisons evaluate compatibility per measurement and scoring basis**
+  (trellis-bd0c, step 6 of 30 of plan `pl-43c5`, SPEC §16.6): `src/compare/`
+  splits the single whole-report comparability gate into two independent
+  bases. The **scored basis** (`compatibility.ts`, new) keeps the established
+  fail-closed rules — analyzer/scoring versions, scored metric catalogs
+  (pre-provider 1.0.0 artifacts still read with every metric as a score
+  input), supplied configurations — and adds per-measurement checks over the
+  recorded analysis identity: a scored analysis whose pinned tool/adapter,
+  parser, or normalized options changed is a `scored-measurement`
+  incompatibility, and a changed declared scored-analysis set is a
+  `scoring-basis` one. The **evidence basis** (`evidence.ts`, new) compares
+  each carried provider by recorded identity: producer and scope semantics
+  gate the evidence diff (changed tool/parser/options/selection is an
+  explicit noncomparable dimension with coded reasons — never fictitious
+  deltas or new/resolved finding churn), while changed content fingerprints
+  are the expected source-revision input, caveated as `input-revision-changed`.
+  Absence reads as `unrequested` on its side — never a regression — and
+  partial/unavailable evidence is never diffed. Advisory-only changes
+  (adding, removing, or upgrading an optional provider) never make two
+  otherwise-compatible reports incompatible, and never affect the native
+  score comparison or its policies. A 1.0.0 ↔ 1.1.0 artifact pair compares
+  the scored basis explicitly (`schema-span` caveat; the pre-provider
+  side's evidence reads as unrequested) instead of failing wholesale;
+  `metric-set` no longer trips on advisory metric additions (they diff with
+  a `null` side). `compare.ts` composes the bases; `diff.ts` (new) holds the
+  shared metric/finding diffs; policy assessment consumes only the scored
+  basis, so provider evidence incompatibility never trips score-regression
+  or new-finding policies.
 - **Audit orchestration consumes the registered native analyzers without
   changing native behavior** (trellis-1e66, step 4 of 30 of plan `pl-43c5`,
   SPEC §16): the measure phase now selects and orders analyzers through the
