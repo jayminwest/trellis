@@ -22,6 +22,17 @@
  * Request types mirror the core option types and response types ARE the core
  * report types — re-exported below, each annotated with its source module. No
  * business logic lives in this file; it is pure type shaping over the core.
+ *
+ * **Provider-capable requests (SPEC §16.4, trellis-ad4b)** ride the same
+ * declarative `providers` block the CLI's `--provider` flag translates
+ * into: pass it inside a `config` object (mirroring `trellis.yaml`) or
+ * through `configPath`. The SDK invents no provider surface of its own — no
+ * selection validation, planning, execution or policy evaluation — so a
+ * programmatic provider request and a CLI `--provider` run exercise one core
+ * path (proven by the deep-equal parity tests in `index.test.ts` and
+ * `provider-parity.test.ts`). Provider evidence is advisory, namespaced
+ * and unscored: it never changes the sloppiness index, and callers that
+ * pass no provider fields get exactly the pre-provider behavior.
  */
 
 import {
@@ -41,7 +52,21 @@ import {
 	type ReportComparison,
 	runComparison,
 } from "../compare/index.ts"; // Mirrors src/compare
-import type { AuditConfig, AuditReport } from "../contract/index.ts"; // Mirrors src/contract
+import type {
+	JscpdProviderRequest,
+	ProviderSelection,
+	UndeliveredProviderRequest,
+} from "../contract/config.ts"; // Mirrors src/contract/config.ts
+import type {
+	AnalysisResult,
+	AuditConfig,
+	AuditReport,
+	DependencyCruiserProviderRequest,
+	EvidenceArea,
+	EvidenceAuditReport,
+	ProviderState,
+	ReportAnalysis,
+} from "../contract/index.ts"; // Mirrors src/contract
 import {
 	assessFleet,
 	type FleetAssessment,
@@ -52,19 +77,34 @@ import {
 import { buildReport, type HistoryReport, type ReportRunOptions } from "../history/index.ts"; // Mirrors src/history
 import { type DriftOptions, type DriftReport, driftRepo } from "../standards/index.ts"; // Mirrors src/standards
 
-/** Re-exported core report types — the SDK's response shapes (SPEC §6.4, §9). */
+/**
+ * Re-exported core report types — the SDK's response shapes (SPEC §6.4, §9) —
+ * plus the provider/evidence contract types (SPEC §16, trellis-ad4b) so a
+ * programmatic caller shapes provider requests and reads carried evidence
+ * without reaching past the SDK. The export set is additive only: nothing
+ * was removed or renamed, so every existing import keeps working.
+ */
 export type {
+	AnalysisResult,
 	AuditConfig,
 	AuditReport,
+	DependencyCruiserProviderRequest,
 	DriftReport,
+	EvidenceArea,
+	EvidenceAuditReport,
 	FleetAssessment,
 	FleetReport,
 	HistoryReport,
+	JscpdProviderRequest,
 	PolicyAssessment,
 	PolicyReason,
 	PolicyReasonCode,
 	PolicyResult,
+	ProviderSelection,
+	ProviderState,
+	ReportAnalysis,
 	ReportComparison,
+	UndeliveredProviderRequest,
 	WorkspaceAuditResult,
 };
 /** Re-exported core services and the exit-code rules (SPEC §9, §12), so a script applies the CLI's rule. */
@@ -78,6 +118,16 @@ export type AuditRequest = WorkspaceAuditOptions;
  * ({@link WorkspaceAuditResult}). Stateless by default — pass
  * `history: true` to record the run and resolve a stored baseline, or
  * `baselinePath` for an explicit artifact. Identical to `trellis audit`.
+ *
+ * **Optional provider evidence (SPEC §16.4).** Request optional providers
+ * through the `providers` block of a `config` object (or of the `configPath`
+ * file) — the same declarative block the CLI's `--provider` flag translates
+ * into, applied per provider over the workspace's own `trellis.yaml`. The
+ * pinned tools resolve only from an operator-prepared local installation
+ * (never installed or fetched at audit time) and run over trellis-owned
+ * scratch; the evidence is advisory, namespaced and unscored, so a provider
+ * request never changes the index. See `ProviderSelection` for the request
+ * shapes and `EvidenceAuditReport` / `ReportAnalysis` for reading evidence.
  */
 export function audit(repoPath: string, opts: AuditRequest = {}): Promise<WorkspaceAuditResult> {
 	return runWorkspaceAudit(repoPath, opts);
