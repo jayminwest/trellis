@@ -20,11 +20,15 @@
  * spellings or symlinks canonicalizes to one identity. No Git, no network —
  * identity is a pure function of the filesystem path.
  *
- * **Compatible trends (SPEC §3.5, §10).** Trend queries select only runs
- * whose schema, analyzer, and scoring versions all match the requested
- * versions — the persistence-level half of the §3.5 comparability rule.
- * Metric-set and configuration compatibility are decidable only from report
- * artifacts and remain the comparator's job (`src/compare/`).
+ * **Compatible trends (SPEC §3.5, §10, §16.6 — trellis-ab01).** Trend and
+ * baseline selection reuses the step-6 scored-basis compatibility verdicts
+ * (`src/compare/`): a stored run joins a series — or resolves as the
+ * baseline — exactly when `assessScoredBasis` says its scored basis is
+ * comparable with the reference report's, decided over the stored JSON
+ * provenance (`compatible-runs.ts`). Advisory-only provider changes never
+ * fragment a series; a changed scored measurement or scoring basis starts a
+ * distinct one. The row's version columns remain the recorded headline; the
+ * verdict never trusts them alone.
  */
 
 import type { Database } from "bun:sqlite";
@@ -33,13 +37,7 @@ import { realpathSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import type { AuditReport, Completeness } from "../contract/index.ts";
 import { renderAuditJson } from "../report/audit-json.ts";
-
-/** The §3.5 version triple a trend query matches on (SPEC §3.5). */
-export interface ReportVersions {
-	schemaVersion: string;
-	analyzerVersion: string;
-	scoringVersion: string;
-}
+import { scoredBasisCompatible } from "./compatible-runs.ts";
 
 /** A row read back from `audit_runs`, with columns mapped to camelCase. */
 export interface StoredAuditRun {
@@ -81,23 +79,24 @@ export interface AuditStore {
 	/** All audit runs for `identity` (optionally since `since`), oldest first. */
 	auditRuns(identity: string, since?: string): StoredAuditRun[];
 	/**
-	 * The §3.5-compatible run series for `identity`: only runs whose schema,
-	 * analyzer, and scoring versions all match `versions`, oldest first.
-	 * Incompatible runs are excluded, never silently trended.
+	 * The scored-basis-compatible run series for `identity`: every stored
+	 * run whose scored basis is comparable with `reference` (step-6 verdicts,
+	 * reused — see `compatible-runs.ts`), oldest first. Advisory-only provider
+	 * changes never exclude a run; a changed scored measurement or scoring
+	 * basis does. Incompatible runs are excluded, never silently trended.
 	 */
-	compatibleAuditRuns(identity: string, versions: ReportVersions, since?: string): StoredAuditRun[];
+	compatibleAuditRuns(identity: string, reference: AuditReport, since?: string): StoredAuditRun[];
 	/**
-	 * The most recent §3.5-compatible run for `identity` — the prior-run
-	 * selection for baseline comparison (SPEC §9). Consumers read it before
-	 * inserting the new run (the legacy path's read-before-write pattern).
+	 * The most recent scored-basis-compatible run for `identity` — the
+	 * prior-run selection for baseline comparison (SPEC §9). Walks back from
+	 * the newest row instead of accepting it blindly: the latest run may be
+	 * an incompatible basis (or a foreign row), and the latest *compatible*
+	 * run is the baseline. Consumers read it before inserting the new run
+	 * (the legacy path's read-before-write pattern).
 	 */
-	latestCompatibleRun(identity: string, versions: ReportVersions): StoredAuditRun | null;
+	latestCompatibleRun(identity: string, reference: AuditReport): StoredAuditRun | null;
 	/** The compatible sloppiness-index series for `identity`, oldest first. */
-	sloppinessTrend(
-		identity: string,
-		versions: ReportVersions,
-		since?: string,
-	): SloppinessTrendPoint[];
+	sloppinessTrend(identity: string, reference: AuditReport, since?: string): SloppinessTrendPoint[];
 	/** Distinct repository identities with at least one recorded audit run, sorted ascending. */
 	auditRepos(): string[];
 }
@@ -121,10 +120,6 @@ interface AuditRunRow {
 const AUDIT_RUN_COLUMNS =
 	"id, repo_root, repo_identity, schema_version, analyzer_version, scoring_version, " +
 	"sloppiness_index, partial, completeness, report_json, audited_at";
-
-/** The WHERE clause selecting §3.5-compatible runs (all three versions match). */
-const COMPATIBLE_WHERE =
-	"repo_identity = ? AND schema_version = ? AND analyzer_version = ? AND scoring_version = ?";
 
 /** Map a raw {@link AuditRunRow} to the camelCase {@link StoredAuditRun} surface. */
 function toStoredAuditRun(row: AuditRunRow): StoredAuditRun {
@@ -180,15 +175,6 @@ export function repoIdentity(root: string, declaredIdentity?: string): string {
 	return `${label}#${hash}`;
 }
 
-/** The §3.5 version triple of a report, for compatible-run queries. */
-export function reportVersions(report: AuditReport): ReportVersions {
-	return {
-		schemaVersion: report.schemaVersion,
-		analyzerVersion: report.analyzerVersion,
-		scoringVersion: report.scoringVersion,
-	};
-}
-
 /**
  * Build the {@link AuditStore} over an already-open, already-migrated
  * database. Composed into the central store by `openStore` — never call this
@@ -213,17 +199,9 @@ export function auditStore(db: Database): AuditStore {
 		`SELECT ${AUDIT_RUN_COLUMNS} FROM audit_runs
 		 WHERE repo_identity = ? AND audited_at >= ? ORDER BY audited_at ASC, id ASC`,
 	);
-	const compatibleAllStmt = db.query<AuditRunRow, [string, string, string, string]>(
+	const runsDescStmt = db.query<AuditRunRow, [string]>(
 		`SELECT ${AUDIT_RUN_COLUMNS} FROM audit_runs
-		 WHERE ${COMPATIBLE_WHERE} ORDER BY audited_at ASC, id ASC`,
-	);
-	const compatibleSinceStmt = db.query<AuditRunRow, [string, string, string, string, string]>(
-		`SELECT ${AUDIT_RUN_COLUMNS} FROM audit_runs
-		 WHERE ${COMPATIBLE_WHERE} AND audited_at >= ? ORDER BY audited_at ASC, id ASC`,
-	);
-	const latestCompatibleStmt = db.query<AuditRunRow, [string, string, string, string]>(
-		`SELECT ${AUDIT_RUN_COLUMNS} FROM audit_runs
-		 WHERE ${COMPATIBLE_WHERE} ORDER BY audited_at DESC, id DESC LIMIT 1`,
+		 WHERE repo_identity = ? ORDER BY audited_at DESC, id DESC`,
 	);
 	const reposStmt = db.query<{ repo_identity: string }, []>(
 		"SELECT DISTINCT repo_identity FROM audit_runs ORDER BY repo_identity ASC",
@@ -237,20 +215,12 @@ export function auditStore(db: Database): AuditStore {
 	});
 	const compatibleRuns = (
 		identity: string,
-		versions: ReportVersions,
+		reference: AuditReport,
 		since?: string,
 	): StoredAuditRun[] => {
-		const params: [string, string, string, string] = [
-			identity,
-			versions.schemaVersion,
-			versions.analyzerVersion,
-			versions.scoringVersion,
-		];
 		const rows =
-			since === undefined
-				? compatibleAllStmt.all(...params)
-				: compatibleSinceStmt.all(...params, since);
-		return rows.map(toStoredAuditRun);
+			since === undefined ? runsAllStmt.all(identity) : runsSinceStmt.all(identity, since);
+		return rows.map(toStoredAuditRun).filter((run) => scoredBasisCompatible(run, reference));
 	};
 
 	return {
@@ -279,17 +249,18 @@ export function auditStore(db: Database): AuditStore {
 			return rows.map(toStoredAuditRun);
 		},
 		compatibleAuditRuns: compatibleRuns,
-		latestCompatibleRun(identity, versions) {
-			const row = latestCompatibleStmt.get(
-				identity,
-				versions.schemaVersion,
-				versions.analyzerVersion,
-				versions.scoringVersion,
-			);
-			return row ? toStoredAuditRun(row) : null;
+		latestCompatibleRun(identity, reference) {
+			// Walk back from the newest row: the first stored run whose scored
+			// basis is comparable with the reference is the baseline candidate —
+			// never the latest row blindly (AC: find the latest compatible).
+			for (const row of runsDescStmt.all(identity)) {
+				const run = toStoredAuditRun(row);
+				if (scoredBasisCompatible(run, reference)) return run;
+			}
+			return null;
 		},
-		sloppinessTrend(identity, versions, since) {
-			return compatibleRuns(identity, versions, since).map(toTrendPoint);
+		sloppinessTrend(identity, reference, since) {
+			return compatibleRuns(identity, reference, since).map(toTrendPoint);
 		},
 		auditRepos() {
 			return reposStmt.all().map((row) => row.repo_identity);

@@ -13,8 +13,9 @@
  * **Stateless by default (SPEC §8, §10).** No database is opened and no file
  * is written unless `history` is opted into — then the run appends to the
  * central SQLite history (`db` overrides its location) and, absent an
- * explicit `baselinePath`, the baseline resolves to the latest §3.5-compatible
- * stored run (read before the new run is inserted).
+ * explicit `baselinePath`, the baseline resolves to the latest stored run
+ * whose scored basis is compatible with the new report (read before the new
+ * run is inserted).
  *
  * **Policy (SPEC §6.5, §9).** The declarative `policy` block of the resolved
  * configuration is evaluated independently of scoring; the structured
@@ -31,7 +32,7 @@ import { loadAuditConfig, loadAuditConfigFile } from "../config/index.ts";
 import type { AuditConfig, AuditReport } from "../contract/index.ts";
 import { LegacyConfigError, legacyConfigMessage, retiredReadinessMessage } from "../legacy.ts";
 import type { DuplicationBudget } from "../metrics/index.ts";
-import { openStore, repoIdentity, reportVersions, storedAuditReport } from "../store/index.ts";
+import { openStore, repoIdentity, storedAuditReport } from "../store/index.ts";
 import { auditWorkspace } from "./audit.ts";
 import type { AuditProgress } from "./progress.ts";
 
@@ -113,8 +114,11 @@ async function resolveConfig(root: string, opts: WorkspaceAuditOptions): Promise
 
 /**
  * Persist the run and resolve the stored baseline (SPEC §10): the latest
- * §3.5-compatible prior run for this repository identity, read **before** the
- * new run is inserted so a first run has no baseline.
+ * prior run for this repository identity whose scored basis is compatible
+ * with the new report (the step-6 verdicts, reused — advisory-only provider
+ * changes never fragment the baseline, a changed scored measurement or
+ * scoring basis does), read **before** the new run is inserted so a first
+ * run has no baseline.
  */
 function recordRun(
 	report: AuditReport,
@@ -123,7 +127,7 @@ function recordRun(
 	const store = openStore(db);
 	try {
 		const identity = repoIdentity(report.repo.root, report.repo.identity);
-		const prior = store.latestCompatibleRun(identity, reportVersions(report));
+		const prior = store.latestCompatibleRun(identity, report);
 		const historyRunId = store.insertAuditRun(report);
 		return {
 			...(prior ? { baseline: storedAuditReport(prior) } : {}),
