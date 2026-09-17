@@ -157,15 +157,13 @@ describe("renderAuditJson round-trips provider evidence through the artifact bou
 	);
 
 	test("preserves requested undelivered providers as located unsupported evidence", async () => {
-		const report = await audit({ "dependency-cruiser": {}, knip: {}, sonarjs: {} });
+		// knip and sonarjs are the undelivered/gated set; dependency-cruiser
+		// delivered its adapter (trellis-adbf) and now runs per request.
+		const report = await audit({ knip: {}, sonarjs: {} });
 		const loaded = await roundTrip("undelivered.json", report);
 		expect(loaded).toEqual(report);
 		expect(loaded.schemaVersion).toBe("1.1.0");
-		expect(externalAnalyses(loaded).map((entry) => entry.provider.id)).toEqual([
-			"dependency-cruiser",
-			"knip",
-			"sonarjs",
-		]);
+		expect(externalAnalyses(loaded).map((entry) => entry.provider.id)).toEqual(["knip", "sonarjs"]);
 		for (const entry of externalAnalyses(loaded)) {
 			expect(entry.state).toBe("unsupported");
 			expect(entry.reason).toBeDefined();
