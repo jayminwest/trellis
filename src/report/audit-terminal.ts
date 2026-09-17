@@ -5,7 +5,13 @@
  * headline index with its direction and scoring version, source coverage,
  * score contributions traceable to raw metrics, the raw metric table,
  * ranked hotspots (bounded; the total is always printed), remaining located
- * findings, and safeguard evidence (never folded into the score).
+ * findings, and safeguard evidence (never folded into the score). When the
+ * report carries external provider analyses (an explicitly requested
+ * optional provider), a distinct evidence section follows: every carried
+ * analysis's state, provenance and asserted coverage, with overall
+ * evidence completeness kept visible and separate from the score (see
+ * `./audit-terminal-providers.ts`) — a default native-only audit renders
+ * byte-identically, with no provider noise.
  *
  * All numbers and locations come from {@link ./audit-format.ts} so this view
  * can never disagree with the JSON/Markdown ones, and no readiness levels,
@@ -27,6 +33,7 @@ import {
 	scoreHeadline,
 	sortedMetrics,
 } from "./audit-format.ts";
+import { providerAnalysisLines } from "./audit-terminal-providers.ts";
 
 /** Options for {@link renderAuditTerminal}. */
 export interface AuditTerminalOptions {
@@ -34,6 +41,8 @@ export interface AuditTerminalOptions {
 	hotspotLimit?: number;
 	/** Maximum non-hotspot findings shown; the total is always printed. */
 	findingLimit?: number;
+	/** Maximum provider findings shown per optional analysis; the total is always printed. */
+	providerFindingLimit?: number;
 }
 
 /** Right-pad `s` to `width` for fixed-width columns. */
@@ -158,6 +167,7 @@ export function renderAuditTerminal(
 			boundFindings(otherFindings(report), options.findingLimit ?? DEFAULT_HOTSPOT_LIMIT),
 		),
 		safeguardLines(report),
+		providerAnalysisLines(report, options.providerFindingLimit ?? DEFAULT_HOTSPOT_LIMIT),
 	].filter((section) => section.length > 0);
 	return sections.map((section) => section.join("\n")).join("\n\n");
 }
