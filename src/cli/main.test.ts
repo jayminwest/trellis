@@ -26,13 +26,15 @@ async function runCli(
 }
 
 describe("retired readiness catalog", () => {
+	// Tests spawn the CLI as a subprocess (audit runs, reads); the 20s budget
+	// accommodates slow CI containers where the 5s default is marginal.
 	test("rejects rubric and its old options with migration guidance", async () => {
 		const { code, stdout, stderr } = await runCli(["rubric", "--validate", "--rubric-dir", "gone"]);
 		expect(code).toBe(1);
 		expect(stdout).toBe("");
 		expect(stderr).toContain("removed in the deterministic pivot");
 		expect(stderr).toContain("trellis.yaml");
-	});
+	}, 20_000);
 });
 
 describe("trellis (program)", () => {
@@ -40,12 +42,12 @@ describe("trellis (program)", () => {
 		const { code, stdout } = await runCli(["--version"]);
 		expect(code).toBe(0);
 		expect(stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
-	});
+	}, 20_000);
 
 	test("an unknown command exits non-zero", async () => {
 		const { code } = await runCli(["does-not-exist"]);
 		expect(code).not.toBe(0);
-	});
+	}, 20_000);
 });
 
 describe("trellis standards", () => {
@@ -55,7 +57,7 @@ describe("trellis standards", () => {
 		expect(stdout).toContain("canonical set");
 		expect(stdout).toContain("biome.json");
 		expect(stdout).toContain("matcher");
-	});
+	}, 20_000);
 
 	test("--json emits the manifest document", async () => {
 		const { code, stdout } = await runCli(["standards", "--json"]);
@@ -64,14 +66,14 @@ describe("trellis standards", () => {
 		expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
 		expect(Array.isArray(manifest.files)).toBe(true);
 		expect(manifest.files[0]).toHaveProperty("matcher");
-	});
+	}, 20_000);
 
 	test("--md emits a markdown table", async () => {
 		const { code, stdout } = await runCli(["standards", "--md"]);
 		expect(code).toBe(0);
 		expect(stdout).toContain("# Canonical standards");
 		expect(stdout).toContain("| File | Version | Matcher |");
-	});
+	}, 20_000);
 });
 
 describe("trellis drift", () => {
@@ -93,7 +95,7 @@ describe("trellis drift", () => {
 		expect(stdout).toContain("trellis drift");
 		expect(stdout).toContain("biome.json");
 		expect(stdout).toContain("MISS");
-	});
+	}, 20_000);
 
 	test("--json emits a parseable drift report with a summary", async () => {
 		const { code, stdout } = await runCli(["drift", dir, "--json", "--fail-on", "none"]);
@@ -102,20 +104,20 @@ describe("trellis drift", () => {
 		expect(report.canonicalVersion).toMatch(/^\d+\.\d+\.\d+$/);
 		expect(Array.isArray(report.files)).toBe(true);
 		expect(report.summary.missing).toBe(report.files.length);
-	});
+	}, 20_000);
 
 	test("--md emits a markdown table", async () => {
 		const { code, stdout } = await runCli(["drift", dir, "--md", "--fail-on", "none"]);
 		expect(code).toBe(0);
 		expect(stdout).toContain("# Canonical drift");
 		expect(stdout).toContain("| File | State | Matcher | Note |");
-	});
+	}, 20_000);
 
 	test("an unbundled --canonical version errors out", async () => {
 		const { code, stderr } = await runCli(["drift", dir, "--canonical", "9.9.9"]);
 		expect(code).not.toBe(0);
 		expect(stderr).toContain("not bundled");
-	});
+	}, 20_000);
 });
 
 describe("trellis audit (program smoke)", () => {
@@ -139,7 +141,7 @@ describe("trellis audit (program smoke)", () => {
 		expect(code).toBe(0);
 		expect(stdout).toContain("sloppiness index 0/100");
 		expect(stdout).toContain("lower is better");
-	});
+	}, 20_000);
 
 	test("--help lists the deterministic surface (audit + compare)", async () => {
 		const { code, stdout } = await runCli(["--help"]);
@@ -148,5 +150,5 @@ describe("trellis audit (program smoke)", () => {
 		expect(stdout).toContain("audit");
 		expect(stdout).toContain("compare");
 		expect(stdout).not.toContain("rubric");
-	});
+	}, 20_000);
 });

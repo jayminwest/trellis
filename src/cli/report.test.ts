@@ -50,6 +50,8 @@ describe("trellis report", () => {
 		expect(code).toBe(0);
 	}
 
+	// Each test spawns the CLI 1-3 times (audit runs + report reads); the 20s
+	// budget accommodates slow CI containers where the 5s default is marginal.
 	test("reports an empty dashboard on a store with no runs", async () => {
 		const { code, stdout } = await runCli(["report", "--db", dbPath, "--json"], { TRELLIS_DB: "" });
 		expect(code).toBe(0);
@@ -57,7 +59,7 @@ describe("trellis report", () => {
 		expect(report.audits.snapshot).toEqual([]);
 		expect(report.audits.repos).toEqual([]);
 		expect(report.legacy).toEqual([]);
-	});
+	}, 20_000);
 
 	test("after two recorded audits, shows the snapshot and the compatible series", async () => {
 		await auditRun();
@@ -78,7 +80,7 @@ describe("trellis report", () => {
 		const detail = report.audits.repos[0];
 		expect(detail.runs).toHaveLength(2);
 		expect(detail.runs[0].index).toBe(entry.index);
-	});
+	}, 20_000);
 
 	test("the --repo filter narrows the dashboard to one identity", async () => {
 		await auditRun();
@@ -94,7 +96,7 @@ describe("trellis report", () => {
 		const report = JSON.parse(stdout);
 		expect(report.scope.repo).toBe(identity);
 		expect(report.audits.snapshot.map((e: { repo: string }) => e.repo)).toEqual([identity]);
-	});
+	}, 20_000);
 
 	test("legacy readiness runs surface in a visibly distinct section", async () => {
 		await auditRun();
@@ -124,7 +126,7 @@ describe("trellis report", () => {
 		expect(stdout).toContain("never compared with the sloppiness index");
 		expect(stdout).toContain("warren");
 		expect(stdout).toContain("L3");
-	});
+	}, 20_000);
 
 	test("renders the human dashboard with the snapshot table after a run", async () => {
 		await auditRun();
@@ -133,5 +135,5 @@ describe("trellis report", () => {
 		expect(stdout).toContain("trellis report · sloppiness history");
 		expect(stdout).toContain("lower is better");
 		expect(stdout).toContain("fixture-sloppy#");
-	});
+	}, 20_000);
 });
