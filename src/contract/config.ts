@@ -25,6 +25,7 @@
  * (trellis-6003); this module defines only the contract.
  */
 import { z } from "zod";
+import { dependencyCruiserProviderRequestSchema } from "./architecture-policy.ts";
 import { CLONE_MATCH_MODES } from "./clone-evidence.ts";
 import { SOURCE_SETS } from "./coverage.ts";
 import { dottedIdSchema, finiteNumberSchema } from "./primitives.ts";
@@ -136,6 +137,13 @@ export type JscpdProviderRequest = z.infer<typeof jscpdProviderRequestSchema>;
  * resolves to located `unsupported` evidence with the capability table's
  * recorded reason (`src/providers/capabilities.ts`). Adapter-owning steps
  * replace this shape with their own request schema when they deliver.
+ *
+ * dependency-cruiser already carries its declarative architecture-rule
+ * subset (trellis-89be, `src/contract/architecture-policy.ts`) while its
+ * adapter is still pending: such a request is valid configuration — the
+ * pure compilation lives in `src/providers/dependency-cruiser/policy.ts` —
+ * and still resolves to located `unsupported` evidence until the adapter
+ * delivers (trellis-adbf).
  */
 export const undeliveredProviderRequestSchema = z.strictObject({});
 
@@ -150,7 +158,7 @@ export type UndeliveredProviderRequest = z.infer<typeof undeliveredProviderReque
  */
 export const providerSelectionSchema = z.strictObject({
 	jscpd: jscpdProviderRequestSchema.optional(),
-	"dependency-cruiser": undeliveredProviderRequestSchema.optional(),
+	"dependency-cruiser": dependencyCruiserProviderRequestSchema.optional(),
 	knip: undeliveredProviderRequestSchema.optional(),
 	sonarjs: undeliveredProviderRequestSchema.optional(),
 });

@@ -108,6 +108,27 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Architecture policies describe a bounded declarative dependency-rule
+  subset** (trellis-89be, step 21 of 30 of plan `pl-43c5`, SPEC §16.1/§16.4):
+  a `dependency-cruiser` request in the `providers` block now carries
+  `rules` — inline data only, never an executable `.dependency-cruiser`
+  config. Three closed rule kinds: `boundary` (explicit start-anchored
+  from/to scope selectors, `forbidden` or `allowed` as an explicit
+  exception, over declared runtime/type-only edge kinds), `cycle` (per
+  edge kind, keeping type-only and runtime cycle policies distinct) and
+  `unresolved`. Unknown kinds/keys, duplicate names or semantics,
+  contradictory allowed+forbidden pairs, and unanchored/absolute/
+  traversal/uncompileable/over-length patterns are rejected at
+  config-load time; rule count and pattern/name lengths are capped
+  (bounded evaluation). An absent rules block declares no architecture
+  claims — zero rules is never coherence, and nothing is inferred from
+  directory names. The pure compilation
+  (`src/providers/dependency-cruiser/policy.ts`) normalizes rules into a
+  canonical form with a sha-256 digest that rides the §16.2 provider
+  options — the existing step-6 compatibility seam — so a changed declared
+  architecture is a changed measurement (noncomparable evidence), never
+  silently reported as code churn. No adapter yet: requests still resolve
+  to located `unsupported` evidence until trellis-adbf delivers.
 - **Typed analysis results carry provider provenance and observed coverage**
   (trellis-90d6, step 2 of 30 of plan `pl-43c5`, SPEC §16): new focused
   contracts under `src/contract/` type what a provider analysis is before any
