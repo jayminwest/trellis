@@ -17,6 +17,7 @@ domains:
   metrics: {}
   architecture: {}
   spec: {}
+  providers: {}
 governance:
   max_entries: 100
   warn_entries: 150
