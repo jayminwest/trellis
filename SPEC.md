@@ -1120,6 +1120,16 @@ Rules:
   execution environment as safe for arbitrary untrusted code. Resource
   limits, staged input snapshots, and raw-evidence validation (steps
   `trellis-eddc`, `trellis-2fe6`) are the compensating controls.
+  > **Delivered (`trellis-ff52`, plan `pl-43c5` step 11):** the supported-
+  > tool manifest/resolver (`src/providers/manifest.ts` +
+  > `src/providers/resolve.ts`, see `docs/provider-tools.md`) pins jscpd
+  > 5.2.1 as an isolated devDependency, resolves it only from the
+  > operator-prepared local installation via trellis-owned `node_modules`
+  > discovery (never PATH/`bunx`, never at audit time), and verifies the
+  > resolved artifact against recorded digests before the process-runner
+  > registry (`src/providers/process.ts`) may run it — with honest
+  > per-platform execution records (`tested` / `research-tested` /
+  > `declared-untested`) instead of universal platform claims.
 - **Never**: target scripts, target verification, models, network
   fetches, opportunistic downloads, or credentials.
 

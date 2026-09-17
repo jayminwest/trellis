@@ -8,12 +8,10 @@
  * - **No shell, ever.** Fixed `argv` array — no `sh -c`, no joining, no
  *   interpolation. Target scripts and executable target configuration
  *   are never evaluated; target data only ever crosses as inert strings.
- * - **Supported executables only.** Executables are named through
- *   trellis-owned resolution ({@link resolveExecutable} for runtime
- *   identifiers, {@link pinnedExecutable} for trellis-discovered pinned
- *   artifacts, `trellis-ff52`). Unsupported identifiers are rejected as
- *   operational errors (SPEC §16.3); no target- or operator-provided
- *   command path is ever accepted.
+ * - **Supported executables only.** Executables are named through trellis-owned resolution:
+ *   {@link resolveExecutable} for runtime identifiers, and pinned artifacts via the verified
+ *   supported-tool manifest/resolver (`trellis-ff52`). Unsupported identifiers are operational
+ *   errors (SPEC §16.3); no target- or operator-provided command path is ever accepted.
  * - **Explicit environment.** The child receives exactly the request's
  *   `env` map — nothing inherited from the trellis process, so ambient
  *   credentials cannot leak into provider execution.
@@ -34,6 +32,8 @@
  * (SPEC §16.4); adapters validate raw provider output before it becomes
  * evidence.
  */
+
+import { requirePinnedToolExecutable } from "./resolve.ts";
 
 const SENSITIVE_ENV_KEY_NAMES = [
 	"token",
@@ -80,12 +80,14 @@ export interface ResolvedExecutable {
 }
 
 /**
- * Trellis-owned executable registry: the identifiers this step supports,
- * each with its own resolution. Later pinned-artifact steps extend this
- * map; it is the only place an identifier becomes a path.
+ * Trellis-owned executable registry: the identifiers this step supports, each with its own
+ * resolution — the only place an identifier becomes a path. `jscpd` resolves via the verified
+ * pinned-tool manifest/resolver (`trellis-ff52`); an absent or host-unsupported pin throws
+ * `PinnedToolUnavailableError` for callers to translate into provider evidence (§16.3).
  */
 const SUPPORTED_EXECUTABLES: Readonly<Record<string, () => string>> = {
 	bun: () => process.execPath,
+	jscpd: () => requirePinnedToolExecutable("jscpd"),
 };
 
 /** Resolve a supported executable identifier, rejecting anything else. */
@@ -98,10 +100,9 @@ export function resolveExecutable(id: string): ResolvedExecutable {
 }
 
 /**
- * Reference a trellis-discovered pinned artifact (SPEC §16.4 — pinned and
- * discoverable offline, `trellis-ff52`) as the executable to run. The path
- * must be absolute and must come from trellis-owned discovery — never from
- * the target workspace, operator configuration, or a command string.
+ * Reference a trellis-discovered pinned artifact (SPEC §16.4 — pinned and discoverable offline,
+ * `trellis-ff52`) as the executable to run: an absolute path from trellis-owned discovery —
+ * never from the target workspace, operator configuration, or a command string.
  */
 export function pinnedExecutable(id: string, path: string): ResolvedExecutable {
 	if (typeof id !== "string" || id === "") {
