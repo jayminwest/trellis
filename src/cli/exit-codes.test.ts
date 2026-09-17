@@ -2,11 +2,15 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { seedFixtureRepo } from "../report/audit-fixtures.ts";
 
 /**
- * The CLI exit-code contract (SPEC §12): `0` clean, `2` when a `--fail-on`
- * policy trips (the report is still emitted), `1` on an operational error. The
- * default policy (no `--fail-on`) fails on a gate criterion OR canonical drift.
+ * The CLI exit-code contract (SPEC §9, §12): `0` clean, `2` when a policy
+ * trips (the report is still emitted to stdout; reasons go to stderr), `1`
+ * on an operational error (the command could not run). On the deterministic
+ * `audit` surface the policy is declarative (`trellis.yaml`, SPEC §6.5) — no
+ * policy configured means nothing to trip. The transitional `drift`/`fleet`
+ * commands keep their legacy `--fail-on` knobs until trellis-8366.
  */
 
 /** Absolute path to the CLI entrypoint, resolved relative to this test file. */
@@ -30,17 +34,15 @@ async function runCli(
 	return { code, stdout, stderr };
 }
 
-describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
+describe("trellis exit-code contract (SPEC §9)", () => {
 	let dir: string;
 	let dbDir: string;
 	let dbPath: string;
 
-	beforeEach(() => {
-		// A minimal fixture: real but sparse, so deterministic gate criteria fail.
+	beforeEach(async () => {
+		// A non-Git workspace with hotspots — a guaranteed non-zero index.
 		dir = mkdtempSync(join(tmpdir(), "trellis-cli-exit-"));
-		writeFileSync(join(dir, "README.md"), "# fixture\n");
-		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", main: "./i.ts" }));
-		writeFileSync(join(dir, ".gitignore"), "node_modules\n");
+		await seedFixtureRepo(dir, "sloppy");
 		dbDir = mkdtempSync(join(tmpdir(), "trellis-cli-exit-db-"));
 		dbPath = join(dbDir, "trellis.db");
 	});
@@ -50,61 +52,54 @@ describe("trellis exit-code contract (--fail-on, SPEC §12)", () => {
 		rmSync(dbDir, { recursive: true, force: true });
 	});
 
-	/** Run `trellis audit` with the shared env + extra args. */
-	function auditCli(extra: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
-		// `--no-output`: these assert exit codes, not artifacts — never write a report file.
-		return runCli(["audit", dir, "--db", dbPath, "--no-persist", "--no-output", ...extra], {
-			TRELLIS_DB: "",
+	test("audit with no configured policy is clean (exit 0)", async () => {
+		const { code, stdout } = await runCli(["audit", dir, "--json", "--quiet"], {
+			TRELLIS_DB: dbPath,
 		});
-	}
-
-	test("audit defaults to failing on a gate criterion (exit 2), still emitting the report", async () => {
-		const { code, stdout, stderr } = await auditCli(["--json"]);
-		expect(code).toBe(2);
-		// The full report is still on stdout — the policy trips *after* emitting.
-		expect(Object.keys(JSON.parse(stdout).criteria)).toHaveLength(70);
-		expect(stderr).toContain("gate criterion failed");
+		expect(code).toBe(0);
+		expect(JSON.parse(stdout).score.index).toBeGreaterThan(0);
 	});
 
-	test("--fail-on none always exits 0", async () => {
-		const { code } = await auditCli(["--fail-on", "none"]);
+	test("a tripped declarative policy exits 2 and still emits the report", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
+		const { code, stdout, stderr } = await runCli(["audit", dir, "--json", "--quiet"], {
+			TRELLIS_DB: dbPath,
+		});
+		expect(code).toBe(2);
+		expect(JSON.parse(stdout).score.index).toBeGreaterThan(0);
+		expect(stderr).toContain("policy max-index failed");
+	});
+
+	test("a passing declarative policy stays clean (exit 0)", async () => {
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 100\n");
+		const { code } = await runCli(["audit", dir, "--quiet"], { TRELLIS_DB: dbPath });
 		expect(code).toBe(0);
 	});
 
-	test("--fail-on gate trips on a failing gate (exit 2)", async () => {
-		const { code, stderr } = await auditCli(["--fail-on", "gate"]);
-		expect(code).toBe(2);
-		expect(stderr).toContain("gate criterion failed");
-	});
-
-	test("--fail-on drift without --canonical is clean (no drift computed)", async () => {
-		const { code } = await auditCli(["--fail-on", "drift"]);
-		expect(code).toBe(0);
-	});
-
-	test("--fail-on drift with --canonical trips on missing canonical files (exit 2)", async () => {
-		const { code, stderr } = await auditCli(["--canonical", "1.0.0", "--fail-on", "drift"]);
-		expect(code).toBe(2);
-		expect(stderr).toContain("canonical drift detected");
-	});
-
-	test("--fail-on level clears a low threshold but trips a high one", async () => {
-		const low = await auditCli(["--fail-on", "level", "--min-level", "1"]);
-		expect(low.code).toBe(0);
-		const high = await auditCli(["--fail-on", "level", "--min-level", "5"]);
-		expect(high.code).toBe(2);
-		expect(high.stderr).toContain("below minimum L5");
-	});
-
-	test("an out-of-range --min-level is an operational error (exit 1)", async () => {
-		const { code, stderr } = await auditCli(["--fail-on", "level", "--min-level", "9"]);
+	test("an unreadable workspace is an operational error (exit 1), distinct from a policy trip", async () => {
+		const { code, stdout, stderr } = await runCli(["audit", join(dbDir, "absent"), "--quiet"], {
+			TRELLIS_DB: dbPath,
+		});
 		expect(code).toBe(1);
-		expect(stderr).toContain("--min-level");
+		expect(stdout).toBe("");
+		expect(stderr.length).toBeGreaterThan(0);
 	});
 
-	test("an invalid --fail-on value is rejected by commander (exit non-zero)", async () => {
-		const { code } = await auditCli(["--fail-on", "bogus"]);
-		expect(code).not.toBe(0);
+	test("policy failure and operational failure are always distinguishable (2 vs 1)", async () => {
+		// Policy trip: report on stdout, reasons on stderr, exit 2.
+		writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
+		const tripped = await runCli(["audit", dir, "--json", "--quiet"], { TRELLIS_DB: dbPath });
+		expect(tripped.code).toBe(2);
+		expect(tripped.stdout.length).toBeGreaterThan(0);
+		// Operational: nothing on stdout, exit 1.
+		const broken = await runCli(
+			["audit", dir, "--json", "--quiet", "--config", join(dbDir, "gone.yaml")],
+			{
+				TRELLIS_DB: dbPath,
+			},
+		);
+		expect(broken.code).toBe(1);
+		expect(broken.stdout).toBe("");
 	});
 
 	test("drift defaults to failing when drift is detected (exit 2)", async () => {

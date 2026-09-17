@@ -9,10 +9,9 @@
  * - `policy.ts` — pure, independent evaluation of the §6.5 failure policy
  *   (max index, metric budgets, score regression, new findings) with
  *   structured reason codes.
- *
- * CLI (`trellis compare`, `--baseline`) and SDK wiring lands with
- * trellis-9a88; history persistence consumes these artifacts with
- * trellis-424d.
+ * - `run.ts` — the `trellis compare` service (trellis-9a88): load two
+ *   artifacts, compare them, and evaluate a supplied configuration's policy.
+ *   The CLI and SDK both fold it — one code path.
  */
 export {
 	type CompareOptions,
@@ -38,3 +37,8 @@ export {
 	type PolicyReasonCode,
 	type PolicyResult,
 } from "./policy.ts";
+export {
+	type CompareRunOptions,
+	type CompareRunResult,
+	runComparison,
+} from "./run.ts";
