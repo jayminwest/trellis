@@ -5,7 +5,12 @@ import {
 	type HotspotIdentity,
 	type IdentityScope,
 } from "../contract/hotspot-identity.ts";
-import type { FunctionFacts } from "./types.ts";
+
+/** Keep this helper independent of syntax types to avoid a type-only import cycle. */
+interface FunctionNode {
+	node: ts.Node;
+	kind: Extract<HotspotIdentity, { state: "identified" }>["function"]["kind"];
+}
 
 type AmbiguousIdentity = Extract<HotspotIdentity, { state: "ambiguous" }>;
 export type FunctionIdentity =
@@ -59,9 +64,7 @@ function namedScope(
 	};
 }
 
-function functionScope(
-	fn: Pick<FunctionFacts, "kind" | "node">,
-): Pick<Scope, "component" | "reason"> {
+function functionScope(fn: FunctionNode): Pick<Scope, "component" | "reason"> {
 	const node = fn.node;
 	if (ts.isConstructorDeclaration(node)) {
 		return { component: { kind: fn.kind, name: "constructor", member: "instance" } };
@@ -155,7 +158,7 @@ function resolveIdentity(scope: Scope): FunctionIdentity {
 /** Pure second traversal of the existing AST; all body-bearing functions remain in the inventory. */
 export function collectFunctionIdentities(
 	sourceFile: ts.SourceFile,
-	functions: readonly Pick<FunctionFacts, "kind" | "node">[],
+	functions: readonly FunctionNode[],
 ): Map<ts.Node, FunctionIdentity> {
 	const facts = new Map(functions.map((fn) => [fn.node, fn]));
 	const scopes = new Map<ts.Node, Scope>();

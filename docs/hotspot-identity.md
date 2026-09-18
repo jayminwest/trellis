@@ -1,8 +1,8 @@
 # Scoped native hotspot identity
 
 Contract decision for pl-da6d, trellis-9302. Producer adoption is delivered by
-trellis-3d6b. Scoped matching is the subsequent trellis-7cfd milestone; the
-comparison matrix below specifies that matcher's required behavior.
+trellis-3d6b; scoped matching is delivered by trellis-7cfd. The comparison
+matrix below is enforced by the pure core comparator.
 
 Identity v1 is optional on the general finding contract, but belongs only to
 `complexity.hotspot`. Absence means historical provenance, never ambiguity.
@@ -87,3 +87,17 @@ All native metrics, scores, safeguards, coverage, completeness and findings
 (with only the new identity field removed) were deeply equal. No golden
 artifacts or scoring constants changed. This establishes measurement parity;
 it does not certify the later duplication replacement.
+
+## Matcher validation
+
+`src/compare/hotspot-identity.test.ts` runs the four attribution controls through
+real workspace audits: comment-shifted alpha/beta yield 0 new, 0 resolved and
+2 persistent; added gamma yields 1/0/2; replacement beta yields 1/1/0; adding
+B.run beside A.run yields 1/0/1. Additional controls retain CC edits as
+persistent with independent metric deltas, preserve all duplicate occurrences,
+and keep anonymous/mixed/unknown identities out of historical fallback.
+
+The combined identity producer/matcher self-audit retains index 44 against
+pre-producer commit `4730933`; both runs report zero runtime and type-only
+import-cycle groups. The helper consumes a small contract-derived function
+shape so syntax types do not create a type-only import cycle with it.

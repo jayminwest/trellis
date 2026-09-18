@@ -817,15 +817,17 @@ An audit run, end to end:
 
 ## 9. Baseline comparison & failure policies
 
-The staged scoped-hotspot matching contract and historical fallback boundaries
-are specified in [`docs/hotspot-identity.md`](docs/hotspot-identity.md); adoption
-requires unique compatible identities and never bypasses scored compatibility.
+The scoped-hotspot matching contract and historical fallback boundaries are
+specified in [`docs/hotspot-identity.md`](docs/hotspot-identity.md). Native
+hotspots match only on unique compatible scoped identities; ambiguity never
+falls back to historical pairing and never bypasses scored compatibility.
 
 - **Artifact comparison**: two saved JSON reports compare directly — no Git,
   no SQLite. Comparison requires compatible analyzer/scoring/configuration/
   source-scope semantics; incompatible pairs are reported explicitly.
-- **Finding matching is conservative**: findings match by kind + path with
-  tolerance for line shifts; ambiguous matches are reported as
+- **Finding matching is conservative**: modern native hotspots match by
+  scoped identity; historical hotspots and other kinds retain kind + path
+  matching with tolerance for line shifts. Ambiguous matches are reported as
   new/resolved pairs rather than silently paired. Reports classify findings
   as new, resolved, or persistent.
 - **Tolerances**: absolute vs. relative tolerances are documented per policy
@@ -852,8 +854,9 @@ are operational errors, never policy failures). `compare.ts` compares two
 validated artifacts: comparability is refused explicitly on schema/analyzer/
 scoring version, metric-catalog, or supplied-configuration mismatches, while
 unverifiable configuration and changed source scope are reported as caveats;
-finding matching pairs by kind + path with unlimited line-shift tolerance
-inside a 1:1 group and reports ambiguous n:m groups as resolved + new pairs.
+finding matching uses scoped identities for modern native hotspots and kind +
+path for historical hotspots and other kinds, with unlimited line-shift
+tolerance inside a 1:1 group. Ambiguous n:m groups remain resolved + new pairs.
 `policy.ts` evaluates max-index, metric budgets, score regression (absolute
 `maxIncrease` points / relative `maxIncreasePercent` of the baseline index,
 each documented per knob), and `failOnNew` kinds independently — each returns
