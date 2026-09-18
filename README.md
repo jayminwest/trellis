@@ -88,14 +88,21 @@ trellis audit . --json --out /tmp/before.json
 trellis audit . --json --baseline /tmp/before.json
 ```
 
-The comparison shows the index change, metric deltas, and findings that are
-new, resolved, or persistent.
-
-Already have both reports? Compare them without another audit:
+A supplied baseline enables score-regression and new-finding policy checks.
+To inspect index changes, metric deltas, and new/resolved/persistent findings,
+save the current report and compare the artifacts:
 
 ```bash
+trellis audit . --json --out /tmp/after.json
 trellis compare /tmp/before.json /tmp/after.json
 ```
+
+Named hotspots keep their identity across comment and line shifts; replacing
+a function or adding the same method name in another class creates a new
+hotspot. Anonymous or duplicate identities remain conservative new/resolved
+pairs. Analyzer 0.2.2 emits schema 1.2.0: historical reports remain readable,
+but crossing this transition requires a fresh baseline. See the
+[identity and compatibility rules](docs/hotspot-identity.md).
 
 ## Guide an agent through cleanup
 

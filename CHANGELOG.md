@@ -16,6 +16,8 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   baseline. Scoped matching now preserves unchanged named hotspots after line
   shifts and distinguishes replacements and same-named methods in different
   classes; ambiguous identities retain all new/resolved occurrences (trellis-7cfd).
+  Saved-baseline policy, CLI/SDK, fleet and SQLite regressions verify this
+  identity milestone without changing native scores (trellis-61d7).
 
 - Added `trellis guide cleanup` and SDK `guide("cleanup")` with one bundled,
   read-only workflow for behavior-preserving cleanup (trellis-b6f9).

@@ -821,6 +821,9 @@ The scoped-hotspot matching contract and historical fallback boundaries are
 specified in [`docs/hotspot-identity.md`](docs/hotspot-identity.md). Native
 hotspots match only on unique compatible scoped identities; ambiguity never
 falls back to historical pairing and never bypasses scored compatibility.
+The identity milestone (pl-da6d steps 1–4, trellis-61d7) is verified through
+saved reports, declarative policy, CLI/SDK, fleet and SQLite history; the
+linked decision record carries the executed control matrix.
 
 - **Artifact comparison**: two saved JSON reports compare directly — no Git,
   no SQLite. Comparison requires compatible analyzer/scoring/configuration/

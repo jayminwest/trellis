@@ -101,3 +101,33 @@ The combined identity producer/matcher self-audit retains index 44 against
 pre-producer commit `4730933`; both runs report zero runtime and type-only
 import-cycle groups. The helper consumes a small contract-derived function
 shape so syntax types do not create a type-only import cycle with it.
+
+## Surface acceptance (trellis-61d7)
+
+`src/client/hotspot-parity.test.ts` exercises saved JSON baselines with
+`policy.failOnNew: [complexity.hotspot]` through SDK audit/compare, CLI
+`audit --baseline`/`compare --config`, and SDK/CLI fleet using separate seeded
+history databases. Every surface uses the same core policy result:
+
+| Control | New / resolved / persistent hotspots | Policy | CLI exit |
+| --- | --- | --- | --- |
+| Comment above alpha/beta | 0 / 0 / 2 | pass | 0 |
+| Add gamma | 1 / 0 / 2 | fail | 2 |
+| Replace alpha with beta | 1 / 1 / 0 | fail | 2 |
+| Add B.run beside A.run | 1 / 0 / 1 | fail | 2 |
+
+Failing commands still emit their JSON report and write the policy reason to
+stderr. The tests use real non-Git temporary workspaces without installed
+project dependencies, an empty CLI PATH, and real SQLite databases only when
+history is requested. Stateless audits leave source/config contents unchanged
+and create no database. Comment-only edits preserve raw metrics and score.
+
+JSON and SQLite round trips retain identified and ambiguous provenance. History
+selects only compatible baselines. Historical 1.0.0/1.1.0 artifacts load without
+invented identities; crossing to 1.2.0 yields exit 2 and the fresh-baseline
+reason in terminal, Markdown and JSON comparison output. An unreadable identity
+version remains an operational read error (contract/load tests), not a fallback.
+
+The identity milestone (plan steps 1–4) is usable independently of duplication
+work. It adds no CLI or SDK matching logic and changes no score weights,
+clone tokenization, thresholds or optional-provider role.
