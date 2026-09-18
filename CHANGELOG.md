@@ -9,6 +9,14 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+- Cross-provider regressions cover unchanged native scores, independent evidence
+  compatibility, combined CLI/SDK/fleet behavior and SQLite history.
+- Verified dependency-cruiser 18.3.1 support on macOS ARM64, with shared
+  JavaScript launchers accepted only under matching paths and verified digests.
+- Added a network-denied provider resource harness and current quality-evidence
+  setup/migration guidance; Knip milestone acceptance remains pending.
+
+
 ### Fixed
 
 - CLI reports drain fully when piped, including policy-failure output (trellis-5b25).

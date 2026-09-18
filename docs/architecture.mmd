@@ -35,6 +35,10 @@ flowchart LR
     cli --> audit
     sdk --> audit
 
+    providers["providers/ — opt-in pinned local tools\nowned staging + controlled process + validated evidence"]
+    audit -.->|"explicit provider request"| providers
+    providers -->|"unscored namespaced evidence"| report
+
     audit --> config
     audit --> discovery
     discovery --> syntax

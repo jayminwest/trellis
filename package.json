@@ -1,7 +1,7 @@
 {
 	"name": "@os-eco/trellis-cli",
 	"version": "0.2.1",
-	"description": "Deterministic, offline sloppiness audit for TypeScript workspaces — complexity, duplication, and import cycles scored 0–100 (lower is better)",
+	"description": "Offline TypeScript structural audit with a native 0–100 sloppiness index and optional unscored provider evidence",
 	"type": "module",
 	"bin": {
 		"trellis": "./src/cli/main.ts"

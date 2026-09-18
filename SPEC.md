@@ -1059,15 +1059,13 @@ audit; a regression in its own index is a real failure. (The retired
 
 ## 16. Optional quality-evidence providers (integration contract — plan `pl-43c5`)
 
-> **Contract only — nothing in this section is implemented.** This is the
-> integration contract for optional provider evidence (plan `pl-43c5`,
-> feature `trellis-8ac1`, 30 forward-chained issues; research input
-> [`docs/research/provider-spike.md`](docs/research/provider-spike.md)).
-> It fixes scope, trust and score semantics for the implementing steps
-> (from `trellis-90d6`); it changes no delivered behavior of the completed
-> foundation (§14) — it builds on that foundation and never reopens a
-> closed `pl-b2ea` stage. **Native analysis remains the default and the
-> authoritative measurement and scoring basis throughout the plan.**
+> **Implementation status.** The report, comparison, policy, history and
+> surface seams, jscpd and dependency-cruiser adapters, and explicit SonarJS
+> deferral are delivered. Knip delivery (`trellis-8ebc`) and final milestone
+> acceptance remain open. See [`docs/quality-evidence.md`](docs/quality-evidence.md)
+> for current usage and [`docs/provider-acceptance.md`](docs/provider-acceptance.md)
+> for executed evidence and gaps. This contract builds on the completed
+> foundation (§14); native measurement and scoring remain authoritative.
 
 ### 16.1 What a provider is — and is not
 

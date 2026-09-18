@@ -40,6 +40,10 @@ so you can inspect the code behind them.
 The index measures production code. Test code is analyzed separately, and
 safeguard configuration never offsets structural debt.
 
+Optional pinned tools add unscored clone and declared architecture evidence.
+See the [quality-evidence guide](docs/quality-evidence.md) for setup, policy,
+compatibility and supported-platform limits.
+
 ## Quickstart
 
 Requires [Bun](https://bun.sh) 1.1 or later.

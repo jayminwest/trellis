@@ -33,15 +33,12 @@ Three invariants define the product (SPEC §1):
 > readiness scores are preserved separately and never compared with the
 > sloppiness index. See [`docs/release-acceptance.md`](docs/release-acceptance.md).
 
-> **Planned successor: optional quality-evidence providers (plan `pl-43c5`,
-> SPEC §16 — contract only, nothing implemented yet).** Pinned local
-> analysis tools (jscpd, dependency-cruiser, Knip; SonarJS gated) may run
-> as **explicitly opt-in, supplemental, unscored evidence** behind
-> trellis-owned controls. The contract revises the shared-parser and
-> subprocess restrictions for those optional slots without weakening the
-> no-model, no-target-command, no-audit-time-download or default-offline
-> guarantees. Native analysis stays the default and the authoritative
-> scoring basis; steps `trellis-90d6` onward own delivery.
+> **Optional quality-evidence providers (plan `pl-43c5`, SPEC §16).**
+> jscpd and dependency-cruiser run as explicitly opt-in, unscored evidence.
+> SonarJS is deferred; Knip delivery is tracked by `trellis-8ebc`.
+> Native analysis remains the authoritative scoring basis. Current setup,
+> trust boundaries and migration examples: [`docs/quality-evidence.md`](docs/quality-evidence.md).
+> Executed platforms and remaining acceptance: [`docs/provider-acceptance.md`](docs/provider-acceptance.md).
 
 trellis is part of [os-eco](https://github.com/jayminwest/os-eco), the AI agent
 tooling ecosystem. It is the **measurement surface**: it gives the fleet an
@@ -191,12 +188,12 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
   exercise one code path.
 - The pivoted seam: deterministic analyzers over one shared syntax inventory;
   scoring is a pure function of raw metrics; safeguards never enter the
-  score. Keep that seam clean. The planned provider seam (SPEC §16, plan
+  score. Keep that seam clean. The provider seam (SPEC §16, plan
   `pl-43c5`) keeps native analyzers and their shared inventory authoritative
   while optional pinned providers contribute unscored evidence through
   controlled execution — never through the shared inventory or the score.
 
-### Provider evidence contract (planned — SPEC §16)
+### Provider evidence contract (SPEC §16)
 
 The full contract is SPEC §16 (integration contract for plan `pl-43c5`);
 the digest for agents working in this repo:
