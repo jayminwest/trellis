@@ -928,6 +928,11 @@ trellis standards              # canonical drift (separate capability, §11)
 trellis guide cleanup          # bundled instructions only; no audit or agent execution
 ```
 
+For `audit`, `--out <file>` sends the report to that file instead of stdout,
+including when policy fails. `--json`/`--md` override the file extension's
+format. The write confirmation and policy failure reasons go to stderr;
+`--quiet` suppresses the confirmation.
+
 The task-specific cleanup workflow is canonical in `src/guides/cleanup.ts`.
 `getGuide` in `src/guides/index.ts`, the thin CLI `guide <name>`, and SDK
 `guide(name)` share that content. Reading guidance needs no target and performs

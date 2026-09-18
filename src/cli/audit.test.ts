@@ -97,7 +97,7 @@ describe("trellis audit (deterministic core)", () => {
 		expect(existsSync(join(dir, ".trellis"))).toBe(false);
 	}, 20_000);
 
-	test("--out writes a JSON artifact while stdout stays human", async () => {
+	test("writes a JSON artifact without stdout when --out is supplied", async () => {
 		const out = join(dbDir, "report.json");
 		// No --quiet: the write notice lands on stderr (progress stays silent off-TTY).
 		const { code, stdout, stderr } = await runCli(["audit", dir, "--out", out], {
@@ -107,17 +107,37 @@ describe("trellis audit (deterministic core)", () => {
 		expect(existsSync(out)).toBe(true);
 		const parsed = JSON.parse(readFileSync(out, "utf8"));
 		expect(parsed.score.index).toBeGreaterThan(0);
-		expect(stdout).not.toContain('"schemaVersion"');
+		expect(stdout).toBe("");
 		expect(stderr).toContain("report written to");
 	}, 20_000);
 
 	test("--md overrides a .json extension for the --out artifact", async () => {
 		const out = join(dbDir, "report.json");
-		const { code } = await runCli(["audit", dir, "--quiet", "--md", "--out", out], {
+		const { code, stdout } = await runCli(["audit", dir, "--quiet", "--md", "--out", out], {
 			TRELLIS_DB: dbPath,
 		});
 		expect(code).toBe(0);
 		expect(readFileSync(out, "utf8").startsWith("#")).toBe(true);
+		expect(stdout).toBe("");
+	}, 20_000);
+
+	test.each([
+		false,
+		true,
+	])("writes --json --out relative to cwd with policy failure %s", async (failed) => {
+		if (failed) writeFileSync(join(dir, "trellis.yaml"), "policy:\n  maxIndex: 0\n");
+		const { code, stdout, stderr } = await runCli(
+			["audit", ".", "--json", "--out", "report.json"],
+			{ TRELLIS_DB: dbPath },
+			{ cwd: dir },
+		);
+		expect(code).toBe(failed ? 2 : 0);
+		expect(stdout).toBe("");
+		const report = JSON.parse(readFileSync(join(dir, "report.json"), "utf8"));
+		expect(report.schemaVersion).toBeDefined();
+		expect(report.score.index).toBeGreaterThan(0);
+		expect(stderr).toContain("report written to report.json");
+		if (failed) expect(stderr).toContain("policy max-index failed");
 	}, 20_000);
 
 	test("a bad --out target fails fast before the audit runs (exit 1)", async () => {

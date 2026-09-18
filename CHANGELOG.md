@@ -25,6 +25,9 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Fixed
 
+- `audit --out` writes the report only to the requested file, including with
+  `--json` or `--md`, without duplicating it on stdout (trellis-ad3e).
+
 - CLI reports drain fully when piped, including policy-failure output (trellis-5b25).
 - Existing aliased and relative non-source assets no longer produce unresolved
   graph edges; missing assets remain unresolved (trellis-f6b0). Analyzer 0.2.1.

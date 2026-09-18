@@ -312,7 +312,7 @@ describe("trellis audit --provider (provider selection, SPEC §16.4)", () => {
 	}, 20_000);
 
 	test.skipIf(!TOOL_AVAILABLE)(
-		"--out writes the same provider-aware report while stdout stays human",
+		"writes the provider-aware report to --out without stdout",
 		async () => {
 			const out = join(dbDir, "report.json");
 			// No --quiet: the write notice lands on stderr (progress stays silent off-TTY).
@@ -322,7 +322,7 @@ describe("trellis audit --provider (provider selection, SPEC §16.4)", () => {
 			expect(run.code).toBe(0);
 			const artifact = parseReport(readFileSync(out, "utf8"));
 			expect(providerEntry(artifact, "jscpd").state).toBe("complete");
-			expect(run.stdout).not.toContain('"schemaVersion"');
+			expect(run.stdout).toBe("");
 			expect(run.stderr).toContain("report written to");
 		},
 		20_000,

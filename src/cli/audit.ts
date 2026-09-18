@@ -16,7 +16,7 @@
  * explicit `--config <file>` — gates the run.
  *
  * Exit codes (SPEC §9): `0` clean; `2` when a configured policy trips (the
- * report is still emitted to stdout; the reasons go to stderr); `1` on an
+ * report is still emitted to the selected destination; reasons go to stderr); `1` on an
  * operational error (an unreadable workspace, invalid configuration, or an
  * unloadable baseline artifact).
  *
@@ -292,12 +292,12 @@ async function runAuditCommand(repoPath: string, opts: AuditCliOptions): Promise
 		json: result.report,
 		md: renderAuditMarkdown(result.report),
 	} satisfies Rendered;
-	// stdout always honours --json/--md (default human) so piping stays stable;
-	// `--out` writes a separate artifact in its extension's format.
+	// --out selects the file destination; otherwise emit the report to stdout.
 	if (opts.out !== undefined) {
 		writeReportFile(opts.out, formatForPath(opts.out, format), rendered);
 		if (!quiet) process.stderr.write(`trellis: report written to ${opts.out}\n`);
+	} else {
+		emit(format, rendered);
 	}
-	emit(format, rendered);
 	if (result.policy.failed) throw new FailOnExit(policyReasonLines(result.policy));
 }

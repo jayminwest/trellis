@@ -73,6 +73,9 @@ trellis audit . --json --out report.json
 trellis audit . --md --out report.md
 ```
 
+`--out` writes the report to the file instead of stdout. A confirmation goes
+to stderr; add `--quiet` to suppress it.
+
 ## Compare changes
 
 Capture a baseline, make your changes, then audit again:
