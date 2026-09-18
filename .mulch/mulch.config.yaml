@@ -24,6 +24,7 @@ domains:
   audit: {}
   testing: {}
   convention: {}
+  compare: {}
 governance:
   max_entries: 100
   warn_entries: 150
