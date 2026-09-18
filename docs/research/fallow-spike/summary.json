@@ -1,0 +1,1154 @@
+{
+  "protocol": "fallow-spike-v1",
+  "trellisCommit": "dbea36fc87acecd609a3673cfe076f13acaf94b2",
+  "fallowVersion": "fallow 3.27.0\nverified: yes (cache hit at /private/tmp/trellis-fallow-spike-tool/node_modules/@fallow-cli/darwin-arm64/.fallow-verified); fallow 3.27.0 signed",
+  "attribution": [
+    {
+      "name": "two-unchanged",
+      "trellis": {
+        "new": 2,
+        "resolved": 2,
+        "persistent": 0
+      },
+      "trellisNames": [
+        "alpha",
+        "beta"
+      ],
+      "fallow": {
+        "exit": 0,
+        "attribution": {
+          "gate": "new-only",
+          "dead_code_introduced": 0,
+          "dead_code_inherited": 0,
+          "complexity_introduced": 0,
+          "complexity_inherited": 2,
+          "duplication_introduced": 0,
+          "duplication_inherited": 1,
+          "styling_introduced": 0,
+          "styling_inherited": 0,
+          "duplication_demoted": 0
+        },
+        "findings": [
+          {
+            "path": "index.ts",
+            "name": "alpha",
+            "line": 2,
+            "col": 7,
+            "cyclomatic": 13,
+            "cognitive": 12,
+            "line_count": 15,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `alpha` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": false
+          },
+          {
+            "path": "index.ts",
+            "name": "beta",
+            "line": 17,
+            "col": 7,
+            "cyclomatic": 13,
+            "cognitive": 12,
+            "line_count": 15,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `beta` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "add-third",
+      "trellis": {
+        "new": 3,
+        "resolved": 2,
+        "persistent": 0
+      },
+      "trellisNames": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "fallow": {
+        "exit": 1,
+        "attribution": {
+          "gate": "new-only",
+          "dead_code_introduced": 0,
+          "dead_code_inherited": 0,
+          "complexity_introduced": 1,
+          "complexity_inherited": 2,
+          "duplication_introduced": 1,
+          "duplication_inherited": 0,
+          "styling_introduced": 0,
+          "styling_inherited": 0,
+          "duplication_demoted": 0
+        },
+        "findings": [
+          {
+            "path": "index.ts",
+            "name": "alpha",
+            "line": 1,
+            "col": 7,
+            "cyclomatic": 13,
+            "cognitive": 12,
+            "line_count": 15,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `alpha` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": false
+          },
+          {
+            "path": "index.ts",
+            "name": "beta",
+            "line": 16,
+            "col": 7,
+            "cyclomatic": 13,
+            "cognitive": 12,
+            "line_count": 15,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `beta` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": false
+          },
+          {
+            "path": "index.ts",
+            "name": "gamma",
+            "line": 31,
+            "col": 7,
+            "cyclomatic": 13,
+            "cognitive": 12,
+            "line_count": 15,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `gamma` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "replace-only",
+      "trellis": {
+        "new": 0,
+        "resolved": 0,
+        "persistent": 1
+      },
+      "trellisNames": [
+        "beta"
+      ],
+      "fallow": {
+        "exit": 1,
+        "attribution": {
+          "gate": "new-only",
+          "dead_code_introduced": 0,
+          "dead_code_inherited": 0,
+          "complexity_introduced": 1,
+          "complexity_inherited": 0,
+          "duplication_introduced": 0,
+          "duplication_inherited": 0,
+          "styling_introduced": 0,
+          "styling_inherited": 0,
+          "duplication_demoted": 0
+        },
+        "findings": [
+          {
+            "path": "index.ts",
+            "name": "beta",
+            "line": 1,
+            "col": 7,
+            "cyclomatic": 15,
+            "cognitive": 14,
+            "line_count": 17,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `beta` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate-method-name",
+      "trellis": {
+        "new": 2,
+        "resolved": 1,
+        "persistent": 0
+      },
+      "trellisNames": [
+        "run",
+        "run"
+      ],
+      "fallow": {
+        "exit": 0,
+        "attribution": {
+          "gate": "new-only",
+          "dead_code_introduced": 0,
+          "dead_code_inherited": 0,
+          "complexity_introduced": 0,
+          "complexity_inherited": 1,
+          "duplication_introduced": 1,
+          "duplication_inherited": 0,
+          "styling_introduced": 0,
+          "styling_inherited": 0,
+          "duplication_demoted": 0
+        },
+        "findings": [
+          {
+            "path": "index.ts",
+            "name": "run",
+            "line": 1,
+            "col": 20,
+            "cyclomatic": 13,
+            "cognitive": 12,
+            "line_count": 15,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `run` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": false
+          },
+          {
+            "path": "index.ts",
+            "name": "run",
+            "line": 17,
+            "col": 20,
+            "cyclomatic": 13,
+            "cognitive": 12,
+            "line_count": 15,
+            "param_count": 1,
+            "exceeded": "cyclomatic",
+            "severity": "moderate",
+            "actions": [
+              {
+                "type": "refactor-function",
+                "auto_fixable": false,
+                "description": "Refactor `run` to reduce complexity (extract helper functions, simplify branching)",
+                "note": "Split into smaller functions with single responsibilities. Splitting relocates branching, so it lowers this function's score without lowering the total"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the function declaration",
+                "comment": "// fallow-ignore-next-line complexity",
+                "placement": "above-function-declaration"
+              }
+            ],
+            "introduced": false
+          }
+        ]
+      }
+    }
+  ],
+  "duplication": [
+    {
+      "name": "exact",
+      "trellis": {
+        "ms": 3.766166999999996,
+        "tokens": 458,
+        "groups": 1,
+        "exhaustion": null,
+        "duplicatedLines": 54,
+        "codeLines": 54
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 96.125542,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 54,
+            "duplicated_lines": 52,
+            "total_tokens": 410,
+            "duplicated_tokens": 205,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 2,
+            "duplication_percentage": 96.29629629629629
+          },
+          "groups": [
+            {
+              "tokens": 205,
+              "lines": 26,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 26
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "renamed",
+      "trellis": {
+        "ms": 1.8439170000001468,
+        "tokens": 458,
+        "groups": 1,
+        "exhaustion": null,
+        "duplicatedLines": 54,
+        "codeLines": 54
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 93.6779170000002,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 54,
+            "duplicated_lines": 52,
+            "total_tokens": 410,
+            "duplicated_tokens": 205,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 2,
+            "duplication_percentage": 96.29629629629629
+          },
+          "groups": [
+            {
+              "tokens": 205,
+              "lines": 26,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 26
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "edited-copy",
+      "trellis": {
+        "ms": 1.3255419999995866,
+        "tokens": 465,
+        "groups": 3,
+        "exhaustion": null,
+        "duplicatedLines": 55,
+        "codeLines": 55
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 95.11391700000013,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 55,
+            "duplicated_lines": 26,
+            "total_tokens": 418,
+            "duplicated_tokens": 107,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 2,
+            "duplication_percentage": 47.27272727272727
+          },
+          "groups": [
+            {
+              "tokens": 107,
+              "lines": 13,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 13
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 13
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "mode": "semantic-near",
+          "ms": 94.43262499999992,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 55,
+            "duplicated_lines": 26,
+            "total_tokens": 418,
+            "duplicated_tokens": 107,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 2,
+            "duplication_percentage": 47.27272727272727
+          },
+          "groups": [
+            {
+              "tokens": 107,
+              "lines": 13,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 13
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 13
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "jsdoc-only",
+      "trellis": {
+        "ms": 0.0832909999999174,
+        "tokens": 14,
+        "groups": 0,
+        "exhaustion": null,
+        "duplicatedLines": 0,
+        "codeLines": 2
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 96.503917,
+          "exit": 0,
+          "stats": {
+            "total_files": 0,
+            "files_with_clones": 0,
+            "total_lines": 0,
+            "duplicated_lines": 0,
+            "total_tokens": 0,
+            "duplicated_tokens": 0,
+            "clone_groups": 0,
+            "clone_families": 0,
+            "clone_instances": 0,
+            "duplication_percentage": 0
+          },
+          "groups": []
+        }
+      ]
+    },
+    {
+      "name": "near-diverse",
+      "trellis": {
+        "ms": 0.10787500000014916,
+        "tokens": 273,
+        "groups": 0,
+        "exhaustion": null,
+        "duplicatedLines": 0,
+        "codeLines": 35
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 96.08658300000025,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 35,
+            "duplicated_lines": 20,
+            "total_tokens": 304,
+            "duplicated_tokens": 109,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 2,
+            "duplication_percentage": 57.14285714285714
+          },
+          "groups": [
+            {
+              "tokens": 109,
+              "lines": 10,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 10
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "mode": "semantic-near",
+          "ms": 93.6522500000001,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 35,
+            "duplicated_lines": 35,
+            "total_tokens": 304,
+            "duplicated_tokens": 256,
+            "clone_groups": 2,
+            "clone_families": 1,
+            "clone_instances": 4,
+            "duplication_percentage": 100
+          },
+          "groups": [
+            {
+              "tokens": 147,
+              "lines": 18,
+              "similarity": 0.8985507246376812,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 17
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 18
+                }
+              ]
+            },
+            {
+              "tokens": 109,
+              "lines": 10,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 10
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 10
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unrelated",
+      "trellis": {
+        "ms": 0.08433300000024246,
+        "tokens": 186,
+        "groups": 0,
+        "exhaustion": null,
+        "duplicatedLines": 0,
+        "codeLines": 21
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 97.62512500000003,
+          "exit": 0,
+          "stats": {
+            "total_files": 1,
+            "files_with_clones": 0,
+            "total_lines": 7,
+            "duplicated_lines": 0,
+            "total_tokens": 110,
+            "duplicated_tokens": 0,
+            "clone_groups": 0,
+            "clone_families": 0,
+            "clone_instances": 0,
+            "duplication_percentage": 0
+          },
+          "groups": []
+        },
+        {
+          "mode": "semantic-near",
+          "ms": 97.71099999999979,
+          "exit": 0,
+          "stats": {
+            "total_files": 1,
+            "files_with_clones": 0,
+            "total_lines": 7,
+            "duplicated_lines": 0,
+            "total_tokens": 110,
+            "duplicated_tokens": 0,
+            "clone_groups": 0,
+            "clone_families": 0,
+            "clone_instances": 0,
+            "duplication_percentage": 0
+          },
+          "groups": []
+        }
+      ]
+    },
+    {
+      "name": "imports-only",
+      "trellis": {
+        "ms": 2.502124999999978,
+        "tokens": 420,
+        "groups": 1,
+        "exhaustion": null,
+        "duplicatedLines": 60,
+        "codeLines": 60
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 98.97204199999987,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 60,
+            "duplicated_lines": 60,
+            "total_tokens": 360,
+            "duplicated_tokens": 180,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 2,
+            "duplication_percentage": 100
+          },
+          "groups": [
+            {
+              "tokens": 180,
+              "lines": 30,
+              "instances": [
+                {
+                  "file": "a.ts",
+                  "start": 1,
+                  "end": 30
+                },
+                {
+                  "file": "b.ts",
+                  "start": 1,
+                  "end": 30
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "mode": "semantic-ignore-imports",
+          "ms": 94.0653339999999,
+          "exit": 0,
+          "stats": {
+            "total_files": 0,
+            "files_with_clones": 0,
+            "total_lines": 0,
+            "duplicated_lines": 0,
+            "total_tokens": 0,
+            "duplicated_tokens": 0,
+            "clone_groups": 0,
+            "clone_families": 0,
+            "clone_instances": 0,
+            "duplication_percentage": 0
+          },
+          "groups": []
+        }
+      ]
+    },
+    {
+      "name": "repeated-2",
+      "trellis": {
+        "ms": 2.303957999999966,
+        "tokens": 458,
+        "groups": 1,
+        "exhaustion": null,
+        "duplicatedLines": 54,
+        "codeLines": 54
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 96.84604200000012,
+          "exit": 0,
+          "stats": {
+            "total_files": 2,
+            "files_with_clones": 2,
+            "total_lines": 54,
+            "duplicated_lines": 52,
+            "total_tokens": 410,
+            "duplicated_tokens": 205,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 2,
+            "duplication_percentage": 96.29629629629629
+          },
+          "groups": [
+            {
+              "tokens": 205,
+              "lines": 26,
+              "instances": [
+                {
+                  "file": "f0.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f1.ts",
+                  "start": 1,
+                  "end": 26
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "repeated-10",
+      "trellis": {
+        "ms": 40.1706250000002,
+        "tokens": 2290,
+        "groups": 1,
+        "exhaustion": null,
+        "duplicatedLines": 270,
+        "codeLines": 270
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 95.34312499999987,
+          "exit": 0,
+          "stats": {
+            "total_files": 10,
+            "files_with_clones": 10,
+            "total_lines": 270,
+            "duplicated_lines": 260,
+            "total_tokens": 2050,
+            "duplicated_tokens": 1845,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 10,
+            "duplication_percentage": 96.29629629629629
+          },
+          "groups": [
+            {
+              "tokens": 205,
+              "lines": 26,
+              "instances": [
+                {
+                  "file": "f0.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f1.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f2.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f3.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f4.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f5.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f6.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f7.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f8.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f9.ts",
+                  "start": 1,
+                  "end": 26
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "repeated-40",
+      "trellis": {
+        "ms": 150.8180000000002,
+        "tokens": 9160,
+        "groups": 1,
+        "exhaustion": {
+          "kind": "match-work",
+          "limit": 100000000
+        },
+        "duplicatedLines": 1080,
+        "codeLines": 1080
+      },
+      "fallow": [
+        {
+          "mode": "semantic",
+          "ms": 98.32037499999979,
+          "exit": 0,
+          "stats": {
+            "total_files": 40,
+            "files_with_clones": 40,
+            "total_lines": 1080,
+            "duplicated_lines": 1040,
+            "total_tokens": 8200,
+            "duplicated_tokens": 7995,
+            "clone_groups": 1,
+            "clone_families": 1,
+            "clone_instances": 40,
+            "duplication_percentage": 96.29629629629629
+          },
+          "groups": [
+            {
+              "tokens": 205,
+              "lines": 26,
+              "instances": [
+                {
+                  "file": "f0.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f1.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f10.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f11.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f12.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f13.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f14.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f15.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f16.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f17.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f18.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f19.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f2.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f20.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f21.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f22.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f23.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f24.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f25.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f26.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f27.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f28.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f29.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f3.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f30.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f31.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f32.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f33.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f34.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f35.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f36.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f37.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f38.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f39.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f4.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f5.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f6.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f7.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f8.ts",
+                  "start": 1,
+                  "end": 26
+                },
+                {
+                  "file": "f9.ts",
+                  "start": 1,
+                  "end": 26
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "fixtureSha256": "ac710d6958199f1a4e7dfdcb8af7e5d0b2557c6e2f2d6d7cdfdd8f7dfb0ad480",
+  "fallowSourceCommit": "aeb92c9a0f54ec18a11b2522459688728abf53e2",
+  "platform": "Darwin arm64"
+}

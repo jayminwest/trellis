@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "aeb92c9a0f54ec18a11b2522459688728abf53e2",
+  "packages": [
+    {
+      "name": "@fallow-cli/darwin-arm64",
+      "version": "3.27.0",
+      "integrity": "sha512-e8Tn+GxeYONnfWecFO8YrW1sHRaS4wTU23Oq8xsp6myFTTguRBOHiLxANHVpibG7evrnZniJTJ1l6DacP/z9RA==",
+      "resolved": "https://registry.npmjs.org/@fallow-cli/darwin-arm64/-/darwin-arm64-3.27.0.tgz"
+    },
+    {
+      "name": "fallow",
+      "version": "3.27.0",
+      "integrity": "sha512-ZTImVVtqPK6ya68XoFP+uoOLGYX6UTWpXOTfIZCs6QyFygEv5v5BZ7jmdUfOGs27BcpzPlfGXKYovR778MO7Ow==",
+      "resolved": "https://registry.npmjs.org/fallow/-/fallow-3.27.0.tgz"
+    }
+  ]
+}
