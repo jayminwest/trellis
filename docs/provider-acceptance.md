@@ -99,3 +99,48 @@ per output stream. Exhaustion is unavailable/incomplete evidence, not a
 deterministic quality result. These controls do not provide a universal
 untrusted-code sandbox or claim an enforced memory ceiling. Outcome
 validation and scoring calibration remain separate (`trellis-f999`).
+
+## Final milestone audit (trellis-639c)
+
+The native baseline is `eac0f57fc038d7ffb22ea04ec53d95e8b465c4b0`,
+the parent of the first provider-contract commit `538996d`. It includes
+`ac263e7` (asset resolution) and `1de0c90` (count-gradient calibration).
+The earlier pivot-release commit `1bcb8e8` predates those foundation fixes
+and must not be used to attribute their changes to optional providers.
+
+Verified against local HEAD `9e7fd56` on 2026-09-17:
+
+- `git diff --exit-code eac0f57 HEAD -- src/metrics src/scoring src/syntax`
+  exits 0: all native measurement, scoring and parsing implementations and
+  their tests are unchanged from the completed foundation.
+- Coverage floors, file-size ceilings, debt allowlist and duplication
+  threshold are unchanged across the same range. All nine current gates
+  passed in the canonical checkout, as well as the isolated worktree.
+- Foundation feature `trellis-253e` closed at 15:00:01 UTC; its final
+  scoped follow-ups `trellis-831b` and `trellis-f6b0` closed at 15:16:29.
+  The first provider contract child closed at 15:20:05, and its commit
+  follows both implementation fixes. No foundation stage was reopened.
+- The only provider subprocess creation site is `src/providers/process.ts`:
+  fixed executable/argv, explicit environment, no shell, owned process
+  group. Provider modules contain no network-fetch or installer call.
+  The maintained offline and conformance tests exercise that boundary;
+  the source scan alone is not treated as behavioral proof.
+- Sonar's capability remains deferred, has no pinned artifact, and the
+  tests in `src/providers/sonar/deferred.test.ts` verify the preserved
+  native result, no staging, no execution and fail-closed required policy.
+  Its clearance prerequisite remains `trellis-7f5d`; outcome validation
+  remains `trellis-f999`.
+
+**Still unproven:** Knip delivery and its integration acceptance. Both the
+tracker and `src/providers/capabilities.ts` still say adapter-pending;
+`src/audit/providers.ts` routes it through undelivered evidence. No Knip PR
+was open or among the recent merged PRs at this audit. The user assigned
+that implementation to another agent. After it lands, extend the combined
+fixtures/resource run and tool/version documentation to Knip, rerun final
+gates and smoke checks, then close `trellis-639c`, `trellis-8ac1` and the
+plan. Do not infer milestone completion from the other 28 closed children.
+
+The local work commits are `0aca9ac` (acceptance), `4fbac2d` (documentation)
+and `9e7fd56` (tracker handoff). Other agents' uncommitted tracker/memory
+edits were preserved and are not part of this acceptance claim. Nothing
+was published or pushed.
