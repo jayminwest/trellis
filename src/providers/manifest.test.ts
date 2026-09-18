@@ -45,6 +45,16 @@ describe("manifest", () => {
 		);
 		expect(dependencyCruiser?.platforms).toEqual([
 			{
+				key: "darwin-arm64",
+				packageName: "dependency-cruiser",
+				os: "darwin",
+				cpu: "arm64",
+				binaryRelPath: "bin/dependency-cruiser.mjs",
+				execution: "tested",
+				evidence: expect.stringContaining("trellis-b18d"),
+				binarySha256: "3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6",
+			},
+			{
 				key: "linux-x64-gnu",
 				packageName: "dependency-cruiser",
 				os: "linux",
@@ -112,6 +122,25 @@ describe("manifest", () => {
 });
 
 describe("detectLinuxLibc", () => {
+	test("permits shared launchers only with matching paths and verified digests", () => {
+		const entry = pinnedTool("dependency-cruiser");
+		if (entry === undefined) throw new Error("missing dependency-cruiser pin");
+		expect(pinnedToolManifestEntrySchema.safeParse(entry).success).toBe(true);
+		const changed = structuredClone(entry);
+		const last = changed.platforms.at(-1);
+		if (last === undefined) throw new Error("missing platform");
+		const first = changed.platforms[0];
+		if (first === undefined) throw new Error("missing first platform");
+		first.binarySha256 = "0".repeat(64);
+		expect(pinnedToolManifestEntrySchema.safeParse(changed).success).toBe(false);
+		first.binarySha256 = entry.launcherSha256;
+		last.binarySha256 = "0".repeat(64);
+		expect(pinnedToolManifestEntrySchema.safeParse(changed).success).toBe(false);
+		last.binarySha256 = entry.launcherSha256;
+		last.binaryRelPath = "another-launcher.mjs";
+		expect(pinnedToolManifestEntrySchema.safeParse(changed).success).toBe(false);
+	});
+
 	test("reports glibc from a runtime report that carries a glibc version", () => {
 		expect(detectLinuxLibc(() => ({ header: { glibcVersionRuntime: "2.36" } }), "linux")).toBe(
 			"glibc",

@@ -1,0 +1,403 @@
+{
+  "host": "darwin",
+  "arch": "arm64",
+  "bun": "1.3.14",
+  "results": [
+    {
+      "label": "control/native",
+      "durationMs": 261,
+      "maxRSS": 265109504,
+      "sourceSha256": "21814017c94eedd592adf8d46f1c4a1d2e9b242f2023b05efbbcfc8008b86e29",
+      "score": {
+        "index": 16,
+        "direction": "lower-is-better",
+        "partial": false,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 0,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 16,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 0,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": []
+    },
+    {
+      "label": "control/providers",
+      "durationMs": 767,
+      "maxRSS": 272056320,
+      "sourceSha256": "21814017c94eedd592adf8d46f1c4a1d2e9b242f2023b05efbbcfc8008b86e29",
+      "score": {
+        "index": 16,
+        "direction": "lower-is-better",
+        "partial": false,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 0,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 16,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 0,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": [
+        {
+          "id": "dependency-cruiser",
+          "state": "complete",
+          "parser": {
+            "engine": "dependency-cruiser.typescript",
+            "version": "6.0.3"
+          }
+        },
+        {
+          "id": "jscpd",
+          "state": "incomplete",
+          "reason": "2 of 4 staged files are omitted from jscpd's source statistics (below the 50-token threshold or skipped by the tool) — they are not asserted analyzed, so per-file observed coverage cannot be enumerated",
+          "parser": {
+            "engine": "jscpd.tokenizer",
+            "version": "5.2.1"
+          }
+        },
+        {
+          "id": "sonarjs",
+          "state": "unsupported",
+          "reason": "explicitly deferred by the distribution and metric-interface decision (docs/sonarjs-decision.md): the pinned eslint-plugin-sonarjs 3.0.5 distribution carries conflicting license evidence (LGPL-3.0-only package metadata vs SONAR Source-Available License v1.0 shipped headers) and no permitted distribution route is established (deferred by docs/sonarjs-decision.md, issue trellis-db3e; prerequisite trellis-7f5d)"
+        }
+      ]
+    },
+    {
+      "label": "stress-40-copies/native",
+      "durationMs": 280,
+      "maxRSS": 282492928,
+      "sourceSha256": "456df41690e0c240cf4bbccceda813d2d65c179c975dd6e219fa36128f972ff4",
+      "score": {
+        "index": 16,
+        "direction": "lower-is-better",
+        "partial": false,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 0,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 16,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 0,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": []
+    },
+    {
+      "label": "stress-40-copies/providers",
+      "durationMs": 782,
+      "maxRSS": 292143104,
+      "sourceSha256": "456df41690e0c240cf4bbccceda813d2d65c179c975dd6e219fa36128f972ff4",
+      "score": {
+        "index": 16,
+        "direction": "lower-is-better",
+        "partial": false,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 0,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 16,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 0,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": [
+        {
+          "id": "dependency-cruiser",
+          "state": "complete",
+          "parser": {
+            "engine": "dependency-cruiser.typescript",
+            "version": "6.0.3"
+          }
+        },
+        {
+          "id": "jscpd",
+          "state": "complete",
+          "parser": {
+            "engine": "jscpd.tokenizer",
+            "version": "5.2.1"
+          }
+        },
+        {
+          "id": "sonarjs",
+          "state": "unsupported",
+          "reason": "explicitly deferred by the distribution and metric-interface decision (docs/sonarjs-decision.md): the pinned eslint-plugin-sonarjs 3.0.5 distribution carries conflicting license evidence (LGPL-3.0-only package metadata vs SONAR Source-Available License v1.0 shipped headers) and no permitted distribution route is established (deferred by docs/sonarjs-decision.md, issue trellis-db3e; prerequisite trellis-7f5d)"
+        }
+      ]
+    },
+    {
+      "label": "trellis/native",
+      "durationMs": 925,
+      "maxRSS": 656719872,
+      "sourceSha256": "8ccf7d947f3aad15c72cfaa6add09b3e92919aa3d8e8e4bfa36c8b83250e2745",
+      "score": {
+        "index": 100,
+        "direction": "lower-is-better",
+        "partial": true,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 50,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 30,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 20,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": []
+    },
+    {
+      "label": "trellis/providers",
+      "durationMs": 2350,
+      "maxRSS": 759562240,
+      "sourceSha256": "8ccf7d947f3aad15c72cfaa6add09b3e92919aa3d8e8e4bfa36c8b83250e2745",
+      "score": {
+        "index": 100,
+        "direction": "lower-is-better",
+        "partial": true,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 50,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 30,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 20,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": [
+        {
+          "id": "dependency-cruiser",
+          "state": "incomplete",
+          "reason": "the raw report carries suspect evidence: module \"commander\" is reported twice — the graph is not a graph",
+          "parser": {
+            "engine": "dependency-cruiser.typescript",
+            "version": "6.0.3"
+          }
+        },
+        {
+          "id": "jscpd",
+          "state": "incomplete",
+          "reason": "33 of 446 staged files are omitted from jscpd's source statistics (below the 50-token threshold or skipped by the tool) — they are not asserted analyzed, so per-file observed coverage cannot be enumerated",
+          "parser": {
+            "engine": "jscpd.tokenizer",
+            "version": "5.2.1"
+          }
+        },
+        {
+          "id": "sonarjs",
+          "state": "unsupported",
+          "reason": "explicitly deferred by the distribution and metric-interface decision (docs/sonarjs-decision.md): the pinned eslint-plugin-sonarjs 3.0.5 distribution carries conflicting license evidence (LGPL-3.0-only package metadata vs SONAR Source-Available License v1.0 shipped headers) and no permitted distribution route is established (deferred by docs/sonarjs-decision.md, issue trellis-db3e; prerequisite trellis-7f5d)"
+        }
+      ]
+    },
+    {
+      "label": "representative/native",
+      "durationMs": 605,
+      "maxRSS": 516882432,
+      "sourceSha256": "8baeea5c0da12393124041b7c63574f0486c657a907f7f42cdbf48889e8b934b",
+      "score": {
+        "index": 64,
+        "direction": "lower-is-better",
+        "partial": false,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 40,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 24,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 0,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": []
+    },
+    {
+      "label": "representative/providers",
+      "durationMs": 1518,
+      "maxRSS": 543703040,
+      "sourceSha256": "8baeea5c0da12393124041b7c63574f0486c657a907f7f42cdbf48889e8b934b",
+      "score": {
+        "index": 64,
+        "direction": "lower-is-better",
+        "partial": false,
+        "contributions": [
+          {
+            "dimension": "complexity-erosion",
+            "points": 40,
+            "metricIds": [
+              "erosion.eroded-count.production",
+              "erosion.eroded-share.production"
+            ]
+          },
+          {
+            "dimension": "duplication",
+            "points": 24,
+            "metricIds": [
+              "duplication.density.production",
+              "duplication.groups.production"
+            ]
+          },
+          {
+            "dimension": "import-cycle",
+            "points": 0,
+            "metricIds": [
+              "import-cycle.density",
+              "import-cycle.groups"
+            ]
+          }
+        ]
+      },
+      "providers": [
+        {
+          "id": "dependency-cruiser",
+          "state": "complete",
+          "parser": {
+            "engine": "dependency-cruiser.typescript",
+            "version": "6.0.3"
+          }
+        },
+        {
+          "id": "jscpd",
+          "state": "incomplete",
+          "reason": "1 of 120 staged files are omitted from jscpd's source statistics (below the 50-token threshold or skipped by the tool) — they are not asserted analyzed, so per-file observed coverage cannot be enumerated",
+          "parser": {
+            "engine": "jscpd.tokenizer",
+            "version": "5.2.1"
+          }
+        },
+        {
+          "id": "sonarjs",
+          "state": "unsupported",
+          "reason": "explicitly deferred by the distribution and metric-interface decision (docs/sonarjs-decision.md): the pinned eslint-plugin-sonarjs 3.0.5 distribution carries conflicting license evidence (LGPL-3.0-only package metadata vs SONAR Source-Available License v1.0 shipped headers) and no permitted distribution route is established (deferred by docs/sonarjs-decision.md, issue trellis-db3e; prerequisite trellis-7f5d)"
+        }
+      ]
+    }
+  ]
+}

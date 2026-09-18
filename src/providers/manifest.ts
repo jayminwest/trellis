@@ -101,20 +101,28 @@ export const pinnedToolManifestEntrySchema = z
 			});
 		}
 		const keys = new Set<string>();
-		const packageNames = new Set<string>();
+		const packageNames = new Map<string, boolean>();
 		const hosts = new Set<string>();
 		for (const platform of entry.platforms) {
 			if (keys.has(platform.key)) {
 				ctx.addIssue({ code: "custom", message: `duplicate platform key "${platform.key}"` });
 			}
 			keys.add(platform.key);
-			if (packageNames.has(platform.packageName)) {
+			// A JavaScript distribution shares its verified launcher across hosts.
+			// Native platform packages still must be unique (trellis-b18d).
+			const isSharedLauncher =
+				platform.packageName === entry.packageName &&
+				platform.binaryRelPath === entry.launcherRelPath &&
+				platform.binarySha256 === entry.launcherSha256;
+			const permitsSharedPackage =
+				isSharedLauncher && packageNames.get(platform.packageName) === true;
+			if (packageNames.has(platform.packageName) && !permitsSharedPackage) {
 				ctx.addIssue({
 					code: "custom",
 					message: `duplicate platform package "${platform.packageName}"`,
 				});
 			}
-			packageNames.add(platform.packageName);
+			packageNames.set(platform.packageName, isSharedLauncher);
 			const host = `${platform.os}/${platform.cpu}/${platform.libc ?? "any"}`;
 			if (hosts.has(host)) {
 				ctx.addIssue({ code: "custom", message: `duplicate host ${host}` });
@@ -259,6 +267,18 @@ export const PINNED_TOOLS: readonly PinnedToolManifestEntry[] = (() => {
 			launcherSha256: "3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6",
 			platformMapSha256: "6aed892071cdd9ebca9517665d19a67ded18510f64a608beb611f711623c6cbd",
 			platforms: [
+				{
+					key: "darwin-arm64",
+					packageName: "dependency-cruiser",
+					os: "darwin",
+					cpu: "arm64",
+					binaryRelPath: "bin/dependency-cruiser.mjs",
+					execution: "tested",
+					evidence:
+						"macOS 26.5.2 ARM64, Bun 1.3.14: dependency-cruiser conformance and " +
+						"cross-provider suites passed; docs/provider-acceptance.md (trellis-b18d)",
+					binarySha256: "3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6",
+				},
 				{
 					key: "linux-x64-gnu",
 					packageName: "dependency-cruiser",

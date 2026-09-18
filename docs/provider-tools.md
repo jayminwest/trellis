@@ -66,10 +66,13 @@ launcher script `bin/dependency-cruiser.mjs`, so
   `docs/research/architecture-provider-spike`), so the adapter refuses to
   run blind and the coverage check keeps an empty graph `incomplete`.
 
-For dependency-cruiser 18.3.1: **linux-x64-gnu** is `tested` (the adapter's
-conformance and failure-regression suites + the provider smoke). No other
-platform is declared — the pinned distribution is host-independent
-  JavaScript, but trellis claims only what it exercised.
+For dependency-cruiser 18.3.1: **linux-x64-gnu** and **darwin-arm64** are
+`tested` (the adapter's conformance and failure-regression suites plus the
+provider smoke). The [macOS acceptance record](provider-acceptance.md) names
+the exact runtime and verified launcher digest. No other platform is
+declared: the distribution is JavaScript, but trellis claims only what it
+exercised. Shared launcher packages must match both the launcher path and
+its verified digest across host entries.
 
 ## Preparing an installation (operator step, never audit-time)
 
