@@ -63,6 +63,10 @@ function measureFile(file: FileSyntax): FunctionMeasurement[] {
 		const sloc = functionSloc(lines, fn.range);
 		const mass = functionMass(cc, sloc);
 		return {
+			identity:
+				fn.identity.state === "identified"
+					? { ...fn.identity, sourceSet: file.sourceSet }
+					: fn.identity,
 			path: file.path,
 			packagePath: file.packagePath,
 			sourceSet: file.sourceSet,
@@ -210,6 +214,7 @@ function hotspotFindings(functions: readonly FunctionMeasurement[]): Finding[] {
 			kind: "complexity.hotspot",
 			path: fn.path,
 			range: fn.range,
+			identity: fn.identity,
 			summary: `CC ${fn.cc}, mass ${roundTo(fn.mass, 3)}, nesting ${fn.maxNesting}, SLOC ${fn.sloc}`,
 			facts: {
 				rank: index + 1,

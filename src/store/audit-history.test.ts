@@ -120,7 +120,9 @@ describe("audit history provenance and compatible series", () => {
 			"2026-07-01T00:00:00.000Z",
 		);
 		const added = rooted(
-			evidenceReport([jscpdAnalysis(), nativeComplexityAnalysis()], { index: 25 }),
+			evidenceReport([jscpdAnalysis(), nativeComplexityAnalysis()], {
+				index: 25,
+			}),
 			dir,
 			"2026-07-02T00:00:00.000Z",
 		);
@@ -240,7 +242,10 @@ describe("audit history provenance and compatible series", () => {
 			"2026-07-02T00:00:00.000Z",
 		);
 		const current = rooted(
-			evidenceReport([jscpdAnalysis(), nativeComplexityAnalysis()], { index: 25 }),
+			evidenceReport([jscpdAnalysis(), nativeComplexityAnalysis()], {
+				index: 25,
+				schemaVersion: "1.1.0",
+			}),
 			dir,
 			"2026-07-03T00:00:00.000Z",
 		);

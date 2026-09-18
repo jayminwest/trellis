@@ -85,7 +85,7 @@ describe("runComparison", () => {
 		expect(result.comparison.score).toBeUndefined();
 	});
 
-	test("a pre-provider artifact compares explicitly with a current one (old-new pair)", async () => {
+	test("refuses a pre-provider baseline for a scoped-identity report", async () => {
 		const baseline = await saveArtifact("clean", "a.json");
 		// Downgrade the baseline to a pre-provider (schema 1.0.0) artifact: strip
 		// the additive evidence area — exactly the shape older trellis emitted.
@@ -96,12 +96,12 @@ describe("runComparison", () => {
 		await writeFile(baseline, JSON.stringify(legacy, null, 2));
 		const current = await saveArtifact("sloppy", "b.json");
 		const result = await runComparison(baseline, current);
-		// The scored basis compares explicitly — with the span named, never silent.
-		expect(result.comparison.compatibility.comparable).toBe(true);
-		expect(result.comparison.compatibility.caveats.map((caveat) => caveat.code)).toContain(
-			"schema-span",
+		// Identity provenance changed: refuse even when the analyzer field was retained.
+		expect(result.comparison.compatibility.comparable).toBe(false);
+		expect(result.comparison.compatibility.issues.map((issue) => issue.code)).toContain(
+			"schema-version",
 		);
-		expect(result.comparison.score?.delta).toBeGreaterThan(0);
+		expect(result.comparison.score).toBeUndefined();
 		// The pre-provider side's provider evidence reads as unrequested — never a regression.
 		const carried = result.comparison.evidence.providers;
 		expect(carried.length).toBeGreaterThan(0);

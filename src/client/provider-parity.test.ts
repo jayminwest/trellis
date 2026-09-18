@@ -64,7 +64,7 @@ function withoutRun<T extends { run?: unknown }>(value: T): Omit<T, "run"> {
 
 /** The external (provider) analyses a report carries, by provider id. */
 function externalProviderIds(report: client.AuditReport): string[] {
-	if (report.schemaVersion !== "1.1.0") return [];
+	if (report.schemaVersion === "1.0.0") return [];
 	return report.evidence.analyses
 		.filter((analysis) => analysis.provider.kind === "external")
 		.map((analysis) => analysis.provider.id);
@@ -227,7 +227,7 @@ describe("client SDK provider-capable parity (SPEC §16.4, §13.1)", () => {
 		expect(entry.reason).toContain("never at audit time");
 		// Honest completeness (§16.2): the evidence area records the gap while
 		// the native score stays complete — advisory evidence never scores.
-		if (sdk.report.schemaVersion !== "1.1.0")
+		if (sdk.report.schemaVersion === "1.0.0")
 			throw new Error("expected an evidence-carrying report");
 		expect(sdk.report.evidence.completeness).toBe("incomplete");
 		expect(sdk.report.score.partial).toBe(false);
@@ -301,13 +301,13 @@ describe("client SDK provider-capable parity (SPEC §16.4, §13.1)", () => {
 		expect(cli.stderr).toContain(reason.message);
 	}, 20_000);
 
-	test("compare() reads old artifacts as unrequested evidence, never regressions (CLI parity)", async () => {
+	test("compare() keeps old provider evidence unrequested while refusing the identity transition", async () => {
 		// A provider-carrying current report (the deferred sonarjs capability is
 		// located unsupported evidence on every host — no pinned tool needed).
 		const current = await client.audit(dir, {
 			config: providerAuditConfig({ sonarjs: {} }),
 		});
-		if (current.report.schemaVersion !== "1.1.0") {
+		if (current.report.schemaVersion === "1.0.0") {
 			throw new Error("expected the evidence-carrying report");
 		}
 		expect(current.report.score.partial).toBe(false);
@@ -322,11 +322,10 @@ describe("client SDK provider-capable parity (SPEC §16.4, §13.1)", () => {
 		writeFileSync(currentPath, renderAuditJson(current.report));
 		const sdk = await client.compare(oldPath, currentPath);
 		expect(sdk.policy).toBeNull();
-		// The scored basis is unchanged across the schema span, so the pair
-		// still compares — with the schema-span caveat, not a refusal.
-		expect(sdk.comparison.compatibility.comparable).toBe(true);
-		expect(sdk.comparison.compatibility.caveats.map((caveat) => caveat.code)).toContain(
-			"schema-span",
+		// Provider absence remains honest, but native identity provenance is incompatible.
+		expect(sdk.comparison.compatibility.comparable).toBe(false);
+		expect(sdk.comparison.compatibility.issues.map((issue) => issue.code)).toContain(
+			"schema-version",
 		);
 		// The pre-provider side reads as unrequested — never a regression.
 		const sonarjs = sdk.comparison.evidence.providers.find((p) => p.providerId === "sonarjs");
@@ -336,7 +335,7 @@ describe("client SDK provider-capable parity (SPEC §16.4, §13.1)", () => {
 			"never as a regression",
 		);
 		const cli = await runCli(["compare", oldPath, currentPath, "--json"]);
-		expect(cli.code).toBe(0);
+		expect(cli.code).toBe(2);
 		expect(sdk.comparison).toEqual(JSON.parse(cli.stdout));
 	}, 20_000);
 

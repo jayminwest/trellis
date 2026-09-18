@@ -31,13 +31,17 @@ export const SCORING_VERSION = "0.2.0-provisional";
 /**
  * Schema version for the §6 report/configuration contract family.
  *
+ * `1.2.0` (trellis-3d6b) requires scoped identity on native hotspots.
  * `1.1.0` (trellis-a24d) adds the additive per-analysis evidence area
  * (§6.6): per-analysis provenance/status, overall evidence completeness
  * independent of score completeness, and score completeness computed only
  * from the report's declared scored inputs. Native metric values and the
  * scoring formula are unchanged.
  */
-export const SCHEMA_VERSION = "1.1.0";
+export const SCHEMA_VERSION = "1.2.0";
+
+/** Evidence-carrying reports before scoped hotspot identity. */
+export const PRE_IDENTITY_SCHEMA_VERSION = "1.1.0";
 
 /**
  * The pre-provider schema version (`1.0.0`): reports from before the evidence
@@ -48,7 +52,11 @@ export const SCHEMA_VERSION = "1.1.0";
 export const PRE_PROVIDER_SCHEMA_VERSION = "1.0.0";
 
 /** Every schema version this trellis reads, oldest first (§16.6). */
-export const SUPPORTED_SCHEMA_VERSIONS = [PRE_PROVIDER_SCHEMA_VERSION, SCHEMA_VERSION] as const;
+export const SUPPORTED_SCHEMA_VERSIONS = [
+	PRE_PROVIDER_SCHEMA_VERSION,
+	PRE_IDENTITY_SCHEMA_VERSION,
+	SCHEMA_VERSION,
+] as const;
 
 /** One readable schema version. */
 export type SupportedSchemaVersion = (typeof SUPPORTED_SCHEMA_VERSIONS)[number];

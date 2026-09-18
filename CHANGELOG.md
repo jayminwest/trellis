@@ -9,6 +9,12 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+- Native hotspots now carry scoped function identity or an explicit ambiguity
+  reason, derived from the shared AST (trellis-3d6b). Analyzer 0.2.2 and schema
+  1.2.0 preserve native metrics and scoring. Historical 1.0.0/1.1.0 reports
+  remain readable; comparisons across the identity transition require a fresh
+  baseline. Scoped matching follows in trellis-7cfd.
+
 - Added `trellis guide cleanup` and SDK `guide("cleanup")` with one bundled,
   read-only workflow for behavior-preserving cleanup (trellis-b6f9).
 

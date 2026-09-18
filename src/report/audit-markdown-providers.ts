@@ -68,7 +68,7 @@ function inline(text: string): string {
 
 /** The overall-evidence lines: the verdict, then the independence note (§16.2). */
 function evidenceCompletenessLines(report: AuditReport): string[] {
-	if (report.schemaVersion !== "1.1.0") {
+	if (report.schemaVersion === "1.0.0") {
 		throw new Error("external provider evidence requires an evidence-carrying (1.1.0) report");
 	}
 	const verdict =

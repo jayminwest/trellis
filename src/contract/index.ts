@@ -80,6 +80,11 @@ export {
 	type Range,
 	rangeSchema,
 } from "./finding.ts";
+export {
+	HOTSPOT_IDENTITY_VERSION,
+	type HotspotIdentity,
+	hotspotIdentitySchema,
+} from "./hotspot-identity.ts";
 export { type MetricValue, metricValueSchema } from "./metric.ts";
 export {
 	dottedIdSchema,
@@ -161,6 +166,7 @@ export {
 export {
 	ANALYZER_VERSION,
 	isSupportedSchemaVersion,
+	PRE_IDENTITY_SCHEMA_VERSION,
 	PRE_PROVIDER_SCHEMA_VERSION,
 	SCHEMA_VERSION,
 	SCORING_VERSION,

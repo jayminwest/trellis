@@ -28,6 +28,7 @@
  */
 import type ts from "typescript";
 import type { Completeness, Range, SourceSet } from "../contract/index.ts";
+import type { FunctionIdentity } from "./identity.ts";
 
 /** The function-like node kinds the inventory recognizes (SPEC §5.1). */
 export const FUNCTION_KINDS = [
@@ -90,6 +91,8 @@ export interface LineCounts {
  * `node.getSourceFile()` is always the owning {@link FileSyntax.sourceFile}.
  */
 export interface FunctionFacts {
+	/** Scoped identity, derived from this file's shared AST after sibling registration. */
+	identity: FunctionIdentity;
 	kind: FunctionKind;
 	/**
 	 * Display name per the documented naming rule: the declared name for

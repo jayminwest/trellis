@@ -12,13 +12,14 @@
  * are ever silently computed):
  *
  * - `schema-version` — a side's version is not one this trellis reads
- *   (artifact loading rejects these earlier; kept as a defensive refusal);
+ *   (artifact loading rejects these earlier; kept as a defensive refusal),
+ *   or an identity-bearing 1.2.0 report is paired with a historical schema;
  * - `analyzer-version` — the trellis releases differ;
  * - `scoring-version` — the formula versions differ, so the indices are
  *   not on one scale;
  * - `metric-set` — the **scored** metric catalogs differ. Pre-provider
  *   (1.0.0) reports read under their original interpretation (every metric
- *   is a score input); on evidence-carrying (1.1.0) reports the catalog is
+ *   is a score input); on evidence-carrying reports the catalog is
  *   the metrics owned by the declared **scored** analyses, so adding or
  *   removing an *advisory* analysis never trips this (§16.6);
  * - `configuration` — both source configurations were supplied and their
@@ -27,7 +28,7 @@
  *   semantics differ (pinned tool/adapter version, mode, provider options,
  *   parser, normalized options) even when the version triple matches: the
  *   core version alone never establishes comparable measurements;
- * - `scoring-basis` — on a 1.1.0 pair the declared scored analysis sets
+ * - `scoring-basis` — on an evidence-carrying pair the declared scored analysis sets
  *   differ, so the score's inputs are not the same set.
  *
  * Caveats (the comparison proceeds, explicitly):
@@ -47,7 +48,6 @@ import {
 	carriedAnalyses,
 	isSupportedSchemaVersion,
 	PRE_PROVIDER_SCHEMA_VERSION,
-	SCHEMA_VERSION,
 	type SourceCoverage,
 } from "../contract/index.ts";
 import { type CarriedProducer, producerSemanticsDifferences } from "./evidence.ts";
@@ -149,7 +149,7 @@ function sameSourceSemantics(a: AuditConfig, b: AuditConfig): boolean {
 /**
  * The version facts (§3.5): a defensive hard refusal when a side's schema
  * version is unreadable, a `schema-span` caveat for a supported 1.0.0 ↔ 1.1.0
- * pair, and hard issues for analyzer/scoring mismatches.
+ * pair, and hard issues for identity-schema or analyzer/scoring mismatches.
  */
 function versionFacts(
 	baseline: AuditReport,
@@ -171,10 +171,17 @@ function versionFacts(
 		return;
 	}
 	if (baseline.schemaVersion !== current.schemaVersion) {
-		caveats.push({
-			code: "schema-span",
-			message: `schema versions differ (${baseline.schemaVersion} vs ${current.schemaVersion}): the pre-provider side predates the evidence area, so its provider evidence reads as unrequested; the scored measurement body is unchanged between these versions`,
-		});
+		if (baseline.schemaVersion === "1.2.0" || current.schemaVersion === "1.2.0") {
+			issues.push({
+				code: "schema-version",
+				message:
+					"scoped hotspot identity requires a fresh schema 1.2.0 baseline; historical schemas lack identity provenance",
+			});
+		} else
+			caveats.push({
+				code: "schema-span",
+				message: `schema versions differ (${baseline.schemaVersion} vs ${current.schemaVersion}): the pre-provider side predates the evidence area, so its provider evidence reads as unrequested; the scored measurement body is unchanged between these versions`,
+			});
 	}
 	const versionCheck = (
 		code: "analyzer-version" | "scoring-version",
@@ -266,9 +273,12 @@ function scoredMeasurementIssues(
 	return issues;
 }
 
-/** The declared scored-inputs fact (1.1.0 pairs only — pre-provider reports declare none). */
+/** The declared scored-inputs fact (evidence-carrying pairs — pre-provider reports declare none). */
 function scoringBasisIssue(baseline: AuditReport, current: AuditReport): CompatibilityIssue | null {
-	if (baseline.schemaVersion !== SCHEMA_VERSION || current.schemaVersion !== SCHEMA_VERSION) {
+	if (
+		baseline.schemaVersion === PRE_PROVIDER_SCHEMA_VERSION ||
+		current.schemaVersion === PRE_PROVIDER_SCHEMA_VERSION
+	) {
 		return null;
 	}
 	const baselineIds = scoredAnalysisIds(baseline);

@@ -10,7 +10,7 @@ describe("smokePackage", () => {
 	test("packs the tarball and audits a fixture through the packed CLI", () => {
 		const result = smokePackage(REPO_ROOT);
 		expect(result.tarball).toEndWith(".tgz");
-		expect(result.analyzerVersion).toBe("0.2.1");
+		expect(result.analyzerVersion).toBe("0.2.2");
 		expect(result.scoreIndex).toBeGreaterThanOrEqual(0);
 		expect(result.scoreIndex).toBeLessThanOrEqual(100);
 	}, 30_000);

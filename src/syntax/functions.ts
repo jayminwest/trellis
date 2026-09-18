@@ -22,6 +22,7 @@
  * and are ignored — they are types, not callable implementations.
  */
 import ts from "typescript";
+import { collectFunctionIdentities } from "./identity.ts";
 import { rangeAt } from "./parse.ts";
 import type { FunctionFacts, FunctionKind } from "./types.ts";
 
@@ -86,7 +87,7 @@ function nameOf(
 /** Mutable state threaded through the inventory walk. */
 interface CollectState {
 	sourceFile: ts.SourceFile;
-	facts: FunctionFacts[];
+	facts: Omit<FunctionFacts, "identity">[];
 	/** Indices into `facts`: the enclosing functions, outermost first. */
 	stack: number[];
 	signatures: number;
@@ -160,7 +161,13 @@ export interface FileFunctions {
 export function collectFunctions(sourceFile: ts.SourceFile): FileFunctions {
 	const state: CollectState = { sourceFile, facts: [], stack: [], signatures: 0 };
 	visitChildren(state, sourceFile);
-	return { functions: state.facts, signatureCount: state.signatures };
+	const identities = collectFunctionIdentities(sourceFile, state.facts);
+	const functions = state.facts.map((fn): FunctionFacts => {
+		const identity = identities.get(fn.node);
+		if (identity === undefined) throw new Error("inventoried function lacks identity");
+		return { ...fn, identity };
+	});
+	return { functions, signatureCount: state.signatures };
 }
 
 /**

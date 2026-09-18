@@ -34,6 +34,15 @@ function finding(kind: string, path: string, line = 1): Finding {
 		path,
 		range: { start: { line }, end: { line } },
 		summary: `${kind} at ${path}:${line}`,
+		...(kind === "complexity.hotspot"
+			? {
+					identity: {
+						version: "1.0.0" as const,
+						state: "ambiguous" as const,
+						reason: "anonymous" as const,
+					},
+				}
+			: {}),
 	};
 }
 

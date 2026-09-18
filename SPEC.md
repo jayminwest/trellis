@@ -541,8 +541,10 @@ version data, and misleading `complete` states.
 
 Scoped native hotspot identity v1 is defined in
 [`docs/hotspot-identity.md`](docs/hotspot-identity.md), including the function-form
-and historical compatibility matrices. Its contract is staged for schema 1.2.0;
-producer adoption will require identified or explicitly ambiguous provenance.
+and historical compatibility matrices. Schema 1.2.0 requires identified or
+explicitly ambiguous provenance on native hotspots. Analyzer 0.2.2 derives
+that provenance from the shared AST; historical 1.0.0/1.1.0 artifacts retain
+their original interpretation.
 
 ### 6.3 Safeguard result
 

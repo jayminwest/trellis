@@ -214,7 +214,7 @@ describe("client SDK fleet provider-capable parity (SPEC §16.4, §13.1, §11)",
 		}
 		// The native member carries no external analysis at all.
 		const nativeEntry = fleet.entries.find((e) => e.id === "native");
-		if (nativeEntry?.ok !== true || nativeEntry.report.schemaVersion !== "1.1.0") {
+		if (nativeEntry?.ok !== true || nativeEntry.report.schemaVersion === "1.0.0") {
 			throw new Error("expected an evidence-carrying native member");
 		}
 		expect(
@@ -257,7 +257,7 @@ describe("client SDK fleet provider-capable parity (SPEC §16.4, §13.1, §11)",
 			expect(withoutRun(JSON.parse(cliAudit.stdout))).toEqual(withoutRun(standalone.report));
 			// The native neighbor still carries no external evidence.
 			const nativeEntry = fleet.entries.find((e) => e.id === "native");
-			if (nativeEntry?.ok !== true || nativeEntry.report.schemaVersion !== "1.1.0") {
+			if (nativeEntry?.ok !== true || nativeEntry.report.schemaVersion === "1.0.0") {
 				throw new Error("expected an evidence-carrying native member");
 			}
 			expect(
@@ -293,7 +293,7 @@ console.log(JSON.stringify(report));\n`,
 		expect(analysis.reason).toContain("is not installed");
 		// Honest completeness (§16.2): the gap is recorded while the native
 		// score stays complete — and the native neighbor is untouched.
-		if (entry.report.schemaVersion !== "1.1.0") throw new Error("expected evidence area");
+		if (entry.report.schemaVersion === "1.0.0") throw new Error("expected evidence area");
 		expect(entry.report.evidence.completeness).toBe("incomplete");
 		expect(entry.report.score.partial).toBe(false);
 		const nativeEntry = fleet.entries.find((e) => e.id === "native");

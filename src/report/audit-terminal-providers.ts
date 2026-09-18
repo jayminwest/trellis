@@ -100,7 +100,7 @@ export const ZERO_FINDINGS_NOTE = "findings: none — the analysis completed and
  * The overall-evidence line (§16.2): visible whether or not anything failed.
  */
 function overallEvidenceLine(report: AuditReport): string {
-	if (report.schemaVersion !== "1.1.0") {
+	if (report.schemaVersion === "1.0.0") {
 		throw new Error("external provider evidence requires an evidence-carrying (1.1.0) report");
 	}
 	return report.evidence.completeness === "complete"

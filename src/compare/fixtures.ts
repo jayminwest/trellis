@@ -202,6 +202,7 @@ export function jscpdAnalysis(overrides: AnalysisOverrides = {}): ReportAnalysis
 
 /** Optional report-level knobs for the report builders. */
 export interface ReportSpec {
+	schemaVersion?: "1.1.0" | "1.2.0";
 	/** Merged over the default metrics (one complete metric per native-owned id). */
 	metrics?: Record<string, MetricValue>;
 	/** The headline index (default 10). */
@@ -231,7 +232,7 @@ export function evidenceReport(
 	].sort();
 	const index = spec.index ?? 10;
 	return auditReportSchema.parse({
-		schemaVersion: SCHEMA_VERSION,
+		schemaVersion: spec.schemaVersion ?? SCHEMA_VERSION,
 		analyzerVersion: spec.analyzerVersion ?? ANALYZER_VERSION,
 		scoringVersion: spec.scoringVersion ?? SCORING_VERSION,
 		repo: { root: "/abs/path" },

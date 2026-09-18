@@ -33,6 +33,9 @@
  *   flipping a complete native score, and a scored prerequisite's failure
  *   still marks the score partial.
  *
+ * - **1.2.0 (scoped hotspots)** — requires explicit identified/ambiguous
+ *   identity on native hotspots; all evidence/score rules remain unchanged.
+ *
  * Unknown or newer-incompatible schema versions fail at the discriminator
  * with the supported versions named, instead of loading with guessed
  * semantics.
@@ -51,12 +54,16 @@ import {
 	rollUpScoreCompleteness,
 	type ScoringRole,
 } from "./evidence.ts";
-import { historicalFindingSchema } from "./finding.ts";
+import { findingSchema, historicalFindingSchema } from "./finding.ts";
 import { type MetricValue, metricValueSchema } from "./metric.ts";
 import { dottedIdSchema, finiteNumberSchema, versionStringSchema } from "./primitives.ts";
 import { safeguardResultSchema } from "./safeguard.ts";
 import { rollUpCompleteness } from "./states.ts";
-import { PRE_PROVIDER_SCHEMA_VERSION, SCHEMA_VERSION } from "./version.ts";
+import {
+	PRE_IDENTITY_SCHEMA_VERSION,
+	PRE_PROVIDER_SCHEMA_VERSION,
+	SCHEMA_VERSION,
+} from "./version.ts";
 
 /** Per-dimension points, traceable to the raw metrics that produced them (SPEC §7). */
 export const scoreContributionSchema = z.strictObject({
@@ -287,7 +294,7 @@ function validateCompletenessIndependence(
 }
 
 /**
- * The evidence-carrying report (schema `1.1.0`, §6.6): the measurement body
+ * The evidence-carrying report (schemas `1.1.0` and `1.2.0`, §6.6): the measurement body
  * plus the additive evidence area. Overall evidence completeness and score
  * completeness are independent quantities (§16.2):
  *
@@ -303,8 +310,9 @@ function validateCompletenessIndependence(
  */
 export const evidenceAuditReportSchema = z
 	.strictObject({
-		schemaVersion: z.literal(SCHEMA_VERSION),
+		schemaVersion: z.enum([PRE_IDENTITY_SCHEMA_VERSION, SCHEMA_VERSION]),
 		...reportBody,
+		findings: z.array(findingSchema),
 		evidence: evidenceAreaSchema,
 	})
 	.superRefine((report, ctx) => {
@@ -312,9 +320,23 @@ export const evidenceAuditReportSchema = z
 		const owners = validateMetricOwnership(report.evidence.analyses, report.metrics, ctx);
 		validateScoreContributors(report.score.contributions, owners, ctx);
 		validateCompletenessIndependence(report, ctx);
+		for (const [index, finding] of report.findings.entries()) {
+			const hasIdentity = finding.identity !== undefined;
+			const needsIdentity =
+				report.schemaVersion === SCHEMA_VERSION && finding.kind === "complexity.hotspot";
+			if (hasIdentity !== needsIdentity) {
+				ctx.addIssue({
+					code: "custom",
+					path: ["findings", index, "identity"],
+					message: needsIdentity
+						? "schema 1.2.0 hotspots require identity"
+						: "historical findings cannot carry identity",
+				});
+			}
+		}
 	});
 
-/** An evidence-carrying (schema 1.1.0) report. */
+/** An evidence-carrying report, historical or scoped-identity version. */
 export type EvidenceAuditReport = z.infer<typeof evidenceAuditReportSchema>;
 
 /**

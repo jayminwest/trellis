@@ -76,14 +76,14 @@ export async function stagedScratchCount(): Promise<number> {
 
 /** The carried analyses' provider ids (both versions; pre-provider carries none). */
 export function carriedProviderIds(report: AuditReport): string[] {
-	return report.schemaVersion === "1.1.0"
+	return report.schemaVersion !== "1.0.0"
 		? report.evidence.analyses.map((analysis) => analysis.provider.id)
 		: [];
 }
 
 /** The evidence area of an evidence-carrying report (fails fast otherwise). */
 export function evidenceArea(report: AuditReport) {
-	if (report.schemaVersion !== "1.1.0") throw new Error("expected an evidence-carrying report");
+	if (report.schemaVersion === "1.0.0") throw new Error("expected an evidence-carrying report");
 	return report.evidence;
 }
 

@@ -151,6 +151,10 @@ function evidenceReport(): EvidenceAuditReport {
 	return {
 		...baseReport(),
 		schemaVersion: SCHEMA_VERSION,
+		findings: baseReport().findings.map((finding) => ({
+			...finding,
+			identity: { version: "1.0.0", state: "ambiguous", reason: "anonymous" },
+		})),
 		evidence: {
 			completeness: "complete",
 			analyses: [scoredNative(["duplication.density"])],

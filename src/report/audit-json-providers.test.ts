@@ -78,7 +78,7 @@ function externalAnalyses(report: AuditReport): ReportAnalysis[] {
 
 /** The overall evidence completeness (fails fast on pre-provider artifacts). */
 function evidenceCompleteness(report: AuditReport): "complete" | "incomplete" {
-	if (report.schemaVersion !== "1.1.0") throw new Error("expected an evidence-carrying report");
+	if (report.schemaVersion === "1.0.0") throw new Error("expected an evidence-carrying report");
 	return report.evidence.completeness;
 }
 
@@ -163,7 +163,7 @@ describe("renderAuditJson round-trips provider evidence through the artifact bou
 		const report = await audit({ sonarjs: {} });
 		const loaded = await roundTrip("undelivered.json", report);
 		expect(loaded).toEqual(report);
-		expect(loaded.schemaVersion).toBe("1.1.0");
+		expect(loaded.schemaVersion).toBe("1.2.0");
 		expect(externalAnalyses(loaded).map((entry) => entry.provider.id)).toEqual(["sonarjs"]);
 		for (const entry of externalAnalyses(loaded)) {
 			expect(entry.state).toBe("unsupported");
@@ -215,7 +215,7 @@ describe("renderAuditJson round-trips provider evidence through the artifact bou
 
 	test("round-trips a contract-valid unrequested entry as an explicit absence", async () => {
 		const report = await audit({ sonarjs: {} });
-		if (report.schemaVersion !== "1.1.0") throw new Error("expected an evidence-carrying report");
+		if (report.schemaVersion === "1.0.0") throw new Error("expected an evidence-carrying report");
 		const unrequested: ReportAnalysis = {
 			provider: {
 				kind: "external",
@@ -262,7 +262,7 @@ describe("renderAuditJson determinism and stable fields", () => {
 	test("keeps a default native-only audit native-only on the wire", async () => {
 		const report = await audit({});
 		const parsed = JSON.parse(renderAuditJson(report)) as AuditReport;
-		expect(parsed.schemaVersion).toBe("1.1.0");
+		expect(parsed.schemaVersion).toBe("1.2.0");
 		// Schema 1.1.0 mandates the evidence area — with native entries only.
 		expect(carriedAnalyses(parsed).every((entry) => entry.provider.kind === "native")).toBe(true);
 		expect(externalAnalyses(parsed)).toEqual([]);
@@ -318,7 +318,7 @@ describe("renderAuditJson versioned reading and the schema boundary", () => {
 
 	test("rejects malformed provider evidence at the schema boundary before publishing", async () => {
 		const report = await audit({ sonarjs: {} });
-		if (report.schemaVersion !== "1.1.0") throw new Error("expected an evidence-carrying report");
+		if (report.schemaVersion === "1.0.0") throw new Error("expected an evidence-carrying report");
 		const [entry] = externalAnalyses(report);
 		if (entry === undefined) throw new Error("expected a provider evidence entry");
 		// Measured output without the analysis identity that produced it.
@@ -348,7 +348,7 @@ describe("renderAuditJson versioned reading and the schema boundary", () => {
 
 	test("rejects an external entry that claims a native metric id", async () => {
 		const report = await audit({ sonarjs: {} });
-		if (report.schemaVersion !== "1.1.0") throw new Error("expected an evidence-carrying report");
+		if (report.schemaVersion === "1.0.0") throw new Error("expected an evidence-carrying report");
 		const [nativeMetricId] = Object.keys(report.metrics);
 		if (nativeMetricId === undefined) throw new Error("expected a native metric");
 		const [entry] = externalAnalyses(report);

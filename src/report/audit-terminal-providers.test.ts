@@ -297,7 +297,7 @@ describe("renderAuditTerminal with missing or partial provider evidence", () => 
 			scoring: "advisory",
 			metricIds: [],
 		};
-		if (report.schemaVersion !== "1.1.0") throw new Error("expected an evidence-carrying report");
+		if (report.schemaVersion === "1.0.0") throw new Error("expected an evidence-carrying report");
 		const carried: AuditReport = {
 			...report,
 			evidence: { ...report.evidence, analyses: [...report.evidence.analyses, unrequested] },

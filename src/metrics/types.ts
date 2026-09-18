@@ -24,6 +24,7 @@
  *   partial values instead — `not-applicable` never hides an analysis
  *   failure (SPEC §3.3).
  */
+import type { HotspotIdentity } from "../contract/hotspot-identity.ts";
 import type { Finding, MetricValue, Range, SourceSet } from "../contract/index.ts";
 import type { FunctionKind } from "../syntax/index.ts";
 
@@ -35,6 +36,7 @@ export const EROSION_CC_THRESHOLD = 10;
 
 /** One measured function: raw facts plus derived erosion mass. */
 export interface FunctionMeasurement {
+	identity: HotspotIdentity;
 	/** Repo-relative POSIX path of the owning file. */
 	path: string;
 	/** Owning package root from discovery (`.` for the repo root). */

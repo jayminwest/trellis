@@ -108,9 +108,43 @@ describe("assessScoredBasis scored measurement changes", () => {
 });
 
 describe("assessScoredBasis versioned artifact pairs", () => {
+	test("refuses modern/historical schemas in both directions even with matching analyzer fields", () => {
+		const modern = evidenceReport([nativeComplexityAnalysis()]);
+		for (const old of [
+			preProviderReport(),
+			evidenceReport([nativeComplexityAnalysis()], { schemaVersion: "1.1.0" }),
+		]) {
+			for (const [baseline, current] of [
+				[old, modern],
+				[modern, old],
+			] as const) {
+				const comparison = compareReports(baseline, current);
+				expect(comparison.compatibility.comparable).toBe(false);
+				expect(comparison.compatibility.issues.map((issue) => issue.code)).toContain(
+					"schema-version",
+				);
+				expect(comparison.findings).toBeUndefined();
+			}
+		}
+	});
+
+	test("retains scored-input compatibility checks for historical evidence schemas", () => {
+		const baseline = evidenceReport([nativeComplexityAnalysis()], { schemaVersion: "1.1.0" });
+		const current = evidenceReport(
+			[nativeComplexityAnalysis(), jscpdAnalysis({ scoring: "scored" })],
+			{ schemaVersion: "1.1.0" },
+		);
+		expect(assessScoredBasis(baseline, current).issues.map((issue) => issue.code)).toContain(
+			"scoring-basis",
+		);
+	});
+
 	test("a 1.0.0 vs 1.1.0 pair compares the scored basis explicitly with a schema-span caveat", () => {
 		const baseline = preProviderReport();
-		const current = evidenceReport([nativeComplexityAnalysis(), jscpdAnalysis()], { index: 15 });
+		const current = evidenceReport([nativeComplexityAnalysis(), jscpdAnalysis()], {
+			index: 15,
+			schemaVersion: "1.1.0",
+		});
 		const basis = assessScoredBasis(baseline, current);
 		expect(basis.comparable).toBe(true);
 		expect(basis.issues).toEqual([]);
@@ -124,7 +158,9 @@ describe("assessScoredBasis versioned artifact pairs", () => {
 	});
 
 	test("the reverse span reads the current side as unrequested", () => {
-		const baseline = evidenceReport([nativeComplexityAnalysis(), jscpdAnalysis()]);
+		const baseline = evidenceReport([nativeComplexityAnalysis(), jscpdAnalysis()], {
+			schemaVersion: "1.1.0",
+		});
 		const current = preProviderReport({
 			"complexity.average-cc": completeMetric("complexity.average-cc"),
 		});

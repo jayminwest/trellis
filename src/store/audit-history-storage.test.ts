@@ -191,7 +191,7 @@ describe("a pre-existing history database", () => {
 		);
 		insertAudit(
 			rooted(
-				evidenceReport([nativeComplexityAnalysis()], { index: 30 }),
+				evidenceReport([nativeComplexityAnalysis()], { index: 30, schemaVersion: "1.1.0" }),
 				root,
 				"2026-07-02T00:00:00.000Z",
 			),
@@ -208,7 +208,10 @@ describe("a pre-existing history database", () => {
 			expect(version?.user_version).toBe(2);
 			expect(store.auditRuns(identity)).toHaveLength(2);
 			const current = rooted(
-				evidenceReport([jscpdAnalysis(), nativeComplexityAnalysis()], { index: 25 }),
+				evidenceReport([jscpdAnalysis(), nativeComplexityAnalysis()], {
+					index: 25,
+					schemaVersion: "1.1.0",
+				}),
 				root,
 				"2026-07-03T00:00:00.000Z",
 			);

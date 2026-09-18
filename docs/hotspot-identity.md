@@ -1,7 +1,8 @@
 # Scoped native hotspot identity
 
-Contract decision for pl-da6d, trellis-9302. This contract is staged before
-producer adoption; existing audits and comparison behavior are unchanged.
+Contract decision for pl-da6d, trellis-9302. Producer adoption is delivered by
+trellis-3d6b. Scoped matching is the subsequent trellis-7cfd milestone; the
+comparison matrix below specifies that matcher's required behavior.
 
 Identity v1 is optional on the general finding contract, but belongs only to
 `complexity.hotspot`. Absence means historical provenance, never ambiguity.
@@ -45,11 +46,11 @@ marks otherwise identified collisions; it never removes inventory entries.
 
 ## Version and reader transition
 
-Producer adoption will atomically emit report schema **1.2.0**, analyzer
+The producer emits report schema **1.2.0**, analyzer
 **0.2.2**, and native `trellis.complexity` tool/adapter **0.2.2**. Identity
 version is **1.0.0**. Scoring stays **0.2.0-provisional** with unchanged weights.
-Until that adoption, report readers retain schemas 1.0.0 and 1.1.0 and reject
-identity fields in those historical schemas. Schema 1.2.0 will require valid
+Report readers retain schemas 1.0.0 and 1.1.0 and reject
+identity fields in those historical schemas. Schema 1.2.0 requires valid
 identity on every native hotspot. Historical schemas never synthesize identity.
 Unknown identity versions and malformed identities are operational read errors,
 not silent legacy fallback. Unknown report schemas remain read errors.
@@ -69,3 +70,20 @@ Historical fallback is compatibility behavior, not a claim of verified function
 identity. Modern users need a fresh baseline. Other finding kinds and provider
 evidence retain their current matching semantics. No Git, source reread or
 filesystem access is needed to compare saved artifacts.
+
+## Producer validation
+
+The syntax inventory derives identity by traversing its existing parsed AST;
+no parse, filesystem, Git or process access is added. Named scope collisions
+are registered across all functions before identities are resolved, including
+non-hotspot functions. Display names and body measurements remain independent.
+`src/syntax/identity.test.ts` exercises the function-form matrix;
+`src/metrics/hotspot-identity.test.ts` covers source-set propagation, collisions
+below the hotspot threshold, modern round trips and rejected identity payloads.
+
+Against pre-producer commit `4730933`, both audit cores were run over each of
+the eleven `corpus/fixtures` directories, using the same local dependencies.
+All native metrics, scores, safeguards, coverage, completeness and findings
+(with only the new identity field removed) were deeply equal. No golden
+artifacts or scoring constants changed. This establishes measurement parity;
+it does not certify the later duplication replacement.
