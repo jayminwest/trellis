@@ -281,6 +281,53 @@ export const PINNED_TOOLS: readonly PinnedToolManifestEntry[] = (() => {
 				"--save-dev dependency-cruiser@18.3.1` / `bun add --dev dependency-cruiser@18.3.1`; trellis " +
 				"then discovers and verifies the artifact offline (SPEC §16.4)",
 		},
+		{
+			/**
+			 * Knip 6.16.1 (plan `pl-43c5` step 24, trellis-8ebc) is a
+			 * **pure-JavaScript** distribution that ships a dedicated Bun
+			 * launcher (`bin/knip-bun.js`) — the artifact the pin verifies and
+			 * the adapter executes under trellis's own runtime through the
+			 * controlled process runner (`src/providers/knip/invocation.ts`).
+			 * Like dependency-cruiser there is no platform map: the platform
+			 * package of every declared host is the tool package itself, and
+			 * the two cross-platform distribution files the pin verifies are
+			 * the launcher and the package manifest. Knip is also this
+			 * repository's own `check:deps` gate tool, so the pin reuses the
+			 * exact version already installed as a devDependency — never a
+			 * second copy — and the gate keeps working against it.
+			 */
+			providerId: "knip",
+			packageName: "knip",
+			pinnedVersion: "6.16.1",
+			versionOutput: "6.16.1",
+			binCommand: "knip-bun",
+			binEntry: "bin/knip-bun.js",
+			launcherRelPath: "bin/knip-bun.js",
+			platformMapRelPath: "package.json",
+			launcherSha256: "0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388",
+			platformMapSha256: "331cb6aa29cf65ff754257ba01aee8c695f3dbf836d2539722a20771cb55a272",
+			platforms: [
+				{
+					key: "linux-x64-gnu",
+					packageName: "knip",
+					os: "linux",
+					cpu: "x64",
+					libc: "glibc",
+					binaryRelPath: "bin/knip-bun.js",
+					execution: "tested",
+					evidence:
+						"src/providers/knip conformance suite + scripts/smoke-provider-tools.ts " +
+						"(plan pl-43c5 step 24, trellis-8ebc)",
+					binarySha256: "0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388",
+				},
+			],
+			installInstructions:
+				"prepare the pinned tool locally where trellis resolves from (never at audit time): " +
+				"run `bun install` in this repository (knip 6.16.1 is a pinned devDependency — the same " +
+				"install this repository's own check:deps gate uses), or in the package tree a trellis " +
+				"CLI install runs from run `npm install --save-exact --save-dev knip@6.16.1` / `bun add " +
+				"--dev knip@6.16.1`; trellis then discovers and verifies the artifact offline (SPEC §16.4)",
+		},
 	];
 	const validated = z.array(pinnedToolManifestEntrySchema).parse(table);
 	for (const entry of validated) {

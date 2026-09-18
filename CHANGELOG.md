@@ -108,6 +108,39 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ### Added
 
+- **Knip emits contextual advisory reachability evidence with stable
+  ordering** (trellis-8ebc, step 24 of 30 of plan `pl-43c5`, SPEC
+  §16.2–§16.5): the `knip` provider's adapter is delivered. A `providers:
+  knip: …` request now runs the pinned Knip 6.16.1 — the repository's own
+  `check:deps` gate tool, pinned exactly and never a second copy — through
+  the controlled process runner over a staged source-only view, under a
+  trellis-generated configuration derived from the step-23 reachability
+  context: the declared roots as `entry`, the production candidate scope as
+  `project`, a generated minimal tsconfig and a generated minimal workspace
+  manifest written into owned scratch (never the target's `knip`
+  configuration, never the target's manifests), with every runtime registry
+  plugin explicitly disabled (the registry's names are derived from the
+  pinned artifact itself). Evidence is namespaced `provider.knip.*`, advisory
+  and unscored: orphan files, unused exports, unused types and unresolved
+  imports are reported as distinct candidate kinds with the tool's own
+  positions and stable path/symbol ordering (repeat runs normalize
+  byte-identically); declared public surfaces exempt their own candidates
+  as visible `public-surface` evidence — a barrel stays a distinct surface
+  from the implementation it exposes; and the recorded contextual
+  assumptions (omitted entries, unverified dependency context, disabled
+  plugin discovery) ride the evidence, since candidates are never confirmed
+  dead code and zero candidates never proves overall quality. Coverage is
+  checked per run through a pinned exit-code protocol (the findings exit
+  code is neutralized and configuration hints are errors): an empty or
+  partial pass — a submitted pattern matching no staged file, staging gaps,
+  suspect or malformed reports, exhausted limits — is located `incomplete`
+  evidence, never a clean pass. The adapter resolves and records the
+  `oxc-parser` version the tool finds locally, is registered in the
+  step-15 execution plan and the supported-provider capability table
+  (the gated set is now SonarJS only), and the CLI's `--provider knip`
+  stays a bare-id flag whose richer request lives in the declarative
+  block.
+
 - **Reachability configuration records entries, public API and test
   participation** (trellis-5da5, step 23 of 30 of plan `pl-43c5`,
   SPEC §16.1/§16.4): a `knip` request in the `providers` block now

@@ -15,7 +15,11 @@ describe("manifest", () => {
 			expect(isKnownProviderId(entry.providerId)).toBe(true);
 			expect(entry.pinnedVersion).toMatch(/^\d+\.\d+\.\d+$/);
 		}
-		expect(PINNED_TOOLS.map((entry) => entry.providerId)).toEqual(["jscpd", "dependency-cruiser"]);
+		expect(PINNED_TOOLS.map((entry) => entry.providerId)).toEqual([
+			"jscpd",
+			"dependency-cruiser",
+			"knip",
+		]);
 	});
 
 	test("pins jscpd 5.2.1 with its real distribution digests", () => {
@@ -86,8 +90,41 @@ describe("manifest", () => {
 		expect(jscpd.installInstructions).toContain("never at audit time");
 	});
 
+	test("pins knip 6.16.1, a pure-JavaScript distribution, with its real digests", () => {
+		const knip = pinnedTool("knip");
+		expect(knip?.pinnedVersion).toBe("6.16.1");
+		expect(knip?.versionOutput).toBe("6.16.1");
+		// The Bun launcher is the "binary" of every declared platform; the
+		// package manifest is the second cross-platform identity file (no
+		// platform map ships — see the manifest entry's own record). The pin
+		// reuses the exact devDependency install this repository's own
+		// check:deps gate runs — never a second copy.
+		expect(knip?.binCommand).toBe("knip-bun");
+		expect(knip?.binEntry).toBe("bin/knip-bun.js");
+		expect(knip?.launcherSha256).toBe(
+			"0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388",
+		);
+		expect(knip?.platformMapSha256).toBe(
+			"331cb6aa29cf65ff754257ba01aee8c695f3dbf836d2539722a20771cb55a272",
+		);
+		expect(knip?.platforms).toEqual([
+			{
+				key: "linux-x64-gnu",
+				packageName: "knip",
+				os: "linux",
+				cpu: "x64",
+				libc: "glibc",
+				binaryRelPath: "bin/knip-bun.js",
+				execution: "tested",
+				evidence: expect.stringContaining("trellis-8ebc"),
+				binarySha256: "0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388",
+			},
+		]);
+		expect(knip?.installInstructions).toContain("knip@6.16.1");
+		expect(knip?.installInstructions).toContain("never at audit time");
+	});
+
 	test("returns undefined for unpinned provider ids", () => {
-		expect(pinnedTool("knip")).toBeUndefined();
 		expect(pinnedTool("sonarjs")).toBeUndefined();
 	});
 

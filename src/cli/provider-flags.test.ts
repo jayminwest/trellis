@@ -72,7 +72,12 @@ describe("providerSelectionFromFlags", () => {
 		);
 	});
 
-	test("rejects options on providers with no delivered adapter", () => {
-		expectOperationalError(["sonarjs:rules"], 'provider "sonarjs" takes no selection options yet');
+	test("rejects flag options on providers whose requests are declarative", () => {
+		expectOperationalError(["sonarjs:rules"], 'provider "sonarjs" takes no flag options');
+		expectOperationalError(["knip:entries"], 'provider "knip" takes no flag options');
+		expectOperationalError(
+			["dependency-cruiser:rules"],
+			'provider "dependency-cruiser" takes no flag options',
+		);
 	});
 });

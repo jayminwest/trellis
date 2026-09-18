@@ -171,9 +171,11 @@ export const SUPPORTED_PROVIDERS: readonly ProviderCapabilityStatus[] = (() => {
 			providerId: "knip",
 			capabilityIds: ["reachability.contextual"],
 			unscored: true,
-			status: "adapter-pending",
-			requestState: "unsupported",
-			reason: "contracted reachability-evidence candidate; no adapter delivered yet (plan pl-43c5)",
+			status: "delivered",
+			reason:
+				"reachability-evidence adapter delivered (src/providers/knip/, trellis-8ebc) evaluating the " +
+				"prepared declarative reachability context over staged views with every runtime plugin " +
+				"disabled and selectable through declarative provider configuration: requests resolve per run",
 		},
 		{
 			providerId: "sonarjs",

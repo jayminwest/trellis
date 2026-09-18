@@ -657,9 +657,16 @@ classified test — never scored as production and never diluting a
 production denominator — and a barrel re-export is a distinct surface
 from the implementation it exposes. The compiled context's normalized
 digest rides the analysis identity (§16.2) through the same compatibility
-seam as the architecture policy; the adapter (trellis-8ebc) turns the
-prepared context into advisory evidence — until it delivers, requests
-resolve to located `unsupported` evidence.
+seam as the architecture policy. The delivered adapter (trellis-8ebc) turns
+the prepared context into contextual advisory evidence: the pinned Knip
+runs through trellis-generated configuration over a staged source view with
+every runtime plugin disabled, differentiating orphan files, unused
+exports/types and unresolved imports as namespaced candidate findings with
+stable path/symbol ordering, and declared public surfaces exempt their own
+candidates as visible evidence. Coverage is checked per run: an empty or
+partial pass (the tool's configuration-hint signal, staging gaps, suspect
+or malformed reports) is located `incomplete` evidence, never a clean pass —
+and zero candidates never proves overall quality.
 
 Policy budgets gate the run; they never silently change how the index is
 computed (§7). A budget key may also name a provider's namespaced evidence
