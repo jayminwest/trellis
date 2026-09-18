@@ -51,7 +51,7 @@ import {
 	rollUpScoreCompleteness,
 	type ScoringRole,
 } from "./evidence.ts";
-import { findingSchema } from "./finding.ts";
+import { historicalFindingSchema } from "./finding.ts";
 import { type MetricValue, metricValueSchema } from "./metric.ts";
 import { dottedIdSchema, finiteNumberSchema, versionStringSchema } from "./primitives.ts";
 import { safeguardResultSchema } from "./safeguard.ts";
@@ -104,7 +104,7 @@ const reportBody = {
 	completeness: z.enum(["complete", "incomplete"]),
 	metrics: z.record(dottedIdSchema, metricValueSchema),
 	score: scoreSchema,
-	findings: z.array(findingSchema),
+	findings: z.array(historicalFindingSchema),
 	safeguards: z.array(safeguardResultSchema),
 	run: runMetadataSchema.optional(),
 } as const;

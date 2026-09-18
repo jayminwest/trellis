@@ -8,6 +8,7 @@
  * is valid (end never precedes start).
  */
 import { z } from "zod";
+import { hotspotIdentitySchema } from "./hotspot-identity.ts";
 import { dottedIdSchema, relativePathSchema } from "./primitives.ts";
 
 /** A source position: 1-based line, optional 1-based column. */
@@ -49,12 +50,25 @@ export const rangeSchema = z
 
 export type Range = z.infer<typeof rangeSchema>;
 
-export const findingSchema = z.strictObject({
+export const historicalFindingSchema = z.strictObject({
 	kind: dottedIdSchema,
 	path: relativePathSchema,
 	range: rangeSchema,
 	summary: z.string().min(1),
 	facts: z.record(z.string(), z.unknown()).optional(),
 });
+
+/** Modern identity is scoped to native hotspots; historical absence stays absence. */
+export const findingSchema = historicalFindingSchema
+	.extend({ identity: hotspotIdentitySchema.optional() })
+	.superRefine((finding, ctx) => {
+		if (finding.identity !== undefined && finding.kind !== "complexity.hotspot") {
+			ctx.addIssue({
+				code: "custom",
+				path: ["identity"],
+				message: "identity requires complexity.hotspot",
+			});
+		}
+	});
 
 export type Finding = z.infer<typeof findingSchema>;

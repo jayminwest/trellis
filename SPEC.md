@@ -201,6 +201,9 @@ Comparability rule: two reports are trend-comparable only when analyzer,
 scoring, and configuration semantics are compatible; incompatible
 comparisons are reported explicitly rather than silently computed (§9).
 
+The scoped hotspot identity transition and exact version changes are specified
+in [`docs/hotspot-identity.md`](docs/hotspot-identity.md). Scoring is unchanged.
+
 **Deterministic payload.** The measurement payload excludes timestamps,
 durations, and machine identifiers from equality and fingerprint inputs:
 same files + same configuration + same analyzer/scoring versions ⇒ equal
@@ -536,6 +539,11 @@ version data, and misleading `complete` states.
 }
 ```
 
+Scoped native hotspot identity v1 is defined in
+[`docs/hotspot-identity.md`](docs/hotspot-identity.md), including the function-form
+and historical compatibility matrices. Its contract is staged for schema 1.2.0;
+producer adoption will require identified or explicitly ambiguous provenance.
+
 ### 6.3 Safeguard result
 
 ```jsonc
@@ -806,6 +814,10 @@ An audit run, end to end:
 ---
 
 ## 9. Baseline comparison & failure policies
+
+The staged scoped-hotspot matching contract and historical fallback boundaries
+are specified in [`docs/hotspot-identity.md`](docs/hotspot-identity.md); adoption
+requires unique compatible identities and never bypasses scored compatibility.
 
 - **Artifact comparison**: two saved JSON reports compare directly — no Git,
   no SQLite. Comparison requires compatible analyzer/scoring/configuration/
