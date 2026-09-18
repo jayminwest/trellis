@@ -368,6 +368,14 @@ Semantics fixed by this decision:
   **match-work budget** of 100,000,000 token comparisons per source set
   (`DEFAULT_DUPLICATION_BUDGET` in `src/metrics/duplication.ts`).
 
+**Bounded-engine migration contract (pl-da6d, trellis-271c):**
+[`docs/research/native-duplication/README.md`](docs/research/native-duplication/README.md)
+freezes the same token/group/line semantics, an exhaustive small-input oracle,
+fourteen fingerprinted offline corpus entries and numerical whole-pipeline
+resource acceptance. The production engine remains unchanged until candidate
+parity and resource acceptance pass. Work accounting v2 is explicitly distinct
+from the historical token-comparison count; no scoring calibration is bundled.
+
 Evaluation record (evidence; directional measurements, not benchmarks):
 
 - **Fixtures**: six hand-authored TS cases with known outcomes — exact copy,

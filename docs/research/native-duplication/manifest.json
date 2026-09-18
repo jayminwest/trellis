@@ -1,0 +1,239 @@
+{
+  "protocol": "native-duplication-v1",
+  "digest": "sha256(JSON.stringify(sorted [relative-path, content-sha256] pairs))",
+  "referenceCommit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M4 Pro",
+    "bun": "1.3.14",
+    "typescript": "6.0.3"
+  },
+  "resources": {
+    "maxTokens": 2000000,
+    "maxMatchWork": 100000000,
+    "maxStreams": 100000,
+    "maxWorkingCells": 32000000,
+    "maxGroups": 200000,
+    "maxOccurrences": 1000000,
+    "checkpointEvery": 1024,
+    "oracleMaxTokens": 2500,
+    "runs": 3,
+    "maxSingleRunMs": 30000,
+    "stressMaxCoreMs": 2000,
+    "stressMaxAuditMs": 2000,
+    "stressMaxPeakRssMiB": 512
+  },
+  "entries": [
+    {
+      "id": "trellis-self",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": ".",
+      "budget": {
+        "maxMedianCoreMs": 5000,
+        "maxMedianAuditMs": 10000,
+        "maxPeakRssMiB": 1024
+      },
+      "files": 663,
+      "bytes": 6035081,
+      "treeSha256": "3ad588df32defbde27505f0aafe075df65bf9093773a2b278733ad28b95e2015"
+    },
+    {
+      "id": "hono-src",
+      "repository": "https://github.com/honojs/hono",
+      "commit": "cee5b88ac177755768cd81adda1feb5547eff3b8",
+      "snapshotDir": "hono",
+      "scope": "src",
+      "budget": {
+        "maxMedianCoreMs": 5000,
+        "maxMedianAuditMs": 10000,
+        "maxPeakRssMiB": 1024
+      },
+      "files": 307,
+      "bytes": 2109973,
+      "treeSha256": "c2bcb71e8a2b097ed48bb7b648040e7ecc7db9c55b3c01ad9d009f2ebb46c393"
+    },
+    {
+      "id": "zod-package",
+      "repository": "https://github.com/colinhacks/zod",
+      "commit": "59bbc03e10c636b9eb3c393dfeb552819774ec21",
+      "snapshotDir": "zod-current",
+      "scope": "packages/zod",
+      "budget": {
+        "maxMedianCoreMs": 5000,
+        "maxMedianAuditMs": 10000,
+        "maxPeakRssMiB": 1024
+      },
+      "files": 341,
+      "bytes": 3101279,
+      "treeSha256": "a6ffba3095a26a83efa2006a316078c5fba8e40296b7f97d91cf0b58a6093e86"
+    },
+    {
+      "id": "clean-small",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/clean-small",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 4,
+      "bytes": 495,
+      "treeSha256": "742d06306397d3260b3f5bba8b551a51e9bc24eae68876a828274a8b8f5b207c"
+    },
+    {
+      "id": "clone-base",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/clone-base",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 4,
+      "bytes": 1125,
+      "treeSha256": "b5866213282c440fcf80a0337332acbf31450b747b79fd5689e965199183366d"
+    },
+    {
+      "id": "clone-removed",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/clone-removed",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 4,
+      "bytes": 908,
+      "treeSha256": "92a95e912b5164c6e6d680e55e889c20c3ef3b680d922949800f51d0f52c1193"
+    },
+    {
+      "id": "branch-base",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/branch-base",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 4,
+      "bytes": 418,
+      "treeSha256": "e3111400c13a2e97fb2b1d1661836a7dc5afa5e4224908e9042a5e42fe5cb8ee"
+    },
+    {
+      "id": "branch-grown",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/branch-grown",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 4,
+      "bytes": 860,
+      "treeSha256": "ca5704f212800e56708d7b60ff113468e96cbef9e687e8412ba1eabca981b768"
+    },
+    {
+      "id": "acyclic",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/acyclic",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 5,
+      "bytes": 324,
+      "treeSha256": "2549fb35317dfc8af62e4ba4efdeb5ac6d43909f4144c0e093c7632982f9b18a"
+    },
+    {
+      "id": "cyclic",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/cyclic",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 5,
+      "bytes": 358,
+      "treeSha256": "03773a682fec6839a091517a4cc334de179aee7a8c278b066253e7bdd7e85825"
+    },
+    {
+      "id": "dilution-base",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/dilution-base",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 5,
+      "bytes": 1690,
+      "treeSha256": "74bc25ec6611addbda0ea8e462c1399e2e24129a4f8a3ebf6dffe0dff023f296"
+    },
+    {
+      "id": "dilution-grown",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/dilution-grown",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 7,
+      "bytes": 4171,
+      "treeSha256": "88dd194b8d53e97dde47959931850b948040bdfec7538c0b73b5de1f89d32bf2"
+    },
+    {
+      "id": "test-separation",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/test-separation",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 6,
+      "bytes": 1598,
+      "treeSha256": "8d36d9f97964c0ea85085cd27d67ebad1d50652c4e76cccd51c0fec2bdcc55d8"
+    },
+    {
+      "id": "incomplete-parse",
+      "repository": "https://github.com/jayminwest/trellis",
+      "commit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+      "snapshotDir": "trellis",
+      "scope": "corpus/fixtures/incomplete-parse",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "files": 3,
+      "bytes": 143,
+      "treeSha256": "c0524e9af4378797ea142e6962aa75ac32197ed58c8cc816d521a33ba1232bcc"
+    }
+  ]
+}
