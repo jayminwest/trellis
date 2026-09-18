@@ -157,11 +157,12 @@ through the suites and commands above.
 The merge produced duplicate `trellis-8ac1` JSONL rows with different stale
 blocker lists. Reconciliation retained one row and derived its blockers from
 the surviving open child; final tracker closure preserves the plan history.
-All 30 children and the milestone can close after the final gates. Sonar's
+All 30 children, the milestone and the plan are closed after the final gates. Sonar's
 explicit deferral is the permitted plan outcome, with its prerequisite open;
 no scoring recalibration, publishing or adoption/outcome claim is included.
 
 The local work commits are `0aca9ac` (acceptance), `4fbac2d` (documentation)
-and `9e7fd56` (tracker handoff). Other agents' uncommitted tracker/memory
+`9e7fd56` (tracker handoff), and `d9c2796` (Knip integration and final
+acceptance). Other agents' uncommitted tracker/memory
 edits were preserved and are not part of this acceptance claim. Nothing
 was published or pushed.
