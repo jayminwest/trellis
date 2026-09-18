@@ -12,14 +12,17 @@
  * failure is reported in the outcome without ever masking the original
  * result: the adapter's value or error always wins its outcome kind.
  *
- * The wall-time limit bounds **waiting** for the adapter, not the adapter
- * itself: adapters drive `runControlledProcess` (process.ts) with the same
- * signal, which terminates the provider's process group, so a limit actually
- * stops the work. After a timeout or cancellation the wrapper stops waiting
- * and cleans immediately; a callback that ignores the signal keeps running
- * detached over its already-removed scratch and its late result is
- * discarded. No execution metadata (timestamps, pids, durations) is
- * recorded, preserving determinism of downstream evidence.
+ * The wall-time limit bounds **waiting** for the adapter, and stopping the
+ * wait stops the work: the lifecycle owns an internal abort handle it
+ * hands to the adapter callback, and a wall-time limit or caller
+ * cancellation aborts it — adapters drive `runControlledProcess` (process.ts)
+ * with that signal, which terminates the provider's process group, so a
+ * limit actually stops the work. After a timeout or cancellation the
+ * wrapper stops waiting and cleans immediately; a callback that ignores
+ * the handed-off signal keeps running detached over its already-removed
+ * scratch and its late result is discarded. No execution metadata
+ * (timestamps, pids, durations) is recorded, preserving determinism of
+ * downstream evidence.
  */
 
 import { type CleanupStatus, InvalidStagingRequestError, type StagingRequest } from "./staging.ts";
@@ -73,13 +76,16 @@ function assertOptions(run: unknown, options: StagedRunOptions): void {
 
 /**
  * Run `run` against a freshly staged view of `request`, cleaning the owned
- * scratch on every exit path (see the module docblock). Rejects only on
+ * scratch on every exit path (see the module docblock). The callback
+ * receives the lifecycle's own abort handle: it is aborted when the
+ * wall-time limit is hit or the caller cancels, so controlled children
+ * driven with it are terminated on those exit paths. Rejects only on
  * invalid requests and staging failures — operational errors, SPEC §16.3 —
  * never on adapter outcomes.
  */
 export async function withStagedWorkspaceView<T>(
 	request: StagingRequest,
-	run: (view: StagedWorkspaceView) => Promise<T>,
+	run: (view: StagedWorkspaceView, signal: AbortSignal) => Promise<T>,
 	options: StagedRunOptions = {},
 ): Promise<StagedRunOutcome<T>> {
 	assertOptions(run, options);
@@ -89,9 +95,12 @@ export async function withStagedWorkspaceView<T>(
 	}
 
 	const view = await stageWorkspaceView(request);
+	// The lifecycle's abort handle: handed to the adapter so a limit or a
+	// caller cancellation stops its controlled children, not just the waiting.
+	const controller = new AbortController();
 	const runSettled = (async (): Promise<RunResult<T>> => {
 		try {
-			return { ok: true, value: await run(view) };
+			return { ok: true, value: await run(view, controller.signal) };
 		} catch (error) {
 			return { ok: false, error };
 		}
@@ -104,14 +113,22 @@ export async function withStagedWorkspaceView<T>(
 		timeoutMs === undefined
 			? NEVER_SETTLES
 			: new Promise<{ kind: "timeout" }>((resolve) => {
-					timer = setTimeout(() => resolve({ kind: "timeout" }), timeoutMs);
+					timer = setTimeout(() => {
+						controller.abort();
+						resolve({ kind: "timeout" });
+					}, timeoutMs);
 				}),
 		signal === undefined
 			? NEVER_SETTLES
 			: new Promise<{ kind: "cancelled" }>((resolve) => {
-					if (signal.aborted) resolve({ kind: "cancelled" });
-					else {
-						onAbort = () => resolve({ kind: "cancelled" });
+					if (signal.aborted) {
+						controller.abort();
+						resolve({ kind: "cancelled" });
+					} else {
+						onAbort = () => {
+							controller.abort();
+							resolve({ kind: "cancelled" });
+						};
 						signal.addEventListener("abort", onAbort);
 					}
 				}),

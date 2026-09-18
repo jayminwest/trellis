@@ -273,14 +273,16 @@ export async function runJscpdAnalysis(
 	const request = {
 		modes: [mode],
 		thresholds: JSCPD_DEFAULT_THRESHOLDS,
-		...(options.signal === undefined ? {} : { signal: options.signal }),
 		...(options.resolve === undefined ? {} : { resolve: options.resolve }),
 	};
 	let lifecycle: StagedRunOutcome<AnalysisResult>;
 	try {
 		lifecycle = await withStagedWorkspaceView(
 			{ root, files: selection },
-			async (view) => await foldJscpdOutcome(view, await runJscpdAdapter(view, request), mode),
+			// The lifecycle's own abort handle reaches the adapter: a wall-time
+			// limit or caller cancellation terminates the provider process group.
+			async (view, signal) =>
+				await foldJscpdOutcome(view, await runJscpdAdapter(view, { ...request, signal }), mode),
 			options.signal === undefined ? {} : { signal: options.signal },
 		);
 	} catch (error) {

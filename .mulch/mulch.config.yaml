@@ -23,6 +23,7 @@ domains:
   pattern: {}
   audit: {}
   testing: {}
+  convention: {}
 governance:
   max_entries: 100
   warn_entries: 150
