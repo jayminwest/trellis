@@ -71,7 +71,17 @@ export function exhaustiveGroups(streams: readonly TokenStream[]): ReferenceGrou
 			enumeratePair(groups, a, b, i === j);
 		}
 	}
-	return [...groups.values()];
+	// The legacy final sort is stable on equal line/count keys. Its raw groups
+	// arrive by earliest token occurrence, rather than this oracle's pair order.
+	const offsets = new Map<string, number>();
+	let offset = 0;
+	for (const stream of streams) {
+		offsets.set(stream.path, offset);
+		offset += stream.kinds.length;
+	}
+	const first = (group: ReferenceGroup) =>
+		Math.min(...group.members.map((member) => (offsets.get(member.path) ?? 0) + member.start));
+	return [...groups.values()].sort((a, b) => first(a) - first(b));
 }
 
 /** Independent finalization: minimum span, strict token containment, then canonical locations. */

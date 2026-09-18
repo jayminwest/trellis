@@ -205,3 +205,40 @@ periodic, repeated-kind and equal-prefix controls. They verify zero-valued input
 kinds and unique sentinel boundaries, malformed kinds, before-allocation size
 failure, deterministic phase-work/allocation failure, cumulative output bounds
 and cancellation before entry and during charged work.
+
+## Maximal extraction (step 7)
+
+`duplication-extract.ts` visits branching LCP intervals with an explicit bounded
+stack. For each interval, left-context, right-context and joint-context counts
+identify exactly which occurrences have a partner differing on both sides:
+`total - sameLeft - sameRight + samePair > 0`. This keeps the maximal-pair
+semantics without a Cartesian occurrence expansion. A unique negative context
+marks each file start; the indexed unique terminators mark ends. Every emitted
+member therefore shares the interval's exact content/length, and participates
+in at least one left-and-right maximal pair. Nested/periodic intervals remain
+eligible for the existing finalizer's line and subsumption rules. Interval
+visits, context probes, temporary map cells, groups and occurrences are charged.
+
+The broader reference controls exposed an ordinal edge case: the legacy final
+sort leaves ties when first-member line ranges, token lengths and copy counts
+all match. Its stable order then depends on hash-window discovery, which differs
+from exhaustive pair enumeration even when all groups/ranges are identical.
+The independent oracle compares full canonical group payloads in those ties;
+its raw groups use earliest-token order for reproducibility. Candidate tests
+also compare the **entire finalized result, including IDs**, against every
+completed legacy control, so this is not permission to renumber old groups.
+
+`duplication-order.ts` preserves that legacy ordering by a bounded compatibility
+key: first-seen 100-token hash bucket, then earliest maximal-pair positions. It
+scans windows and group offsets, and finds the earliest representative's partner
+using contexts; it never expands pairs or uses hashes as clone-equivalence
+proof. All storage, scans and sort comparisons use the candidate guard. It is
+an ordinal pass inside the one candidate, not an alternate detection backend.
+The production detector and finalizer remain unchanged in this milestone.
+
+The extraction tests cover 40 fixed-seed context/overlap variants, independent
+raw content and half-open intervals, finalized locations and IDs, exact/renamed/
+edited source, boundary/line minima, discovery-order reversal and forced work/
+output limits. The forty-copy control completes with one 229-token group,
+forty 27-line members and 1,080 unique code lines. Step 8 must still bound the
+finalizer and collection/accounting before any corpus acceptance or cutover.
