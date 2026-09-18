@@ -657,9 +657,16 @@ classified test — never scored as production and never diluting a
 production denominator — and a barrel re-export is a distinct surface
 from the implementation it exposes. The compiled context's normalized
 digest rides the analysis identity (§16.2) through the same compatibility
-seam as the architecture policy; the adapter (trellis-8ebc) turns the
-prepared context into advisory evidence — until it delivers, requests
-resolve to located `unsupported` evidence.
+seam as the architecture policy. The delivered adapter (trellis-8ebc) turns
+the prepared context into contextual advisory evidence: the pinned Knip
+runs through trellis-generated configuration over a staged source view with
+every runtime plugin disabled, differentiating orphan files, unused
+exports/types and unresolved imports as namespaced candidate findings with
+stable path/symbol ordering, and declared public surfaces exempt their own
+candidates as visible evidence. Coverage is checked per run: an empty or
+partial pass (the tool's configuration-hint signal, staging gaps, suspect
+or malformed reports) is located `incomplete` evidence, never a clean pass —
+and zero candidates never proves overall quality.
 
 Policy budgets gate the run; they never silently change how the index is
 computed (§7). A budget key may also name a provider's namespaced evidence
@@ -1070,9 +1077,9 @@ audit; a regression in its own index is a real failure. (The retired
 ## 16. Optional quality-evidence providers (integration contract — plan `pl-43c5`)
 
 > **Implementation status.** The report, comparison, policy, history and
-> surface seams, jscpd and dependency-cruiser adapters, and explicit SonarJS
-> deferral are delivered. Knip delivery (`trellis-8ebc`) and final milestone
-> acceptance remain open. See [`docs/quality-evidence.md`](docs/quality-evidence.md)
+> surface seams, jscpd, dependency-cruiser and Knip adapters, and explicit
+> SonarJS deferral are delivered. Final integration acceptance is recorded
+> under `trellis-639c`. See [`docs/quality-evidence.md`](docs/quality-evidence.md)
 > for current usage and [`docs/provider-acceptance.md`](docs/provider-acceptance.md)
 > for executed evidence and gaps. This contract builds on the completed
 > foundation (§14); native measurement and scoring remain authoritative.

@@ -16,6 +16,7 @@ describe("verifyPinnedToolPin", () => {
 		expect(pinned).toEqual([
 			{ tool: "jscpd", pinnedVersion: "5.2.1" },
 			{ tool: "dependency-cruiser", pinnedVersion: "18.3.1" },
+			{ tool: "knip", pinnedVersion: "6.16.1" },
 		]);
 	});
 
@@ -57,8 +58,9 @@ describe("smokeProviderTools", () => {
 		expect(result.pinned).toEqual([
 			{ tool: "jscpd", pinnedVersion: "5.2.1" },
 			{ tool: "dependency-cruiser", pinnedVersion: "18.3.1" },
+			{ tool: "knip", pinnedVersion: "6.16.1" },
 		]);
-		expect(result.invoked.length).toBe(2);
+		expect(result.invoked.length).toBe(3);
 		const jscpd = result.invoked.find((run) => run.providerId === "jscpd");
 		expect(jscpd?.versionOutput).toBe("jscpd 5.2.1");
 		// The pure-JavaScript dependency-cruiser launcher runs under trellis's
@@ -66,5 +68,9 @@ describe("smokeProviderTools", () => {
 		const dependencyCruiser = result.invoked.find((run) => run.providerId === "dependency-cruiser");
 		expect(dependencyCruiser?.versionOutput).toBe("18.3.1");
 		expect(dependencyCruiser?.platformKey.length ?? 0).toBeGreaterThan(0);
+		// The pure-JavaScript knip Bun launcher runs the same way.
+		const knip = result.invoked.find((run) => run.providerId === "knip");
+		expect(knip?.versionOutput).toBe("6.16.1");
+		expect(knip?.platformKey.length ?? 0).toBeGreaterThan(0);
 	}, 20_000);
 });

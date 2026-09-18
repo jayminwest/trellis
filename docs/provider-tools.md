@@ -74,6 +74,40 @@ declared: the distribution is JavaScript, but trellis claims only what it
 exercised. Shared launcher packages must match both the launcher path and
 its verified digest across host entries.
 
+**Knip 6.16.1** (`providerId: knip`, plan `pl-43c5` step 24 — trellis-8ebc)
+— the contextual reachability-evidence adapter's pinned tool. Like
+dependency-cruiser it is a **pure-JavaScript** distribution, and it ships
+a dedicated **Bun launcher** (`bin/knip-bun.js`) — the artifact the pin
+verifies and executes under trellis's own runtime through the controlled
+process runner (`src/providers/knip/invocation.ts`), never a PATH lookup.
+The pin reuses the exact devDependency this repository's own `check:deps`
+gate already installs — never a second copy. The adapter additionally:
+
+- derives the runtime **plugin registry's names** from the pinned
+  artifact's own registry file (a static read of a digest-verified
+  distribution file — never imported or executed) and disables every
+  plugin, so no framework/tool configuration or entry convention can
+  reach the declared reachability model;
+- resolves and **records the `oxc-parser` version** the tool finds locally
+  in analysis identity (Knip's manifest pins a range, so the exact parser
+  is a property of the prepared installation), refusing to run blind;
+- generates the tool configuration from the prepared reachability context
+  into owned scratch — the declared roots as `entry`, the production
+  candidate scope as `project`, a generated minimal tsconfig, and a
+  generated minimal workspace manifest written into the staged tree
+  (trellis-owned scratch — the target's own manifests and `knip`
+  configurations are never loaded); and
+- neutralizes the findings exit code and promotes configuration hints to
+  errors, so the exit status carries the tool's coverage signal: a hint
+  means an empty or partial analysis, located `incomplete` — never a
+  clean pass, and zero candidates never proves overall quality.
+
+For Knip 6.16.1: **linux-x64-gnu** and **darwin-arm64** are `tested`
+(conformance and failure-regression suites plus provider smoke). The
+[combined acceptance record](provider-acceptance.md) records macOS execution
+with oxc-parser 0.133.0 and all 155 runtime plugins disabled. Other hosts
+remain undeclared; JavaScript distribution alone does not prove support.
+
 ## Preparing an installation (operator step, never audit-time)
 
 trellis never installs, updates, or downloads tools. The supported
@@ -85,13 +119,16 @@ execution context is a **local installation prepared by the operator**:
   smoke (`bun run smoke:provider-tools`) then resolve it locally.
   The dependency-cruiser pin is prepared the same way
   (`"dependency-cruiser": "18.3.1"`), alongside the repository's own
-  `typescript` install the tool resolves as its parser.
+  `typescript` install the tool resolves as its parser. The knip pin is
+  prepared the same way (`"knip": "6.16.1"`) — the exact devDependency
+  the repository's own `check:deps` gate uses.
 - **For a CLI install**, prepare the tool in the `node_modules` tree trellis
   itself resolves from, e.g. in the package that depends on
   `@os-eco/trellis-cli`:
   `npm install --save-exact --save-dev jscpd@5.2.1`
   (or `bun add --dev jscpd@5.2.1`); likewise
-  `npm install --save-exact --save-dev dependency-cruiser@18.3.1`.
+  `npm install --save-exact --save-dev dependency-cruiser@18.3.1` and
+  `npm install --save-exact --save-dev knip@6.16.1`.
 
 A request for a tool that is not installed resolves to `unavailable` with
 these instructions attached (SPEC §16.2/§16.3) — never a fabricated run and

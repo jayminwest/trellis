@@ -279,7 +279,7 @@ runtime/parser versions, source hashes, timings, memory measurement semantics
 and incomplete evidence. A skipped real-tool test is not acceptance.
 
 See [provider-acceptance.md](docs/provider-acceptance.md) for the executed
-macOS command, failure matrix and remaining Knip integration, and
+macOS command, failure matrix and combined Knip integration, and
 [quality-evidence.md](docs/quality-evidence.md) for migration examples.
 Provider upgrades require new digests and conformance observations; preserve
 native scoring and treat incompatible provider evidence as noncomparable.

@@ -11,7 +11,7 @@ Optional providers add located evidence without changing that score:
 | jscpd 5.2.1 | `jscpd:exact`, `jscpd:normalized`, `jscpd:near` | Clone evidence with trellis-owned line accounting |
 | dependency-cruiser 18.3.1 | Declarative rules below | Violations of the rules you declare |
 | SonarJS | `sonarjs` | Unsupported under the recorded [deferral](sonarjs-decision.md); clearance tracked by `trellis-7f5d` |
-| Knip | Declarative reachability context | Adapter delivery and final verification tracked by `trellis-8ebc` |
+| Knip 6.16.1 | Declarative entries, public surfaces and tests | Contextual reachability candidates, never confirmed dead code |
 
 ## Prepare tools separately
 
@@ -42,6 +42,10 @@ Richer requests live in the project's `trellis.yaml`:
 providers:
   jscpd:
     mode: exact
+  knip:
+    entries: [src/main.ts]
+    public: [{path: src/index.ts}]
+    tests: roots
   dependency-cruiser:
     rules:
       - kind: boundary
@@ -119,8 +123,8 @@ violation list does not prove overall architectural quality.
 
 Knip's declared entries, public surfaces and test-root participation define
 the reachability question. Missing context cannot establish dead code.
-Plugin discovery is disabled, and candidates remain advisory. Its adapter
-is not included in this document's executed acceptance claim yet.
+Plugin discovery is disabled, and candidates remain advisory. The adapter uses its locally resolved oxc-parser, recorded in each report;
+the acceptance installation resolved 0.133.0.
 
 Enabled tools receive a source snapshot in owned temporary storage, with
 cleanup and execution/output bounds. Native audits create no trellis scratch.

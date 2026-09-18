@@ -18,10 +18,11 @@ import { runWorkspaceAudit } from "./run.ts";
 // trellis-1e03: authored controls, real pinned processes and saved artifacts.
 // Update expectations only after reviewing the provider identity and raw
 // evidence; run `bun test src/audit/cross-provider.test.ts` to validate.
-const AVAILABLE = ["jscpd", "dependency-cruiser"].every(
+const AVAILABLE = ["jscpd", "dependency-cruiser", "knip"].every(
 	(id) => resolvePinnedTool(id).state === "available",
 );
 const selection = {
+	knip: { entries: ["src/clone-a.ts"], tests: "excluded" as const },
 	jscpd: { mode: "exact" as const },
 	"dependency-cruiser": {
 		rules: [{ kind: "cycle" as const, name: "runtime-cycles", edges: ["runtime" as const] }],
@@ -52,8 +53,14 @@ describe("cross-provider evidence isolation", () => {
 			const clones = providerEntry(first.report, "jscpd");
 			const architecture = providerEntry(first.report, "dependency-cruiser");
 			expect(clones.state).toBe("complete");
+			const reachability = providerEntry(first.report, "knip");
+			expect(reachability.state).toBe("complete");
+			expect(reachability.findings?.map((f) => [f.kind, f.path])).toEqual([
+				["provider.knip.unused-file", "src/clone-b.ts"],
+			]);
 			expect(architecture.state).toBe("complete");
 			expect(clones.analysis?.selection.files).toEqual(architecture.analysis?.selection.files);
+			expect(clones.analysis?.selection.files).toEqual(reachability.analysis?.selection.files);
 			expect(clones.findings).toHaveLength(1);
 			expect(architecture.findings).toEqual([]);
 			expect(providerEntry(first.report, "sonarjs").state).toBe("unsupported");
@@ -85,7 +92,7 @@ describe("cross-provider evidence isolation", () => {
 			const config = providerAuditConfig(selection, {
 				budgets: {},
 				failOnNew: [],
-				requireEvidence: ["jscpd", "dependency-cruiser", "sonarjs"],
+				requireEvidence: ["jscpd", "dependency-cruiser", "knip", "sonarjs"],
 			});
 			const result = await runWorkspaceAudit(root, { config, now: PINNED });
 			expect(providerEntry(result.report, "jscpd").state).toBe("incomplete");
@@ -99,6 +106,37 @@ describe("cross-provider evidence isolation", () => {
 					.map((r) => r.subject)
 					.sort(),
 			).toEqual(["jscpd", "sonarjs"]);
+		},
+	);
+	test.skipIf(!AVAILABLE)(
+		"separates changed Knip test roots from native score trends",
+		async () => {
+			await putFile(
+				root,
+				"src/consumer.test.ts",
+				'import { alpha } from "./clone-b.ts"; alpha(1, 2);\n',
+			);
+			const before = await runWorkspaceAudit(root, {
+				config: providerAuditConfig(selection),
+				now: PINNED,
+			});
+			const after = await runWorkspaceAudit(root, {
+				config: providerAuditConfig({ ...selection, knip: { ...selection.knip, tests: "roots" } }),
+				now: PINNED,
+			});
+			const first = providerEntry(before.report, "knip");
+			const second = providerEntry(after.report, "knip");
+			expect(first.state).toBe("complete");
+			expect(second.state).toBe("complete");
+			expect(first.findings?.some((f) => f.path === "src/clone-b.ts")).toBe(true);
+			expect(second.findings?.some((f) => f.path === "src/clone-b.ts")).toBe(false);
+			expect(after.report.score).toEqual(before.report.score);
+			expect(after.report.findings).toEqual(before.report.findings);
+			const diff = compareReports(before.report, after.report);
+			expect(diff.score?.delta).toBe(0);
+			const knip = diff.evidence.providers.find((p) => p.providerId === "knip");
+			expect(knip?.status).toBe("noncomparable");
+			expect(knip?.findings).toBeUndefined();
 		},
 	);
 });

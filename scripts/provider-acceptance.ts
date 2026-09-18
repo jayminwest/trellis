@@ -68,7 +68,7 @@ async function measure(target: string, config: string, label: string) {
 }
 
 try {
-	for (const id of ["jscpd", "dependency-cruiser"]) {
+	for (const id of ["jscpd", "dependency-cruiser", "knip"]) {
 		const tool = resolvePinnedTool(id);
 		if (tool.state !== "available") throw new Error(`${id}: ${tool.reason}`);
 	}
@@ -77,7 +77,7 @@ try {
 	await writeFile(nativeConfig, "{}\n");
 	await writeFile(
 		providerConfig,
-		"providers:\n  jscpd: {mode: exact}\n  dependency-cruiser:\n    rules: [{kind: cycle, name: runtime-cycles, edges: [runtime]}]\n  sonarjs: {}\n",
+		"providers:\n  jscpd: {mode: exact}\n  dependency-cruiser:\n    rules: [{kind: cycle, name: runtime-cycles, edges: [runtime]}]\n  sonarjs: {}\n  knip: { tests: roots }\n",
 	);
 	const fixture = join(root, "fixture");
 	await seedClonePair(fixture);

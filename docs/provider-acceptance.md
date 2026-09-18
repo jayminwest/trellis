@@ -1,15 +1,20 @@
 # Provider acceptance record
 
-Plan `pl-43c5`, steps `trellis-1e03` and `trellis-b18d`.
-This record covers jscpd, dependency-cruiser and deferred SonarJS.
-Knip integration acceptance remains pending `trellis-8ebc`; this is not
-a claim that the entire milestone has passed.
+Plan `pl-43c5`, steps `trellis-1e03`, `trellis-b18d` and `trellis-639c`.
+This record covers combined jscpd, dependency-cruiser, Knip and deferred
+SonarJS acceptance after integrating Knip PR #61 (`e1618b8`).
 
 ## Executed environment
 
 On 2026-09-17: macOS 26.5.2 (25F84), ARM64, Bun
 1.3.14-canary.1+11a2e2c20, TypeScript 6.0.3, jscpd 5.2.1,
-dependency-cruiser 18.3.1 (adapter 0.1.0). The dependency-cruiser
+dependency-cruiser 18.3.1 and Knip 6.16.1 (adapters 0.1.0). Knip resolved
+oxc-parser 0.133.0 and explicitly disabled all 155 runtime plugins. Its
+launcher SHA-256 is
+`0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388`;
+its package manifest SHA-256 is
+`331cb6aa29cf65ff754257ba01aee8c695f3dbf836d2539722a20771cb55a272`.
+The dependency-cruiser
 launcher SHA-256 is
 `3a57384034c8b33016761ea022df1a9f1476f187a8c250573ccdcf301d169ba6`;
 its package manifest is
@@ -21,7 +26,9 @@ The architecture corpus passed before adding the macOS host declaration:
 an allowed boundary exemption and an unresolved local import. The complete
 dependency-cruiser and cross-provider suites then passed: 85 tests,
 239 assertions. Package and provider-tool smoke checks also passed on this
-host. Linux x64 has the earlier step-22 record; it was not re-executed here.
+host. Knip then passed its real candidate preflight before host registration,
+followed by 110 manifest/Knip/core tests and all combined surface controls.
+Linux x64 has the earlier step-22/24 records; it was not re-executed here.
 The local Colima VM could not start (its disk was reported in use).
 Other OS/architecture combinations retain their manifest status; no
 Windows, Intel macOS or Linux ARM64 execution is claimed by this record.
@@ -33,7 +40,7 @@ acceptance command ran with network operations denied by the OS and writes
 denied to both measured checkouts:
 
 ```bash
-/usr/bin/sandbox-exec -p '(version 1)(allow default)(deny network*)(deny file-write* (subpath "/private/tmp/trellis-pl-43c5") (subpath "/Users/jayminwest/Projects/os-eco/seeds"))' bun scripts/provider-acceptance.ts /Users/jayminwest/Projects/os-eco/seeds
+/usr/bin/sandbox-exec -p '(version 1)(allow default)(deny network*)(deny file-write* (subpath "/private/tmp/trellis-final-43c5") (subpath "/Users/jayminwest/Projects/os-eco/seeds"))' bun scripts/provider-acceptance.ts /Users/jayminwest/Projects/os-eco/seeds
 ```
 
 Use the actual absolute checkout paths when reproducing. The harness clears
@@ -48,10 +55,10 @@ outside trellis's control, including on native audits.
 
 | Target | Native ms | Providers ms | Native peak RSS bytes | Providers peak RSS bytes |
 | --- | ---: | ---: | ---: | ---: |
-| Small control with executable-config sentinels | 261 | 767 | 265109504 | 272056320 |
-| 40 identical 13-line source copies | 280 | 782 | 282492928 | 292143104 |
-| Trellis checkout | 925 | 2350 | 656719872 | 759562240 |
-| Prepared Seeds checkout | 605 | 1518 | 516882432 | 543703040 |
+| Small control with executable-config sentinels | 266 | 985 | 270745600 | 275611648 |
+| 40 identical 13-line source copies | 283 | 1011 | 283000832 | 299270144 |
+| Trellis checkout | 963 | 3037 | 680493056 | 791855104 |
+| Prepared Seeds checkout | 589 | 1753 | 509804544 | 552910848 |
 
 The [raw measurement artifact](provider-acceptance-macos.json) retains source
 hashes, parser identities and the exact incomplete-evidence reasons.
@@ -61,7 +68,10 @@ validation and post-run hashing. RSS is Bun's direct child-process
 memory limit. The harness prints input hashes, tool parser identity, states
 and reasons so a rerun can distinguish changed inputs from changed engines.
 
-The stress control produced complete jscpd and architecture evidence.
+Knip completed over all four scopes; the harness explicitly selects test
+roots without declaring application entries, so its contextual assumptions
+remain visible. The stress control produced complete evidence for all three
+executable providers.
 Short sentinel files made control jscpd incomplete. Trellis's architecture
 and jscpd evidence were incomplete; Seeds architecture was complete and
 jscpd incomplete. These gaps remained visible while native scores stayed
@@ -76,13 +86,14 @@ counted as a complete zero.
 | Combined CLI/SDK/fleet parity, real SQLite history and saved artifacts | `src/client/cross-provider-surfaces.test.ts` |
 | Idiomatic, renamed, near, unrelated clones; exact pairs versus groups; source-set boundaries | `src/providers/jscpd/conformance*.test.ts` |
 | Changed architecture policy; type/runtime separation; stubs and missing parser | `src/providers/dependency-cruiser/*.test.ts` |
+| Entries, public barrels, tests, dynamic imports, aliases and contextual candidates | `src/providers/knip/*.test.ts` |
 | Missing/version-mismatched binaries and unsupported hosts | `src/providers/resolve.test.ts` |
 | Timeout, output budget, process termination | `src/providers/process.test.ts` and provider failure suites |
 | Cancellation, interrupted work, cleanup failure visibility | `src/providers/staged-run.test.ts` and `workspace.test.ts` |
 | Native no process/model/network boundary calls, no target writes | `src/audit/offline.test.ts` |
 | Runtime-only packed installation and pinned asset/version checks | `bun run smoke:package`, `bun run smoke:provider-tools` |
 
-The full local suite passed 2,025 tests and all nine quality gates. The
+The full local suite passed 2,112 tests and all nine quality gates. The
 quality-evidence guide's commands were also executed against a controlled
 clone-pair fixture: CLI/SDK/fleet, JSON/Markdown output, saved comparison,
 SQLite history and operational/policy exits 0/1/2 passed.
@@ -94,7 +105,7 @@ Expected fixture observations are authored assertions next to each suite.
 To update, inspect raw evidence and identity changes, edit the explicit
 assertions, and rerun the named suite; there is no automatic golden rewrite.
 
-The current dependency-cruiser limits are 60 seconds and 4,000,000 bytes
+The current dependency-cruiser and Knip limits are 60 seconds and 4,000,000 bytes
 per output stream. Exhaustion is unavailable/incomplete evidence, not a
 deterministic quality result. These controls do not provide a universal
 untrusted-code sandbox or claim an enforced memory ceiling. Outcome
@@ -108,7 +119,8 @@ the parent of the first provider-contract commit `538996d`. It includes
 The earlier pivot-release commit `1bcb8e8` predates those foundation fixes
 and must not be used to attribute their changes to optional providers.
 
-Verified against local HEAD `9e7fd56` on 2026-09-17:
+Verified after combining local `69135e9` with merged Knip `e1618b8` on
+2026-09-17:
 
 - `git diff --exit-code eac0f57 HEAD -- src/metrics src/scoring src/syntax`
   exits 0: all native measurement, scoring and parsing implementations and
@@ -131,14 +143,23 @@ Verified against local HEAD `9e7fd56` on 2026-09-17:
   Its clearance prerequisite remains `trellis-7f5d`; outcome validation
   remains `trellis-f999`.
 
-**Still unproven:** Knip delivery and its integration acceptance. Both the
-tracker and `src/providers/capabilities.ts` still say adapter-pending;
-`src/audit/providers.ts` routes it through undelivered evidence. No Knip PR
-was open or among the recent merged PRs at this audit. The user assigned
-that implementation to another agent. After it lands, extend the combined
-fixtures/resource run and tool/version documentation to Knip, rerun final
-gates and smoke checks, then close `trellis-639c`, `trellis-8ac1` and the
-plan. Do not infer milestone completion from the other 28 closed children.
+**Knip integration verified:** the delivered capability executes pinned
+Knip through the controlled process seam. Combined core tests repeat the
+same source corpus with all providers, preserve native measurements and
+score completeness beside incomplete/deferred evidence, and keep useful
+independent results. Changing test-root participation changes Knip candidates
+without changing native scores; comparison refuses candidate churn across
+that changed evidence basis. Combined CLI/SDK/fleet/SQLite tests preserve
+the same normalized evidence. Source/parser provenance, scratch cleanup,
+network denial, failure limits, raw validation and package assets passed
+through the suites and commands above.
+
+The merge produced duplicate `trellis-8ac1` JSONL rows with different stale
+blocker lists. Reconciliation retained one row and derived its blockers from
+the surviving open child; final tracker closure preserves the plan history.
+All 30 children and the milestone can close after the final gates. Sonar's
+explicit deferral is the permitted plan outcome, with its prerequisite open;
+no scoring recalibration, publishing or adoption/outcome claim is included.
 
 The local work commits are `0aca9ac` (acceptance), `4fbac2d` (documentation)
 and `9e7fd56` (tracker handoff). Other agents' uncommitted tracker/memory

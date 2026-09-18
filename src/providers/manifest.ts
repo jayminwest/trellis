@@ -1,23 +1,10 @@
 /**
- * The supported-tool manifest (SPEC §16.4, plan `pl-43c5` — trellis-ff52):
- * the pinned record of every external provider artifact trellis may execute
- * — exact package version, bin layout, and SHA-256 digests of the pinned
- * distribution's cross-platform files (plus each platform binary's digest
- * wherever a real host produced one) — together with the honesty record for
- * every declared platform host.
- *
- * Resolution and verification live in `resolve.ts`; execution lives in the
- * controlled process runner (`process.ts`). Nothing here runs, installs,
- * updates, or downloads a tool — the operator prepares the installation
- * (this repository pins jscpd as a devDependency, so `bun install` prepares
- * the exact artifact offline), and trellis only ever discovers and verifies
- * what is already local (SPEC §16.4 "Trust boundary — supported
- * installation"; no audit-time acquisition, ever).
- *
- * The pinned tool version is part of provider/analysis identity (§16.2), so
- * changing a pin changes evidence identity — it never silently trends
- * (§16.6). An upgrade is a manifest change with fresh digests and fresh
- * platform execution records, not a runtime resolution.
+ * Pinned provider artifacts (SPEC §16.4, trellis-ff52): exact versions,
+ * launcher/package digests and verified host execution records.
+ * `resolve.ts` verifies operator-prepared local tools; `process.ts` runs
+ * them. This manifest never installs, downloads or executes anything.
+ * Pin changes require fresh digests/conformance and change evidence
+ * identity, never the native scoring basis. See docs/provider-tools.md.
  */
 import { z } from "zod";
 import { providerIdSchema } from "../contract/index.ts";
@@ -300,6 +287,65 @@ export const PINNED_TOOLS: readonly PinnedToolManifestEntry[] = (() => {
 				"in the package tree a trellis CLI install runs from run `npm install --save-exact " +
 				"--save-dev dependency-cruiser@18.3.1` / `bun add --dev dependency-cruiser@18.3.1`; trellis " +
 				"then discovers and verifies the artifact offline (SPEC §16.4)",
+		},
+		{
+			/**
+			 * Knip 6.16.1 (plan `pl-43c5` step 24, trellis-8ebc) is a
+			 * **pure-JavaScript** distribution that ships a dedicated Bun
+			 * launcher (`bin/knip-bun.js`) — the artifact the pin verifies and
+			 * the adapter executes under trellis's own runtime through the
+			 * controlled process runner (`src/providers/knip/invocation.ts`).
+			 * Like dependency-cruiser there is no platform map: the platform
+			 * package of every declared host is the tool package itself, and
+			 * the two cross-platform distribution files the pin verifies are
+			 * the launcher and the package manifest. Knip is also this
+			 * repository's own `check:deps` gate tool, so the pin reuses the
+			 * exact version already installed as a devDependency — never a
+			 * second copy — and the gate keeps working against it.
+			 */
+			providerId: "knip",
+			packageName: "knip",
+			pinnedVersion: "6.16.1",
+			versionOutput: "6.16.1",
+			binCommand: "knip-bun",
+			binEntry: "bin/knip-bun.js",
+			launcherRelPath: "bin/knip-bun.js",
+			platformMapRelPath: "package.json",
+			launcherSha256: "0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388",
+			platformMapSha256: "331cb6aa29cf65ff754257ba01aee8c695f3dbf836d2539722a20771cb55a272",
+			platforms: [
+				{
+					key: "darwin-arm64",
+					packageName: "knip",
+					os: "darwin",
+					cpu: "arm64",
+					binaryRelPath: "bin/knip-bun.js",
+					execution: "tested",
+					evidence:
+						"macOS ARM64: conformance, failure, combined surface and offline acceptance " +
+						"passed with oxc-parser 0.133.0; docs/provider-acceptance.md (trellis-639c)",
+					binarySha256: "0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388",
+				},
+				{
+					key: "linux-x64-gnu",
+					packageName: "knip",
+					os: "linux",
+					cpu: "x64",
+					libc: "glibc",
+					binaryRelPath: "bin/knip-bun.js",
+					execution: "tested",
+					evidence:
+						"src/providers/knip conformance suite + scripts/smoke-provider-tools.ts " +
+						"(plan pl-43c5 step 24, trellis-8ebc)",
+					binarySha256: "0decd26eef37578c2574b6a83f711f19775ca04c132fb89049a23e9cecb80388",
+				},
+			],
+			installInstructions:
+				"prepare the pinned tool locally where trellis resolves from (never at audit time): " +
+				"run `bun install` in this repository (knip 6.16.1 is a pinned devDependency — the same " +
+				"install this repository's own check:deps gate uses), or in the package tree a trellis " +
+				"CLI install runs from run `npm install --save-exact --save-dev knip@6.16.1` / `bun add " +
+				"--dev knip@6.16.1`; trellis then discovers and verifies the artifact offline (SPEC §16.4)",
 		},
 	];
 	const validated = z.array(pinnedToolManifestEntrySchema).parse(table);

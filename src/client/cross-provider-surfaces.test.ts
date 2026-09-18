@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { runWorkspaceAudit } from "../audit/index.ts";
 import { providerEntry, seedClonePair, TOOL_AVAILABLE } from "../audit/provider-fixtures.ts";
 import { auditReportSchema } from "../contract/index.ts";
+import { resolvePinnedTool } from "../providers/resolve.ts";
 import * as client from "./index.ts";
 
 // trellis-1e03: combined complete/deferred evidence across the actual surfaces.
@@ -14,7 +15,11 @@ beforeEach(async () => {
 	root = await mkdtemp(join(tmpdir(), "trellis-cross-surfaces-"));
 	await seedClonePair(root);
 	configPath = join(root, "trellis.yaml");
-	await writeFile(configPath, "providers:\n  jscpd: { mode: exact }\n  sonarjs: {}\n");
+	await writeFile(
+		configPath,
+		"providers:\n  jscpd: { mode: exact }\n  sonarjs: {}\n  knip: { entries: [src/clone-a.ts] }\n" +
+			"  dependency-cruiser:\n    rules: [{kind: cycle, name: runtime-cycles, edges: [runtime]}]\n",
+	);
 });
 afterEach(async () => {
 	await rm(root, { recursive: true, force: true });
@@ -25,13 +30,18 @@ function withoutRun<T extends { run?: unknown }>(report: T) {
 }
 
 describe("cross-provider public surfaces", () => {
-	test.skipIf(!TOOL_AVAILABLE)(
+	test.skipIf(
+		!TOOL_AVAILABLE ||
+			["knip", "dependency-cruiser"].some((id) => resolvePinnedTool(id).state !== "available"),
+	)(
 		"preserves mixed evidence through CLI, SDK, fleet and SQLite",
 		async () => {
 			const core = await runWorkspaceAudit(root);
 			const sdk = await client.audit(root);
 			expect(withoutRun(sdk.report)).toEqual(withoutRun(core.report));
 			expect(providerEntry(core.report, "jscpd").state).toBe("complete");
+			expect(providerEntry(core.report, "knip").state).toBe("complete");
+			expect(providerEntry(core.report, "dependency-cruiser").state).toBe("complete");
 			expect(providerEntry(core.report, "sonarjs").state).toBe("unsupported");
 			const cli = Bun.spawn(
 				[process.execPath, join(import.meta.dir, "../cli/main.ts"), "audit", root, "--json"],

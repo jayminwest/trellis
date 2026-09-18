@@ -75,14 +75,14 @@ describe("assessPolicy evidence requirements", () => {
 		}
 	});
 
-	test("fails closed when the required analysis is not carried and cannot be requested", () => {
-		// A capability with no delivered adapter cannot be requested at all — the
-		// capability table records that; jscpd is delivered and selectable since
-		// step 15, so requiring it unselected reads as unrequested instead.
+	test("fails closed when a delivered analysis is required but never requested", () => {
+		// knip is delivered and selectable since trellis-8ebc: requiring it
+		// unselected reads as unrequested — the run never asked for the
+		// evidence (the gated sonarjs case is covered below).
 		const assessment = assessPolicy(report(), policy({ requireEvidence: ["knip"] }));
 		expect(assessment.failed).toBe(true);
-		expect(assessment.results[0]?.reasons[0]?.code).toBe("requirement-evidence-unsupported");
-		expect(assessment.results[0]?.reasons[0]?.message).toContain("no adapter delivered yet");
+		expect(assessment.results[0]?.reasons[0]?.code).toBe("requirement-analysis-unrequested");
+		expect(assessment.results[0]?.reasons[0]?.message).toContain("knip");
 	});
 
 	test("requiring the deferred sonarjs capability is a located unsupported violation", () => {
@@ -136,9 +136,14 @@ describe("assessPolicy evidence requirements", () => {
 		// A schema 1.0.0 report predates the evidence area: the required
 		// analysis reads as not carried, never as satisfied (§16.6) — and a
 		// capability that cannot be requested stays an unsupported violation.
-		const assessment = assessPolicy(preProviderReport(), policy({ requireEvidence: ["knip"] }));
-		expect(assessment.failed).toBe(true);
-		expect(assessment.results[0]?.reasons[0]?.code).toBe("requirement-evidence-unsupported");
+		const gated = assessPolicy(preProviderReport(), policy({ requireEvidence: ["sonarjs"] }));
+		expect(gated.failed).toBe(true);
+		expect(gated.results[0]?.reasons[0]?.code).toBe("requirement-evidence-unsupported");
+		// A delivered capability on the same pre-provider report reads as
+		// unrequested — the report never carried the request.
+		const unrequested = assessPolicy(preProviderReport(), policy({ requireEvidence: ["knip"] }));
+		expect(unrequested.failed).toBe(true);
+		expect(unrequested.results[0]?.reasons[0]?.code).toBe("requirement-analysis-unrequested");
 	});
 });
 

@@ -5,8 +5,8 @@
   "results": [
     {
       "label": "control/native",
-      "durationMs": 261,
-      "maxRSS": 265109504,
+      "durationMs": 266,
+      "maxRSS": 270745600,
       "sourceSha256": "21814017c94eedd592adf8d46f1c4a1d2e9b242f2023b05efbbcfc8008b86e29",
       "score": {
         "index": 16,
@@ -43,8 +43,8 @@
     },
     {
       "label": "control/providers",
-      "durationMs": 767,
-      "maxRSS": 272056320,
+      "durationMs": 985,
+      "maxRSS": 275611648,
       "sourceSha256": "21814017c94eedd592adf8d46f1c4a1d2e9b242f2023b05efbbcfc8008b86e29",
       "score": {
         "index": 16,
@@ -96,6 +96,14 @@
           }
         },
         {
+          "id": "knip",
+          "state": "complete",
+          "parser": {
+            "engine": "knip.oxc-parser",
+            "version": "0.133.0"
+          }
+        },
+        {
           "id": "sonarjs",
           "state": "unsupported",
           "reason": "explicitly deferred by the distribution and metric-interface decision (docs/sonarjs-decision.md): the pinned eslint-plugin-sonarjs 3.0.5 distribution carries conflicting license evidence (LGPL-3.0-only package metadata vs SONAR Source-Available License v1.0 shipped headers) and no permitted distribution route is established (deferred by docs/sonarjs-decision.md, issue trellis-db3e; prerequisite trellis-7f5d)"
@@ -104,8 +112,8 @@
     },
     {
       "label": "stress-40-copies/native",
-      "durationMs": 280,
-      "maxRSS": 282492928,
+      "durationMs": 283,
+      "maxRSS": 283000832,
       "sourceSha256": "456df41690e0c240cf4bbccceda813d2d65c179c975dd6e219fa36128f972ff4",
       "score": {
         "index": 16,
@@ -142,8 +150,8 @@
     },
     {
       "label": "stress-40-copies/providers",
-      "durationMs": 782,
-      "maxRSS": 292143104,
+      "durationMs": 1011,
+      "maxRSS": 299270144,
       "sourceSha256": "456df41690e0c240cf4bbccceda813d2d65c179c975dd6e219fa36128f972ff4",
       "score": {
         "index": 16,
@@ -194,6 +202,14 @@
           }
         },
         {
+          "id": "knip",
+          "state": "complete",
+          "parser": {
+            "engine": "knip.oxc-parser",
+            "version": "0.133.0"
+          }
+        },
+        {
           "id": "sonarjs",
           "state": "unsupported",
           "reason": "explicitly deferred by the distribution and metric-interface decision (docs/sonarjs-decision.md): the pinned eslint-plugin-sonarjs 3.0.5 distribution carries conflicting license evidence (LGPL-3.0-only package metadata vs SONAR Source-Available License v1.0 shipped headers) and no permitted distribution route is established (deferred by docs/sonarjs-decision.md, issue trellis-db3e; prerequisite trellis-7f5d)"
@@ -202,9 +218,9 @@
     },
     {
       "label": "trellis/native",
-      "durationMs": 925,
-      "maxRSS": 656719872,
-      "sourceSha256": "8ccf7d947f3aad15c72cfaa6add09b3e92919aa3d8e8e4bfa36c8b83250e2745",
+      "durationMs": 963,
+      "maxRSS": 680493056,
+      "sourceSha256": "d31c36131d17a1b93c6ed8dc61ccf1d627aa62411d416ecd98a877ab614d3612",
       "score": {
         "index": 100,
         "direction": "lower-is-better",
@@ -240,9 +256,9 @@
     },
     {
       "label": "trellis/providers",
-      "durationMs": 2350,
-      "maxRSS": 759562240,
-      "sourceSha256": "8ccf7d947f3aad15c72cfaa6add09b3e92919aa3d8e8e4bfa36c8b83250e2745",
+      "durationMs": 3037,
+      "maxRSS": 791855104,
+      "sourceSha256": "d31c36131d17a1b93c6ed8dc61ccf1d627aa62411d416ecd98a877ab614d3612",
       "score": {
         "index": 100,
         "direction": "lower-is-better",
@@ -287,10 +303,18 @@
         {
           "id": "jscpd",
           "state": "incomplete",
-          "reason": "33 of 446 staged files are omitted from jscpd's source statistics (below the 50-token threshold or skipped by the tool) — they are not asserted analyzed, so per-file observed coverage cannot be enumerated",
+          "reason": "34 of 468 staged files are omitted from jscpd's source statistics (below the 50-token threshold or skipped by the tool) — they are not asserted analyzed, so per-file observed coverage cannot be enumerated",
           "parser": {
             "engine": "jscpd.tokenizer",
             "version": "5.2.1"
+          }
+        },
+        {
+          "id": "knip",
+          "state": "complete",
+          "parser": {
+            "engine": "knip.oxc-parser",
+            "version": "0.133.0"
           }
         },
         {
@@ -302,8 +326,8 @@
     },
     {
       "label": "representative/native",
-      "durationMs": 605,
-      "maxRSS": 516882432,
+      "durationMs": 589,
+      "maxRSS": 509804544,
       "sourceSha256": "8baeea5c0da12393124041b7c63574f0486c657a907f7f42cdbf48889e8b934b",
       "score": {
         "index": 64,
@@ -340,8 +364,8 @@
     },
     {
       "label": "representative/providers",
-      "durationMs": 1518,
-      "maxRSS": 543703040,
+      "durationMs": 1753,
+      "maxRSS": 552910848,
       "sourceSha256": "8baeea5c0da12393124041b7c63574f0486c657a907f7f42cdbf48889e8b934b",
       "score": {
         "index": 64,
@@ -390,6 +414,14 @@
           "parser": {
             "engine": "jscpd.tokenizer",
             "version": "5.2.1"
+          }
+        },
+        {
+          "id": "knip",
+          "state": "complete",
+          "parser": {
+            "engine": "knip.oxc-parser",
+            "version": "0.133.0"
           }
         },
         {

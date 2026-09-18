@@ -21,6 +21,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { auditWorkspace } from "../audit/audit.ts";
 import {
+	KNIP_TOOL_AVAILABLE,
 	PINNED,
 	providerAuditConfig,
 	putFile,
@@ -156,14 +157,14 @@ describe("renderAuditJson round-trips provider evidence through the artifact bou
 		},
 	);
 
-	test("preserves requested undelivered providers as located unsupported evidence", async () => {
-		// knip and sonarjs are the undelivered/gated set; dependency-cruiser
-		// delivered its adapter (trellis-adbf) and now runs per request.
-		const report = await audit({ knip: {}, sonarjs: {} });
+	test("preserves requested gated providers as located unsupported evidence", async () => {
+		// sonarjs is the gated set; knip delivered its adapter (trellis-8ebc)
+		// and now runs per request wherever the pinned tool is installed.
+		const report = await audit({ sonarjs: {} });
 		const loaded = await roundTrip("undelivered.json", report);
 		expect(loaded).toEqual(report);
 		expect(loaded.schemaVersion).toBe("1.1.0");
-		expect(externalAnalyses(loaded).map((entry) => entry.provider.id)).toEqual(["knip", "sonarjs"]);
+		expect(externalAnalyses(loaded).map((entry) => entry.provider.id)).toEqual(["sonarjs"]);
 		for (const entry of externalAnalyses(loaded)) {
 			expect(entry.state).toBe("unsupported");
 			expect(entry.reason).toBeDefined();
@@ -172,6 +173,45 @@ describe("renderAuditJson round-trips provider evidence through the artifact bou
 		expect(evidenceCompleteness(loaded)).toBe("incomplete");
 		expect(loaded.score.partial).toBe(false);
 	});
+
+	test.skipIf(!KNIP_TOOL_AVAILABLE)(
+		"preserves a complete knip reachability entry's candidates, assumptions and coverage",
+		async () => {
+			// No entry is declared for the clone-pair workspace, so the reachability
+			// model records its assumptions and reports both files as contextual
+			// orphan candidates — advisory evidence, never a score contribution.
+			const report = await audit({ knip: {} });
+			const loaded = await roundTrip("knip.json", report);
+			expect(loaded).toEqual(report);
+			const knip = externalAnalyses(loaded).find((entry) => entry.provider.id === "knip");
+			if (knip === undefined) throw new Error("expected the knip evidence entry");
+			expect(knip.state).toBe("complete");
+			expect(knip.provider.mode).toBe("contextual");
+			expect(knip.scoring).toBe("advisory");
+			expect(knip.observedCoverage?.analyzedFiles).toEqual(["src/clone-a.ts", "src/clone-b.ts"]);
+			for (const metric of knip.metrics ?? []) {
+				expect(metric.id.startsWith("provider.knip.")).toBe(true);
+			}
+			const assumptions = knip.metrics?.find(
+				(metric) => metric.id === "provider.knip.context.assumptions",
+			);
+			expect(assumptions?.detail).toMatchObject({
+				ids: [
+					"dependency-context-unverified",
+					"no-entries-declared",
+					"no-public-surfaces-declared",
+					"plugin-discovery-disabled",
+				],
+			});
+			expect(knip.findings?.map((finding) => finding.kind)).toEqual([
+				"provider.knip.unused-file",
+				"provider.knip.unused-file",
+			]);
+			// The native score stays untouched by the advisory evidence.
+			expect(loaded.score.partial).toBe(false);
+		},
+		20_000,
+	);
 
 	test("round-trips a contract-valid unrequested entry as an explicit absence", async () => {
 		const report = await audit({ sonarjs: {} });
