@@ -20,6 +20,9 @@ export const PINNED = new Date("2026-01-01T00:00:00.000Z");
 /** Real-binary tests run only where the pinned artifact resolved on this host. */
 export const TOOL_AVAILABLE = resolvePinnedTool("jscpd").state === "available";
 
+/** Real-binary knip tests run only where the pinned knip resolved on this host. */
+export const KNIP_TOOL_AVAILABLE = resolvePinnedTool("knip").state === "available";
+
 /** A clone fixture above every pinned threshold (105 tokens, 13 lines, CC 10). */
 export const CLONE_FN =
 	"export function alpha(a: number, b: number) {\n" +

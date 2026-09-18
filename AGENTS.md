@@ -257,8 +257,15 @@ the digest for agents working in this repo:
   participation compile into a normalized, assumption-carrying context —
   omitted entries, unresolvable declarations, missing dependency context
   and disabled plugin discovery are recorded contextual assumptions that
-  can never imply confirmed dead code — and the adapter is step 24
-  (trellis-8ebc).
+  can never imply confirmed dead code — and the delivered adapter
+  (trellis-8ebc) runs the pinned Knip (6.16.1, the repo's own check:deps
+  gate tool, no second copy) through trellis-generated configuration over
+  a staged view with the runtime plugin registry explicitly disabled,
+  differentiating orphan files, unused exports/types and unresolved
+  imports as contextual advisory candidates with stable path/symbol
+  ordering; declared public surfaces exempt their own candidates as
+  visible evidence, and an empty or partial pass is located `incomplete`
+  — never a clean pass and never a quality verdict.
 - **Compatibility.** Provider changes never fragment score history; provider
   evidence compares only on identical provider/analysis identity; older
   artifacts without provider evidence read as `unrequested`, never as

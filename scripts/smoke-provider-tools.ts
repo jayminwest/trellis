@@ -26,8 +26,12 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
 	dependencyCruiserEnvironment,
-	pinnedLauncherInvocation,
+	pinnedLauncherInvocation as dependencyCruiserLauncherInvocation,
 } from "../src/providers/dependency-cruiser/invocation.ts";
+import {
+	knipEnvironment,
+	pinnedLauncherInvocation as knipLauncherInvocation,
+} from "../src/providers/knip/invocation.ts";
 import { PINNED_TOOLS } from "../src/providers/manifest.ts";
 import { resolveExecutable, runControlledProcess } from "../src/providers/process.ts";
 import { resolvePinnedTool } from "../src/providers/resolve.ts";
@@ -92,10 +96,10 @@ export interface ProviderToolSmokeResult {
 /**
  * How one pinned tool's `--version` check is invoked: platform-binary tools
  * run their own resolved executable; pure-JavaScript distributions (the
- * dependency-cruiser launcher) run under trellis's own runtime through the
- * same controlled runner, with the pinned launcher path as an inert first
- * argument — never a PATH lookup (src/providers/dependency-cruiser/
- * invocation.ts owns the composition).
+ * dependency-cruiser and knip launchers) run under trellis's own runtime
+ * through the same controlled runner, with the pinned launcher path as an
+ * inert first argument — never a PATH lookup (each adapter's invocation
+ * module owns the composition).
  */
 function versionInvocation(entry: (typeof PINNED_TOOLS)[number]): {
 	executable: ReturnType<typeof resolveExecutable>;
@@ -110,11 +114,26 @@ function versionInvocation(entry: (typeof PINNED_TOOLS)[number]): {
 					`${resolution.reason} — ${resolution.instructions}`,
 			);
 		}
-		const invocation = pinnedLauncherInvocation(resolution);
+		const invocation = dependencyCruiserLauncherInvocation(resolution);
 		return {
 			executable: invocation.interpreter,
 			args: [invocation.launcher.path, "--version"],
 			env: dependencyCruiserEnvironment("/trellis-owned-smoke-home"),
+		};
+	}
+	if (entry.providerId === "knip") {
+		const resolution = resolvePinnedTool(entry.providerId);
+		if (resolution.state !== "available") {
+			throw new Error(
+				`pinned tool "${entry.providerId}" did not resolve on this host (${resolution.state}): ` +
+					`${resolution.reason} — ${resolution.instructions}`,
+			);
+		}
+		const invocation = knipLauncherInvocation(resolution);
+		return {
+			executable: invocation.interpreter,
+			args: [invocation.launcher.path, "--version"],
+			env: knipEnvironment("/trellis-owned-smoke-home"),
 		};
 	}
 	return { executable: resolveExecutable(entry.providerId), args: ["--version"], env: {} };

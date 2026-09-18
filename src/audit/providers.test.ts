@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { type AuditConfig, auditReportSchema, measurementPayload } from "../contract/index.ts";
 import { discoverSourceInventory, type SourceInventory } from "../discovery/index.ts";
 import { resolvePinnedTool } from "../providers/resolve.ts";
+
 import { auditWorkspace } from "./audit.ts";
 import {
 	carriedProviderIds,
@@ -61,7 +62,7 @@ describe("providerExecutionPlan", () => {
 		);
 		const expected: ProviderAnalysisPlanEntry[] = [
 			{ providerId: "jscpd", mode: "near" },
-			{ providerId: "knip" },
+			{ providerId: "knip", request: {} },
 			{ providerId: "sonarjs" },
 		];
 		expect(plan).toEqual(expected);
@@ -262,23 +263,22 @@ describe("provider failures stay located evidence with native results intact", (
 		expect(results[0]?.reason).toMatch(/measured production\/test selection is empty/);
 	});
 
-	test("a requested undelivered or gated capability is located unsupported evidence", async () => {
+	test("a requested gated capability is located unsupported evidence", async () => {
 		await seedClonePair(repo);
 		const results = await runProviderAnalyses(
 			repo,
 			await inventory(),
 			providerAuditConfig({
 				sonarjs: {},
-				knip: {},
 			}),
 		);
-		expect(results.map((result) => result.provider.id)).toEqual(["knip", "sonarjs"]);
+		expect(results.map((result) => result.provider.id)).toEqual(["sonarjs"]);
 		for (const result of results) {
 			expect(result.state).toBe("unsupported");
 			expect(result.provider.kind).toBe("external");
 		}
-		expect(results[1]?.reason).toMatch(/LGPL-3\.0-only/);
-		expect(results[1]?.reason).toMatch(/deferred by docs\/sonarjs-decision\.md/);
+		expect(results[0]?.reason).toMatch(/LGPL-3\.0-only/);
+		expect(results[0]?.reason).toMatch(/deferred by docs\/sonarjs-decision\.md/);
 	});
 
 	test("cancellation propagates: nothing is staged and the evidence says so", async () => {

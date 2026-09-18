@@ -29,7 +29,8 @@
  * **Optional provider selection (SPEC §16.4).** The repeatable
  * `--provider <id[:mode]>` flag names the supported optional evidence
  * providers (jscpd needs a match mode, e.g. `--provider jscpd:normalized`;
- * the still-undelivered ids take a bare id). Flags translate into exactly
+ * every other id takes a bare id — its richer request is declarative and
+ * lives in the providers block of trellis.yaml). Flags translate into exactly
  * the declarative `providers` block the core configuration accepts — no
  * CLI-side planning, execution or policy evaluation — and apply **per
  * provider** over the configuration file's block: a provider named by a

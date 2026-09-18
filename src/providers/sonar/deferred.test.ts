@@ -124,7 +124,11 @@ describe("sonarjs deferred capability", () => {
 		expect(status?.requestState).toBe("unsupported");
 		// No pinned tool exists to resolve and no manifest entry claims one.
 		expect(pinnedTool("sonarjs")).toBeUndefined();
-		expect(PINNED_TOOLS.map((tool) => tool.providerId)).toEqual(["jscpd", "dependency-cruiser"]);
+		expect(PINNED_TOOLS.map((tool) => tool.providerId)).toEqual([
+			"jscpd",
+			"dependency-cruiser",
+			"knip",
+		]);
 		// No Sonar dependency ships in this repository (no unapproved
 		// redistribution — docs/sonarjs-decision.md, prerequisite trellis-7f5d).
 		const pkg = JSON.parse(readFileSync(PACKAGE_JSON, "utf8")) as {

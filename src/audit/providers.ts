@@ -18,11 +18,13 @@
  *   native-only pipeline. Only an explicitly requested provider stages a
  *   view or runs anything.
  * - **Delivered providers run per request.** jscpd (the delivered adapter,
- *   `src/providers/jscpd/`) and dependency-cruiser (the delivered adapter,
+ *   `src/providers/jscpd/`), dependency-cruiser (the delivered adapter,
  *   `src/providers/dependency-cruiser/`, evaluating the declarative
- *   architecture-policy subset over the same measured selection) stage the
- *   audit's measured production/test selection through the owned-scratch
- *   lifecycle and resolve per run.
+ *   architecture-policy subset over the same measured selection) and knip
+ *   (the delivered adapter, `src/providers/knip/`, evaluating the prepared
+ *   declarative reachability context over the same measured selection)
+ *   stage the audit's measured production/test selection through the
+ *   owned-scratch lifecycle and resolve per run.
  * - **Undelivered or gated providers resolve to located `unsupported`
  *   evidence** with the capability table's recorded reason
  *   (`src/providers/capabilities.ts` — including the deferred SonarJS
@@ -43,11 +45,13 @@ import type {
 	AuditConfig,
 	CloneMatchMode,
 	DependencyCruiserProviderRequest,
+	KnipProviderRequest,
 } from "../contract/index.ts";
 import type { SourceInventory } from "../discovery/index.ts";
 import { providerCapabilityStatus } from "../providers/capabilities.ts";
 import { runDependencyCruiserAnalysis } from "../providers/dependency-cruiser/analysis.ts";
 import { runJscpdAnalysis } from "../providers/jscpd/analysis.ts";
+import { runKnipAnalysis } from "../providers/knip/analysis.ts";
 import type { PinnedToolResolveOptions } from "../providers/resolve.ts";
 import type { StagedSelectionFile } from "../providers/staging.ts";
 
@@ -58,7 +62,8 @@ export type ProviderAnalysisPlanEntry =
 			readonly providerId: "dependency-cruiser";
 			readonly request: DependencyCruiserProviderRequest;
 	  }
-	| { readonly providerId: "knip" | "sonarjs" };
+	| { readonly providerId: "knip"; readonly request: KnipProviderRequest }
+	| { readonly providerId: "sonarjs" };
 
 /**
  * Translate the declarative `providers` block into the deterministic
@@ -76,8 +81,11 @@ export function providerExecutionPlan(config: AuditConfig): readonly ProviderAna
 	if (providers["dependency-cruiser"] !== undefined) {
 		entries.push({ providerId: "dependency-cruiser", request: providers["dependency-cruiser"] });
 	}
-	for (const providerId of ["knip", "sonarjs"] as const) {
-		if (providers[providerId] !== undefined) entries.push({ providerId });
+	if (providers.knip !== undefined) {
+		entries.push({ providerId: "knip", request: providers.knip });
+	}
+	if (providers.sonarjs !== undefined) {
+		entries.push({ providerId: "sonarjs" });
 	}
 	return entries.sort((a, b) =>
 		a.providerId < b.providerId ? -1 : a.providerId > b.providerId ? 1 : 0,
@@ -118,7 +126,7 @@ export function measuredSelection(source: SourceInventory): StagedSelectionFile[
  * while the entry stands; `mode` records that the request names the
  * capability set, not a delivered analysis mode.
  */
-export function undeliveredProviderEvidence(providerId: "knip" | "sonarjs"): AnalysisResult {
+export function undeliveredProviderEvidence(providerId: "sonarjs"): AnalysisResult {
 	const status = providerCapabilityStatus(providerId);
 	if (status === undefined) {
 		throw new Error(
@@ -168,6 +176,14 @@ async function runPlannedEntry(
 	}
 	if (entry.providerId === "dependency-cruiser") {
 		return await runDependencyCruiserAnalysis(
+			root,
+			measuredSelection(source),
+			entry.request,
+			deliveredProviderOptions(options),
+		);
+	}
+	if (entry.providerId === "knip") {
+		return await runKnipAnalysis(
 			root,
 			measuredSelection(source),
 			entry.request,

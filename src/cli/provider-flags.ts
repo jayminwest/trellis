@@ -10,7 +10,9 @@
  * capability table (`src/providers/capabilities.ts`) and the core selection
  * schema has the final word, so the flag surface and the core can never
  * drift apart. Bad selections are actionable operational errors (exit 1,
- * SPEC §16.3) raised before any measurement runs.
+ * SPEC §16.3) raised before any measurement runs. The flag surface carries
+ * no per-provider request data: jscpd selects its match mode and every other
+ * provider's richer request lives in the providers block of trellis.yaml.
  */
 import { CLONE_MATCH_MODES, type CloneMatchMode } from "../contract/clone-evidence.ts";
 import { type ProviderSelection, providerSelectionSchema } from "../contract/config.ts";
@@ -60,8 +62,9 @@ function isMatchMode(value: string): value is CloneMatchMode {
 /**
  * Parse one `--provider` value into its request data, rejecting unknown ids
  * (the closed vocabulary of the core capability table), a missing jscpd
- * match mode and options on still-undelivered providers — actionable
- * operational errors (exit 1, SPEC §16.3) raised before any measurement.
+ * match mode and flag options on providers whose requests are declarative —
+ * actionable operational errors (exit 1, SPEC §16.3) raised before any
+ * measurement runs.
  */
 function parseProviderFlag(raw: string): ProviderFlagEntry {
 	if (raw.length === 0) {
@@ -79,13 +82,15 @@ function parseProviderFlag(raw: string): ProviderFlagEntry {
 		);
 	}
 	if (id !== "jscpd") {
-		// The still-undelivered or gated ids (capability table, §16.7): valid
-		// requests carrying no options — they resolve to located `unsupported`
-		// evidence with the recorded reason, never a fabricated clean result.
+		// The non-jscpd request shapes are declarative data (architecture rules,
+		// reachability entries and surfaces, the gated SonarJS capability): the
+		// flag surface carries no options for them — richer per-provider
+		// requests live in the providers block of trellis.yaml (SPEC §16.4).
 		if (option !== undefined) {
 			throw new CliError(
-				`provider "${id}" takes no selection options yet — no adapter is delivered; ` +
-					`pass --provider ${id}`,
+				`provider "${id}" takes no flag options — its request is declarative; pass ` +
+					`--provider ${id} and declare richer requests in the providers block of ` +
+					"trellis.yaml (SPEC §16.4)",
 			);
 		}
 		return { id };

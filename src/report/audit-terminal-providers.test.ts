@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { auditWorkspace } from "../audit/audit.ts";
 import {
 	CLONE_FN,
+	KNIP_TOOL_AVAILABLE,
 	PINNED,
 	providerAuditConfig,
 	putFile,
@@ -212,25 +213,35 @@ describe("renderAuditTerminal with missing or partial provider evidence", () => 
 		},
 	);
 
-	test("renders requested undelivered providers as located unsupported evidence, never a clean zero", async () => {
+	test("renders requested gated providers as located unsupported evidence, never a clean zero", async () => {
 		await seedClonePair(repo);
-		// knip and sonarjs are the undelivered/gated set; dependency-cruiser
-		// delivered its adapter (trellis-adbf) and now runs per request.
-		const output = await render({ knip: {}, sonarjs: {} });
+		// sonarjs is the gated set; knip delivered its adapter (trellis-8ebc)
+		// and now runs per request wherever the pinned tool is installed.
+		const output = await render({ sonarjs: {} });
 		expectPlain(output);
 		expect(output).toContain(SECTION_TITLE);
 		expect(output).toContain("evidence: incomplete");
-		const first = output.indexOf("knip");
-		const second = output.indexOf("sonarjs");
-		expect(first).toBeGreaterThan(-1);
-		expect(first).toBeLessThan(second);
-		for (const id of ["knip", "sonarjs"]) {
-			expect(output).toMatch(new RegExp(`${id} +unsupported +mode capability-request`));
-			expect(output).toMatch(/reason: /);
-		}
-		expect(output).toMatch(/reason: .*LGPL-3\.0-only/);
+		expect(output).toMatch(/sonarjs +unsupported +mode capability-request/);
+		expect(output).toMatch(/reason: .*deferred by docs\/sonarjs-decision\.md/);
 		expect(headline(output)).not.toContain("PARTIAL");
 	});
+
+	test.skipIf(!KNIP_TOOL_AVAILABLE)(
+		"renders knip reachability evidence with its candidates and assumptions, unscored",
+		async () => {
+			await seedClonePair(repo);
+			const output = await render({ knip: {} });
+			expectPlain(output);
+			expect(output).toContain(SECTION_TITLE);
+			expect(output).toMatch(/knip +complete +mode contextual/);
+			// Contextual candidates render as candidates, never defects.
+			expect(output).toContain("unreferenced file candidate 'src/clone-a.ts'");
+			expect(output).toContain("never confirmed dead code");
+			expect(output).toContain("provider.knip.context.assumptions = 4");
+			expect(headline(output)).not.toContain("PARTIAL");
+		},
+		20_000,
+	);
 
 	test("renders a provider that cannot run over an empty selection as unsupported with its reason", async () => {
 		await putFile(repo, "README.md", "no typescript here\n");

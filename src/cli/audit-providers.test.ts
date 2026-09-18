@@ -19,13 +19,13 @@ import { seedClonePair, TOOL_AVAILABLE } from "../audit/provider-fixtures.ts";
  *
  * - flag translation into the declarative `providers` block the core accepts,
  *   with fail-fast rejection of unknown ids, duplicate/conflicting
- *   selections, a missing jscpd match mode and options on undelivered
- *   providers (operational exit 1, SPEC §16.3);
+ *   selections, a missing jscpd match mode and flag options on providers
+ *   whose requests are declarative (operational exit 1, SPEC §16.3);
  * - per-provider precedence: a flagged provider overrides its `trellis.yaml`
  *   entry, unflagged providers keep theirs;
  * - the honest evidence states through the real CLI — `complete` for a
  *   configured jscpd (where the pinned tool is installed), `unsupported`
- *   for undelivered/gated ids, `unavailable` for a CLI install whose
+ *   for gated ids, `unavailable` for a CLI install whose
  *   operator never prepared the pinned tool (a real copied install with the
  *   tool absent, so resolution fails exactly as it would in the wild);
  * - the exit-code contract: a required provider that cannot run is policy
@@ -175,9 +175,13 @@ describe("trellis audit --provider (provider selection, SPEC §16.4)", () => {
 			});
 			expect(run.code).toBe(0);
 			const report = parseReport(run.stdout);
-			// The flag wins for jscpd; the file's knip entry is kept.
+			// The flag wins for jscpd; the file's knip entry is kept and its
+			// adapter runs per request (no entry declared → contextual orphan
+			// candidates over an undefined reachability model).
 			expect(providerEntry(report, "jscpd").provider.mode).toBe("near");
-			expect(providerEntry(report, "knip").state).toBe("unsupported");
+			const knip = providerEntry(report, "knip");
+			expect(knip.state).toBe("complete");
+			expect(knip.provider.mode).toBe("contextual");
 		},
 		20_000,
 	);
@@ -206,7 +210,7 @@ describe("trellis audit --provider (provider selection, SPEC §16.4)", () => {
 			},
 			{
 				args: ["--provider", "sonarjs:rules"],
-				stderrContains: 'provider "sonarjs" takes no selection options yet',
+				stderrContains: 'provider "sonarjs" takes no flag options',
 			},
 		];
 		for (const { args, stderrContains } of cases) {
@@ -217,14 +221,7 @@ describe("trellis audit --provider (provider selection, SPEC §16.4)", () => {
 		}
 	}, 20_000);
 
-	test("requests undelivered providers as located unsupported evidence (exit 0)", async () => {
-		const knip = await runCli(["audit", dir, "--json", "--quiet", "--provider", "knip"], {
-			TRELLIS_DB: dbPath,
-		});
-		expect(knip.code).toBe(0);
-		const knipEntry = providerEntry(parseReport(knip.stdout), "knip");
-		expect(knipEntry.state).toBe("unsupported");
-		expect(knipEntry.reason).toContain("no adapter delivered");
+	test("requests gated providers as located unsupported evidence (exit 0)", async () => {
 		const sonar = await runCli(["audit", dir, "--json", "--quiet", "--provider", "sonarjs"], {
 			TRELLIS_DB: dbPath,
 		});
@@ -236,6 +233,32 @@ describe("trellis audit --provider (provider selection, SPEC §16.4)", () => {
 		// stays machine-clean JSON) and never on stdout outside the report.
 		expect(sonar.stderr).toBe("");
 	}, 20_000);
+
+	test.skipIf(!TOOL_AVAILABLE)(
+		"requests the delivered knip adapter as advisory evidence without touching the score (exit 0)",
+		async () => {
+			const nativeRun = await runCli(["audit", dir, "--json", "--quiet"], {
+				TRELLIS_DB: dbPath,
+			});
+			expect(nativeRun.code).toBe(0);
+			const knip = await runCli(["audit", dir, "--json", "--quiet", "--provider", "knip"], {
+				TRELLIS_DB: dbPath,
+			});
+			expect(knip.code).toBe(0);
+			const report = parseReport(knip.stdout);
+			const knipEntry = providerEntry(report, "knip");
+			expect(knipEntry.state).toBe("complete");
+			expect(knipEntry.provider.mode).toBe("contextual");
+			expect(knipEntry.metrics?.map((metric) => metric.id)).toContain(
+				"provider.knip.candidates.total",
+			);
+			// Advisory evidence never touches the native score or the native metrics.
+			expect(report.score.index).toBe(parseReport(nativeRun.stdout).score.index);
+			expect(Object.keys(report.metrics).some((id) => id.startsWith("provider."))).toBe(false);
+			expect(knip.stderr).toBe("");
+		},
+		20_000,
+	);
 
 	test("a missing pinned tool is located unavailable evidence, never an abort", async () => {
 		install = installCliWithoutPinnedTool();
