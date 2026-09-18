@@ -14,6 +14,7 @@ import { registerAudit } from "./audit.ts";
 import { registerCompare } from "./compare.ts";
 import { registerDrift } from "./drift.ts";
 import { registerFleet } from "./fleet.ts";
+import { registerGuide } from "./guide.ts";
 import {
 	CliError,
 	EXIT,
@@ -42,6 +43,7 @@ export function buildProgram(): Command {
 	registerCompare(program);
 	registerDrift(program);
 	registerFleet(program);
+	registerGuide(program);
 	registerReport(program);
 	registerRubric(program);
 	registerStandards(program);

@@ -94,6 +94,22 @@ Already have both reports? Compare them without another audit:
 trellis compare /tmp/before.json /tmp/after.json
 ```
 
+## Guide an agent through cleanup
+
+Ask your agent: **Run `trellis guide cleanup` and follow it until no clearly
+justified improvements remain.** The bundled guide describes the cleanup workflow;
+repository-specific constraints stay in your repository instructions.
+
+```bash
+trellis guide cleanup
+```
+
+Reading the guide writes nothing and starts no audit or agent. The same canonical
+content is available as `guide("cleanup")` from `@os-eco/trellis-cli/client`, or
+as `{ name, content }` with `trellis guide cleanup --json`. Markdown output uses
+`--md`. The maintained source is [src/guides/cleanup.ts](src/guides/cleanup.ts);
+workflow documentation should reference it rather than copy its instructions.
+
 ## Set your project's limits
 
 Add an optional `trellis.yaml` to declare the conditions that fail an audit:

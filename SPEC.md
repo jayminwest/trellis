@@ -918,7 +918,17 @@ trellis compare <a.json> <b.json>   # artifact comparison without an audit
 trellis fleet                  # optional multi-repo run (§11)
 trellis report                 # history views (only with --history data)
 trellis standards              # canonical drift (separate capability, §11)
+trellis guide cleanup          # bundled instructions only; no audit or agent execution
 ```
+
+The task-specific cleanup workflow is canonical in `src/guides/cleanup.ts`.
+`getGuide` in `src/guides/index.ts`, the thin CLI `guide <name>`, and SDK
+`guide(name)` share that content. Reading guidance needs no target and performs
+no workspace I/O or command execution. Unknown names fail with supported names;
+the CLI returns exit 1. Human/Markdown output is the guide text; JSON and the SDK
+return `{ name, content }`. This is separate from general session orientation.
+Plan `pl-d028` / `trellis-1e2d` updates this source as additional cleanup
+capabilities land instead of maintaining another workflow copy.
 
 - Terminal output shows headline index + completeness, raw metric summaries,
   score contributions, ranked hotspots, and safeguard evidence; JSON carries

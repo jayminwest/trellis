@@ -74,9 +74,12 @@ import {
 	type FleetRunOptions,
 	runFleetTargets,
 } from "../fleet/index.ts"; // Mirrors src/fleet
+import { type Guide, getGuide } from "../guides/index.ts"; // Mirrors src/guides
 import { buildReport, type HistoryReport, type ReportRunOptions } from "../history/index.ts"; // Mirrors src/history
 import { type DriftOptions, type DriftReport, driftRepo } from "../standards/index.ts"; // Mirrors src/standards
 
+// Mirrors src/guides: response shape and discoverable names/errors are core-owned.
+export { GUIDE_NAMES, type Guide, GuideError } from "../guides/index.ts";
 /**
  * Re-exported core report types — the SDK's response shapes (SPEC §6.4, §9) —
  * plus the provider/evidence contract types (SPEC §16, trellis-ad4b) so a
@@ -109,6 +112,11 @@ export type {
 };
 /** Re-exported core services and the exit-code rules (SPEC §9, §12), so a script applies the CLI's rule. */
 export { AuditRunError, assessFleet, assessPolicy };
+
+/** Read bundled task instructions. Identical to `trellis guide <name>`; no workspace I/O. */
+export function guide(name: string): Guide {
+	return getGuide(name);
+}
 
 /** Request for {@link audit}. Mirrors src/audit {@link WorkspaceAuditOptions}. */
 export type AuditRequest = WorkspaceAuditOptions;

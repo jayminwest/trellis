@@ -9,6 +9,9 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+- Added `trellis guide cleanup` and SDK `guide("cleanup")` with one bundled,
+  read-only workflow for behavior-preserving cleanup (trellis-b6f9).
+
 - Cross-provider regressions cover unchanged native scores, independent evidence
   compatibility, combined CLI/SDK/fleet behavior and SQLite history.
 - Verified dependency-cruiser 18.3.1 support on macOS ARM64, with shared
