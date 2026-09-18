@@ -253,16 +253,28 @@ describe("runJscpdAdapter failure regressions (staged lifecycle)", () => {
 				await writeFile(join(root, "a.ts"), PAIR_FILES["a.ts"] ?? "");
 				await writeFile(join(root, "b.ts"), PAIR_FILES["b.ts"] ?? "");
 				let scratchDir = "";
+				let lifecycleSignal: AbortSignal | undefined;
 				const run = await withStagedWorkspaceView(
 					{ root, files: productionSelection(["a.ts", "b.ts"]) },
-					async (view) => {
+					async (view, signal) => {
 						scratchDir = view.scratchDir;
-						return runJscpdAdapter(view, { modes: ["exact"] });
+						lifecycleSignal = signal;
+						// The adapter's settlement time is host-dependent — a transient
+						// spawn failure can even settle it inside the first tick — so the
+						// callback also awaits the lifecycle's abort handle: it can only
+						// resolve once the limit is hit, so the lifecycle outcome is
+						// deterministically the wall-time limit, never a clean result.
+						const adapter = runJscpdAdapter(view, { modes: ["exact"], signal });
+						await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve()));
+						return adapter;
 					},
-					{ timeoutMs: 1 },
+					{ timeoutMs: 250 },
 				);
 				// The measurement never scores as clean: the lifecycle stops waiting…
 				expect(run.kind).toBe("timeout");
+				// …the handed-off handle was aborted on that exit path, stopping the
+				// real provider process group and not just the waiting…
+				expect(lifecycleSignal?.aborted).toBe(true);
 				// …and the owned scratch is cleaned on the timeout exit path.
 				expect(run.cleanup).toEqual({ status: "cleaned" });
 				expect(existsSync(scratchDir)).toBe(false);

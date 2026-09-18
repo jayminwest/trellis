@@ -84,6 +84,50 @@ describe("withStagedWorkspaceView", () => {
 		}
 	});
 
+	test("aborts the handed-off handle on the wall-time limit", async () => {
+		const { root, files } = await makeRequest();
+		try {
+			let observed: AbortSignal | undefined;
+			const outcome = await withStagedWorkspaceView(
+				{ root, files },
+				async (_view, signal) => {
+					observed = signal;
+					// Only the lifecycle's limit can settle this callback.
+					await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve()));
+					return "late";
+				},
+				{ timeoutMs: 150 },
+			);
+			expect(outcome).toEqual({ kind: "timeout", cleanup: { status: "cleaned" } });
+			expect(observed?.aborted).toBe(true);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	test("aborts the handed-off handle on caller cancellation", async () => {
+		const { root, files } = await makeRequest();
+		try {
+			const controller = new AbortController();
+			let observed: AbortSignal | undefined;
+			const pending = withStagedWorkspaceView(
+				{ root, files },
+				async (_view, signal) => {
+					observed = signal;
+					await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve()));
+					return "late";
+				},
+				{ signal: controller.signal },
+			);
+			setTimeout(() => controller.abort(), 100);
+			const outcome = await pending;
+			expect(outcome).toEqual({ kind: "cancelled", cleanup: { status: "cleaned" } });
+			expect(observed?.aborted).toBe(true);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	test("completes when the adapter finishes within the limit", async () => {
 		const { root, files } = await makeRequest();
 		try {
