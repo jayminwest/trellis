@@ -171,3 +171,37 @@ commit `aeb92c9a0f54ec18a11b2522459688728abf53e2` is reference material only;
 no source has been ported here. Any adapted source must retain its MIT notice
 in a checked-in `docs/research/native-duplication/NOTICE` and a source-file
 provenance comment before it can be accepted.
+
+## Index implementation (step 6)
+
+`duplication-index-input.ts` ranks the exact integer alphabet and places a unique
+positive terminator below every token rank. Zero is reserved for an out-of-range
+suffix rank, so an input token kind of zero remains ordinary content. File
+start/end/owner arrays retain source mapping, including empty files. Stream and
+token totals are checked before combined allocation. The alphabet map reserves
+two numeric cells per entry; its sorted key buffer is separately reserved.
+
+`duplication-suffix.ts` uses original iterative prefix doubling with stable
+counting sort, followed by Kasai LCP construction. This is O(n log n) worst-case
+index work and O(n) live numeric storage, avoiding recursive induced sorting and
+comparison-sorting the suffixes. Counting passes explicitly charge every slot;
+rank-pair comparisons and token comparisons are charged too. Prefix doubling
+reuses four scratch arrays, releasing their reservations before LCP scratch is
+allocated. Distinct terminators prevent any two suffixes from sharing a prefix
+across a file boundary. No Fallow implementation was copied or adapted.
+
+`duplication-work.ts` owns the frozen ceilings, per-phase/total counters, numeric
+cell reservations, cumulative output reservations and structured limit errors.
+Allocation zero-initialization is charged in advance; subsequent array passes
+charge their visits separately. Ordinary per-slot loops and sort comparisons
+check cancellation through this guard within 1,024 units. Phase boundaries also
+check cancellation. Only its structured limit error may later become incomplete
+evidence; unexpected errors remain operational errors. These modules are not
+imported by the production detector in step 6.
+
+The colocated tests compare permutation/order and every LCP against exhaustive
+suffix comparisons for 250 fixed-seed multi-file inputs, plus empty, singleton,
+periodic, repeated-kind and equal-prefix controls. They verify zero-valued input
+kinds and unique sentinel boundaries, malformed kinds, before-allocation size
+failure, deterministic phase-work/allocation failure, cumulative output bounds
+and cancellation before entry and during charged work.
