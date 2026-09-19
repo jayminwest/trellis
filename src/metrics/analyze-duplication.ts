@@ -44,6 +44,7 @@ import {
 } from "./duplication.ts";
 import { measureCandidateScope } from "./duplication-candidate.ts";
 import { roundTo } from "./erosion.ts";
+import { cloneLineOverlap } from "./line-overlap.ts";
 
 /** The source sets duplication measurement covers (SPEC §3.1: scored sets, separately). */
 const MEASURED_SETS = ["production", "test"] as const;
@@ -197,6 +198,7 @@ function groupFindings(scope: DuplicationScope): Finding[] {
 			summary: `${group.members.length} copies of ${group.tokenCount} normalized tokens`,
 			facts: {
 				groupId: group.id,
+				lineOverlap: cloneLineOverlap(group.members),
 				sourceSet: scope.sourceSet,
 				memberCount: group.members.length,
 				tokenCount: group.tokenCount,

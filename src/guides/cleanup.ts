@@ -75,7 +75,11 @@ using the result as evidence. Respect compatibility warnings and scope caveats.
 Provider evidence has its own compatibility and never changes the native score.
 
 A lower 0–100 sloppiness index is a measurement, not proof of design improvement
-or a percentage of bad code. Review raw metrics and changed findings alongside
+or a percentage of bad code. Check whether the change reduces duplication of
+responsibility or makes behavior easier to follow. For clone groups with line
+overlap, review the repeated structure before treating matches as separate
+implementations to consolidate; shared lines do not prove token overlap.
+Review raw metrics and changed findings alongside
 the diff, tests, responsibilities, dependency direction, and readability. Inspect
 moved code and extracted helpers even if they fall below hotspot thresholds.
 New/resolved finding pairs can reflect ambiguous matching rather than real debt

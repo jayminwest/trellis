@@ -15,6 +15,7 @@ import {
 	sortedMetrics,
 } from "./audit-format.ts";
 import { providerAnalysisLines } from "./audit-terminal-providers.ts";
+import { cloneReviewContext } from "./clone-context.ts";
 
 /** Options for {@link renderAuditTerminal}. */
 export interface AuditTerminalOptions {
@@ -107,7 +108,7 @@ function boundedFindingLines(
 		header,
 		...findings.shown.map(
 			(finding) =>
-				`  ${pad(finding.kind, kindWidth)}  ${findingLocation(finding)} · ${finding.summary}`,
+				`  ${pad(finding.kind, kindWidth)}  ${findingLocation(finding)} · ${finding.summary}${cloneReviewContext(finding)}`,
 		),
 	];
 }

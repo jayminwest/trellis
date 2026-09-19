@@ -14,6 +14,7 @@ import {
 	sortedMetrics,
 } from "./audit-format.ts";
 import { providerAnalysesSection } from "./audit-markdown-providers.ts";
+import { cloneReviewContext } from "./clone-context.ts";
 
 /** Options for {@link renderAuditMarkdown}. */
 export interface AuditMarkdownOptions {
@@ -34,7 +35,7 @@ function cell(text: string): string {
 function findingRows(findings: readonly Finding[]): string[] {
 	return findings.map(
 		(finding) =>
-			`| ${cell(finding.kind)} | ${cell(findingLocation(finding))} | ${cell(finding.summary)} |`,
+			`| ${cell(finding.kind)} | ${cell(findingLocation(finding))} | ${cell(finding.summary + cloneReviewContext(finding))} |`,
 	);
 }
 

@@ -9,6 +9,12 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+- Native clone findings now include versioned same-file line-overlap facts,
+  affected member indexes and shared spans. Terminal and Markdown reports
+  flag overlapping matches for review; older reports retain unknown overlap
+  status. Cleanup guidance emphasizes responsibility and readability over score
+  reduction alone. Clone findings, metrics and scoring stay unchanged (trellis-8a72).
+
 - Simplified the package to the deterministic audit, its reports and opt-in
   history. Removed unused analysis paths and refreshed contributor, CLI and
   architecture guidance (trellis-ddf5, trellis-46db, trellis-57b1).

@@ -337,6 +337,20 @@ Semantics fixed by this decision:
   pairwise merging. Within-file repeats count as clones.
 - **Ranges** are token-exact maximal runs; a reported line range may include
   a partial boundary line (both jscpd engines exhibit the same overhang).
+- **Line-overlap review context** (trellis-8a72): native clone findings add
+  `facts.lineOverlap = { version: 1, overlaps, memberIndexes, spans }`.
+  Zero-based indexes identify affected entries in the existing `facts.members`
+  array; spans are the sorted union of inclusive `{ path, startLine, endLine }`
+  ranges covered by at least two members of this group in the same file.
+  Production/test groups remain separate. This is line overlap, not proof of
+  token overlap, semantic duplication, or a safe extraction opportunity.
+  The additive, independently versioned facts extension fits schema 1.2.0's
+  existing open facts map; no report, analyzer, or scoring version changes.
+  Older 1.0.0/1.1.0/1.2.0 artifacts remain readable; missing or unrecognized
+  overlap metadata means unknown, never false. It does not participate in
+  finding identity, metrics, scoring or comparison compatibility. Evidence
+  describes only emitted members: parse-incomplete scopes stay incomplete;
+  exhausted scopes emit no groups and make no overlap claim.
 - **Overlap union**: the numerator is the union of code-classified lines
   (§5.1 line rules) covered by any member range, counted once per file —
   overlapping or nested groups never double-count; the denominator is the
