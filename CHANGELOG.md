@@ -29,6 +29,11 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   readable; analyzer/resource transitions require a fresh baseline. No provider
   promotion, runtime dependency, model, network or default write is introduced.
 
+- Combined scoped-hotspot and forty-copy clone acceptance now covers saved
+  baselines, policy, CLI/SDK, fleet and SQLite without changing native scores
+  on formerly complete inputs (trellis-12c1). Evidence:
+  `docs/scoped-identity-duplication-acceptance.md`.
+
 - Added `trellis guide cleanup` and SDK `guide("cleanup")` with one bundled,
   read-only workflow for behavior-preserving cleanup (trellis-b6f9).
 

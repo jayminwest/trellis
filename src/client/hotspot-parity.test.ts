@@ -10,6 +10,7 @@ import {
 	type Finding,
 	measurementPayload,
 } from "../contract/index.ts";
+import { repeatedSource } from "../metrics/tests/duplication-fixtures.ts";
 import { openStore, repoIdentity, storedAuditReport } from "../store/index.ts";
 import * as client from "./index.ts";
 
@@ -94,13 +95,48 @@ async function assertFleetParity(
 	expect(measurementPayload(cliEntry.report)).toEqual(measurementPayload(sdk.report));
 }
 
+async function prepareCopies(count: number): Promise<string[]> {
+	const names: string[] = [];
+	for (let i = 1; i < count; i++) {
+		const name = `copy${i}.ts`;
+		names.push(name);
+		await writeFile(join(root, name), repeatedSource(`copy${i}`));
+	}
+	return names;
+}
+
+function assertCopies(report: AuditReport, count: number): void {
+	if (count === 0) return;
+	expect(report.metrics["duplication.groups.production"]).toMatchObject({
+		state: "complete",
+		value: 1,
+	});
+	expect(report.metrics["duplication.duplicated-lines.production"]?.value).toBe(1080);
+	expect(report.findings.find((f) => f.kind === "duplication.clone-group")?.facts).toMatchObject({
+		memberCount: count,
+		tokenCount: 229,
+	});
+	expect(report.score.partial).toBe(false);
+}
+
+const REPETITIVE = repeatedSource("copy0");
+
 const CONTROLS = [
+	{
+		name: "forty-copy corpus with stable hotspot identities",
+		before: REPETITIVE,
+		after: `// unchanged functions below\n${REPETITIVE}`,
+		fails: false,
+		counts: [0, 0, 40],
+		copies: 40,
+	},
 	{
 		name: "comment-only shift",
 		before: named("alpha") + named("beta"),
 		after: `// shift\n${named("alpha")}${named("beta")}`,
 		fails: false,
 		counts: [0, 0, 2],
+		copies: 0,
 	},
 	{
 		name: "added gamma",
@@ -108,6 +144,7 @@ const CONTROLS = [
 		after: named("alpha") + named("beta") + named("gamma"),
 		fails: true,
 		counts: [1, 0, 2],
+		copies: 0,
 	},
 	{
 		name: "replacement beta",
@@ -115,6 +152,7 @@ const CONTROLS = [
 		after: named("beta"),
 		fails: true,
 		counts: [1, 1, 0],
+		copies: 0,
 	},
 	{
 		name: "added B.run",
@@ -122,17 +160,21 @@ const CONTROLS = [
 		after: method("A") + method("B"),
 		fails: true,
 		counts: [1, 0, 1],
+		copies: 0,
 	},
 ] as const;
 
 describe("scoped hotspot surface acceptance", () => {
 	for (const control of CONTROLS) {
 		test(`agrees on ${control.name} across saved comparison, CLI, SDK and fleet`, async () => {
+			const extraFiles = await prepareCopies(control.copies);
 			const baseline = await seed(control.before);
 			await writeFile(baselinePath, JSON.stringify(baseline.report));
 			await writeFile(join(root, "a.ts"), control.after);
 			const sdk = await client.audit(root, { baselinePath });
 			expect(sdk.policy.failed).toBe(control.fails);
+			assertCopies(sdk.report, control.copies);
+
 			await writeFile(currentPath, JSON.stringify(sdk.report));
 			expect(await loadReportArtifact(baselinePath)).toEqual(baseline.report);
 			expect(await loadReportArtifact(currentPath)).toEqual(sdk.report);
@@ -176,7 +218,7 @@ describe("scoped hotspot surface acceptance", () => {
 			}
 			// Stateless surfaces have not created a DB, installed dependencies or touched the source.
 			expect(existsSync(db)).toBe(false);
-			expect((await readdir(root)).sort()).toEqual(["a.ts", "trellis.yaml"]);
+			expect((await readdir(root)).sort()).toEqual(["a.ts", ...extraFiles, "trellis.yaml"].sort());
 			expect(await readFile(join(root, "a.ts"), "utf8")).toBe(control.after);
 			expect(await readFile(configPath, "utf8")).toBe(POLICY);
 

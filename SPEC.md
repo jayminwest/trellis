@@ -386,6 +386,8 @@ semantics. Report schema stays 1.2.0 and scoring stays 0.2.0-provisional. Older
 artifacts remain readable; crossing analyzer/resource semantics requires a fresh
 baseline. Formerly complete metrics/scores retain parity; newly complete
 measurements are improved observability, not source cleanup.
+[Combined release acceptance](docs/scoped-identity-duplication-acceptance.md) maps
+all eleven plan steps to executed identity, corpus, surface and offline checks.
 
 Historical Evaluation record (evidence; directional measurements, not benchmarks):
 
