@@ -1,6 +1,6 @@
 {
 	"name": "@os-eco/trellis-cli",
-	"version": "0.2.3",
+	"version": "0.3.0",
 	"description": "Offline TypeScript structural audit with a native 0–100 sloppiness index and optional unscored provider evidence",
 	"type": "module",
 	"bin": {

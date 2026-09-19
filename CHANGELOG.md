@@ -9,16 +9,15 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-09-19
+
+### Added
+
 - Native clone findings now include versioned same-file line-overlap facts,
   affected member indexes and shared spans. Terminal and Markdown reports
   flag overlapping matches for review; older reports retain unknown overlap
   status. Cleanup guidance emphasizes responsibility and readability over score
   reduction alone. Clone findings, metrics and scoring stay unchanged (trellis-8a72).
-
-- Simplified the package to the deterministic audit, its reports and opt-in
-  history. Removed unused analysis paths and refreshed contributor, CLI and
-  architecture guidance (trellis-ddf5, trellis-46db, trellis-57b1).
-
 - Native hotspots now carry scoped function identity or an explicit ambiguity
   reason, derived from the shared AST (trellis-3d6b). Analyzer 0.2.2 and schema
   1.2.0 preserve native metrics and scoring. Historical 1.0.0/1.1.0 reports
@@ -28,25 +27,12 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   classes; ambiguous identities retain all new/resolved occurrences (trellis-7cfd).
   Saved-baseline policy, CLI/SDK, fleet and SQLite regressions verify this
   identity milestone without changing native scores (trellis-61d7).
-
-- Analyzer **0.2.3** promotes the parity-validated SA-IS/LCP native duplication
-  engine (trellis-e55c). Forty-copy, pinned Hono and Zod duplication now complete
-  within frozen work/time/RSS bounds. Token normalization, 100-token/3-line
-  thresholds, group/line semantics, schema 1.2.0 and the scoring formula remain
-  unchanged. `maxMatchWork` now explicitly counts whole-pipeline work (v2);
-  exhaustion is located and unmeasured, never fabricated zero debt. The old
-  quadratic engine exists only in test references. Historical artifacts remain
-  readable; analyzer/resource transitions require a fresh baseline. No provider
-  promotion, runtime dependency, model, network or default write is introduced.
-
 - Combined scoped-hotspot and forty-copy clone acceptance now covers saved
   baselines, policy, CLI/SDK, fleet and SQLite without changing native scores
   on formerly complete inputs (trellis-12c1). Evidence:
   `docs/scoped-identity-duplication-acceptance.md`.
-
 - Added `trellis guide cleanup` and SDK `guide("cleanup")` with one bundled,
   read-only workflow for behavior-preserving cleanup (trellis-b6f9).
-
 - Cross-provider regressions cover unchanged native scores, independent evidence
   compatibility, combined CLI/SDK/fleet behavior and SQLite history.
 - Verified dependency-cruiser 18.3.1 support on macOS ARM64, with shared
@@ -56,23 +42,6 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 - Verified Knip 6.16.1 on macOS ARM64 with oxc-parser 0.133.0, including
   conformance, mixed provider evidence, test-root compatibility and offline
   resource acceptance. Optional providers still never affect native scores.
-
-
-### Fixed
-
-- `audit --out` writes the report only to the requested file, including with
-  `--json` or `--md`, without duplicating it on stdout (trellis-ad3e).
-
-- CLI reports drain fully when piped, including policy-failure output (trellis-5b25).
-- Existing aliased and relative non-source assets no longer produce unresolved
-  graph edges; missing assets remain unresolved (trellis-f6b0). Analyzer 0.2.1.
-- Count contributions use a bounded logarithmic curve without finite saturation,
-  restoring sensitivity above the former 20/15/5 cutoffs (trellis-831b).
-  Scoring 0.2.0-provisional preserves count non-dilution and monotonicity;
-  earlier scoring versions are not comparable. Evidence: `docs/count-calibration.md`.
-
-### Changed
-
 - **Declarative policy can require provider evidence without changing
   scoring** (trellis-68b9, step 7 of 30 of plan `pl-43c5`, SPEC §16.3): the
   `policy` block of `trellis.yaml` gains `requireEvidence` — a list of
@@ -100,49 +69,6 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   new-finding semantics are unchanged, and audit, saved comparison and
   fleet consume the one `assessPolicy` (`src/compare/policy.ts` + new
   `policy-evidence.ts`).
-- **Comparisons evaluate compatibility per measurement and scoring basis**
-  (trellis-bd0c, step 6 of 30 of plan `pl-43c5`, SPEC §16.6): `src/compare/`
-  splits the single whole-report comparability gate into two independent
-  bases. The **scored basis** (`compatibility.ts`, new) keeps the established
-  fail-closed rules — analyzer/scoring versions, scored metric catalogs
-  (pre-provider 1.0.0 artifacts still read with every metric as a score
-  input), supplied configurations — and adds per-measurement checks over the
-  recorded analysis identity: a scored analysis whose pinned tool/adapter,
-  parser, or normalized options changed is a `scored-measurement`
-  incompatibility, and a changed declared scored-analysis set is a
-  `scoring-basis` one. The **evidence basis** (`evidence.ts`, new) compares
-  each carried provider by recorded identity: producer and scope semantics
-  gate the evidence diff (changed tool/parser/options/selection is an
-  explicit noncomparable dimension with coded reasons — never fictitious
-  deltas or new/resolved finding churn), while changed content fingerprints
-  are the expected source-revision input, caveated as `input-revision-changed`.
-  Absence reads as `unrequested` on its side — never a regression — and
-  partial/unavailable evidence is never diffed. Advisory-only changes
-  (adding, removing, or upgrading an optional provider) never make two
-  otherwise-compatible reports incompatible, and never affect the native
-  score comparison or its policies. A 1.0.0 ↔ 1.1.0 artifact pair compares
-  the scored basis explicitly (`schema-span` caveat; the pre-provider
-  side's evidence reads as unrequested) instead of failing wholesale;
-  `metric-set` no longer trips on advisory metric additions (they diff with
-  a `null` side). `compare.ts` composes the bases; `diff.ts` (new) holds the
-  shared metric/finding diffs; policy assessment consumes only the scored
-  basis, so provider evidence incompatibility never trips score-regression
-  or new-finding policies.
-- **Audit orchestration consumes the registered native analyzers without
-  changing native behavior** (trellis-1e66, step 4 of 30 of plan `pl-43c5`,
-  SPEC §16): the measure phase now selects and orders analyzers through the
-  internal capability registry (trellis-cb51) and folds the selected
-  execution list's results generically — `src/audit/audit.ts` runs each
-  registered measured analyzer through its step-3 wrapper over the one
-  shared parse, feeding the cycle analyzer the exact produced graph run,
-  and `src/audit/assemble.ts` takes a generic measured-analyses list
-  instead of a hardcoded four-analyzer shape. Progress analyzer events
-  derive from the selected execution list (registry order, counts from the
-  list). Report shape, metrics, findings, ordering, score, safeguards and
-  exit behavior are byte-identical to the pre-refactor baseline — proven by
-  payload-equality tests against the pre-refactor pipeline and core/service/
-  CLI parity over dirty, non-Git workspaces; no provider is selected,
-  started, or reported, and no report field or version changed.
 - **Knip emits contextual advisory reachability evidence with stable
   ordering** (trellis-8ebc, step 24 of 30 of plan `pl-43c5`, SPEC
   §16.2–§16.5): the `knip` provider's adapter is delivered. A `providers:
@@ -175,7 +101,6 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   (the gated set is now SonarJS only), and the CLI's `--provider knip`
   stays a bare-id flag whose richer request lives in the declarative
   block.
-
 - **Reachability configuration records entries, public API and test
   participation** (trellis-5da5, step 23 of 30 of plan `pl-43c5`,
   SPEC §16.1/§16.4): a `knip` request in the `providers` block now
@@ -273,8 +198,64 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   configuration. Measurement payloads agree and recursive file snapshots
   prove the workspace and surrounding scratch directory remain unchanged.
 
-### Added
+### Changed
 
+- Analyzer **0.3.0**: the analyzer version follows the package version, and
+  comparisons fail closed across analyzer versions. Reports saved by 0.2.3 or
+  earlier remain readable; comparing against them requires a fresh baseline.
+  Schema 1.2.0 and scoring 0.2.0-provisional are unchanged.
+- Analyzer **0.2.3** promotes the parity-validated SA-IS/LCP native duplication
+  engine (trellis-e55c). Forty-copy, pinned Hono and Zod duplication now complete
+  within frozen work/time/RSS bounds. Token normalization, 100-token/3-line
+  thresholds, group/line semantics, schema 1.2.0 and the scoring formula remain
+  unchanged. `maxMatchWork` now explicitly counts whole-pipeline work (v2);
+  exhaustion is located and unmeasured, never fabricated zero debt. The old
+  quadratic engine exists only in test references. Historical artifacts remain
+  readable; analyzer/resource transitions require a fresh baseline. No provider
+  promotion, runtime dependency, model, network or default write is introduced.
+- **Comparisons evaluate compatibility per measurement and scoring basis**
+  (trellis-bd0c, step 6 of 30 of plan `pl-43c5`, SPEC §16.6): `src/compare/`
+  splits the single whole-report comparability gate into two independent
+  bases. The **scored basis** (`compatibility.ts`, new) keeps the established
+  fail-closed rules — analyzer/scoring versions, scored metric catalogs
+  (pre-provider 1.0.0 artifacts still read with every metric as a score
+  input), supplied configurations — and adds per-measurement checks over the
+  recorded analysis identity: a scored analysis whose pinned tool/adapter,
+  parser, or normalized options changed is a `scored-measurement`
+  incompatibility, and a changed declared scored-analysis set is a
+  `scoring-basis` one. The **evidence basis** (`evidence.ts`, new) compares
+  each carried provider by recorded identity: producer and scope semantics
+  gate the evidence diff (changed tool/parser/options/selection is an
+  explicit noncomparable dimension with coded reasons — never fictitious
+  deltas or new/resolved finding churn), while changed content fingerprints
+  are the expected source-revision input, caveated as `input-revision-changed`.
+  Absence reads as `unrequested` on its side — never a regression — and
+  partial/unavailable evidence is never diffed. Advisory-only changes
+  (adding, removing, or upgrading an optional provider) never make two
+  otherwise-compatible reports incompatible, and never affect the native
+  score comparison or its policies. A 1.0.0 ↔ 1.1.0 artifact pair compares
+  the scored basis explicitly (`schema-span` caveat; the pre-provider
+  side's evidence reads as unrequested) instead of failing wholesale;
+  `metric-set` no longer trips on advisory metric additions (they diff with
+  a `null` side). `compare.ts` composes the bases; `diff.ts` (new) holds the
+  shared metric/finding diffs; policy assessment consumes only the scored
+  basis, so provider evidence incompatibility never trips score-regression
+  or new-finding policies.
+- **Audit orchestration consumes the registered native analyzers without
+  changing native behavior** (trellis-1e66, step 4 of 30 of plan `pl-43c5`,
+  SPEC §16): the measure phase now selects and orders analyzers through the
+  internal capability registry (trellis-cb51) and folds the selected
+  execution list's results generically — `src/audit/audit.ts` runs each
+  registered measured analyzer through its step-3 wrapper over the one
+  shared parse, feeding the cycle analyzer the exact produced graph run,
+  and `src/audit/assemble.ts` takes a generic measured-analyses list
+  instead of a hardcoded four-analyzer shape. Progress analyzer events
+  derive from the selected execution list (registry order, counts from the
+  list). Report shape, metrics, findings, ordering, score, safeguards and
+  exit behavior are byte-identical to the pre-refactor baseline — proven by
+  payload-equality tests against the pre-refactor pipeline and core/service/
+  CLI parity over dirty, non-Git workspaces; no provider is selected,
+  started, or reported, and no report field or version changed.
 - **Duplication minimum clone size calibrated 50 → 100 normalized tokens**
   (trellis-e924, SPEC §5.3): at 50 tokens the corpus and the trellis
   self-audit were dominated by idiomatic-structure matches (78 of 124
@@ -289,10 +270,31 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   corpus, not changed. Clone test fixtures grew to 105 tokens over 13
   lines at CC 10 so they never leak hotspot findings.
 
-### Added
+### Fixed
 
+- `audit --out` writes the report only to the requested file, including with
+  `--json` or `--md`, without duplicating it on stdout (trellis-ad3e).
+- CLI reports drain fully when piped, including policy-failure output (trellis-5b25).
+- Existing aliased and relative non-source assets no longer produce unresolved
+  graph edges; missing assets remain unresolved (trellis-f6b0). Analyzer 0.2.1.
+- Count contributions use a bounded logarithmic curve without finite saturation,
+  restoring sensitivity above the former 20/15/5 cutoffs (trellis-831b).
+  Scoring 0.2.0-provisional preserves count non-dilution and monotonicity;
+  earlier scoring versions are not comparable. Evidence: `docs/count-calibration.md`.
 - **Duplication metrics no longer emit a zero denominator** for a scope
   with no code-classified lines (e.g. a repository without test files):
   `duplication.duplicated-lines.<set>` omits the numerator/denominator pair
   there, matching the §6.1 contract (denominators must be positive). The
   audit core's schema validation (trellis-ef85) surfaced the violation.
+
+### Removed
+
+- Simplified the package to the deterministic audit, its reports and opt-in
+  history. Removed unused analysis paths and refreshed contributor, CLI and
+  architecture guidance (trellis-ddf5, trellis-46db, trellis-57b1).
+- **Breaking:** the hidden retirement shims are gone. `trellis rubric` and the
+  retired `audit` flags (`--no-cache`, `--no-persist`, `--output`/`--no-output`,
+  `--fail-on`, `--min-level`, `--canonical`, `--rubric-dir`, `--rubric-version`)
+  now fail as unknown commands/options instead of printing retirement guidance,
+  and `trellis report` / SDK `report` no longer show legacy readiness history.
+  Existing audit records are preserved.

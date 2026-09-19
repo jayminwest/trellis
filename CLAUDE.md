@@ -43,12 +43,15 @@ src/
   cli/            # THIN commander entrypoints; parse args, call core, shape output
   client/         # typed SDK; request/response types MIRROR the core (// Mirrors src/<x>)
   audit/          # deterministic core: auditWorkspace + runWorkspaceAudit service
+  analysis/       # native analyzer registry, wrapped analyzers, provenance (§16)
   guides/         # bundled, read-only task guidance
   config/         # declarative audit configuration (trellis.yaml, SPEC §6.5)
   contract/       # versioned zod contracts: metrics, findings, report, config (§6)
   discovery/      # TS/TSX source discovery → classified source-set inventory (§3.1)
   syntax/         # shared parse layer (pinned TS compiler API) + function inventory
   metrics/        # complexity, erosion, duplication, import graph/cycles (§5)
+  providers/      # optional pinned evidence providers: staging, process runner,
+                  #   jscpd / dependency-cruiser / knip adapters (unscored, §16)
   safeguards/     # hook/check configuration inspection (non-scoring, §5.5)
   scoring/        # pure provisional sloppiness formula (§7)
   report/         # terminal / JSON / markdown renderers
@@ -56,6 +59,7 @@ src/
   store/          # migrations/ (opt-in audit history, SPEC §10)
   history/        # sloppiness dashboard projection over the store
   fleet/          # targets.yaml loader + multi-repo orchestration (optional, §11)
+  research/       # internal research spikes; no public surface or scoring input
   standards/      # canonical/ (bundled files), manifest.yaml, drift.ts
                   #   (separate capability; never feeds the sloppiness index)
   index.ts        # public lib entry — VERSION constant only (lockstep w/ package.json)
