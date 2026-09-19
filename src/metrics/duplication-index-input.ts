@@ -18,6 +18,7 @@ function preflight(streams: readonly TokenStream[], work: DuplicationWork): numb
 	for (const stream of streams) {
 		work.charge();
 		count += stream.kinds.length;
+		work.inputTokens = Math.max(work.inputTokens, count);
 		if (count > work.limits.maxTokens) work.stop("maxTokens", work.limits.maxTokens);
 	}
 	return count;

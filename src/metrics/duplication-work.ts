@@ -61,6 +61,8 @@ export class DuplicationWork {
 	groups = 0;
 	occurrences = 0;
 	private nextCheckpoint = 0;
+	private failure?: DuplicationLimitError;
+	inputTokens = 0;
 
 	constructor(private readonly options: DuplicationWorkOptions = {}) {
 		this.limits = { ...DUPLICATION_LIMITS };
@@ -75,10 +77,12 @@ export class DuplicationWork {
 	}
 
 	stop(kind: DuplicationStop["kind"], limit: number): never {
-		throw new DuplicationLimitError({ phase: this.phase, kind, limit });
+		this.failure ??= new DuplicationLimitError({ phase: this.phase, kind, limit });
+		throw this.failure;
 	}
 
 	checkpoint(): void {
+		if (this.failure !== undefined) throw this.failure;
 		if (this.options.isCancelled?.()) this.stop("cancelled", 0);
 		this.nextCheckpoint = this.total + 1024;
 	}
@@ -90,6 +94,7 @@ export class DuplicationWork {
 	}
 
 	charge(units = 1): void {
+		if (this.failure !== undefined) throw this.failure;
 		if (this.total + units > this.limits.maxMatchWork) {
 			this.stop("maxMatchWork", this.limits.maxMatchWork);
 		}

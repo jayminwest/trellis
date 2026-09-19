@@ -16,6 +16,7 @@
  */
 import ts from "typescript";
 import type { LineCounts } from "./types.ts";
+import type { SyntaxWork } from "./work.ts";
 
 const COMMENT_TRIVIA = new Set<ts.SyntaxKind>([
 	ts.SyntaxKind.SingleLineCommentTrivia,
@@ -40,10 +41,11 @@ interface LineFlags {
 }
 
 /** The line containing `pos` (index into `lineStarts`, via binary search). */
-function lineOf(lineStarts: readonly number[], pos: number): number {
+function lineOf(lineStarts: readonly number[], pos: number, work?: SyntaxWork): number {
 	let lo = 0;
 	let hi = lineStarts.length - 1;
 	while (lo < hi) {
+		work?.charge();
 		const mid = (lo + hi + 1) >> 1;
 		if ((lineStarts[mid] ?? 0) <= pos) lo = mid;
 		else hi = mid - 1;
@@ -58,10 +60,12 @@ function markLines(
 	start: number,
 	end: number,
 	key: "code" | "comment",
+	work?: SyntaxWork,
 ): void {
-	const first = lineOf(lineStarts, start);
-	const last = lineOf(lineStarts, Math.max(start, end - 1));
+	const first = lineOf(lineStarts, start, work);
+	const last = lineOf(lineStarts, Math.max(start, end - 1), work);
 	for (let line = first; line <= last; line += 1) {
+		work?.charge();
 		const entry = flags[line];
 		if (entry !== undefined) entry[key] = true;
 	}
@@ -76,25 +80,37 @@ function markLines(
  * classification (e.g. per-function SLOC, trellis-fbc5) scan once per file
  * through this function instead of re-running the scanner per range.
  */
-export function classifyLines(sourceFile: ts.SourceFile): readonly LineKind[] {
+export function classifyLines(sourceFile: ts.SourceFile, work?: SyntaxWork): readonly LineKind[] {
 	const lineStarts = sourceFile.getLineStarts();
-	const flags: LineFlags[] = [...lineStarts].map(() => ({ code: false, comment: false }));
+	work?.reserve(lineStarts.length * 3);
+	const flags: LineFlags[] = [];
+	for (let line = 0; line < lineStarts.length; line += 1) {
+		work?.charge();
+		flags.push({ code: false, comment: false });
+	}
 	const scanner = ts.createScanner(
 		ts.ScriptTarget.ESNext,
 		/* skipTrivia */ false,
 		sourceFile.languageVariant,
 		sourceFile.text,
 	);
+	work?.charge();
 	let token = scanner.scan();
 	while (token !== ts.SyntaxKind.EndOfFileToken) {
 		if (COMMENT_TRIVIA.has(token)) {
-			markLines(flags, lineStarts, scanner.getTokenStart(), scanner.getTokenEnd(), "comment");
+			markLines(flags, lineStarts, scanner.getTokenStart(), scanner.getTokenEnd(), "comment", work);
 		} else if (!PLAIN_TRIVIA.has(token)) {
-			markLines(flags, lineStarts, scanner.getTokenStart(), scanner.getTokenEnd(), "code");
+			markLines(flags, lineStarts, scanner.getTokenStart(), scanner.getTokenEnd(), "code", work);
 		}
+		work?.charge();
 		token = scanner.scan();
 	}
-	return flags.map((flag) => (flag.code ? "code" : flag.comment ? "commentOnly" : "blank"));
+	const kinds: LineKind[] = flags.map((flag) => {
+		work?.charge();
+		return flag.code ? "code" : flag.comment ? "commentOnly" : "blank";
+	});
+	work?.release(lineStarts.length * 2);
+	return kinds;
 }
 
 /** Fold a per-line classification into {@link LineCounts} totals. */

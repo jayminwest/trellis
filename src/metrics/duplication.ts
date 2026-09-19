@@ -46,6 +46,7 @@
 import ts from "typescript";
 import type { Range, SourceSet } from "../contract/index.ts";
 import { type FileSyntax, positionAt } from "../syntax/index.ts";
+import type { SyntaxWork } from "../syntax/work.ts";
 
 /**
  * Minimum normalized-token run for a clone member (SPEC §5.3). Calibrated
@@ -159,26 +160,40 @@ function normalizeKind(kind: ts.SyntaxKind): ts.SyntaxKind {
  * stack); leaf tokens are visited in document order. The end-of-file token
  * is dropped so file-final clones are not artificially extended.
  */
-export function collectTokenStream(file: FileSyntax): TokenStream {
+export interface TokenCollectionWork extends SyntaxWork {
+	/** Check the shared token ceiling and reserve the three location/kind slots before append. */
+	token(): void;
+}
+
+function collectTokens(file: FileSyntax, work?: TokenCollectionWork): TokenStream {
 	const sourceFile = file.sourceFile;
 	const kinds: ts.SyntaxKind[] = [];
 	const startLines: number[] = [];
 	const endLines: number[] = [];
+	work?.reserve(2);
 	const stack: ts.Node[] = [sourceFile];
 	while (stack.length > 0) {
+		work?.charge();
+		work?.release(2);
 		const node = stack.pop();
 		if (node === undefined) continue;
 		const children = node.getChildren(sourceFile);
 		if (children.length === 0) {
 			if (node.kind === ts.SyntaxKind.EndOfFileToken) continue;
+			work?.token();
+			work?.charge(2 + 2 * Math.ceil(Math.log2(file.lines.total + 1)));
 			kinds.push(normalizeKind(node.kind));
 			startLines.push(positionAt(sourceFile, node.getStart(sourceFile)).line);
 			endLines.push(positionAt(sourceFile, node.getEnd()).line);
 			continue;
 		}
 		for (let index = children.length - 1; index >= 0; index -= 1) {
+			work?.charge();
 			const child = children[index];
-			if (child !== undefined) stack.push(child);
+			if (child !== undefined) {
+				work?.reserve(2);
+				stack.push(child);
+			}
 		}
 	}
 	return {
@@ -189,4 +204,14 @@ export function collectTokenStream(file: FileSyntax): TokenStream {
 		startLines,
 		endLines,
 	};
+}
+
+/** The unchanged collector entry point remains safe as an array-map callback. */
+export function collectTokenStream(file: FileSyntax): TokenStream {
+	return collectTokens(file);
+}
+
+/** The same collector with candidate-owned operation and storage accounting. */
+export function collectControlledTokens(file: FileSyntax, work: TokenCollectionWork): TokenStream {
+	return collectTokens(file, work);
 }

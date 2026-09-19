@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { collectTokenStream, type TokenStream } from "./duplication.ts";
 import { detectClones } from "./duplication-detect.ts";
 import { extractCloneGroups } from "./duplication-extract.ts";
+import { finalizeCandidateGroups } from "./duplication-finalize.ts";
 import { finalizeGroups } from "./duplication-groups.ts";
 import { rankTokenStreams } from "./duplication-index-input.ts";
 import { orderRawGroups } from "./duplication-order.ts";
@@ -27,6 +28,7 @@ function candidate(streams: TokenStream[], options: DuplicationWorkOptions = {})
 	const raw = extractCloneGroups(data, sa, lcp, work);
 	orderRawGroups(raw, streams, data, work);
 	const groups = finalizeGroups(raw, streams, [...data.fileStart]);
+	expect(finalizeCandidateGroups(raw, streams, data.fileStart, work)).toEqual(groups);
 	const referenceRaw: ReferenceGroup[] = [...raw.values()].flat().map((group) => {
 		const stream = streams[group.rep.file];
 		const start = group.rep.start - (data.fileStart[group.rep.file] ?? 0);

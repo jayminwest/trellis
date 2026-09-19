@@ -242,3 +242,45 @@ edited source, boundary/line minima, discovery-order reversal and forced work/
 output limits. The forty-copy control completes with one 229-token group,
 forty 27-line members and 1,080 unique code lines. Step 8 must still bound the
 finalizer and collection/accounting before any corpus acceptance or cutover.
+
+## Complete candidate guard (step 8)
+
+`duplication-candidate.ts` exposes an isolated token-stream detector and a
+whole-scope measurement for acceptance. Whole-scope collection, indexing,
+extraction, ordering, finalization and code-line union share one guard. The
+public production entry points still select the original engine at this step.
+The unchanged one-argument token collector delegates to the same implementation
+as the controlled collector, so array-map callers retain their original behavior.
+Optional syntax work hooks charge AST visits, stack references, token/location
+storage, line-classification buffers, scanner steps, line-map searches and
+classified/covered-line visits; syntax owns no analyzer-specific budgets.
+Shared compiler parsing and the compiler's internal caches remain inventory
+operations, as declared in step 5; candidate-owned stacks/arrays are reserved.
+
+The candidate stops collecting on the first observed token beyond the limit.
+The observed count is a lower bound on that incomplete input, never an assertion
+that the rest was scanned. Already-materialized stream input is preflighted
+before combined arrays. Group/member retention limits count intermediate raw,
+located, projected and line-interval records cumulatively. Numeric scratch and
+reference buffers reserve cells before growth; reference slots count as two
+32-bit cells. The first limit/cancellation error latches and is propagated
+unchanged. Other errors remain operational failures.
+
+`duplication-finalize.ts` first applies the three-line minimum. Equal-length
+members of the same content group cannot strictly contain each other. Across
+eligible groups, a file/start/end-sorted interval sweep marks strict containment,
+including the equal-end/earlier-start case and excluding equal ranges. This
+preserves the old single-pass subsumption result in O(m log m), with guarded
+sorting/visits instead of nested group/member scans. The bounded implementation
+is checked against the original finalizer on every extraction fixture.
+`duplication-account.ts` groups line intervals by file, sorts them, and counts
+each covered code line once using the shared classifier; it never sums spans.
+
+No groups or totals are committed until every requested phase and final
+cancellation check complete. An exhausted result has an explicit phase/cap,
+empty uncommitted groups and absent totals, not a complete zero. Tests force all
+five phases, the final line-accounting operation, token/stream/allocation/work/
+output ceilings, already/mid-operation cancellation, latched failure and unrelated
+errors. Forty copies complete through the whole guarded pipeline with the
+expected 1,080-line union. No hard ceiling has been raised. Step 9 still owns the
+pinned-corpus proof; this section does not grant production cutover approval.

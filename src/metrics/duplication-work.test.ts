@@ -28,11 +28,11 @@ describe("DuplicationWork", () => {
 	test("reserves and releases live numeric cells before allocating", () => {
 		const work = new DuplicationWork({ maxWorkingCells: 3 });
 		expect(work.array(3)).toEqual(new Uint32Array(3));
-		expect(() => work.array(1)).toThrow(DuplicationLimitError);
 		work.release(2);
 		expect(work.array(2).length).toBe(2);
 		expect(work.peakCells).toBe(3);
 		expect(work.liveCells).toBe(3);
+		expect(() => work.array(1)).toThrow(DuplicationLimitError);
 	});
 
 	test("bounds cumulative retained groups and member occurrences", () => {
