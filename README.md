@@ -100,9 +100,12 @@ trellis compare /tmp/before.json /tmp/after.json
 Named hotspots keep their identity across comment and line shifts; replacing
 a function or adding the same method name in another class creates a new
 hotspot. Anonymous or duplicate identities remain conservative new/resolved
-pairs. Analyzer 0.2.2 emits schema 1.2.0: historical reports remain readable,
-but crossing this transition requires a fresh baseline. See the
-[identity and compatibility rules](docs/hotspot-identity.md).
+pairs. Analyzer 0.2.3 emits schema 1.2.0 and uses bounded suffix-array duplication
+analysis. Historical reports remain readable; crossing either the identity or
+native-engine transition requires a fresh baseline. Scoring and the 100-token /
+3-line clone thresholds are unchanged. See the
+[identity and compatibility rules](docs/hotspot-identity.md) and
+[native engine acceptance](docs/research/native-duplication/acceptance.md).
 
 ## Guide an agent through cleanup
 

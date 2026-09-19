@@ -359,24 +359,35 @@ Semantics fixed by this decision:
   streams are never matched across sets, so production and test duplication
   are measured separately (§3.1); `generated`, `vendored`,
   `declaration-only`, and excluded files are never tokenized.
-- **Bounded feasibility**: declared token-count and match-work budgets are
-  checked as the analysis runs; on exhaustion the metric is `incomplete`
-  with the reason — never a silent clean result. Landed with the
-  implementation (trellis-6e4c; confirmed by the trellis-e924 corpus run —
-  the largest observed source set keeps an order-of-magnitude headroom):
-  a **token budget** of 2,000,000 normalized tokens per source set and a
-  **match-work budget** of 100,000,000 token comparisons per source set
-  (`DEFAULT_DUPLICATION_BUDGET` in `src/metrics/duplication.ts`).
+- **Bounded feasibility (work accounting v2, analyzer 0.2.3)**: collection,
+  indexing, extraction, materialization, containment and line accounting share
+  deterministic guards. Per source set: **2,000,000 normalized tokens**,
+  **100,000,000 work units**, 100,000 streams, 32,000,000 numeric scratch cells,
+  200,000 retained groups and 1,000,000 retained member occurrences. Existing
+  `maxTokens`/`maxMatchWork` callers may lower the two limits; non-finite,
+  fractional, negative or above-ceiling values are operational errors. The
+  token limit is checked during collection and before combined allocation.
+  Every stopped pass is `incomplete`, with its phase/cap and no uncommitted
+  metric value or group presented as measured zero. Shared parsing precedes
+  the detector and is not claimed to fit its scratch limit.
 
-**Bounded-engine migration contract (pl-da6d, trellis-271c):**
-[`docs/research/native-duplication/README.md`](docs/research/native-duplication/README.md)
-freezes the same token/group/line semantics, an exhaustive small-input oracle,
-fourteen fingerprinted offline corpus entries and numerical whole-pipeline
-resource acceptance. The production engine remains unchanged until candidate
-parity and resource acceptance pass. Work accounting v2 is explicitly distinct
-from the historical token-comparison count; no scoring calibration is bundled.
+**Delivered bounded engine (pl-da6d, trellis-e55c):** original SA-IS induced
+suffix sorting, Kasai LCP and maximal-context interval extraction replace the
+quadratic window-pair runtime. The old engine remains only as a bounded test
+reference. No public engine selector, subprocess, dependency, model, download,
+scoring recalibration or target write is added. The thresholds, token stream,
+source-set separation, clone membership/IDs and code-line union remain unchanged.
+[The contract](docs/research/native-duplication/README.md) freezes semantics and
+resources; [executed acceptance](docs/research/native-duplication/acceptance.md)
+covers fourteen fingerprinted corpus entries plus 2/10/40-copy controls.
+Work v2 counts the whole pipeline rather than historical extension comparisons;
+analyzer/native tool+adapter 0.2.3 and recorded analysis options distinguish the
+semantics. Report schema stays 1.2.0 and scoring stays 0.2.0-provisional. Older
+artifacts remain readable; crossing analyzer/resource semantics requires a fresh
+baseline. Formerly complete metrics/scores retain parity; newly complete
+measurements are improved observability, not source cleanup.
 
-Evaluation record (evidence; directional measurements, not benchmarks):
+Historical Evaluation record (evidence; directional measurements, not benchmarks):
 
 - **Fixtures**: six hand-authored TS cases with known outcomes — exact copy,
   identifier/literal rename, overlapping multi-file regions, four-way

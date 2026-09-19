@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { collectTokenStream, type TokenStream } from "../duplication.ts";
-import { detectClones } from "../duplication-detect.ts";
 import {
 	repeatedSource,
 	repeatedStreams,
@@ -8,6 +7,7 @@ import {
 	syntheticStream,
 } from "./duplication-fixtures.ts";
 import { exhaustiveGroups, referenceDetection } from "./duplication-oracle.ts";
+import { detectClones } from "./legacy-duplication.ts";
 
 const RUN = Array.from({ length: 101 }, (_, i) => i + 1);
 function parity(streams: TokenStream[]) {

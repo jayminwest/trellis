@@ -2,11 +2,12 @@
  * Duplication detection (SPEC §5.3, trellis-6e4c) — trellis's own
  * normalized-token clone detector over the shared syntax inventory. No
  * runtime dependency: the pinned compiler's AST walk yields the token
- * stream, and detection is hashing plus arithmetic over it.
+ * stream, and detection uses bounded induced suffix sorting and LCP intervals over it.
  *
  * This module holds the detection **contract** (types, budgets, minimums)
  * and the token-stream collector; the matching engine lives in
- * `duplication-detect.ts` and group finalization in `duplication-groups.ts`.
+ * `duplication-candidate.ts`, with the stable entry point in `duplication-detect.ts`
+ * and bounded group finalization in `duplication-finalize.ts`.
  *
  * Documented semantics (fixed by the trellis-5a91 decision, SPEC §5.3):
  *
@@ -47,6 +48,7 @@ import ts from "typescript";
 import type { Range, SourceSet } from "../contract/index.ts";
 import { type FileSyntax, positionAt } from "../syntax/index.ts";
 import type { SyntaxWork } from "../syntax/work.ts";
+import type { DuplicationPhase, DuplicationStop } from "./duplication-work.ts";
 
 /**
  * Minimum normalized-token run for a clone member (SPEC §5.3). Calibrated
@@ -63,17 +65,13 @@ export const DUPLICATION_MIN_LINES = 3;
 export interface DuplicationBudget {
 	/** Maximum normalized tokens tokenized in one source set. */
 	maxTokens: number;
-	/** Maximum token comparisons during window verification, extension, and group merging. */
+	/** Maximum deterministic work units across the whole pipeline (v2, analyzer 0.2.3). */
 	maxMatchWork: number;
 }
 
-/**
- * Default budgets (land with trellis-6e4c; confirmed by the trellis-e924
- * corpus run — the largest observed source set, trellis's own test set at
- * ~135k tokens, keeps an order-of-magnitude headroom). The token budget
- * covers the largest observed corpus by an order of magnitude; the work
- * budget bounds the quadratic pair-extension worst case of pathological
- * high-multiplicity clone classes.
+/** Frozen input/work ceilings; callers may lower them, never disable or raise them.
+ * Work-accounting v2 charges the complete pipeline, not legacy pair comparisons.
+ * Numerical resource acceptance is docs/research/native-duplication/acceptance.md.
  */
 export const DEFAULT_DUPLICATION_BUDGET: DuplicationBudget = {
 	maxTokens: 2_000_000,
@@ -82,7 +80,17 @@ export const DEFAULT_DUPLICATION_BUDGET: DuplicationBudget = {
 
 /** Which budget tripped, and at what limit (SPEC §3.3 `incomplete` reason). */
 export interface BudgetExhaustion {
-	kind: "token-count" | "match-work";
+	kind:
+		| "token-count"
+		| "match-work"
+		| "stream-count"
+		| "working-cells"
+		| "group-count"
+		| "occurrence-count"
+		| "phase-work"
+		| "cancelled";
+	/** Present on work-accounting v2 failures; historical test references predate phases. */
+	phase?: DuplicationPhase;
 	limit: number;
 }
 
@@ -165,33 +173,33 @@ export interface TokenCollectionWork extends SyntaxWork {
 	token(): void;
 }
 
-function collectTokens(file: FileSyntax, work?: TokenCollectionWork): TokenStream {
+function collectTokens(file: FileSyntax, work: TokenCollectionWork): TokenStream {
 	const sourceFile = file.sourceFile;
 	const kinds: ts.SyntaxKind[] = [];
 	const startLines: number[] = [];
 	const endLines: number[] = [];
-	work?.reserve(2);
+	work.reserve(2);
 	const stack: ts.Node[] = [sourceFile];
 	while (stack.length > 0) {
-		work?.charge();
-		work?.release(2);
+		work.charge();
+		work.release(2);
 		const node = stack.pop();
 		if (node === undefined) continue;
 		const children = node.getChildren(sourceFile);
 		if (children.length === 0) {
 			if (node.kind === ts.SyntaxKind.EndOfFileToken) continue;
-			work?.token();
-			work?.charge(2 + 2 * Math.ceil(Math.log2(file.lines.total + 1)));
+			work.token();
+			work.charge(2 + 2 * Math.ceil(Math.log2(file.lines.total + 1)));
 			kinds.push(normalizeKind(node.kind));
 			startLines.push(positionAt(sourceFile, node.getStart(sourceFile)).line);
 			endLines.push(positionAt(sourceFile, node.getEnd()).line);
 			continue;
 		}
 		for (let index = children.length - 1; index >= 0; index -= 1) {
-			work?.charge();
+			work.charge();
 			const child = children[index];
 			if (child !== undefined) {
-				work?.reserve(2);
+				work.reserve(2);
 				stack.push(child);
 			}
 		}
@@ -206,12 +214,37 @@ function collectTokens(file: FileSyntax, work?: TokenCollectionWork): TokenStrea
 	};
 }
 
+const UNTRACKED_COLLECTION: TokenCollectionWork = {
+	charge() {},
+	reserve() {},
+	release() {},
+	token() {},
+};
+
 /** The unchanged collector entry point remains safe as an array-map callback. */
 export function collectTokenStream(file: FileSyntax): TokenStream {
-	return collectTokens(file);
+	return collectTokens(file, UNTRACKED_COLLECTION);
 }
 
 /** The same collector with candidate-owned operation and storage accounting. */
 export function collectControlledTokens(file: FileSyntax, work: TokenCollectionWork): TokenStream {
 	return collectTokens(file, work);
+}
+
+const EXHAUSTION_KINDS = {
+	maxTokens: "token-count",
+	maxMatchWork: "match-work",
+	maxStreams: "stream-count",
+	maxWorkingCells: "working-cells",
+	maxGroups: "group-count",
+	maxOccurrences: "occurrence-count",
+	"phase-work": "phase-work",
+	cancelled: "cancelled",
+} as const;
+
+/** Preserve familiar budget names while locating every v2 failure in its phase. */
+export function locateBudgetExhaustion(stop: DuplicationStop | null): BudgetExhaustion | null {
+	return stop === null
+		? null
+		: { kind: EXHAUSTION_KINDS[stop.kind], limit: stop.limit, phase: stop.phase };
 }

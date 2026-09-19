@@ -1,9 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { collectTokenStream, type TokenStream } from "./duplication.ts";
-import { detectClones } from "./duplication-detect.ts";
 import { extractCloneGroups } from "./duplication-extract.ts";
 import { finalizeCandidateGroups } from "./duplication-finalize.ts";
-import { finalizeGroups } from "./duplication-groups.ts";
 import { rankTokenStreams } from "./duplication-index-input.ts";
 import { orderRawGroups } from "./duplication-order.ts";
 import { longestCommonPrefixes, suffixArray } from "./duplication-suffix.ts";
@@ -19,6 +17,8 @@ import {
 	syntheticStream,
 } from "./tests/duplication-fixtures.ts";
 import { type ReferenceGroup, referenceDetection } from "./tests/duplication-oracle.ts";
+import { detectClones } from "./tests/legacy-duplication.ts";
+import { finalizeGroups } from "./tests/legacy-duplication-groups.ts";
 
 function candidate(streams: TokenStream[], options: DuplicationWorkOptions = {}) {
 	const work = new DuplicationWork(options);

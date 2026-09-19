@@ -51,17 +51,15 @@ function memberAt(data: RankedTokens, start: number, length: number): RawMember 
 	return { file: data.fileOf[start] ?? 0, start, end: start + length };
 }
 
-function emitInterval(
+function intervalMembers(
 	data: RankedTokens,
 	sa: Uint32Array,
 	begin: number,
 	end: number,
 	length: number,
-	groups: Map<number, RawGroup[]>,
+	counts: ContextCounts,
 	work: DuplicationWork,
-): void {
-	work.charge();
-	const counts = countContexts(data, sa, begin, end, length, work);
+): RawGroup | undefined {
 	let group: RawGroup | undefined;
 	for (let rank = begin; rank < end; rank += 1) {
 		work.charge(5);
@@ -83,6 +81,21 @@ function emitInterval(
 		if (member.start < group.rep.start) group.rep = member;
 		group.members.set(`${member.file}:${member.start}`, member);
 	}
+	return group;
+}
+
+function emitInterval(
+	data: RankedTokens,
+	sa: Uint32Array,
+	begin: number,
+	end: number,
+	length: number,
+	groups: Map<number, RawGroup[]>,
+	work: DuplicationWork,
+): void {
+	work.charge();
+	const counts = countContexts(data, sa, begin, end, length, work);
+	const group = intervalMembers(data, sa, begin, end, length, counts, work);
 	work.release(2 * (counts.left.size + counts.right.size + counts.pairs.size));
 	if (group !== undefined) {
 		work.charge();
@@ -90,6 +103,31 @@ function emitInterval(
 		sameLength.push(group);
 		groups.set(length, sameLength);
 	}
+}
+
+interface IntervalStack {
+	starts: Uint32Array;
+	depths: Uint32Array;
+	size: number;
+}
+
+function closeIntervals(
+	stack: IntervalStack,
+	depth: number,
+	rank: number,
+	data: RankedTokens,
+	sa: Uint32Array,
+	groups: Map<number, RawGroup[]>,
+	work: DuplicationWork,
+): number {
+	let begin = rank - 1;
+	while (stack.size > 0 && (stack.depths[stack.size - 1] ?? 0) > depth) {
+		work.charge(3);
+		stack.size -= 1;
+		begin = stack.starts[stack.size] ?? 0;
+		emitInterval(data, sa, begin, rank, stack.depths[stack.size] ?? 0, groups, work);
+	}
+	return begin;
 }
 
 /** A single stack sweep visits every branching LCP interval once. */
@@ -103,21 +141,18 @@ export function extractCloneGroups(
 	const starts = work.array(sa.length);
 	const depths = work.array(sa.length);
 	const groups = new Map<number, RawGroup[]>();
-	let size = 0;
+	const stack: IntervalStack = { starts, depths, size: 0 };
 	for (let rank = 1; rank <= sa.length; rank += 1) {
 		work.charge(3);
 		const depth = lcp[rank] ?? 0;
-		let begin = rank - 1;
-		while (size > 0 && (depths[size - 1] ?? 0) > depth) {
-			work.charge(3);
-			size -= 1;
-			begin = starts[size] ?? 0;
-			emitInterval(data, sa, begin, rank, depths[size] ?? 0, groups, work);
-		}
-		if (depth >= DUPLICATION_MIN_TOKENS && (size === 0 || (depths[size - 1] ?? 0) < depth)) {
+		const begin = closeIntervals(stack, depth, rank, data, sa, groups, work);
+		if (
+			depth >= DUPLICATION_MIN_TOKENS &&
+			(stack.size === 0 || (depths[stack.size - 1] ?? 0) < depth)
+		) {
 			work.charge(2);
-			starts[size] = begin;
-			depths[size++] = depth;
+			starts[stack.size] = begin;
+			depths[stack.size++] = depth;
 		}
 	}
 	work.release(starts.length + depths.length);

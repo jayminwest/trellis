@@ -19,6 +19,16 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   Saved-baseline policy, CLI/SDK, fleet and SQLite regressions verify this
   identity milestone without changing native scores (trellis-61d7).
 
+- Analyzer **0.2.3** promotes the parity-validated SA-IS/LCP native duplication
+  engine (trellis-e55c). Forty-copy, pinned Hono and Zod duplication now complete
+  within frozen work/time/RSS bounds. Token normalization, 100-token/3-line
+  thresholds, group/line semantics, schema 1.2.0 and the scoring formula remain
+  unchanged. `maxMatchWork` now explicitly counts whole-pipeline work (v2);
+  exhaustion is located and unmeasured, never fabricated zero debt. The old
+  quadratic engine exists only in test references. Historical artifacts remain
+  readable; analyzer/resource transitions require a fresh baseline. No provider
+  promotion, runtime dependency, model, network or default write is introduced.
+
 - Added `trellis guide cleanup` and SDK `guide("cleanup")` with one bundled,
   read-only workflow for behavior-preserving cleanup (trellis-b6f9).
 

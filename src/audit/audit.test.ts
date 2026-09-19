@@ -262,7 +262,7 @@ describe("auditWorkspace under partial analysis", () => {
 			state: "incomplete",
 		});
 		expect(report.metrics["duplication.density.production"]?.reason).toMatch(
-			/token budget of 1 exceeded/,
+			/match-work budget of 1 exceeded in input/,
 		);
 	});
 });

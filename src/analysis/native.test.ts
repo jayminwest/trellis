@@ -193,7 +193,15 @@ describe("runDuplicationAnalysis", () => {
 		const budget = { maxTokens: 5000, maxMatchWork: 6000 };
 		const run = runDuplicationAnalysis(syntax, { budget });
 		expect(run.product).toEqual(analyzeDuplication(syntax, { budget }));
-		expect(run.result.analysis.options).toEqual({ "max-tokens": 5000, "max-match-work": 6000 });
+		expect(run.result.analysis.options).toEqual({
+			"max-tokens": 5000,
+			"max-match-work": 6000,
+			"work-accounting": "v2",
+			"max-streams": 100_000,
+			"max-working-cells": 32_000_000,
+			"max-groups": 200_000,
+			"max-occurrences": 1_000_000,
+		});
 		parsesContract(toContractResult(run.result));
 	});
 

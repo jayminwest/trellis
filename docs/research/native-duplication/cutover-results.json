@@ -1,0 +1,2002 @@
+{
+  "protocol": "native-duplication-v1",
+  "referenceCommit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+  "candidateSources": {
+    "docs/research/native-duplication/measure.mjs": "6ccc436f43cdd957db3b0538c5300955e931a00873069c8c65c40e46ede0787e",
+    "src/metrics/duplication-account.ts": "f2b799f25887f19568b7a01272dac184dfd5cc4ae4df5a25ca8ce753f9876315",
+    "src/metrics/duplication-candidate.ts": "3dab4052566d4374aa0f0fb31bd4d40b21d32e968d17b859f0a03136d55b11d4",
+    "src/metrics/duplication-detect.ts": "7e9e706226d33d5a31e7405080b0451765941e673f9639b6b003b5b5fea65f64",
+    "src/metrics/duplication-extract.ts": "d1442ce566e29ac54c3ca76671775857495bb46ffb7d3c09049f40d96eeecccb",
+    "src/metrics/duplication-finalize.ts": "adb65b12c7e6a2cda90097055d85f2e6e0786f8497f6333532870e18986b3c8c",
+    "src/metrics/duplication-groups.ts": "6cbd3432822a20bf9dac6e487cc81452626987935f832a790b2b14f915e1529e",
+    "src/metrics/duplication-index-input.ts": "f902ff5b8116a12d9fae278f1c92abe290c8259c679ac4ed9bf509d3f82cd353",
+    "src/metrics/duplication-induced.ts": "33740d5a87e1040b91dcea4745f4294f30a68d70884646d70cf34e07d32b3593",
+    "src/metrics/duplication-order.ts": "dd0bd172b6af2ebdf6e7879aa4aaaa644807e43f6a73d9da61546dfbda120e3e",
+    "src/metrics/duplication-suffix.ts": "9acb13196efc40a17495965f43e1f3d85b7c88203e626a4c0ddfea366d9a38a7",
+    "src/metrics/duplication-work.ts": "a56f2b9268caf6bcb81b5fa5c0538d1b0fb50934d310b6f64819c90525d015fe",
+    "src/metrics/duplication.ts": "627f4b1ec44ac353db9bb549d7c583c0ab3acfe31de48a8a51d12f941c37ee6e",
+    "src/metrics/tests/duplication-fixtures.ts": "76ba5f420e3b254f58645ab38b54f52dd65e3950f76126e4c8214b2fdaaadf3f",
+    "src/syntax/sloc.ts": "6e5fe7c3528b9e70387c431e4cb6b90b41dba8f886edf744f9e7bc92820f2a09",
+    "src/syntax/work.ts": "e21a4d9678c7cd09d4969618690c1150d4f74746712446e2e853a99ceb81fc4a"
+  },
+  "algorithm": "SA-IS + Kasai; deterministic work accounting v2",
+  "host": {
+    "runtime": "1.3.14",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M4 Pro"
+  },
+  "runs": 3,
+  "rss": "Bun getrusage maxRSS: bytes on Darwin, KiB elsewhere; converted to MiB",
+  "watchdogMs": 30000,
+  "entries": [
+    {
+      "id": "trellis-self",
+      "inputHash": "3ad588df32defbde27505f0aafe075df65bf9093773a2b278733ad28b95e2015",
+      "budget": {
+        "maxMedianCoreMs": 5000,
+        "maxMedianAuditMs": 10000,
+        "maxPeakRssMiB": 1024
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 154.787417,
+          "medianAuditMs": 485.543959,
+          "peakRssMiB": 508.65625,
+          "payloadHash": "8302890597571ababa6ecdb61fe5bebe0a4401b119370c05a46190dd878a0c85",
+          "repetitions": [
+            {
+              "coreMs": 151.89229199999994,
+              "auditMs": 477.544625,
+              "peakRssMiB": 489.984375
+            },
+            {
+              "coreMs": 159.73170799999997,
+              "auditMs": 488.383542,
+              "peakRssMiB": 506.84375
+            },
+            {
+              "coreMs": 154.787417,
+              "auditMs": 485.543959,
+              "peakRssMiB": 508.65625
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 234,
+              "tokens": 180347,
+              "groups": 36,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 201,
+              "tokens": 267018,
+              "groups": 214,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 329.70945800000004,
+          "medianAuditMs": 659.531334,
+          "peakRssMiB": 523.15625,
+          "payloadHash": "8302890597571ababa6ecdb61fe5bebe0a4401b119370c05a46190dd878a0c85",
+          "repetitions": [
+            {
+              "coreMs": 329.70945800000004,
+              "auditMs": 659.531334,
+              "peakRssMiB": 523.15625
+            },
+            {
+              "coreMs": 337.837375,
+              "auditMs": 659.869458,
+              "peakRssMiB": 514.78125
+            },
+            {
+              "coreMs": 320.20200000000006,
+              "auditMs": 642.330333,
+              "peakRssMiB": 522.6875
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 27614893,
+              "phases": {
+                "input": 6228290,
+                "index": 18371769,
+                "extraction": 2672739,
+                "materialization": 1097,
+                "finalization": 340998
+              },
+              "peakCells": 1910361,
+              "groups": 170,
+              "occurrences": 426
+            },
+            "test": {
+              "total": 41884173,
+              "phases": {
+                "input": 9284177,
+                "index": 26038286,
+                "extraction": 4465275,
+                "materialization": 5767,
+                "finalization": 2090668
+              },
+              "peakCells": 2735403,
+              "groups": 850,
+              "occurrences": 2476
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 234,
+              "tokens": 180347,
+              "groups": 36,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 201,
+              "tokens": 267018,
+              "groups": 214,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "hono-src",
+      "inputHash": "c2bcb71e8a2b097ed48bb7b648040e7ecc7db9c55b3c01ad9d009f2ebb46c393",
+      "budget": {
+        "maxMedianCoreMs": 5000,
+        "maxMedianAuditMs": 10000,
+        "maxPeakRssMiB": 1024
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 410.462625,
+          "medianAuditMs": 722.588,
+          "peakRssMiB": 578.21875,
+          "payloadHash": "5e49dc2058725ddf23734a47726ca59099bfffdd557f3575fc89c2a901ddf371",
+          "repetitions": [
+            {
+              "coreMs": 407.213375,
+              "auditMs": 722.588,
+              "peakRssMiB": 524.9375
+            },
+            {
+              "coreMs": 420.659875,
+              "auditMs": 732.676916,
+              "peakRssMiB": 549.390625
+            },
+            {
+              "coreMs": 410.462625,
+              "auditMs": 720.636416,
+              "peakRssMiB": 578.21875
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 185,
+              "tokens": 121548,
+              "groups": 50,
+              "exhaustion": {
+                "kind": "match-work",
+                "limit": 100000000
+              }
+            },
+            "test": {
+              "files": 120,
+              "tokens": 288824,
+              "groups": 537,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 402.341333,
+          "medianAuditMs": 736.400625,
+          "peakRssMiB": 549.125,
+          "payloadHash": "80abbe11df3aa47f405b27f02437df5dfe347647bd5163465c52e7b368c8b777",
+          "repetitions": [
+            {
+              "coreMs": 406.77175,
+              "auditMs": 732.903166,
+              "peakRssMiB": 540.296875
+            },
+            {
+              "coreMs": 400.513542,
+              "auditMs": 736.400625,
+              "peakRssMiB": 536.078125
+            },
+            {
+              "coreMs": 402.341333,
+              "auditMs": 762.98925,
+              "peakRssMiB": 549.125
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 22780988,
+              "phases": {
+                "input": 4385898,
+                "index": 12263820,
+                "extraction": 5351158,
+                "materialization": 14068,
+                "finalization": 766044
+              },
+              "peakCells": 1288024,
+              "groups": 1285,
+              "occurrences": 4418
+            },
+            "test": {
+              "total": 51033138,
+              "phases": {
+                "input": 11130182,
+                "index": 28681781,
+                "extraction": 7870680,
+                "materialization": 22557,
+                "finalization": 3327938
+              },
+              "peakCells": 2979583,
+              "groups": 2381,
+              "occurrences": 8860
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 185,
+              "tokens": 121548,
+              "groups": 111,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 120,
+              "tokens": 288824,
+              "groups": 537,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "zod-package",
+      "inputHash": "a6ffba3095a26a83efa2006a316078c5fba8e40296b7f97d91cf0b58a6093e86",
+      "budget": {
+        "maxMedianCoreMs": 5000,
+        "maxMedianAuditMs": 10000,
+        "maxPeakRssMiB": 1024
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 492.176416,
+          "medianAuditMs": 902.936541,
+          "peakRssMiB": 703.390625,
+          "payloadHash": "2ce522216a07aef138f4a0ff3ab266acb3505a84c1b4143f9f3c926bda23fe44",
+          "repetitions": [
+            {
+              "coreMs": 492.176416,
+              "auditMs": 991.046084,
+              "peakRssMiB": 703.390625
+            },
+            {
+              "coreMs": 509.881792,
+              "auditMs": 902.936541,
+              "peakRssMiB": 633.890625
+            },
+            {
+              "coreMs": 477.70949999999993,
+              "auditMs": 886.155792,
+              "peakRssMiB": 674.40625
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 135,
+              "tokens": 236698,
+              "groups": 190,
+              "exhaustion": {
+                "kind": "match-work",
+                "limit": 100000000
+              }
+            },
+            "test": {
+              "files": 198,
+              "tokens": 391464,
+              "groups": 89,
+              "exhaustion": {
+                "kind": "match-work",
+                "limit": 100000000
+              }
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 610.7300419999999,
+          "medianAuditMs": 1020.7531669999998,
+          "peakRssMiB": 877.109375,
+          "payloadHash": "a63adc4772cf6106a0acb5298584b9eaaa59ee32949ab8ddc621aa3aee3e04b2",
+          "repetitions": [
+            {
+              "coreMs": 604.551375,
+              "auditMs": 1016.4837080000001,
+              "peakRssMiB": 712.921875
+            },
+            {
+              "coreMs": 610.7300419999999,
+              "auditMs": 1020.7531669999998,
+              "peakRssMiB": 877.109375
+            },
+            {
+              "coreMs": 622.7690419999999,
+              "auditMs": 1028.021333,
+              "peakRssMiB": 829.96875
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 46816394,
+              "phases": {
+                "input": 9214284,
+                "index": 23840455,
+                "extraction": 11079124,
+                "materialization": 37892,
+                "finalization": 2644639
+              },
+              "peakCells": 2474601,
+              "groups": 1993,
+              "occurrences": 12754
+            },
+            "test": {
+              "total": 73123580,
+              "phases": {
+                "input": 14477849,
+                "index": 38996596,
+                "extraction": 14424159,
+                "materialization": 42055,
+                "finalization": 5182921
+              },
+              "peakCells": 4048327,
+              "groups": 2744,
+              "occurrences": 13596
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 135,
+              "tokens": 236698,
+              "groups": 295,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 198,
+              "tokens": 391464,
+              "groups": 408,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "clean-small",
+      "inputHash": "742d06306397d3260b3f5bba8b551a51e9bc24eae68876a828274a8b8f5b207c",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 0.6648750000000092,
+          "medianAuditMs": 9.111084000000005,
+          "peakRssMiB": 124.78125,
+          "payloadHash": "6cf58d2b5ce703ba3f1cc85a1f6576b13871498ab0350e612221b37fe12fa0e2",
+          "repetitions": [
+            {
+              "coreMs": 0.6648750000000092,
+              "auditMs": 9.003416999999999,
+              "peakRssMiB": 124.46875
+            },
+            {
+              "coreMs": 0.7363749999999953,
+              "auditMs": 9.184916999999999,
+              "peakRssMiB": 124.78125
+            },
+            {
+              "coreMs": 0.6645000000000039,
+              "auditMs": 9.111084000000005,
+              "peakRssMiB": 124.65625
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 63,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 1,
+              "tokens": 16,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 1.7688330000000008,
+          "medianAuditMs": 10.094375,
+          "peakRssMiB": 122.390625,
+          "payloadHash": "6cf58d2b5ce703ba3f1cc85a1f6576b13871498ab0350e612221b37fe12fa0e2",
+          "repetitions": [
+            {
+              "coreMs": 1.7688330000000008,
+              "auditMs": 10.064750000000004,
+              "peakRssMiB": 122.046875
+            },
+            {
+              "coreMs": 1.6412499999999994,
+              "auditMs": 10.094375,
+              "peakRssMiB": 122.078125
+            },
+            {
+              "coreMs": 1.9559580000000096,
+              "auditMs": 10.337917000000004,
+              "peakRssMiB": 122.390625
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 8521,
+              "phases": {
+                "input": 1788,
+                "index": 5861,
+                "extraction": 870,
+                "materialization": 0,
+                "finalization": 2
+              },
+              "peakCells": 730,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 2097,
+              "phases": {
+                "input": 514,
+                "index": 1283,
+                "extraction": 299,
+                "materialization": 0,
+                "finalization": 1
+              },
+              "peakCells": 196,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 63,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 1,
+              "tokens": 16,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "clone-base",
+      "inputHash": "b5866213282c440fcf80a0337332acbf31450b747b79fd5689e965199183366d",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 1.641834000000003,
+          "medianAuditMs": 10.5715,
+          "peakRssMiB": 130.5,
+          "payloadHash": "778e472db37d34b010042591a156836e28111ac8e660cfcf266a5898c6b7924d",
+          "repetitions": [
+            {
+              "coreMs": 1.6637500000000074,
+              "auditMs": 10.464208999999997,
+              "peakRssMiB": 130.5
+            },
+            {
+              "coreMs": 1.641834000000003,
+              "auditMs": 10.5715,
+              "peakRssMiB": 128.953125
+            },
+            {
+              "coreMs": 1.6251670000000047,
+              "auditMs": 10.802333000000004,
+              "peakRssMiB": 130.0625
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 265,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 3.2028339999999957,
+          "medianAuditMs": 12.825541999999999,
+          "peakRssMiB": 128.15625,
+          "payloadHash": "778e472db37d34b010042591a156836e28111ac8e660cfcf266a5898c6b7924d",
+          "repetitions": [
+            {
+              "coreMs": 2.9430830000000014,
+              "auditMs": 12.817334000000002,
+              "peakRssMiB": 127.0625
+            },
+            {
+              "coreMs": 3.295749999999998,
+              "auditMs": 12.825541999999999,
+              "peakRssMiB": 128.15625
+            },
+            {
+              "coreMs": 3.2028339999999957,
+              "auditMs": 14.093041999999997,
+              "peakRssMiB": 126.59375
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 41607,
+              "phases": {
+                "input": 7550,
+                "index": 27361,
+                "extraction": 3908,
+                "materialization": 16,
+                "finalization": 2772
+              },
+              "peakCells": 2978,
+              "groups": 3,
+              "occurrences": 8
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 265,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "clone-removed",
+      "inputHash": "92a95e912b5164c6e6d680e55e889c20c3ef3b680d922949800f51d0f52c1193",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 0.8019999999999925,
+          "medianAuditMs": 9.368667000000002,
+          "peakRssMiB": 126.140625,
+          "payloadHash": "ed4506a3456f5e4ef4ff1636efe289a1eca0505e10f9eb37debfe5c4baa17b32",
+          "repetitions": [
+            {
+              "coreMs": 0.8682920000000109,
+              "auditMs": 9.368667000000002,
+              "peakRssMiB": 126.140625
+            },
+            {
+              "coreMs": 0.7998750000000001,
+              "auditMs": 10.432166999999993,
+              "peakRssMiB": 125.1875
+            },
+            {
+              "coreMs": 0.8019999999999925,
+              "auditMs": 8.679375000000007,
+              "peakRssMiB": 125.921875
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 194,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 2.3607079999999883,
+          "medianAuditMs": 11.586917,
+          "peakRssMiB": 124.03125,
+          "payloadHash": "ed4506a3456f5e4ef4ff1636efe289a1eca0505e10f9eb37debfe5c4baa17b32",
+          "repetitions": [
+            {
+              "coreMs": 2.46875,
+              "auditMs": 11.586917,
+              "peakRssMiB": 124.03125
+            },
+            {
+              "coreMs": 2.1607090000000113,
+              "auditMs": 11.563541,
+              "peakRssMiB": 122.0625
+            },
+            {
+              "coreMs": 2.3607079999999883,
+              "auditMs": 12.417917000000003,
+              "peakRssMiB": 122.71875
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 27653,
+              "phases": {
+                "input": 5388,
+                "index": 19795,
+                "extraction": 2467,
+                "materialization": 0,
+                "finalization": 3
+              },
+              "peakCells": 2228,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 194,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "branch-base",
+      "inputHash": "e3111400c13a2e97fb2b1d1661836a7dc5afa5e4224908e9042a5e42fe5cb8ee",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 0.644999999999996,
+          "medianAuditMs": 8.133875000000003,
+          "peakRssMiB": 125.75,
+          "payloadHash": "3916cd7c916335acbe51a149de33a6e82f4c8ee2c50bb26303d95f674534a1d7",
+          "repetitions": [
+            {
+              "coreMs": 0.5983749999999901,
+              "auditMs": 7.953333000000001,
+              "peakRssMiB": 124.015625
+            },
+            {
+              "coreMs": 0.7028750000000059,
+              "auditMs": 8.201041999999987,
+              "peakRssMiB": 123.953125
+            },
+            {
+              "coreMs": 0.644999999999996,
+              "auditMs": 8.133875000000003,
+              "peakRssMiB": 125.75
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 89,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 1.9791660000000064,
+          "medianAuditMs": 10.151832999999996,
+          "peakRssMiB": 122.203125,
+          "payloadHash": "3916cd7c916335acbe51a149de33a6e82f4c8ee2c50bb26303d95f674534a1d7",
+          "repetitions": [
+            {
+              "coreMs": 1.7097499999999997,
+              "auditMs": 10.068916999999999,
+              "peakRssMiB": 122.203125
+            },
+            {
+              "coreMs": 1.9791660000000064,
+              "auditMs": 10.151832999999996,
+              "peakRssMiB": 121.1875
+            },
+            {
+              "coreMs": 2.0309999999999917,
+              "auditMs": 10.343666999999996,
+              "peakRssMiB": 121.84375
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 12874,
+              "phases": {
+                "input": 2430,
+                "index": 9252,
+                "extraction": 1189,
+                "materialization": 0,
+                "finalization": 3
+              },
+              "peakCells": 1061,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 89,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "branch-grown",
+      "inputHash": "ca5704f212800e56708d7b60ff113468e96cbef9e687e8412ba1eabca981b768",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 0.9089579999999984,
+          "medianAuditMs": 10.202875000000006,
+          "peakRssMiB": 128.0625,
+          "payloadHash": "4fbbf541842ef4557847ebf9f384b8518bf39bd62dabd058a49526e12ee759f6",
+          "repetitions": [
+            {
+              "coreMs": 0.8732499999999987,
+              "auditMs": 10.155874999999995,
+              "peakRssMiB": 128.0625
+            },
+            {
+              "coreMs": 0.9342499999999916,
+              "auditMs": 10.202875000000006,
+              "peakRssMiB": 127.296875
+            },
+            {
+              "coreMs": 0.9089579999999984,
+              "auditMs": 10.370125000000002,
+              "peakRssMiB": 126.6875
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 224,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 2.353750000000005,
+          "medianAuditMs": 12.638416000000007,
+          "peakRssMiB": 124.546875,
+          "payloadHash": "4fbbf541842ef4557847ebf9f384b8518bf39bd62dabd058a49526e12ee759f6",
+          "repetitions": [
+            {
+              "coreMs": 2.353750000000005,
+              "auditMs": 13.446207999999999,
+              "peakRssMiB": 124.546875
+            },
+            {
+              "coreMs": 2.3437920000000076,
+              "auditMs": 12.638416000000007,
+              "peakRssMiB": 123.4375
+            },
+            {
+              "coreMs": 2.5502500000000055,
+              "auditMs": 12.582832999999994,
+              "peakRssMiB": 124.3125
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 32126,
+              "phases": {
+                "input": 6821,
+                "index": 22347,
+                "extraction": 2955,
+                "materialization": 0,
+                "finalization": 3
+              },
+              "peakCells": 2545,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 3,
+              "tokens": 224,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "acyclic",
+      "inputHash": "2549fb35317dfc8af62e4ba4efdeb5ac6d43909f4144c0e093c7632982f9b18a",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 0.6557499999999976,
+          "medianAuditMs": 7.793333000000004,
+          "peakRssMiB": 124.421875,
+          "payloadHash": "99f62c6f9b54b6dc63578e7d2506e7187998e169241617e1ca4722cfa6725ebe",
+          "repetitions": [
+            {
+              "coreMs": 0.6879160000000013,
+              "auditMs": 7.8018749999999955,
+              "peakRssMiB": 124.421875
+            },
+            {
+              "coreMs": 0.6557499999999976,
+              "auditMs": 7.793333000000004,
+              "peakRssMiB": 123.046875
+            },
+            {
+              "coreMs": 0.6502499999999998,
+              "auditMs": 7.656499999999994,
+              "peakRssMiB": 123.234375
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 4,
+              "tokens": 88,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 1.6184999999999974,
+          "medianAuditMs": 8.928791999999987,
+          "peakRssMiB": 122.796875,
+          "payloadHash": "99f62c6f9b54b6dc63578e7d2506e7187998e169241617e1ca4722cfa6725ebe",
+          "repetitions": [
+            {
+              "coreMs": 1.5911250000000052,
+              "auditMs": 7.921750000000003,
+              "peakRssMiB": 120.390625
+            },
+            {
+              "coreMs": 2.02795900000001,
+              "auditMs": 9.92758400000001,
+              "peakRssMiB": 122.796875
+            },
+            {
+              "coreMs": 1.6184999999999974,
+              "auditMs": 8.928791999999987,
+              "peakRssMiB": 120.125
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 12499,
+              "phases": {
+                "input": 2317,
+                "index": 8994,
+                "extraction": 1184,
+                "materialization": 0,
+                "finalization": 4
+              },
+              "peakCells": 1021,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 4,
+              "tokens": 88,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "cyclic",
+      "inputHash": "03773a682fec6839a091517a4cc334de179aee7a8c278b066253e7bdd7e85825",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 0.6529589999999956,
+          "medianAuditMs": 7.886125000000007,
+          "peakRssMiB": 125.671875,
+          "payloadHash": "aa37a3f9430b5021921bf0080afe5f4672fcea09f2f6bd4d817e7434b2bbaf7a",
+          "repetitions": [
+            {
+              "coreMs": 0.7864170000000001,
+              "auditMs": 7.886125000000007,
+              "peakRssMiB": 125.28125
+            },
+            {
+              "coreMs": 0.625458000000009,
+              "auditMs": 7.943708999999998,
+              "peakRssMiB": 125.671875
+            },
+            {
+              "coreMs": 0.6529589999999956,
+              "auditMs": 6.955832999999998,
+              "peakRssMiB": 124.078125
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 4,
+              "tokens": 100,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 2.0902909999999935,
+          "medianAuditMs": 9.866083000000003,
+          "peakRssMiB": 122.46875,
+          "payloadHash": "aa37a3f9430b5021921bf0080afe5f4672fcea09f2f6bd4d817e7434b2bbaf7a",
+          "repetitions": [
+            {
+              "coreMs": 2.124541999999991,
+              "auditMs": 9.866083000000003,
+              "peakRssMiB": 120.40625
+            },
+            {
+              "coreMs": 2.0902909999999935,
+              "auditMs": 10.278541000000004,
+              "peakRssMiB": 122.265625
+            },
+            {
+              "coreMs": 1.7482090000000028,
+              "auditMs": 9.69116600000001,
+              "peakRssMiB": 122.46875
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 14218,
+              "phases": {
+                "input": 2618,
+                "index": 10268,
+                "extraction": 1328,
+                "materialization": 0,
+                "finalization": 4
+              },
+              "peakCells": 1153,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 4,
+              "tokens": 100,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "dilution-base",
+      "inputHash": "74bc25ec6611addbda0ea8e462c1399e2e24129a4f8a3ebf6dffe0dff023f296",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 1.6973749999999939,
+          "medianAuditMs": 11.988708000000003,
+          "peakRssMiB": 134.671875,
+          "payloadHash": "51e38d25e4f1c650e5b3e8fcd645d9d420a2426950737cf868515ad8958bda65",
+          "repetitions": [
+            {
+              "coreMs": 1.658208000000002,
+              "auditMs": 11.988708000000003,
+              "peakRssMiB": 131.359375
+            },
+            {
+              "coreMs": 1.6973749999999939,
+              "auditMs": 11.630375,
+              "peakRssMiB": 132.875
+            },
+            {
+              "coreMs": 1.8535420000000045,
+              "auditMs": 12.55404200000001,
+              "peakRssMiB": 134.671875
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 4,
+              "tokens": 448,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 3.532749999999993,
+          "medianAuditMs": 14.221208000000004,
+          "peakRssMiB": 131.140625,
+          "payloadHash": "51e38d25e4f1c650e5b3e8fcd645d9d420a2426950737cf868515ad8958bda65",
+          "repetitions": [
+            {
+              "coreMs": 3.532749999999993,
+              "auditMs": 14.221208000000004,
+              "peakRssMiB": 130.25
+            },
+            {
+              "coreMs": 3.364167000000009,
+              "auditMs": 14.110541999999995,
+              "peakRssMiB": 129.640625
+            },
+            {
+              "coreMs": 3.5977919999999983,
+              "auditMs": 15.231667000000002,
+              "peakRssMiB": 131.140625
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 68248,
+              "phases": {
+                "input": 13214,
+                "index": 46016,
+                "extraction": 6229,
+                "materialization": 16,
+                "finalization": 2773
+              },
+              "peakCells": 5030,
+              "groups": 3,
+              "occurrences": 8
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 4,
+              "tokens": 448,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "dilution-grown",
+      "inputHash": "88dd194b8d53e97dde47959931850b948040bdfec7538c0b73b5de1f89d32bf2",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 1.9885830000000055,
+          "medianAuditMs": 16.242333000000002,
+          "peakRssMiB": 137.25,
+          "payloadHash": "0f7dbdf1ef6f5434e31a77e754c3e6df7781bdac780bd6cdb2426bd13160e6ec",
+          "repetitions": [
+            {
+              "coreMs": 1.941625000000002,
+              "auditMs": 16.242333000000002,
+              "peakRssMiB": 137.25
+            },
+            {
+              "coreMs": 1.9885830000000055,
+              "auditMs": 16.442375,
+              "peakRssMiB": 136.4375
+            },
+            {
+              "coreMs": 2.199541999999994,
+              "auditMs": 15.90641699999999,
+              "peakRssMiB": 136.484375
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 6,
+              "tokens": 1089,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 5.201166000000001,
+          "medianAuditMs": 20.014583000000002,
+          "peakRssMiB": 134.796875,
+          "payloadHash": "0f7dbdf1ef6f5434e31a77e754c3e6df7781bdac780bd6cdb2426bd13160e6ec",
+          "repetitions": [
+            {
+              "coreMs": 5.439750000000004,
+              "auditMs": 20.014583000000002,
+              "peakRssMiB": 134.53125
+            },
+            {
+              "coreMs": 5.201166000000001,
+              "auditMs": 19.550208999999995,
+              "peakRssMiB": 134.796875
+            },
+            {
+              "coreMs": 4.996291999999997,
+              "auditMs": 20.13624999999999,
+              "peakRssMiB": 134.359375
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 161364,
+              "phases": {
+                "input": 33733,
+                "index": 109871,
+                "extraction": 14969,
+                "materialization": 16,
+                "finalization": 2775
+              },
+              "peakCells": 11956,
+              "groups": 3,
+              "occurrences": 8
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 6,
+              "tokens": 1089,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "test-separation",
+      "inputHash": "8d36d9f97964c0ea85085cd27d67ebad1d50652c4e76cccd51c0fec2bdcc55d8",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 1.7441249999999968,
+          "medianAuditMs": 11.694582999999994,
+          "peakRssMiB": 134.71875,
+          "payloadHash": "03678a51645ee0e4d4b88bcace5884b54d7422519fc7446947a2001f924222b6",
+          "repetitions": [
+            {
+              "coreMs": 1.8382079999999945,
+              "auditMs": 12.41812499999999,
+              "peakRssMiB": 133.734375
+            },
+            {
+              "coreMs": 1.7441249999999968,
+              "auditMs": 11.16125000000001,
+              "peakRssMiB": 134.71875
+            },
+            {
+              "coreMs": 1.6084170000000029,
+              "auditMs": 11.694582999999994,
+              "peakRssMiB": 131.484375
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 80,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 3,
+              "tokens": 374,
+              "groups": 1,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 3.311000000000007,
+          "medianAuditMs": 14.399541999999997,
+          "peakRssMiB": 131.078125,
+          "payloadHash": "03678a51645ee0e4d4b88bcace5884b54d7422519fc7446947a2001f924222b6",
+          "repetitions": [
+            {
+              "coreMs": 3.311000000000007,
+              "auditMs": 14.288624999999996,
+              "peakRssMiB": 131.078125
+            },
+            {
+              "coreMs": 3.318708000000001,
+              "auditMs": 14.400833000000006,
+              "peakRssMiB": 130.78125
+            },
+            {
+              "coreMs": 3.2325830000000053,
+              "auditMs": 14.399541999999997,
+              "peakRssMiB": 131.015625
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 10907,
+              "phases": {
+                "input": 2172,
+                "index": 7659,
+                "extraction": 1074,
+                "materialization": 0,
+                "finalization": 2
+              },
+              "peakCells": 921,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 57765,
+              "phases": {
+                "input": 11234,
+                "index": 38409,
+                "extraction": 5334,
+                "materialization": 16,
+                "finalization": 2772
+              },
+              "peakCells": 4196,
+              "groups": 3,
+              "occurrences": 8
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 80,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 3,
+              "tokens": 374,
+              "groups": 1,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "incomplete-parse",
+      "inputHash": "c0524e9af4378797ea142e6962aa75ac32197ed58c8cc816d521a33ba1232bcc",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 0.45879200000000253,
+          "medianAuditMs": 6.994083000000003,
+          "peakRssMiB": 123.625,
+          "payloadHash": "10fa216ce0a03565b8c687c80c9f42dd238f99d7e933bdb4c93664fde1c720a1",
+          "repetitions": [
+            {
+              "coreMs": 0.4340000000000117,
+              "auditMs": 6.604292000000001,
+              "peakRssMiB": 122.171875
+            },
+            {
+              "coreMs": 0.45879200000000253,
+              "auditMs": 6.994083000000003,
+              "peakRssMiB": 122.359375
+            },
+            {
+              "coreMs": 0.46358399999999733,
+              "auditMs": 7.45150000000001,
+              "peakRssMiB": 123.625
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 23,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 1.1416660000000007,
+          "medianAuditMs": 8.34812500000001,
+          "peakRssMiB": 120.53125,
+          "payloadHash": "10fa216ce0a03565b8c687c80c9f42dd238f99d7e933bdb4c93664fde1c720a1",
+          "repetitions": [
+            {
+              "coreMs": 1.1491670000000056,
+              "auditMs": 8.759666999999993,
+              "peakRssMiB": 118.625
+            },
+            {
+              "coreMs": 1.1416660000000007,
+              "auditMs": 8.34812500000001,
+              "peakRssMiB": 118.328125
+            },
+            {
+              "coreMs": 1.1097919999999988,
+              "auditMs": 8.32575,
+              "peakRssMiB": 120.53125
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 2919,
+              "phases": {
+                "input": 709,
+                "index": 1818,
+                "extraction": 390,
+                "materialization": 0,
+                "finalization": 2
+              },
+              "peakCells": 281,
+              "groups": 0,
+              "occurrences": 0
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 23,
+              "groups": 0,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "copies-2",
+      "inputHash": "b889ac03dbf00f2fadc2a14d361c59cec33599ac9a4d4df95f0c1be8b1fc4726",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 5.9722500000000025,
+          "medianAuditMs": 12.89970799999999,
+          "peakRssMiB": 135.484375,
+          "payloadHash": "4133c7b6d9ddb9c0789ebee79bbc82552edf98925a66d6ce087fd8afac4ee353",
+          "repetitions": [
+            {
+              "coreMs": 5.846416999999988,
+              "auditMs": 12.89970799999999,
+              "peakRssMiB": 135.484375
+            },
+            {
+              "coreMs": 6.082917000000009,
+              "auditMs": 12.485375000000005,
+              "peakRssMiB": 135.359375
+            },
+            {
+              "coreMs": 5.9722500000000025,
+              "auditMs": 13.023332999999994,
+              "peakRssMiB": 134.4375
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 458,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 4.1902919999999995,
+          "medianAuditMs": 10.717249999999993,
+          "peakRssMiB": 129.796875,
+          "payloadHash": "4133c7b6d9ddb9c0789ebee79bbc82552edf98925a66d6ce087fd8afac4ee353",
+          "repetitions": [
+            {
+              "coreMs": 4.679708000000005,
+              "auditMs": 12.374250000000004,
+              "peakRssMiB": 129.4375
+            },
+            {
+              "coreMs": 4.1902919999999995,
+              "auditMs": 10.689166999999998,
+              "peakRssMiB": 129.796875
+            },
+            {
+              "coreMs": 4.147750000000002,
+              "auditMs": 10.717249999999993,
+              "peakRssMiB": 129.625
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 116556,
+              "phases": {
+                "input": 12695,
+                "index": 42619,
+                "extraction": 53794,
+                "materialization": 376,
+                "finalization": 7072
+              },
+              "peakCells": 4623,
+              "groups": 27,
+              "occurrences": 104
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 2,
+              "tokens": 458,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "copies-10",
+      "inputHash": "50a5a903a0b11fd4f125310f3aab8a0ca26446bc5ebbcbcda80fb718e0b2bca1",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 49.01216600000001,
+          "medianAuditMs": 58.439916999999994,
+          "peakRssMiB": 160.640625,
+          "payloadHash": "39131304d09229c32d67b64cb9417b0a0d512cfecb7ef0ca9a9106056fd5e58b",
+          "repetitions": [
+            {
+              "coreMs": 45.34595800000001,
+              "auditMs": 55.05408399999999,
+              "peakRssMiB": 160.25
+            },
+            {
+              "coreMs": 49.01216600000001,
+              "auditMs": 58.439916999999994,
+              "peakRssMiB": 160.328125
+            },
+            {
+              "coreMs": 49.141166999999996,
+              "auditMs": 59.106375000000014,
+              "peakRssMiB": 160.640625
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 10,
+              "tokens": 2290,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 9.690458000000007,
+          "medianAuditMs": 19.069125,
+          "peakRssMiB": 140.640625,
+          "payloadHash": "39131304d09229c32d67b64cb9417b0a0d512cfecb7ef0ca9a9106056fd5e58b",
+          "repetitions": [
+            {
+              "coreMs": 9.793790999999999,
+              "auditMs": 19.069125,
+              "peakRssMiB": 140.640625
+            },
+            {
+              "coreMs": 9.613874999999993,
+              "auditMs": 19.1815,
+              "peakRssMiB": 139.40625
+            },
+            {
+              "coreMs": 9.690458000000007,
+              "auditMs": 18.712916000000007,
+              "peakRssMiB": 138.75
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 561467,
+              "phases": {
+                "input": 63039,
+                "index": 213387,
+                "extraction": 246850,
+                "materialization": 1776,
+                "finalization": 36415
+              },
+              "peakCells": 22919,
+              "groups": 27,
+              "occurrences": 520
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 10,
+              "tokens": 2290,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    },
+    {
+      "id": "copies-40",
+      "inputHash": "5acd4e15da14ce04e0059a4db89bd78bfa53339a8ded6f779868db80731d1dd8",
+      "budget": {
+        "maxMedianCoreMs": 2000,
+        "maxMedianAuditMs": 2000,
+        "maxPeakRssMiB": 512
+      },
+      "engines": {
+        "reference": {
+          "medianCoreMs": 167.910416,
+          "medianAuditMs": 183.220167,
+          "peakRssMiB": 192.078125,
+          "payloadHash": "e040fd8eb76dec2d42d291bf729de2a5824139853c1764457b72128f004de064",
+          "repetitions": [
+            {
+              "coreMs": 167.910416,
+              "auditMs": 183.220167,
+              "peakRssMiB": 192.078125
+            },
+            {
+              "coreMs": 158.9635,
+              "auditMs": 174.239666,
+              "peakRssMiB": 190.921875
+            },
+            {
+              "coreMs": 170.98087499999997,
+              "auditMs": 186.386459,
+              "peakRssMiB": 191.171875
+            }
+          ],
+          "operations": {},
+          "scopes": {
+            "production": {
+              "files": 40,
+              "tokens": 9160,
+              "groups": 1,
+              "exhaustion": {
+                "kind": "match-work",
+                "limit": 100000000
+              }
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        },
+        "candidate": {
+          "medianCoreMs": 24.456417000000002,
+          "medianAuditMs": 39.314916999999994,
+          "peakRssMiB": 155.34375,
+          "payloadHash": "736abfe1402bf5cd4e76464f8de7da2f58710649b09de72aa0574d1981c6fd39",
+          "repetitions": [
+            {
+              "coreMs": 24.456417000000002,
+              "auditMs": 39.314916999999994,
+              "peakRssMiB": 153.375
+            },
+            {
+              "coreMs": 24.477500000000006,
+              "auditMs": 39.400834,
+              "peakRssMiB": 153.1875
+            },
+            {
+              "coreMs": 24.215790999999996,
+              "auditMs": 39.229709000000014,
+              "peakRssMiB": 155.34375
+            }
+          ],
+          "operations": {
+            "production": {
+              "total": 2228696,
+              "phases": {
+                "input": 251829,
+                "index": 853767,
+                "extraction": 970810,
+                "materialization": 7026,
+                "finalization": 145264
+              },
+              "peakCells": 91529,
+              "groups": 27,
+              "occurrences": 2080
+            },
+            "test": {
+              "total": 0,
+              "phases": {
+                "input": 0,
+                "index": 0,
+                "extraction": 0,
+                "materialization": 0,
+                "finalization": 0
+              },
+              "peakCells": 0,
+              "groups": 0,
+              "occurrences": 0
+            }
+          },
+          "scopes": {
+            "production": {
+              "files": 40,
+              "tokens": 9160,
+              "groups": 1,
+              "exhaustion": null
+            },
+            "test": {
+              "files": 0,
+              "tokens": 0,
+              "groups": 0,
+              "exhaustion": null
+            }
+          }
+        }
+      },
+      "failures": []
+    }
+  ],
+  "passed": true
+}

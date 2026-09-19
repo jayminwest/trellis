@@ -27,6 +27,21 @@ export function suffixArray(
 	return sa;
 }
 
+function extendPrefix(
+	tokens: Uint32Array,
+	position: number,
+	previous: number,
+	common: number,
+	work: DuplicationWork,
+): number {
+	while (position + common < tokens.length && previous + common < tokens.length) {
+		work.charge(3);
+		if (tokens[position + common] !== tokens[previous + common]) break;
+		common += 1;
+	}
+	return common;
+}
+
 /** Kasai's linear LCP; distinct terminators force mismatch at every file boundary. */
 export function longestCommonPrefixes(
 	tokens: Uint32Array,
@@ -49,11 +64,7 @@ export function longestCommonPrefixes(
 			continue;
 		}
 		const previous = sa[rank - 1] ?? 0;
-		while (position + common < tokens.length && previous + common < tokens.length) {
-			work.charge(3);
-			if (tokens[position + common] !== tokens[previous + common]) break;
-			common += 1;
-		}
+		common = extendPrefix(tokens, position, previous, common, work);
 		lcp[rank] = common;
 		if (common > 0) common -= 1;
 	}

@@ -1,0 +1,187 @@
+{
+  "referenceCommit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+  "analyzerVersion": "0.2.3",
+  "scoringVersion": "0.2.0-provisional",
+  "passed": true,
+  "entries": [
+    {
+      "id": "trellis-self",
+      "oldIndex": 44,
+      "newIndex": 44,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "hono-src",
+      "oldIndex": 89,
+      "newIndex": 83,
+      "oldPartial": true,
+      "newPartial": true,
+      "changedMetrics": [
+        "duplication.density.production",
+        "duplication.duplicated-lines.production",
+        "duplication.groups.production"
+      ],
+      "remainingIncompleteMetrics": [
+        "graph.edges.unresolved",
+        "import-cycle.density",
+        "import-cycle.groups",
+        "import-cycle.modules"
+      ],
+      "exactMetricAndScoreParity": false
+    },
+    {
+      "id": "zod-package",
+      "oldIndex": 92,
+      "newIndex": 88,
+      "oldPartial": true,
+      "newPartial": true,
+      "changedMetrics": [
+        "duplication.density.production",
+        "duplication.density.test",
+        "duplication.duplicated-lines.production",
+        "duplication.duplicated-lines.test",
+        "duplication.groups.production",
+        "duplication.groups.test"
+      ],
+      "remainingIncompleteMetrics": [
+        "graph.edges.unresolved",
+        "import-cycle.density",
+        "import-cycle.groups",
+        "import-cycle.modules"
+      ],
+      "exactMetricAndScoreParity": false
+    },
+    {
+      "id": "clean-small",
+      "oldIndex": 0,
+      "newIndex": 0,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "clone-base",
+      "oldIndex": 16,
+      "newIndex": 16,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "clone-removed",
+      "oldIndex": 0,
+      "newIndex": 0,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "branch-base",
+      "oldIndex": 0,
+      "newIndex": 0,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "branch-grown",
+      "oldIndex": 26,
+      "newIndex": 26,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "acyclic",
+      "oldIndex": 0,
+      "newIndex": 0,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "cyclic",
+      "oldIndex": 12,
+      "newIndex": 12,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "dilution-base",
+      "oldIndex": 42,
+      "newIndex": 42,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "dilution-grown",
+      "oldIndex": 42,
+      "newIndex": 42,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "test-separation",
+      "oldIndex": 0,
+      "newIndex": 0,
+      "oldPartial": false,
+      "newPartial": false,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [],
+      "exactMetricAndScoreParity": true
+    },
+    {
+      "id": "incomplete-parse",
+      "oldIndex": 100,
+      "newIndex": 100,
+      "oldPartial": true,
+      "newPartial": true,
+      "changedMetrics": [],
+      "remainingIncompleteMetrics": [
+        "complexity.cc.max.production",
+        "complexity.cc.p50.production",
+        "complexity.cc.p90.production",
+        "complexity.functions.production",
+        "complexity.nesting.max.production",
+        "duplication.density.production",
+        "duplication.duplicated-lines.production",
+        "duplication.groups.production",
+        "erosion.eroded-count.production",
+        "erosion.eroded-share.production",
+        "erosion.mass.production",
+        "graph.edges.external",
+        "graph.edges.local",
+        "graph.edges.unresolved",
+        "import-cycle.density",
+        "import-cycle.groups",
+        "import-cycle.modules"
+      ],
+      "exactMetricAndScoreParity": true
+    }
+  ]
+}

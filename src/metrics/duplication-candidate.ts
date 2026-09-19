@@ -1,4 +1,5 @@
-/** Isolated bounded candidate. Not selected by the audit before trellis-b594 acceptance. */
+/** Single bounded native engine, promoted after trellis-b594 acceptance.
+ * Candidate names retain the acceptance harness seam; there is no runtime engine selector. */
 import type { FileSyntax } from "../syntax/index.ts";
 import { type CloneGroup, collectControlledTokens, type TokenStream } from "./duplication.ts";
 import { accountCandidateLines } from "./duplication-account.ts";
@@ -15,6 +16,7 @@ import {
 } from "./duplication-work.ts";
 
 export interface CandidateDetection {
+	diagnosticFiles: string[];
 	groups: CloneGroup[];
 	tokenCount: number;
 	exhaustion: DuplicationStop | null;
@@ -29,10 +31,11 @@ export interface CandidateDetection {
 	};
 }
 
-function collectFiles(files: readonly FileSyntax[], work: DuplicationWork): TokenStream[] {
+function collectFiles(files: readonly FileSyntax[], work: DuplicationWork) {
 	work.enter("input");
 	if (files.length > work.limits.maxStreams) work.stop("maxStreams", work.limits.maxStreams);
 	const streams: TokenStream[] = [];
+	const diagnosticFiles: string[] = [];
 	const sourceSet = files[0]?.sourceSet;
 	const control = {
 		charge: (units = 1) => work.charge(units),
@@ -47,10 +50,18 @@ function collectFiles(files: readonly FileSyntax[], work: DuplicationWork): Toke
 	for (const file of files) {
 		work.charge();
 		if (file.sourceSet !== sourceSet) throw new Error("Duplication requires one source set");
+		if (file.diagnostics.length > 0) {
+			work.reserve(2);
+			diagnosticFiles.push(file.path);
+		}
 		streams.push(collectControlledTokens(file, control));
 	}
+	diagnosticFiles.sort((a, b) => {
+		work.charge();
+		return a < b ? -1 : a > b ? 1 : 0;
+	});
 	work.checkpoint();
-	return streams;
+	return { streams, diagnosticFiles };
 }
 
 function detect(streams: readonly TokenStream[], work: DuplicationWork): CloneGroup[] {
@@ -75,8 +86,10 @@ function result(
 	groups: CloneGroup[],
 	totals: CandidateDetection["totals"],
 	exhaustion: DuplicationStop | null,
+	diagnosticFiles: string[] = [],
 ): CandidateDetection {
 	return {
+		diagnosticFiles,
 		groups,
 		totals,
 		exhaustion,
@@ -94,13 +107,17 @@ function result(
 /** Only a budget/cancellation stop becomes incomplete. No partial groups escape. */
 function run(
 	work: DuplicationWork,
-	operation: () => { groups: CloneGroup[]; totals: CandidateDetection["totals"] },
+	operation: () => {
+		groups: CloneGroup[];
+		totals: CandidateDetection["totals"];
+		diagnosticFiles?: string[];
+	},
 ): CandidateDetection {
 	try {
 		work.checkpoint();
-		const { groups, totals } = operation();
+		const { groups, totals, diagnosticFiles } = operation();
 		work.checkpoint();
-		return result(work, groups, totals, null);
+		return result(work, groups, totals, null, diagnosticFiles);
 	} catch (error) {
 		if (!(error instanceof DuplicationLimitError)) throw error;
 		return result(work, [], null, error.exhaustion);
@@ -122,7 +139,8 @@ export function measureCandidateScope(
 ): CandidateDetection {
 	const work = new DuplicationWork(options);
 	return run(work, () => {
-		const groups = detect(collectFiles(files, work), work);
-		return { groups, totals: accountCandidateLines(files, groups, work) };
+		const { streams, diagnosticFiles } = collectFiles(files, work);
+		const groups = detect(streams, work);
+		return { groups, totals: accountCandidateLines(files, groups, work), diagnosticFiles };
 	});
 }

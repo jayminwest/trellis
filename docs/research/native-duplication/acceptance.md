@@ -96,3 +96,51 @@ membership digests, exact-reference status and independent comparison counts.
 The manifest and budget ceilings must not be changed to obtain acceptance.
 Production cutover is step 10 and remains a separate change, with native score,
 policy, CLI/SDK and zero-footprint checks required there.
+
+## Production cutover (step 10, trellis-e55c)
+
+Analyzer 0.2.3 now uses this engine through `analyzeDuplication`; the token-stream
+entry point delegates to the same bounded implementation. The old detector and
+finalizer are retained only under `src/metrics/tests/` as reference code. The
+candidate filename is historical, not a second selectable runtime backend.
+
+[cutover-results.json](cutover-results.json) repeats all 17 inputs, three fresh
+processes per engine, against the final cutover source hashes. Every frozen
+resource and complete-reference payload check passes.
+[cutover-raw-proof.json](cutover-raw-proof.json) repeats the independent raw
+membership/maximality proof. No manifest, ceiling or scoring constant changed.
+
+| Input | Core median ms | Overall median ms | Peak MiB |
+| --- | ---: | ---: | ---: |
+| trellis-self | 329.7 | 659.5 | 523.2 |
+| hono-src | 402.3 | 736.4 | 549.1 |
+| zod-package | 610.7 | 1020.8 | 877.1 |
+| copies-40 | 24.5 | 39.3 | 155.3 |
+
+[score-proof.json](score-proof.json) compares complete production audits against
+the pinned pre-cutover core on all fourteen source snapshots. All formerly
+complete metrics and unchanged-input score objects agree exactly. Hono's index
+changes 89 → 83 and Zod's 92 → 88 solely because previously incomplete duplication
+is now measured. Their graph metrics remain incomplete: these are measurement
+coverage improvements, not source cleanup or claims of fully complete audits.
+The pinned trellis index remains 44. Scoring is still 0.2.0-provisional.
+
+`src/client/duplication-cutover.test.ts` proves forty-copy CLI/SDK measurement
+parity, 1,080 affected lines, production/test separation, forced unmeasured
+exhaustion, unchanged target contents and no default database. Prior 0.2.2 reports
+remain readable; analyzer changes and disguised work-option changes both refuse
+scored comparison with policy exit 2. The existing optional-provider isolation
+and native offline suites exercise the production audit path.
+
+To reproduce the cutover records, use the preparation and network-disabled
+commands above with a new output directory, then copy `results.json` and
+`raw-proof.json` to their `cutover-` names. The additional score proof is:
+
+```sh
+NODE_PATH="$PWD/node_modules" bun docs/research/native-duplication/score-proof.mjs "$corpus_root" "$results_dir/score-proof.json"
+cp "$results_dir/score-proof.json" docs/research/native-duplication/score-proof.json
+```
+
+The supported input limit remains 2M normalized tokens per source set. The
+22.7M-token OpenClaw observation is outside that limit. No just-bash/pi-mono or
+additional operating-system resource validation is claimed here.

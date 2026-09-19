@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { collectTokenStream } from "./duplication.ts";
 import { detectCandidateClones, measureCandidateScope } from "./duplication-candidate.ts";
-import { detectClones } from "./duplication-detect.ts";
 import {
 	type DuplicationStop,
 	DuplicationWork,
@@ -14,12 +13,21 @@ import {
 	sourceFile,
 	syntheticStream,
 } from "./tests/duplication-fixtures.ts";
+import { detectClones } from "./tests/legacy-duplication.ts";
 
 function files(copies = 2) {
 	return Array.from({ length: copies }, (_, i) => sourceFile(`${i}.ts`, repeatedSource(`fn${i}`)));
 }
 
 describe("bounded duplication candidate", () => {
+	test("retains sorted diagnostic provenance for completed partial-parse measurements", () => {
+		const input = [sourceFile("z.ts", "const z = ;"), sourceFile("a.ts", "const a = ;")];
+		const result = measureCandidateScope(input);
+		expect(result.exhaustion).toBeNull();
+		expect(result.diagnosticFiles).toEqual(["a.ts", "z.ts"]);
+		expect(result.totals?.codeLines).toBe(2);
+	});
+
 	test("matches complete legacy groups and independent code-line unions", () => {
 		for (const input of [[], files(1), files(2), files(10)]) {
 			const actual = measureCandidateScope(input);

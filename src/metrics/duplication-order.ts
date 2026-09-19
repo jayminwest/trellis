@@ -9,6 +9,7 @@ import type { RankedTokens } from "./duplication-index-input.ts";
 import type { DuplicationWork } from "./duplication-work.ts";
 
 type Order = readonly [number, number, number];
+const EMPTY_ORDER: Order = [0, 0, 0];
 
 function windowFactor(work: DuplicationWork): number {
 	let factor = 1;
@@ -99,9 +100,9 @@ export function orderRawGroups(
 		}
 		sameLength.sort((a, b) => {
 			work.charge(7);
-			const x = keys.get(a) ?? [0, 0, 0];
-			const y = keys.get(b) ?? [0, 0, 0];
-			return (x[0] ?? 0) - (y[0] ?? 0) || (x[1] ?? 0) - (y[1] ?? 0) || (x[2] ?? 0) - (y[2] ?? 0);
+			const x = keys.get(a) ?? EMPTY_ORDER;
+			const y = keys.get(b) ?? EMPTY_ORDER;
+			return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
 		});
 		work.release(keys.size * 3);
 	}

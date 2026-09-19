@@ -139,7 +139,11 @@ describe("analyzeDuplication bounded feasibility", () => {
 		await put("src/b.ts", CLONE_FN);
 		const budget: DuplicationBudget = { maxTokens: 10, maxMatchWork: 1_000_000 };
 		const { scopes, metrics, findings } = analyzeDuplication(await inventory(), { budget });
-		expect(scopes.production.exhaustion).toEqual({ kind: "token-count", limit: 10 });
+		expect(scopes.production.exhaustion).toEqual({
+			kind: "token-count",
+			limit: 10,
+			phase: "input",
+		});
 		const byIdMap = byId(metrics);
 		for (const id of [
 			"duplication.groups.production",
@@ -154,14 +158,15 @@ describe("analyzeDuplication bounded feasibility", () => {
 		expect(findings).toHaveLength(0);
 	});
 
-	test("match-work exhaustion is incomplete with partial values and a reason", async () => {
+	test("match-work exhaustion is incomplete with no committed values and a located reason", async () => {
 		await put("src/a.ts", CLONE_FN);
 		await put("src/b.ts", CLONE_FN);
 		const budget: DuplicationBudget = { maxTokens: 1_000_000, maxMatchWork: 5 };
 		const { scopes, metrics } = analyzeDuplication(await inventory(), { budget });
-		expect(scopes.production.exhaustion).toEqual({ kind: "match-work", limit: 5 });
+		expect(scopes.production.exhaustion).toEqual({ kind: "match-work", limit: 5, phase: "input" });
 		const groups = byId(metrics).get("duplication.groups.production");
 		expect(groups?.state).toBe("incomplete");
+		expect(groups?.value).toBeUndefined();
 		expect(groups?.reason).toContain("match-work budget of 5");
 	});
 

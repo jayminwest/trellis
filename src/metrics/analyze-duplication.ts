@@ -25,26 +25,24 @@
  *
  * State rules (SPEC §3.3):
  *
- * - Token-budget exhaustion means nothing was measured → every scope metric
- *   is `incomplete` with the reason and no value.
- * - Match-work exhaustion means partial detection → `incomplete` with the
- *   partial values and a reason saying so. Resource limits never silently
- *   return a clean result.
+ * - Any resource exhaustion discards uncommitted groups/totals: every scope
+ *   metric is `incomplete` with the located reason and no value. A stopped
+ *   traversal is never published as complete or as measured zero debt.
  * - A scope containing files with parse diagnostics is `incomplete` with
  *   partial values (same rule as complexity, SPEC §5.1).
  * - A scope with zero code-classified lines has a `not-applicable` density
  *   (a 0/0 ratio is meaningless); counts stay finite (`0`) and `complete`.
  */
 import type { Finding, MetricValue, SourceSet } from "../contract/index.ts";
-import { classifyLines, type FileSyntax, type SyntaxInventory } from "../syntax/index.ts";
+import type { FileSyntax, SyntaxInventory } from "../syntax/index.ts";
 import {
 	type BudgetExhaustion,
 	type CloneGroup,
-	collectTokenStream,
 	DEFAULT_DUPLICATION_BUDGET,
 	type DuplicationBudget,
+	locateBudgetExhaustion,
 } from "./duplication.ts";
-import { detectClones } from "./duplication-detect.ts";
+import { measureCandidateScope } from "./duplication-candidate.ts";
 import { roundTo } from "./erosion.ts";
 
 /** The source sets duplication measurement covers (SPEC §3.1: scored sets, separately). */
@@ -63,10 +61,10 @@ export interface DuplicationScope {
 	files: number;
 	/** Normalized tokens tokenized in this scope. */
 	tokenCount: number;
-	/** Code-classified lines in the scope (the density denominator). */
-	codeLines: number;
-	/** Union of code-classified lines covered by clone members (the numerator). */
-	duplicatedLines: number;
+	/** Code-classified lines in the scope; null when the pass did not commit totals. */
+	codeLines: number | null;
+	/** Union of covered code lines; null when the pass did not commit totals. */
+	duplicatedLines: number | null;
 	/** `duplicatedLines / codeLines`; `null` when the scope has no code lines. */
 	density: number | null;
 	/** Surviving clone groups, deterministically ordered. */
@@ -89,56 +87,25 @@ export interface DuplicationAnalysis {
 	findings: Finding[];
 }
 
-/**
- * Union of code-classified lines covered by any member range in `groups`
- * for one file — counted once, so overlapping groups never double-count.
- */
-function duplicatedCodeLines(file: FileSyntax, groups: readonly CloneGroup[]): number {
-	const ranges = groups.flatMap((group) =>
-		group.members
-			.filter((member) => member.path === file.path)
-			.map((member) => ({ start: member.range.start.line, end: member.range.end.line })),
-	);
-	if (ranges.length === 0) return 0;
-	const kinds = classifyLines(file.sourceFile);
-	const covered = new Array<boolean>(kinds.length).fill(false);
-	for (const range of ranges) {
-		const last = Math.min(range.end, kinds.length);
-		for (let line = range.start; line <= last; line += 1) covered[line - 1] = true;
-	}
-	let count = 0;
-	for (const [index, kind] of kinds.entries()) {
-		if (covered[index] && kind === "code") count += 1;
-	}
-	return count;
-}
-
 /** Measure one source set: tokenize, detect, and fold groups into scope totals. */
 function measureScope(
 	sourceSet: SourceSet,
 	files: readonly FileSyntax[],
 	budget: DuplicationBudget,
 ): DuplicationScope {
-	const streams = files.map((file) => collectTokenStream(file));
-	const detection = detectClones(streams, budget);
-	const codeLines = files.reduce((sum, file) => sum + file.lines.code, 0);
-	const duplicatedLines = files.reduce(
-		(sum, file) => sum + duplicatedCodeLines(file, detection.groups),
-		0,
-	);
+	const detection = measureCandidateScope(files, budget);
+	const codeLines = detection.totals?.codeLines ?? null;
+	const duplicatedLines = detection.totals?.duplicatedLines ?? null;
 	return {
 		sourceSet,
 		files: files.length,
 		tokenCount: detection.tokenCount,
 		codeLines,
 		duplicatedLines,
-		density: codeLines === 0 ? null : duplicatedLines / codeLines,
+		density: detection.totals?.density ?? null,
 		groups: detection.groups,
-		diagnosticFiles: files
-			.filter((file) => file.diagnostics.length > 0)
-			.map((file) => file.path)
-			.sort(),
-		exhaustion: detection.exhaustion,
+		diagnosticFiles: detection.diagnosticFiles,
+		exhaustion: locateBudgetExhaustion(detection.exhaustion),
 	};
 }
 
@@ -147,11 +114,14 @@ function scopeReason(scope: DuplicationScope): string | undefined {
 	if (scope.exhaustion?.kind === "token-count") {
 		return (
 			`token budget of ${scope.exhaustion.limit} exceeded ` +
-			`(${scope.tokenCount} tokens in the ${scope.sourceSet} set); duplication not measured`
+			`(at least ${scope.tokenCount} observed tokens in ${scope.sourceSet}, phase ${scope.exhaustion.phase}); duplication not measured`
 		);
 	}
 	if (scope.exhaustion?.kind === "match-work") {
-		return `match-work budget of ${scope.exhaustion.limit} exceeded; duplication results are partial`;
+		return `match-work budget of ${scope.exhaustion.limit} exceeded in ${scope.exhaustion.phase}; duplication not measured`;
+	}
+	if (scope.exhaustion !== null) {
+		return `${scope.exhaustion.kind} limit ${scope.exhaustion.limit} in ${scope.exhaustion.phase}; duplication not measured`;
 	}
 	const n = scope.diagnosticFiles.length;
 	return n === 0
@@ -183,36 +153,36 @@ function metric(
 	return { id, unit, ...stateAndValue(value, reason), ...extra };
 }
 
+/** Known compatible numerator/denominator, absent for unmeasured or empty scopes. */
+function metricFraction(scope: DuplicationScope) {
+	if (
+		scope.exhaustion !== null ||
+		scope.codeLines === null ||
+		scope.codeLines === 0 ||
+		scope.duplicatedLines === null
+	)
+		return undefined;
+	return { numerator: scope.duplicatedLines, denominator: scope.codeLines };
+}
+
 /** Emit the per-scope metric set: ids carry the source set as their last segment. */
 function scopeMetrics(scope: DuplicationScope): MetricValue[] {
 	const set = scope.sourceSet;
 	const reason = scopeReason(scope);
-	const unmeasured = scope.exhaustion?.kind === "token-count";
+	const unmeasured = scope.exhaustion !== null;
 	const density = scope.density === null ? null : roundTo(scope.density, 6);
+	const fraction = metricFraction(scope);
+	const detail =
+		fraction === undefined
+			? undefined
+			: {
+					...fraction,
+					detail: { tokenCount: scope.tokenCount, files: scope.files },
+				};
 	return [
 		metric(`duplication.groups.${set}`, "count", unmeasured ? null : scope.groups.length, reason),
-		metric(
-			`duplication.duplicated-lines.${set}`,
-			"lines",
-			unmeasured ? null : scope.duplicatedLines,
-			reason,
-			unmeasured || scope.codeLines === 0
-				? undefined
-				: {
-						numerator: scope.duplicatedLines,
-						denominator: scope.codeLines,
-						detail: { tokenCount: scope.tokenCount, files: scope.files },
-					},
-		),
-		metric(
-			`duplication.density.${set}`,
-			"ratio",
-			unmeasured ? null : density,
-			reason,
-			unmeasured || scope.codeLines === 0
-				? undefined
-				: { numerator: scope.duplicatedLines, denominator: scope.codeLines },
-		),
+		metric(`duplication.duplicated-lines.${set}`, "lines", scope.duplicatedLines, reason, detail),
+		metric(`duplication.density.${set}`, "ratio", density, reason, fraction),
 	];
 }
 

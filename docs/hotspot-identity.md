@@ -46,8 +46,11 @@ marks otherwise identified collisions; it never removes inventory entries.
 
 ## Version and reader transition
 
-The producer emits report schema **1.2.0**, analyzer
-**0.2.2**, and native `trellis.complexity` tool/adapter **0.2.2**. Identity
+The identity milestone introduced report schema **1.2.0** in analyzer **0.2.2**.
+The delivered native-engine release is analyzer/tool/adapter **0.2.3**, retaining
+schema **1.2.0** and the same hotspot identity semantics. Crossing 0.2.2 → 0.2.3
+requires a fresh baseline because duplication work accounting changed; the
+reader still preserves those prior artifacts. Identity
 version is **1.0.0**. Scoring stays **0.2.0-provisional** with unchanged weights.
 Report readers retain schemas 1.0.0 and 1.1.0 and reject
 identity fields in those historical schemas. Schema 1.2.0 requires valid

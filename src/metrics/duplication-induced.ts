@@ -44,19 +44,27 @@ function resetBuckets(state: State, end: boolean, work: DuplicationWork): void {
 	}
 }
 
+function inducePredecessor(
+	state: State,
+	position: number,
+	isSmall: boolean,
+	work: DuplicationWork,
+): void {
+	if (position === EMPTY || position === 0 || (state.types[position - 1] === 1) !== isSmall) return;
+	work.charge(4);
+	const token = state.tokens[position - 1] ?? 0;
+	const slot = (state.buckets[token] ?? 0) - (isSmall ? 1 : 0);
+	state.sa[slot] = position - 1;
+	state.buckets[token] = slot + (isSmall ? 0 : 1);
+}
+
 function induceSide(state: State, isSmall: boolean, work: DuplicationWork): void {
 	resetBuckets(state, isSmall, work);
 	const direction = isSmall ? -1 : 1;
 	for (let i = isSmall ? state.sa.length - 1 : 0; i >= 0 && i < state.sa.length; i += direction) {
 		work.charge(2);
 		const position = state.sa[i] ?? EMPTY;
-		if (position === EMPTY || position === 0 || (state.types[position - 1] === 1) !== isSmall)
-			continue;
-		work.charge(4);
-		const token = state.tokens[position - 1] ?? 0;
-		const slot = (state.buckets[token] ?? 0) - (isSmall ? 1 : 0);
-		state.sa[slot] = position - 1;
-		state.buckets[token] = slot + (isSmall ? 0 : 1);
+		inducePredecessor(state, position, isSmall, work);
 	}
 }
 

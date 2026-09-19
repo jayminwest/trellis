@@ -37,6 +37,7 @@ import type {
 	ProviderIdentity,
 } from "../contract/index.ts";
 import type { SourceInventory } from "../discovery/index.ts";
+import { DUPLICATION_LIMITS } from "../metrics/duplication-work.ts";
 import {
 	analyzeComplexity,
 	analyzeCycles,
@@ -67,6 +68,8 @@ import {
 	requiredForScoring,
 } from "./registry.ts";
 import type { InternalAnalysisResult } from "./result.ts";
+
+const DUPLICATION_NATIVE_OPTIONS = { engine: "suffix-array-lcp", "work-accounting": "v2" } as const;
 
 /** Supported native analyzer ids, sorted (the registry's addressable surface). */
 export const NATIVE_ANALYZER_IDS = [
@@ -161,11 +164,20 @@ export function runDuplicationAnalysis(
 	return {
 		product,
 		result: {
-			provider: nativeAnalyzerIdentity("trellis.duplication", "shared-parse"),
+			provider: nativeAnalyzerIdentity(
+				"trellis.duplication",
+				"shared-parse",
+				DUPLICATION_NATIVE_OPTIONS,
+			),
 			...scopeFields(scope),
 			analysis: nativeAnalysisIdentity(scope, syntax.compilerVersion, {
 				"max-tokens": budget.maxTokens,
 				"max-match-work": budget.maxMatchWork,
+				"work-accounting": "v2",
+				"max-streams": DUPLICATION_LIMITS.maxStreams,
+				"max-working-cells": DUPLICATION_LIMITS.maxWorkingCells,
+				"max-groups": DUPLICATION_LIMITS.maxGroups,
+				"max-occurrences": DUPLICATION_LIMITS.maxOccurrences,
 			}),
 			metrics: product.metrics,
 			findings: product.findings,
@@ -298,7 +310,11 @@ const complexityAnalyzer: NativeAnalyzerRegistration = {
 };
 
 const duplicationAnalyzer: NativeAnalyzerRegistration = {
-	identity: nativeAnalyzerIdentity("trellis.duplication", "shared-parse"),
+	identity: nativeAnalyzerIdentity(
+		"trellis.duplication",
+		"shared-parse",
+		DUPLICATION_NATIVE_OPTIONS,
+	),
 	capabilities: ["duplication"],
 	metrics: DUPLICATION_METRICS,
 	requires: [],
