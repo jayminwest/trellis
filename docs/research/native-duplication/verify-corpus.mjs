@@ -7,7 +7,7 @@ import { z } from "zod";
 
 const relative = z.string().min(1).refine((path) => !path.startsWith("/") && !path.includes("\\") && path.split("/").every((part) => part !== ".." && part !== ""));
 const entry = z.strictObject({
- id: z.string(), repository: z.string(), commit: z.string().regex(/^[a-f0-9]{40}$/),
+ id: z.string().regex(/^[a-z0-9-]+$/), repository: z.string(), commit: z.string().regex(/^[a-f0-9]{40}$/),
  snapshotDir: relative, scope: relative,
  files: z.number().int().nonnegative(), bytes: z.number().int().nonnegative(),
  treeSha256: z.string().regex(/^[a-f0-9]{64}$/),
@@ -18,8 +18,17 @@ export const manifestSchema = z.strictObject({
  digest: z.literal("sha256(JSON.stringify(sorted [relative-path, content-sha256] pairs))"),
  referenceCommit: z.string().regex(/^[a-f0-9]{40}$/),
  environment: z.record(z.string(), z.string()),
- resources: z.record(z.string(), z.number().int().nonnegative()),
- entries: z.array(entry).min(3),
+ resources: z.strictObject(Object.fromEntries([
+  "maxTokens", "maxMatchWork", "maxStreams", "maxWorkingCells", "maxGroups", "maxOccurrences",
+  "checkpointEvery", "oracleMaxTokens", "runs", "maxSingleRunMs", "stressMaxCoreMs", "stressMaxAuditMs", "stressMaxPeakRssMiB",
+ ].map((key) => [key, z.number().int().positive()]))),
+ entries: z.array(entry).min(14),
+}).superRefine((manifest, context) => {
+ const ids = new Set(manifest.entries.map((item) => item.id));
+ if (ids.size !== manifest.entries.length) context.addIssue({ code: "custom", message: "duplicate corpus id" });
+ for (const id of ["trellis-self", "hono-src", "zod-package", "clean-small", "clone-base", "clone-removed", "branch-base", "branch-grown", "acyclic", "cyclic", "dilution-base", "dilution-grown", "test-separation", "incomplete-parse"]) {
+  if (!ids.has(id)) context.addIssue({ code: "custom", message: `missing required corpus ${id}` });
+ }
 });
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 

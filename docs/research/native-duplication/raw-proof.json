@@ -1,0 +1,346 @@
+{
+  "referenceCommit": "9b894a82b46ff84d3842bc05c7ebd225eca5aced",
+  "passed": true,
+  "records": [
+    {
+      "id": "trellis-self",
+      "sourceSet": "production",
+      "rawGroups": 67,
+      "digest": "6e68aa3690fe3c0da5a73791cf6fbf41d9a17f9bc3b6c8cbf27642420ecda0a2",
+      "invariantComparisons": 22740,
+      "referenceComplete": true,
+      "referenceWork": 1782742,
+      "exactRawParity": true
+    },
+    {
+      "id": "trellis-self",
+      "sourceSet": "test",
+      "rawGroups": 318,
+      "digest": "92d332e55c85686775952127c6f1187c896837421f11db235968687b9145235a",
+      "invariantComparisons": 109614,
+      "referenceComplete": true,
+      "referenceWork": 6880224,
+      "exactRawParity": true
+    },
+    {
+      "id": "hono-src",
+      "sourceSet": "production",
+      "rawGroups": 587,
+      "digest": "6ddfe6ac1f6426bd625c1d98a7c6332bc9965afa7b85c3fbb47f99a89032933b",
+      "invariantComparisons": 489801,
+      "referenceComplete": false,
+      "referenceWork": 100000001,
+      "exactRawParity": false
+    },
+    {
+      "id": "hono-src",
+      "sourceSet": "test",
+      "rawGroups": 922,
+      "digest": "e0cb12b11aa363262d50c626941860233b34c3ba2d4aac7228d97982ca79b4e3",
+      "invariantComparisons": 515440,
+      "referenceComplete": true,
+      "referenceWork": 93790069,
+      "exactRawParity": true
+    },
+    {
+      "id": "zod-package",
+      "sourceSet": "production",
+      "rawGroups": 849,
+      "digest": "3f7643052bedf9a8b6ebd1490235068e96759a714c6cf44328158bd10f70b8c4",
+      "invariantComparisons": 1094381,
+      "referenceComplete": false,
+      "referenceWork": 100000001,
+      "exactRawParity": false
+    },
+    {
+      "id": "zod-package",
+      "sourceSet": "test",
+      "rawGroups": 1168,
+      "digest": "e1c98778e36cdd642a8fb03811972a41d8f37537092e9016f422bfadcf0bb78a",
+      "invariantComparisons": 1600879,
+      "referenceComplete": false,
+      "referenceWork": 100000001,
+      "exactRawParity": false
+    },
+    {
+      "id": "clean-small",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "clean-small",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "clone-base",
+      "sourceSet": "production",
+      "rawGroups": 1,
+      "digest": "97af4fbfcf178441b2942bb7eba20e8ad2c0ca7409411f5713e45e4a6268bd41",
+      "invariantComparisons": 221,
+      "referenceComplete": true,
+      "referenceWork": 1836,
+      "exactRawParity": true
+    },
+    {
+      "id": "clone-base",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "clone-removed",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "clone-removed",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "branch-base",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "branch-base",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "branch-grown",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "branch-grown",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "acyclic",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "acyclic",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "cyclic",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "cyclic",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "dilution-base",
+      "sourceSet": "production",
+      "rawGroups": 1,
+      "digest": "97af4fbfcf178441b2942bb7eba20e8ad2c0ca7409411f5713e45e4a6268bd41",
+      "invariantComparisons": 221,
+      "referenceComplete": true,
+      "referenceWork": 1836,
+      "exactRawParity": true
+    },
+    {
+      "id": "dilution-base",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "dilution-grown",
+      "sourceSet": "production",
+      "rawGroups": 1,
+      "digest": "97af4fbfcf178441b2942bb7eba20e8ad2c0ca7409411f5713e45e4a6268bd41",
+      "invariantComparisons": 221,
+      "referenceComplete": true,
+      "referenceWork": 1836,
+      "exactRawParity": true
+    },
+    {
+      "id": "dilution-grown",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "test-separation",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "test-separation",
+      "sourceSet": "test",
+      "rawGroups": 1,
+      "digest": "cdcfc0c32e578cdf05424fce5eb59c18e709ae7f1737e3486d723ae5509e1439",
+      "invariantComparisons": 221,
+      "referenceComplete": true,
+      "referenceWork": 1836,
+      "exactRawParity": true
+    },
+    {
+      "id": "incomplete-parse",
+      "sourceSet": "production",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "incomplete-parse",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "copies-2",
+      "sourceSet": "production",
+      "rawGroups": 13,
+      "digest": "80f27706fce97d71ae6d710e9d707e58cb7a2fbf538d8dde8edfe2b2db5ca9f9",
+      "invariantComparisons": 8167,
+      "referenceComplete": true,
+      "referenceWork": 1040221,
+      "exactRawParity": true
+    },
+    {
+      "id": "copies-2",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "copies-10",
+      "sourceSet": "production",
+      "rawGroups": 13,
+      "digest": "5826c22391635c9b09697d36e1541cafa5aeb283fc1681c42d4adf90b9c0c5dc",
+      "invariantComparisons": 41791,
+      "referenceComplete": true,
+      "referenceWork": 27247181,
+      "exactRawParity": true
+    },
+    {
+      "id": "copies-10",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    },
+    {
+      "id": "copies-40",
+      "sourceSet": "production",
+      "rawGroups": 13,
+      "digest": "5c44247f86ef49c1a83873faab461a9f6b0fff077e0558e97fed1e1091350936",
+      "invariantComparisons": 181561,
+      "referenceComplete": false,
+      "referenceWork": 100000001,
+      "exactRawParity": false
+    },
+    {
+      "id": "copies-40",
+      "sourceSet": "test",
+      "rawGroups": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "invariantComparisons": 0,
+      "referenceComplete": true,
+      "referenceWork": 0,
+      "exactRawParity": true
+    }
+  ]
+}

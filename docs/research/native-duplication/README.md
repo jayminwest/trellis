@@ -172,7 +172,7 @@ no source has been ported here. Any adapted source must retain its MIT notice
 in a checked-in `docs/research/native-duplication/NOTICE` and a source-file
 provenance comment before it can be accepted.
 
-## Index implementation (step 6)
+## Initial index implementation (step 6; superseded during step 9)
 
 `duplication-index-input.ts` ranks the exact integer alphabet and places a unique
 positive terminator below every token rank. Zero is reserved for an out-of-range
@@ -181,7 +181,7 @@ start/end/owner arrays retain source mapping, including empty files. Stream and
 token totals are checked before combined allocation. The alphabet map reserves
 two numeric cells per entry; its sorted key buffer is separately reserved.
 
-`duplication-suffix.ts` uses original iterative prefix doubling with stable
+The initial `duplication-suffix.ts` used original iterative prefix doubling with stable
 counting sort, followed by Kasai LCP construction. This is O(n log n) worst-case
 index work and O(n) live numeric storage, avoiding recursive induced sorting and
 comparison-sorting the suffixes. Counting passes explicitly charge every slot;
@@ -284,3 +284,17 @@ output ceilings, already/mid-operation cancellation, latched failure and unrelat
 errors. Forty copies complete through the whole guarded pipeline with the
 expected 1,080-line union. No hard ceiling has been raised. Step 9 still owns the
 pinned-corpus proof; this section does not grant production cutover approval.
+
+
+## Pinned-corpus decision (step 9)
+
+[acceptance.md](acceptance.md) records the complete passing corpus/resource proof.
+The fixed Zod test set rejected prefix doubling under the unchanged 100M ceiling
+(trellis-e4f2). `duplication-induced.ts` now performs original SA-IS induced
+sorting, with LMS substring naming and reduced problems at most half the size;
+recursion is bounded by log2(n), never source length. `duplication-suffix.ts`
+adds/removes the global least sentinel and retains Kasai LCP. Slot passes,
+substring comparisons, recursion allocations and output copying remain guarded.
+All complete-reference raw/finalized results agree, and all required candidate
+sets complete within the frozen work/time/RSS limits. This authorizes step 10
+only after the repository gates pass; it does not itself change production.

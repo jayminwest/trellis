@@ -171,11 +171,30 @@ describe("extractCloneGroups", () => {
 		for (let trial = 0; trial < 40; trial += 1) {
 			const period = 1 + (next() % 9);
 			const run = Array.from({ length: 100 + (next() % 40) }, (_, i) => i % period);
-			parity(
-				Array.from({ length: 2 + (next() % 4) }, (_, i) =>
-					syntheticStream(`${i}`, [20 + (next() % 3), ...run, 30 + (next() % 3)], 12),
-				),
+			const streams = Array.from({ length: 2 + (next() % 4) }, (_, i) =>
+				syntheticStream(`${i}`, [20 + (next() % 3), ...run, 30 + (next() % 3)], 12),
 			);
+			const original = parity(streams);
+			const reversed = parity([...streams].reverse());
+			expect(canonical(reversed.raw)).toEqual(canonical(original.raw));
+		}
+	});
+
+	test("keeps unequal rolling-hash collisions distinct under input permutations", () => {
+		const first = new Array<number>(100).fill(200);
+		const collision = [...first];
+		// Adjacent polynomial terms cancel: 31 * (201 - 200) + (169 - 200) = 0.
+		collision[0] = 201;
+		collision[1] = 169;
+		const streams = [
+			syntheticStream("a", first),
+			syntheticStream("b", collision),
+			syntheticStream("c", first),
+		];
+		for (const order of [streams, [...streams].reverse(), [streams[1], streams[2], streams[0]]]) {
+			const result = parity(order.filter((stream): stream is TokenStream => stream !== undefined));
+			expect(result.groups).toHaveLength(1);
+			expect(result.groups[0]?.members.map((member) => member.path)).toEqual(["a", "c"]);
 		}
 	});
 
