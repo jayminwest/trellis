@@ -1,0 +1,1391 @@
+{
+  "protocol": "maintainability-v1",
+  "status": "experimental-evidence-only",
+  "compiler": "6.0.3",
+  "snapshot": "a8786f89099ab1ca6821550589d03f6580d511237890745e806e8c5aff3397d6",
+  "completeness": "complete",
+  "diagnostics": [],
+  "skipped": [],
+  "summary": {
+    "files": 34,
+    "functions": 239,
+    "eroded": 8,
+    "shallowEroded": 4,
+    "cloneGroups": 10,
+    "overlappingGroups": 3,
+    "registrationGroups": 1
+  },
+  "duplication": {
+    "state": "complete",
+    "metrics": [
+      {
+        "id": "duplication.density.production",
+        "unit": "ratio",
+        "state": "complete",
+        "value": 0.060812,
+        "numerator": 250,
+        "denominator": 4111
+      },
+      {
+        "id": "duplication.duplicated-lines.production",
+        "unit": "lines",
+        "state": "complete",
+        "value": 250,
+        "numerator": 250,
+        "denominator": 4111,
+        "detail": {
+          "tokenCount": 25192,
+          "files": 34
+        }
+      },
+      {
+        "id": "duplication.groups.production",
+        "unit": "count",
+        "state": "complete",
+        "value": 10
+      }
+    ],
+    "exhaustion": null,
+    "clones": [
+      {
+        "id": "clone-group-1",
+        "tokenCount": 273,
+        "members": [
+          {
+            "path": "src/cli/commands/db.ts",
+            "range": {
+              "start": {
+                "line": 113
+              },
+              "end": {
+                "line": 151
+              }
+            },
+            "tokenCount": 273,
+            "lineCount": 39,
+            "context": "control-flow",
+            "calls": 18,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 7
+          },
+          {
+            "path": "src/cli/commands/db.ts",
+            "range": {
+              "start": {
+                "line": 172
+              },
+              "end": {
+                "line": 210
+              }
+            },
+            "tokenCount": 273,
+            "lineCount": 39,
+            "context": "control-flow",
+            "calls": 18,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 7
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-2",
+        "tokenCount": 238,
+        "members": [
+          {
+            "path": "src/cli/commands/db.ts",
+            "range": {
+              "start": {
+                "line": 116
+              },
+              "end": {
+                "line": 151
+              }
+            },
+            "tokenCount": 238,
+            "lineCount": 36,
+            "context": "control-flow",
+            "calls": 15,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 6
+          },
+          {
+            "path": "src/cli/commands/db.ts",
+            "range": {
+              "start": {
+                "line": 135
+              },
+              "end": {
+                "line": 170
+              }
+            },
+            "tokenCount": 238,
+            "lineCount": 36,
+            "context": "control-flow",
+            "calls": 18,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 6
+          },
+          {
+            "path": "src/cli/commands/db.ts",
+            "range": {
+              "start": {
+                "line": 175
+              },
+              "end": {
+                "line": 210
+              }
+            },
+            "tokenCount": 238,
+            "lineCount": 36,
+            "context": "control-flow",
+            "calls": 15,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 6
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-3",
+        "tokenCount": 113,
+        "members": [
+          {
+            "path": "src/cli/commands/plan-run.ts",
+            "range": {
+              "start": {
+                "line": 126
+              },
+              "end": {
+                "line": 132
+              }
+            },
+            "tokenCount": 113,
+            "lineCount": 7,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 5,
+            "literals": 0
+          },
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 339
+              },
+              "end": {
+                "line": 345
+              }
+            },
+            "tokenCount": 113,
+            "lineCount": 7,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 5,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-4",
+        "tokenCount": 117,
+        "members": [
+          {
+            "path": "src/cli/commands/plan-run.ts",
+            "range": {
+              "start": {
+                "line": 127
+              },
+              "end": {
+                "line": 134
+              }
+            },
+            "tokenCount": 117,
+            "lineCount": 8,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 5,
+            "literals": 0
+          },
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 112
+              },
+              "end": {
+                "line": 119
+              }
+            },
+            "tokenCount": 117,
+            "lineCount": 8,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 6,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-5",
+        "tokenCount": 127,
+        "members": [
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 111
+              },
+              "end": {
+                "line": 117
+              }
+            },
+            "tokenCount": 127,
+            "lineCount": 7,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 6,
+            "literals": 1
+          },
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 340
+              },
+              "end": {
+                "line": 346
+              }
+            },
+            "tokenCount": 127,
+            "lineCount": 7,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 6,
+            "literals": 0
+          },
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 341
+              },
+              "end": {
+                "line": 347
+              }
+            },
+            "tokenCount": 127,
+            "lineCount": 7,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 7,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-6",
+        "tokenCount": 128,
+        "members": [
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 111
+              },
+              "end": {
+                "line": 118
+              }
+            },
+            "tokenCount": 128,
+            "lineCount": 8,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 6,
+            "literals": 1
+          },
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 341
+              },
+              "end": {
+                "line": 348
+              }
+            },
+            "tokenCount": 128,
+            "lineCount": 8,
+            "context": "control-flow",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 7,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-7",
+        "tokenCount": 124,
+        "members": [
+          {
+            "path": "src/cli/commands/run.ts",
+            "range": {
+              "start": {
+                "line": 342
+              },
+              "end": {
+                "line": 352
+              }
+            },
+            "tokenCount": 124,
+            "lineCount": 11,
+            "context": "control-flow",
+            "calls": 1,
+            "registrations": 0,
+            "decisions": 6,
+            "literals": 0
+          },
+          {
+            "path": "src/cli/main.ts",
+            "range": {
+              "start": {
+                "line": 335
+              },
+              "end": {
+                "line": 345
+              }
+            },
+            "tokenCount": 124,
+            "lineCount": 11,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 5,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-8",
+        "tokenCount": 119,
+        "members": [
+          {
+            "path": "src/cli/commands/show.ts",
+            "range": {
+              "start": {
+                "line": 19
+              },
+              "end": {
+                "line": 43
+              }
+            },
+            "tokenCount": 119,
+            "lineCount": 25,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 1
+          },
+          {
+            "path": "src/cli/commands/wait.ts",
+            "range": {
+              "start": {
+                "line": 23
+              },
+              "end": {
+                "line": 48
+              }
+            },
+            "tokenCount": 119,
+            "lineCount": 26,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 1
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-9",
+        "tokenCount": 103,
+        "members": [
+          {
+            "path": "src/cli/main.ts",
+            "range": {
+              "start": {
+                "line": 99
+              },
+              "end": {
+                "line": 114
+              }
+            },
+            "tokenCount": 103,
+            "lineCount": 16,
+            "context": "control-flow",
+            "calls": 8,
+            "registrations": 1,
+            "decisions": 1,
+            "literals": 6
+          },
+          {
+            "path": "src/cli/register-run-commands.ts",
+            "range": {
+              "start": {
+                "line": 81
+              },
+              "end": {
+                "line": 94
+              }
+            },
+            "tokenCount": 103,
+            "lineCount": 14,
+            "context": "control-flow",
+            "calls": 8,
+            "registrations": 1,
+            "decisions": 1,
+            "literals": 6
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-10",
+        "tokenCount": 137,
+        "members": [
+          {
+            "path": "src/cli/main.ts",
+            "range": {
+              "start": {
+                "line": 345
+              },
+              "end": {
+                "line": 366
+              }
+            },
+            "tokenCount": 137,
+            "lineCount": 22,
+            "context": "registration-candidate",
+            "calls": 15,
+            "registrations": 2,
+            "decisions": 0,
+            "literals": 14
+          },
+          {
+            "path": "src/cli/main.ts",
+            "range": {
+              "start": {
+                "line": 360
+              },
+              "end": {
+                "line": 383
+              }
+            },
+            "tokenCount": 137,
+            "lineCount": 24,
+            "context": "registration-candidate",
+            "calls": 15,
+            "registrations": 3,
+            "decisions": 0,
+            "literals": 13
+          }
+        ],
+        "lineOverlap": true
+      }
+    ]
+  },
+  "sourceConfig": {
+    "exclude": [],
+    "classify": {}
+  },
+  "excluded": [],
+  "unsupported": {
+    "files": 0,
+    "byExtension": {}
+  },
+  "rankings": {
+    "byCc": [
+      {
+        "path": "src/cli/plan-run-renderer.ts",
+        "name": "renderLifecycle",
+        "range": {
+          "start": {
+            "line": 204,
+            "column": 1
+          },
+          "end": {
+            "line": 229,
+            "column": 2
+          }
+        },
+        "cc": 20,
+        "maxNesting": 1,
+        "flow": 6,
+        "structural": 3,
+        "nesting": 2,
+        "booleanOperators": 1,
+        "calls": 17
+      },
+      {
+        "path": "src/cli/commands/run.ts",
+        "name": "runRun",
+        "range": {
+          "start": {
+            "line": 90,
+            "column": 1
+          },
+          "end": {
+            "line": 140,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 3,
+        "flow": 13,
+        "structural": 11,
+        "nesting": 0,
+        "booleanOperators": 2,
+        "calls": 10
+      },
+      {
+        "path": "src/cli/commands/doctor.ts",
+        "name": "runDoctor",
+        "range": {
+          "start": {
+            "line": 98,
+            "column": 1
+          },
+          "end": {
+            "line": 178,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 2,
+        "flow": 11,
+        "structural": 9,
+        "nesting": 2,
+        "booleanOperators": 0,
+        "calls": 30
+      },
+      {
+        "path": "src/cli/commands/up.ts",
+        "name": "runUp",
+        "range": {
+          "start": {
+            "line": 163,
+            "column": 1
+          },
+          "end": {
+            "line": 247,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 2,
+        "flow": 7,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 14
+      },
+      {
+        "path": "src/cli/commands/serve.ts",
+        "name": "runServe",
+        "range": {
+          "start": {
+            "line": 54,
+            "column": 1
+          },
+          "end": {
+            "line": 107,
+            "column": 2
+          }
+        },
+        "cc": 12,
+        "maxNesting": 3,
+        "flow": 12,
+        "structural": 9,
+        "nesting": 3,
+        "booleanOperators": 0,
+        "calls": 16
+      },
+      {
+        "path": "src/cli/commands/db.ts",
+        "name": "runMigrateToPostgres",
+        "range": {
+          "start": {
+            "line": 98,
+            "column": 1
+          },
+          "end": {
+            "line": 232,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 1,
+        "flow": 9,
+        "structural": 8,
+        "nesting": 0,
+        "booleanOperators": 1,
+        "calls": 50
+      },
+      {
+        "path": "src/cli/commands/plan-run.ts",
+        "name": "runPlanRun",
+        "range": {
+          "start": {
+            "line": 106,
+            "column": 1
+          },
+          "end": {
+            "line": 146,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 1,
+        "flow": 9,
+        "structural": 9,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 11
+      },
+      {
+        "path": "src/cli/commands/up.ts",
+        "name": "detectUpRuntime",
+        "range": {
+          "start": {
+            "line": 96,
+            "column": 1
+          },
+          "end": {
+            "line": 126,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 1,
+        "flow": 10,
+        "structural": 6,
+        "nesting": 1,
+        "booleanOperators": 3,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/client.ts",
+        "name": "resolveClientConfigWithSources",
+        "range": {
+          "start": {
+            "line": 131,
+            "column": 1
+          },
+          "end": {
+            "line": 162,
+            "column": 2
+          }
+        },
+        "cc": 10,
+        "maxNesting": 1,
+        "flow": 3,
+        "structural": 2,
+        "nesting": 0,
+        "booleanOperators": 1,
+        "calls": 3
+      },
+      {
+        "path": "src/cli/commands/config-migrate.ts",
+        "name": "runConfigMigrate",
+        "range": {
+          "start": {
+            "line": 74,
+            "column": 1
+          },
+          "end": {
+            "line": 175,
+            "column": 2
+          }
+        },
+        "cc": 9,
+        "maxNesting": 3,
+        "flow": 9,
+        "structural": 8,
+        "nesting": 1,
+        "booleanOperators": 0,
+        "calls": 32
+      },
+      {
+        "path": "src/cli/context.ts",
+        "name": "resolveDbUrl",
+        "range": {
+          "start": {
+            "line": 38,
+            "column": 1
+          },
+          "end": {
+            "line": 51,
+            "column": 2
+          }
+        },
+        "cc": 9,
+        "maxNesting": 1,
+        "flow": 8,
+        "structural": 3,
+        "nesting": 1,
+        "booleanOperators": 4,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/main.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 310,
+            "column": 3
+          },
+          "end": {
+            "line": 344,
+            "column": 4
+          }
+        },
+        "cc": 9,
+        "maxNesting": 0,
+        "flow": 8,
+        "structural": 7,
+        "nesting": 0,
+        "booleanOperators": 1,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/commands/login.ts",
+        "name": "resolveToken",
+        "range": {
+          "start": {
+            "line": 91,
+            "column": 1
+          },
+          "end": {
+            "line": 112,
+            "column": 2
+          }
+        },
+        "cc": 8,
+        "maxNesting": 2,
+        "flow": 8,
+        "structural": 4,
+        "nesting": 1,
+        "booleanOperators": 3,
+        "calls": 3
+      },
+      {
+        "path": "src/cli/commands/plan-status.ts",
+        "name": "runPlanList",
+        "range": {
+          "start": {
+            "line": 86,
+            "column": 1
+          },
+          "end": {
+            "line": 112,
+            "column": 2
+          }
+        },
+        "cc": 8,
+        "maxNesting": 3,
+        "flow": 7,
+        "structural": 6,
+        "nesting": 1,
+        "booleanOperators": 0,
+        "calls": 7
+      },
+      {
+        "path": "src/cli/commands/run.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 319,
+            "column": 3
+          },
+          "end": {
+            "line": 351,
+            "column": 4
+          }
+        },
+        "cc": 8,
+        "maxNesting": 0,
+        "flow": 7,
+        "structural": 7,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 3
+      },
+      {
+        "path": "src/cli/commands/up-wizard.ts",
+        "name": "runUpWizard",
+        "range": {
+          "start": {
+            "line": 198,
+            "column": 1
+          },
+          "end": {
+            "line": 233,
+            "column": 2
+          }
+        },
+        "cc": 8,
+        "maxNesting": 2,
+        "flow": 10,
+        "structural": 5,
+        "nesting": 3,
+        "booleanOperators": 2,
+        "calls": 14
+      },
+      {
+        "path": "src/cli/commands/init.ts",
+        "name": "resolveDefaults",
+        "range": {
+          "start": {
+            "line": 166,
+            "column": 1
+          },
+          "end": {
+            "line": 197,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 3,
+        "flow": 10,
+        "structural": 5,
+        "nesting": 4,
+        "booleanOperators": 1,
+        "calls": 3
+      },
+      {
+        "path": "src/cli/commands/prime.ts",
+        "name": "renderPretty",
+        "range": {
+          "start": {
+            "line": 125,
+            "column": 1
+          },
+          "end": {
+            "line": 153,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 2,
+        "flow": 8,
+        "structural": 6,
+        "nesting": 2,
+        "booleanOperators": 0,
+        "calls": 10
+      },
+      {
+        "path": "src/cli/commands/remote-tail.ts",
+        "name": "tailWithDetach",
+        "range": {
+          "start": {
+            "line": 86,
+            "column": 1
+          },
+          "end": {
+            "line": 117,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 2,
+        "flow": 5,
+        "structural": 4,
+        "nesting": 1,
+        "booleanOperators": 0,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/commands/run.ts",
+        "name": "emitTerminal",
+        "range": {
+          "start": {
+            "line": 218,
+            "column": 1
+          },
+          "end": {
+            "line": 243,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 2,
+        "flow": 7,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 7
+      }
+    ],
+    "byFlow": [
+      {
+        "path": "src/cli/commands/run.ts",
+        "name": "runRun",
+        "range": {
+          "start": {
+            "line": 90,
+            "column": 1
+          },
+          "end": {
+            "line": 140,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 3,
+        "flow": 13,
+        "structural": 11,
+        "nesting": 0,
+        "booleanOperators": 2,
+        "calls": 10
+      },
+      {
+        "path": "src/cli/commands/serve.ts",
+        "name": "runServe",
+        "range": {
+          "start": {
+            "line": 54,
+            "column": 1
+          },
+          "end": {
+            "line": 107,
+            "column": 2
+          }
+        },
+        "cc": 12,
+        "maxNesting": 3,
+        "flow": 12,
+        "structural": 9,
+        "nesting": 3,
+        "booleanOperators": 0,
+        "calls": 16
+      },
+      {
+        "path": "src/cli/commands/doctor.ts",
+        "name": "runDoctor",
+        "range": {
+          "start": {
+            "line": 98,
+            "column": 1
+          },
+          "end": {
+            "line": 178,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 2,
+        "flow": 11,
+        "structural": 9,
+        "nesting": 2,
+        "booleanOperators": 0,
+        "calls": 30
+      },
+      {
+        "path": "src/cli/commands/init.ts",
+        "name": "resolveDefaults",
+        "range": {
+          "start": {
+            "line": 166,
+            "column": 1
+          },
+          "end": {
+            "line": 197,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 3,
+        "flow": 10,
+        "structural": 5,
+        "nesting": 4,
+        "booleanOperators": 1,
+        "calls": 3
+      },
+      {
+        "path": "src/cli/commands/up-wizard.ts",
+        "name": "runUpWizard",
+        "range": {
+          "start": {
+            "line": 198,
+            "column": 1
+          },
+          "end": {
+            "line": 233,
+            "column": 2
+          }
+        },
+        "cc": 8,
+        "maxNesting": 2,
+        "flow": 10,
+        "structural": 5,
+        "nesting": 3,
+        "booleanOperators": 2,
+        "calls": 14
+      },
+      {
+        "path": "src/cli/commands/up.ts",
+        "name": "detectUpRuntime",
+        "range": {
+          "start": {
+            "line": 96,
+            "column": 1
+          },
+          "end": {
+            "line": 126,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 1,
+        "flow": 10,
+        "structural": 6,
+        "nesting": 1,
+        "booleanOperators": 3,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/commands/config-migrate.ts",
+        "name": "runConfigMigrate",
+        "range": {
+          "start": {
+            "line": 74,
+            "column": 1
+          },
+          "end": {
+            "line": 175,
+            "column": 2
+          }
+        },
+        "cc": 9,
+        "maxNesting": 3,
+        "flow": 9,
+        "structural": 8,
+        "nesting": 1,
+        "booleanOperators": 0,
+        "calls": 32
+      },
+      {
+        "path": "src/cli/commands/db.ts",
+        "name": "runMigrateToPostgres",
+        "range": {
+          "start": {
+            "line": 98,
+            "column": 1
+          },
+          "end": {
+            "line": 232,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 1,
+        "flow": 9,
+        "structural": 8,
+        "nesting": 0,
+        "booleanOperators": 1,
+        "calls": 50
+      },
+      {
+        "path": "src/cli/commands/doctor.ts",
+        "name": "previewPortAllocatorCheck",
+        "range": {
+          "start": {
+            "line": 275,
+            "column": 1
+          },
+          "end": {
+            "line": 310,
+            "column": 2
+          }
+        },
+        "cc": 6,
+        "maxNesting": 2,
+        "flow": 9,
+        "structural": 5,
+        "nesting": 4,
+        "booleanOperators": 0,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/commands/plan-run.ts",
+        "name": "runPlanRun",
+        "range": {
+          "start": {
+            "line": 106,
+            "column": 1
+          },
+          "end": {
+            "line": 146,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 1,
+        "flow": 9,
+        "structural": 9,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 11
+      },
+      {
+        "path": "src/cli/commands/target-dir.ts",
+        "name": "resolveTargetDir",
+        "range": {
+          "start": {
+            "line": 28,
+            "column": 1
+          },
+          "end": {
+            "line": 54,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 2,
+        "flow": 9,
+        "structural": 6,
+        "nesting": 3,
+        "booleanOperators": 0,
+        "calls": 5
+      },
+      {
+        "path": "src/cli/commands/up-wizard.ts",
+        "name": "parseWizardEnv",
+        "range": {
+          "start": {
+            "line": 54,
+            "column": 1
+          },
+          "end": {
+            "line": 67,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 2,
+        "flow": 9,
+        "structural": 4,
+        "nesting": 3,
+        "booleanOperators": 2,
+        "calls": 8
+      },
+      {
+        "path": "src/cli/commands/login.ts",
+        "name": "resolveToken",
+        "range": {
+          "start": {
+            "line": 91,
+            "column": 1
+          },
+          "end": {
+            "line": 112,
+            "column": 2
+          }
+        },
+        "cc": 8,
+        "maxNesting": 2,
+        "flow": 8,
+        "structural": 4,
+        "nesting": 1,
+        "booleanOperators": 3,
+        "calls": 3
+      },
+      {
+        "path": "src/cli/commands/prime.ts",
+        "name": "renderPretty",
+        "range": {
+          "start": {
+            "line": 125,
+            "column": 1
+          },
+          "end": {
+            "line": 153,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 2,
+        "flow": 8,
+        "structural": 6,
+        "nesting": 2,
+        "booleanOperators": 0,
+        "calls": 10
+      },
+      {
+        "path": "src/cli/context.ts",
+        "name": "resolveDbUrl",
+        "range": {
+          "start": {
+            "line": 38,
+            "column": 1
+          },
+          "end": {
+            "line": 51,
+            "column": 2
+          }
+        },
+        "cc": 9,
+        "maxNesting": 1,
+        "flow": 8,
+        "structural": 3,
+        "nesting": 1,
+        "booleanOperators": 4,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/main.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 310,
+            "column": 3
+          },
+          "end": {
+            "line": 344,
+            "column": 4
+          }
+        },
+        "cc": 9,
+        "maxNesting": 0,
+        "flow": 8,
+        "structural": 7,
+        "nesting": 0,
+        "booleanOperators": 1,
+        "calls": 4
+      },
+      {
+        "path": "src/cli/commands/plan-status.ts",
+        "name": "runPlanList",
+        "range": {
+          "start": {
+            "line": 86,
+            "column": 1
+          },
+          "end": {
+            "line": 112,
+            "column": 2
+          }
+        },
+        "cc": 8,
+        "maxNesting": 3,
+        "flow": 7,
+        "structural": 6,
+        "nesting": 1,
+        "booleanOperators": 0,
+        "calls": 7
+      },
+      {
+        "path": "src/cli/commands/run.ts",
+        "name": "emitTerminal",
+        "range": {
+          "start": {
+            "line": 218,
+            "column": 1
+          },
+          "end": {
+            "line": 243,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 2,
+        "flow": 7,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 7
+      },
+      {
+        "path": "src/cli/commands/run.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 319,
+            "column": 3
+          },
+          "end": {
+            "line": 351,
+            "column": 4
+          }
+        },
+        "cc": 8,
+        "maxNesting": 0,
+        "flow": 7,
+        "structural": 7,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 3
+      },
+      {
+        "path": "src/cli/commands/up.ts",
+        "name": "runUp",
+        "range": {
+          "start": {
+            "line": 163,
+            "column": 1
+          },
+          "end": {
+            "line": 247,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 2,
+        "flow": 7,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 14
+      }
+    ]
+  },
+  "ccHistogram": {
+    "1": 93,
+    "2": 45,
+    "3": 26,
+    "4": 21,
+    "5": 13,
+    "6": 13,
+    "7": 12,
+    "8": 4,
+    "9": 3,
+    "10": 1,
+    "11": 3,
+    "12": 1,
+    "13": 1,
+    "14": 1,
+    "15": 1,
+    "20": 1
+  }
+}

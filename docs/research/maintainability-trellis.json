@@ -1,0 +1,2676 @@
+{
+  "protocol": "maintainability-v1",
+  "status": "experimental-evidence-only",
+  "compiler": "6.0.3",
+  "snapshot": "15b3555a3ebe59880c38e07591c53e9e3af7565e3c6b2a4bccec2b7c83e3eb15",
+  "completeness": "complete",
+  "diagnostics": [],
+  "skipped": [],
+  "summary": {
+    "files": 244,
+    "functions": 1968,
+    "eroded": 44,
+    "shallowEroded": 23,
+    "cloneGroups": 36,
+    "overlappingGroups": 10,
+    "registrationGroups": 1
+  },
+  "duplication": {
+    "state": "complete",
+    "metrics": [
+      {
+        "id": "duplication.density.production",
+        "unit": "ratio",
+        "state": "complete",
+        "value": 0.058996,
+        "numerator": 1694,
+        "denominator": 28714
+      },
+      {
+        "id": "duplication.duplicated-lines.production",
+        "unit": "lines",
+        "state": "complete",
+        "value": 1694,
+        "numerator": 1694,
+        "denominator": 28714,
+        "detail": {
+          "tokenCount": 186106,
+          "files": 244
+        }
+      },
+      {
+        "id": "duplication.groups.production",
+        "unit": "count",
+        "state": "complete",
+        "value": 36
+      }
+    ],
+    "exhaustion": null,
+    "clones": [
+      {
+        "id": "clone-group-1",
+        "tokenCount": 110,
+        "members": [
+          {
+            "path": "scripts/check-debt-markers.ts",
+            "range": {
+              "start": {
+                "line": 114
+              },
+              "end": {
+                "line": 129
+              }
+            },
+            "tokenCount": 110,
+            "lineCount": 16,
+            "context": "control-flow",
+            "calls": 8,
+            "registrations": 0,
+            "decisions": 5,
+            "literals": 0
+          },
+          {
+            "path": "scripts/check-file-sizes.ts",
+            "range": {
+              "start": {
+                "line": 77
+              },
+              "end": {
+                "line": 92
+              }
+            },
+            "tokenCount": 110,
+            "lineCount": 16,
+            "context": "control-flow",
+            "calls": 8,
+            "registrations": 0,
+            "decisions": 5,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-2",
+        "tokenCount": 330,
+        "members": [
+          {
+            "path": "scripts/check-debt-markers.ts",
+            "range": {
+              "start": {
+                "line": 204
+              },
+              "end": {
+                "line": 248
+              }
+            },
+            "tokenCount": 330,
+            "lineCount": 45,
+            "context": "control-flow",
+            "calls": 12,
+            "registrations": 0,
+            "decisions": 12,
+            "literals": 12
+          },
+          {
+            "path": "scripts/check-file-sizes.ts",
+            "range": {
+              "start": {
+                "line": 163
+              },
+              "end": {
+                "line": 207
+              }
+            },
+            "tokenCount": 330,
+            "lineCount": 45,
+            "context": "control-flow",
+            "calls": 12,
+            "registrations": 0,
+            "decisions": 12,
+            "literals": 12
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-3",
+        "tokenCount": 132,
+        "members": [
+          {
+            "path": "src/cli/audit.ts",
+            "range": {
+              "start": {
+                "line": 129
+              },
+              "end": {
+                "line": 139
+              }
+            },
+            "tokenCount": 132,
+            "lineCount": 11,
+            "context": "registration-candidate",
+            "calls": 19,
+            "registrations": 19,
+            "decisions": 0,
+            "literals": 20
+          },
+          {
+            "path": "src/cli/audit.ts",
+            "range": {
+              "start": {
+                "line": 131
+              },
+              "end": {
+                "line": 140
+              }
+            },
+            "tokenCount": 132,
+            "lineCount": 10,
+            "context": "registration-candidate",
+            "calls": 19,
+            "registrations": 18,
+            "decisions": 0,
+            "literals": 18
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-4",
+        "tokenCount": 157,
+        "members": [
+          {
+            "path": "src/detectors/common/quality.ts",
+            "range": {
+              "start": {
+                "line": 11
+              },
+              "end": {
+                "line": 33
+              }
+            },
+            "tokenCount": 157,
+            "lineCount": 23,
+            "context": "control-flow",
+            "calls": 14,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 14
+          },
+          {
+            "path": "src/detectors/common/quality.ts",
+            "range": {
+              "start": {
+                "line": 29
+              },
+              "end": {
+                "line": 50
+              }
+            },
+            "tokenCount": 157,
+            "lineCount": 22,
+            "context": "control-flow",
+            "calls": 13,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 12
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-5",
+        "tokenCount": 146,
+        "members": [
+          {
+            "path": "src/detectors/lang/python/testing.ts",
+            "range": {
+              "start": {
+                "line": 40
+              },
+              "end": {
+                "line": 64
+              }
+            },
+            "tokenCount": 146,
+            "lineCount": 25,
+            "context": "control-flow",
+            "calls": 9,
+            "registrations": 0,
+            "decisions": 6,
+            "literals": 15
+          },
+          {
+            "path": "src/detectors/lang/typescript/testing.ts",
+            "range": {
+              "start": {
+                "line": 48
+              },
+              "end": {
+                "line": 72
+              }
+            },
+            "tokenCount": 146,
+            "lineCount": 25,
+            "context": "control-flow",
+            "calls": 9,
+            "registrations": 0,
+            "decisions": 6,
+            "literals": 14
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-6",
+        "tokenCount": 117,
+        "members": [
+          {
+            "path": "src/detectors/lang/python/testing.ts",
+            "range": {
+              "start": {
+                "line": 43
+              },
+              "end": {
+                "line": 63
+              }
+            },
+            "tokenCount": 117,
+            "lineCount": 21,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 12
+          },
+          {
+            "path": "src/detectors/lang/swift/testing.ts",
+            "range": {
+              "start": {
+                "line": 44
+              },
+              "end": {
+                "line": 64
+              }
+            },
+            "tokenCount": 117,
+            "lineCount": 21,
+            "context": "control-flow",
+            "calls": 6,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 11
+          },
+          {
+            "path": "src/detectors/lang/typescript/testing.ts",
+            "range": {
+              "start": {
+                "line": 51
+              },
+              "end": {
+                "line": 71
+              }
+            },
+            "tokenCount": 117,
+            "lineCount": 21,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 12
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-7",
+        "tokenCount": 106,
+        "members": [
+          {
+            "path": "src/detectors/lang/python/util.ts",
+            "range": {
+              "start": {
+                "line": 16
+              },
+              "end": {
+                "line": 38
+              }
+            },
+            "tokenCount": 106,
+            "lineCount": 23,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 3
+          },
+          {
+            "path": "src/detectors/lang/swift/util.ts",
+            "range": {
+              "start": {
+                "line": 15
+              },
+              "end": {
+                "line": 37
+              }
+            },
+            "tokenCount": 106,
+            "lineCount": 23,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 3
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-8",
+        "tokenCount": 210,
+        "members": [
+          {
+            "path": "src/detectors/lang/python/util.ts",
+            "range": {
+              "start": {
+                "line": 105
+              },
+              "end": {
+                "line": 137
+              }
+            },
+            "tokenCount": 210,
+            "lineCount": 33,
+            "context": "control-flow",
+            "calls": 12,
+            "registrations": 0,
+            "decisions": 7,
+            "literals": 3
+          },
+          {
+            "path": "src/detectors/lang/swift/util.ts",
+            "range": {
+              "start": {
+                "line": 107
+              },
+              "end": {
+                "line": 139
+              }
+            },
+            "tokenCount": 210,
+            "lineCount": 33,
+            "context": "control-flow",
+            "calls": 12,
+            "registrations": 0,
+            "decisions": 7,
+            "literals": 7
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-9",
+        "tokenCount": 111,
+        "members": [
+          {
+            "path": "src/detectors/lang/swift/code-quality.ts",
+            "range": {
+              "start": {
+                "line": 94
+              },
+              "end": {
+                "line": 111
+              }
+            },
+            "tokenCount": 111,
+            "lineCount": 18,
+            "context": "control-flow",
+            "calls": 10,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 9
+          },
+          {
+            "path": "src/detectors/lang/swift/code-quality.ts",
+            "range": {
+              "start": {
+                "line": 104
+              },
+              "end": {
+                "line": 126
+              }
+            },
+            "tokenCount": 111,
+            "lineCount": 23,
+            "context": "control-flow",
+            "calls": 10,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 9
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-10",
+        "tokenCount": 105,
+        "members": [
+          {
+            "path": "src/detectors/lang/typescript/code-quality.ts",
+            "range": {
+              "start": {
+                "line": 108
+              },
+              "end": {
+                "line": 121
+              }
+            },
+            "tokenCount": 105,
+            "lineCount": 14,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 9
+          },
+          {
+            "path": "src/detectors/lang/typescript/code-quality.ts",
+            "range": {
+              "start": {
+                "line": 208
+              },
+              "end": {
+                "line": 219
+              }
+            },
+            "tokenCount": 105,
+            "lineCount": 12,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 9
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-11",
+        "tokenCount": 158,
+        "members": [
+          {
+            "path": "src/detectors/lang/typescript/code-quality.ts",
+            "range": {
+              "start": {
+                "line": 132
+              },
+              "end": {
+                "line": 155
+              }
+            },
+            "tokenCount": 158,
+            "lineCount": 24,
+            "context": "control-flow",
+            "calls": 12,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 15
+          },
+          {
+            "path": "src/detectors/lang/typescript/locality.ts",
+            "range": {
+              "start": {
+                "line": 57
+              },
+              "end": {
+                "line": 80
+              }
+            },
+            "tokenCount": 158,
+            "lineCount": 24,
+            "context": "control-flow",
+            "calls": 13,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 14
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-12",
+        "tokenCount": 108,
+        "members": [
+          {
+            "path": "src/detectors/lang/typescript/code-quality.ts",
+            "range": {
+              "start": {
+                "line": 141
+              },
+              "end": {
+                "line": 155
+              }
+            },
+            "tokenCount": 108,
+            "lineCount": 15,
+            "context": "control-flow",
+            "calls": 8,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 13
+          },
+          {
+            "path": "src/detectors/lang/typescript/code-quality.ts",
+            "range": {
+              "start": {
+                "line": 174
+              },
+              "end": {
+                "line": 186
+              }
+            },
+            "tokenCount": 108,
+            "lineCount": 13,
+            "context": "control-flow",
+            "calls": 8,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 12
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-13",
+        "tokenCount": 153,
+        "members": [
+          {
+            "path": "src/detectors/lang/typescript/locality.ts",
+            "range": {
+              "start": {
+                "line": 132
+              },
+              "end": {
+                "line": 152
+              }
+            },
+            "tokenCount": 153,
+            "lineCount": 21,
+            "context": "control-flow",
+            "calls": 10,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 7
+          },
+          {
+            "path": "src/detectors/lang/typescript/locality.ts",
+            "range": {
+              "start": {
+                "line": 148
+              },
+              "end": {
+                "line": 169
+              }
+            },
+            "tokenCount": 153,
+            "lineCount": 22,
+            "context": "control-flow",
+            "calls": 10,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 7
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-14",
+        "tokenCount": 274,
+        "members": [
+          {
+            "path": "src/detectors/registry.ts",
+            "range": {
+              "start": {
+                "line": 57
+              },
+              "end": {
+                "line": 91
+              }
+            },
+            "tokenCount": 274,
+            "lineCount": 35,
+            "context": "other-or-mixed",
+            "calls": 31,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          },
+          {
+            "path": "src/detectors/registry.ts",
+            "range": {
+              "start": {
+                "line": 58
+              },
+              "end": {
+                "line": 94
+              }
+            },
+            "tokenCount": 274,
+            "lineCount": 37,
+            "context": "other-or-mixed",
+            "calls": 31,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-15",
+        "tokenCount": 194,
+        "members": [
+          {
+            "path": "src/detectors/registry.ts",
+            "range": {
+              "start": {
+                "line": 91
+              },
+              "end": {
+                "line": 130
+              }
+            },
+            "tokenCount": 194,
+            "lineCount": 40,
+            "context": "other-or-mixed",
+            "calls": 9,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          },
+          {
+            "path": "src/detectors/registry.ts",
+            "range": {
+              "start": {
+                "line": 98
+              },
+              "end": {
+                "line": 134
+              }
+            },
+            "tokenCount": 194,
+            "lineCount": 37,
+            "context": "other-or-mixed",
+            "calls": 8,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-16",
+        "tokenCount": 104,
+        "members": [
+          {
+            "path": "src/detectors/registry.ts",
+            "range": {
+              "start": {
+                "line": 118
+              },
+              "end": {
+                "line": 136
+              }
+            },
+            "tokenCount": 104,
+            "lineCount": 19,
+            "context": "other-or-mixed",
+            "calls": 5,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          },
+          {
+            "path": "src/detectors/registry.ts",
+            "range": {
+              "start": {
+                "line": 134
+              },
+              "end": {
+                "line": 153
+              }
+            },
+            "tokenCount": 104,
+            "lineCount": 20,
+            "context": "other-or-mixed",
+            "calls": 6,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-17",
+        "tokenCount": 135,
+        "members": [
+          {
+            "path": "src/history/render.ts",
+            "range": {
+              "start": {
+                "line": 65
+              },
+              "end": {
+                "line": 76
+              }
+            },
+            "tokenCount": 135,
+            "lineCount": 12,
+            "context": "control-flow",
+            "calls": 20,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 19
+          },
+          {
+            "path": "src/history/render.ts",
+            "range": {
+              "start": {
+                "line": 100
+              },
+              "end": {
+                "line": 111
+              }
+            },
+            "tokenCount": 135,
+            "lineCount": 12,
+            "context": "control-flow",
+            "calls": 19,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 19
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-18",
+        "tokenCount": 177,
+        "members": [
+          {
+            "path": "src/metrics/analyze-duplication.ts",
+            "range": {
+              "start": {
+                "line": 126
+              },
+              "end": {
+                "line": 157
+              }
+            },
+            "tokenCount": 177,
+            "lineCount": 32,
+            "context": "control-flow",
+            "calls": 1,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 11
+          },
+          {
+            "path": "src/metrics/analyze.ts",
+            "range": {
+              "start": {
+                "line": 131
+              },
+              "end": {
+                "line": 162
+              }
+            },
+            "tokenCount": 177,
+            "lineCount": 32,
+            "context": "control-flow",
+            "calls": 1,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 11
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-19",
+        "tokenCount": 272,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/adapter.ts",
+            "range": {
+              "start": {
+                "line": 73
+              },
+              "end": {
+                "line": 122
+              }
+            },
+            "tokenCount": 272,
+            "lineCount": 50,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 6
+          },
+          {
+            "path": "src/providers/knip/adapter.ts",
+            "range": {
+              "start": {
+                "line": 74
+              },
+              "end": {
+                "line": 123
+              }
+            },
+            "tokenCount": 272,
+            "lineCount": 50,
+            "context": "control-flow",
+            "calls": 6,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 6
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-20",
+        "tokenCount": 100,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/adapter.ts",
+            "range": {
+              "start": {
+                "line": 177
+              },
+              "end": {
+                "line": 193
+              }
+            },
+            "tokenCount": 100,
+            "lineCount": 17,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 1
+          },
+          {
+            "path": "src/providers/knip/adapter.ts",
+            "range": {
+              "start": {
+                "line": 191
+              },
+              "end": {
+                "line": 207
+              }
+            },
+            "tokenCount": 100,
+            "lineCount": 17,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-21",
+        "tokenCount": 189,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/analysis.ts",
+            "range": {
+              "start": {
+                "line": 60
+              },
+              "end": {
+                "line": 92
+              }
+            },
+            "tokenCount": 189,
+            "lineCount": 33,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 4
+          },
+          {
+            "path": "src/providers/knip/analysis.ts",
+            "range": {
+              "start": {
+                "line": 63
+              },
+              "end": {
+                "line": 95
+              }
+            },
+            "tokenCount": 189,
+            "lineCount": 33,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 6
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-22",
+        "tokenCount": 198,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/analysis.ts",
+            "range": {
+              "start": {
+                "line": 189
+              },
+              "end": {
+                "line": 235
+              }
+            },
+            "tokenCount": 198,
+            "lineCount": 47,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 3
+          },
+          {
+            "path": "src/providers/knip/analysis.ts",
+            "range": {
+              "start": {
+                "line": 190
+              },
+              "end": {
+                "line": 235
+              }
+            },
+            "tokenCount": 198,
+            "lineCount": 46,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 3
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-23",
+        "tokenCount": 122,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/analysis.ts",
+            "range": {
+              "start": {
+                "line": 240
+              },
+              "end": {
+                "line": 254
+              }
+            },
+            "tokenCount": 122,
+            "lineCount": 15,
+            "context": "control-flow",
+            "calls": 1,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 1
+          },
+          {
+            "path": "src/providers/knip/analysis.ts",
+            "range": {
+              "start": {
+                "line": 242
+              },
+              "end": {
+                "line": 256
+              }
+            },
+            "tokenCount": 122,
+            "lineCount": 15,
+            "context": "control-flow",
+            "calls": 2,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 1
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-24",
+        "tokenCount": 109,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/analysis.ts",
+            "range": {
+              "start": {
+                "line": 260
+              },
+              "end": {
+                "line": 287
+              }
+            },
+            "tokenCount": 109,
+            "lineCount": 28,
+            "context": "control-flow",
+            "calls": 8,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 7
+          },
+          {
+            "path": "src/providers/knip/analysis.ts",
+            "range": {
+              "start": {
+                "line": 258
+              },
+              "end": {
+                "line": 285
+              }
+            },
+            "tokenCount": 109,
+            "lineCount": 28,
+            "context": "control-flow",
+            "calls": 10,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 7
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-25",
+        "tokenCount": 199,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/cruise-run.ts",
+            "range": {
+              "start": {
+                "line": 76
+              },
+              "end": {
+                "line": 130
+              }
+            },
+            "tokenCount": 199,
+            "lineCount": 55,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 9
+          },
+          {
+            "path": "src/providers/knip/knip-run.ts",
+            "range": {
+              "start": {
+                "line": 63
+              },
+              "end": {
+                "line": 117
+              }
+            },
+            "tokenCount": 199,
+            "lineCount": 55,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 9
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-26",
+        "tokenCount": 224,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/invocation.ts",
+            "range": {
+              "start": {
+                "line": 39
+              },
+              "end": {
+                "line": 93
+              }
+            },
+            "tokenCount": 224,
+            "lineCount": 55,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 8
+          },
+          {
+            "path": "src/providers/knip/invocation.ts",
+            "range": {
+              "start": {
+                "line": 39
+              },
+              "end": {
+                "line": 90
+              }
+            },
+            "tokenCount": 224,
+            "lineCount": 52,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 8
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-27",
+        "tokenCount": 147,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/invocation.ts",
+            "range": {
+              "start": {
+                "line": 94
+              },
+              "end": {
+                "line": 138
+              }
+            },
+            "tokenCount": 147,
+            "lineCount": 45,
+            "context": "control-flow",
+            "calls": 5,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 3
+          },
+          {
+            "path": "src/providers/knip/invocation.ts",
+            "range": {
+              "start": {
+                "line": 90
+              },
+              "end": {
+                "line": 131
+              }
+            },
+            "tokenCount": 147,
+            "lineCount": 42,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 4
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-28",
+        "tokenCount": 124,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/invocation.ts",
+            "range": {
+              "start": {
+                "line": 139
+              },
+              "end": {
+                "line": 163
+              }
+            },
+            "tokenCount": 124,
+            "lineCount": 25,
+            "context": "control-flow",
+            "calls": 6,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 10
+          },
+          {
+            "path": "src/providers/knip/invocation.ts",
+            "range": {
+              "start": {
+                "line": 131
+              },
+              "end": {
+                "line": 155
+              }
+            },
+            "tokenCount": 124,
+            "lineCount": 25,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 10
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-29",
+        "tokenCount": 220,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/invocation.ts",
+            "range": {
+              "start": {
+                "line": 231
+              },
+              "end": {
+                "line": 263
+              }
+            },
+            "tokenCount": 220,
+            "lineCount": 33,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 6
+          },
+          {
+            "path": "src/providers/knip/invocation.ts",
+            "range": {
+              "start": {
+                "line": 215
+              },
+              "end": {
+                "line": 247
+              }
+            },
+            "tokenCount": 220,
+            "lineCount": 33,
+            "context": "control-flow",
+            "calls": 7,
+            "registrations": 0,
+            "decisions": 4,
+            "literals": 6
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-30",
+        "tokenCount": 112,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/invocation.ts",
+            "range": {
+              "start": {
+                "line": 233
+              },
+              "end": {
+                "line": 245
+              }
+            },
+            "tokenCount": 112,
+            "lineCount": 13,
+            "context": "control-flow",
+            "calls": 4,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 3
+          },
+          {
+            "path": "src/providers/jscpd/invocation.ts",
+            "range": {
+              "start": {
+                "line": 207
+              },
+              "end": {
+                "line": 219
+              }
+            },
+            "tokenCount": 112,
+            "lineCount": 13,
+            "context": "control-flow",
+            "calls": 4,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 3
+          },
+          {
+            "path": "src/providers/knip/invocation.ts",
+            "range": {
+              "start": {
+                "line": 217
+              },
+              "end": {
+                "line": 229
+              }
+            },
+            "tokenCount": 112,
+            "lineCount": 13,
+            "context": "control-flow",
+            "calls": 4,
+            "registrations": 0,
+            "decisions": 2,
+            "literals": 3
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-31",
+        "tokenCount": 118,
+        "members": [
+          {
+            "path": "src/providers/dependency-cruiser/raw.ts",
+            "range": {
+              "start": {
+                "line": 145
+              },
+              "end": {
+                "line": 152
+              }
+            },
+            "tokenCount": 118,
+            "lineCount": 8,
+            "context": "other-or-mixed",
+            "calls": 19,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          },
+          {
+            "path": "src/providers/jscpd/raw.ts",
+            "range": {
+              "start": {
+                "line": 160
+              },
+              "end": {
+                "line": 167
+              }
+            },
+            "tokenCount": 118,
+            "lineCount": 8,
+            "context": "other-or-mixed",
+            "calls": 21,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-32",
+        "tokenCount": 251,
+        "members": [
+          {
+            "path": "src/providers/jscpd/analysis.ts",
+            "range": {
+              "start": {
+                "line": 208
+              },
+              "end": {
+                "line": 265
+              }
+            },
+            "tokenCount": 251,
+            "lineCount": 58,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 4
+          },
+          {
+            "path": "src/providers/knip/analysis.ts",
+            "range": {
+              "start": {
+                "line": 179
+              },
+              "end": {
+                "line": 234
+              }
+            },
+            "tokenCount": 251,
+            "lineCount": 56,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 3,
+            "literals": 4
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-33",
+        "tokenCount": 171,
+        "members": [
+          {
+            "path": "src/providers/jscpd/raw.ts",
+            "range": {
+              "start": {
+                "line": 157
+              },
+              "end": {
+                "line": 165
+              }
+            },
+            "tokenCount": 171,
+            "lineCount": 9,
+            "context": "other-or-mixed",
+            "calls": 27,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          },
+          {
+            "path": "src/providers/jscpd/raw.ts",
+            "range": {
+              "start": {
+                "line": 158
+              },
+              "end": {
+                "line": 166
+              }
+            },
+            "tokenCount": 171,
+            "lineCount": 9,
+            "context": "other-or-mixed",
+            "calls": 27,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-34",
+        "tokenCount": 126,
+        "members": [
+          {
+            "path": "src/providers/jscpd/raw.ts",
+            "range": {
+              "start": {
+                "line": 198
+              },
+              "end": {
+                "line": 219
+              }
+            },
+            "tokenCount": 126,
+            "lineCount": 22,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 0
+          },
+          {
+            "path": "src/providers/knip/raw.ts",
+            "range": {
+              "start": {
+                "line": 105
+              },
+              "end": {
+                "line": 126
+              }
+            },
+            "tokenCount": 126,
+            "lineCount": 22,
+            "context": "control-flow",
+            "calls": 3,
+            "registrations": 0,
+            "decisions": 1,
+            "literals": 0
+          }
+        ],
+        "lineOverlap": false
+      },
+      {
+        "id": "clone-group-35",
+        "tokenCount": 168,
+        "members": [
+          {
+            "path": "src/providers/manifest.ts",
+            "range": {
+              "start": {
+                "line": 148
+              },
+              "end": {
+                "line": 194
+              }
+            },
+            "tokenCount": 168,
+            "lineCount": 47,
+            "context": "other-or-mixed",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 39
+          },
+          {
+            "path": "src/providers/manifest.ts",
+            "range": {
+              "start": {
+                "line": 158
+              },
+              "end": {
+                "line": 204
+              }
+            },
+            "tokenCount": 168,
+            "lineCount": 47,
+            "context": "other-or-mixed",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 39
+          }
+        ],
+        "lineOverlap": true
+      },
+      {
+        "id": "clone-group-36",
+        "tokenCount": 148,
+        "members": [
+          {
+            "path": "src/providers/manifest.ts",
+            "range": {
+              "start": {
+                "line": 226
+              },
+              "end": {
+                "line": 288
+              }
+            },
+            "tokenCount": 148,
+            "lineCount": 63,
+            "context": "other-or-mixed",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 39
+          },
+          {
+            "path": "src/providers/manifest.ts",
+            "range": {
+              "start": {
+                "line": 285
+              },
+              "end": {
+                "line": 348
+              }
+            },
+            "tokenCount": 148,
+            "lineCount": 64,
+            "context": "other-or-mixed",
+            "calls": 0,
+            "registrations": 0,
+            "decisions": 0,
+            "literals": 39
+          }
+        ],
+        "lineOverlap": true
+      }
+    ]
+  },
+  "sourceConfig": {
+    "exclude": [
+      "corpus/**"
+    ],
+    "classify": {}
+  },
+  "excluded": [
+    {
+      "path": "corpus/fixtures/acyclic/src/a.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/acyclic/src/b.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/acyclic/src/c.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/acyclic/src/d.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/branch-base/src/grade.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/branch-base/src/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/branch-base/src/label.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/branch-grown/src/grade.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/branch-grown/src/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/branch-grown/src/label.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clean-small/src/convert.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clean-small/src/temperature.test.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clean-small/src/temperature.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clone-base/src/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clone-base/src/invoice.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clone-base/src/shipping.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clone-removed/src/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clone-removed/src/invoice.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/clone-removed/src/shipping.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/cyclic/src/a.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/cyclic/src/b.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/cyclic/src/c.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/cyclic/src/d.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-base/src/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-base/src/invoice.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-base/src/legacy.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-base/src/shipping.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-grown/src/clean/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-grown/src/clean/many-clean.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-grown/src/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-grown/src/invoice.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-grown/src/legacy.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/dilution-grown/src/shipping.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/incomplete-parse/src/broken.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/incomplete-parse/src/ok.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/test-separation/src/calc.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/test-separation/src/eroded-helper.test.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/test-separation/src/index.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/test-separation/src/invoice-fixture.test.ts",
+      "reason": "config-exclude"
+    },
+    {
+      "path": "corpus/fixtures/test-separation/src/shipping-fixture.test.ts",
+      "reason": "config-exclude"
+    }
+  ],
+  "unsupported": {
+    "files": 10,
+    "byExtension": {
+      ".mjs": 10
+    }
+  },
+  "rankings": {
+    "byCc": [
+      {
+        "path": "scripts/check-debt-markers.ts",
+        "name": "scan",
+        "range": {
+          "start": {
+            "line": 142,
+            "column": 1
+          },
+          "end": {
+            "line": 205,
+            "column": 2
+          }
+        },
+        "cc": 19,
+        "maxNesting": 3,
+        "flow": 22,
+        "structural": 11,
+        "nesting": 11,
+        "booleanOperators": 0,
+        "calls": 19
+      },
+      {
+        "path": "src/detectors/lang/typescript/testing.ts",
+        "name": "coverageThresholdConfig",
+        "range": {
+          "start": {
+            "line": 98,
+            "column": 1
+          },
+          "end": {
+            "line": 122,
+            "column": 2
+          }
+        },
+        "cc": 18,
+        "maxNesting": 2,
+        "flow": 15,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 9,
+        "calls": 6
+      },
+      {
+        "path": "src/compare/policy-evidence.ts",
+        "name": "assessProviderEvidenceBudget",
+        "range": {
+          "start": {
+            "line": 216,
+            "column": 1
+          },
+          "end": {
+            "line": 283,
+            "column": 2
+          }
+        },
+        "cc": 16,
+        "maxNesting": 2,
+        "flow": 10,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 4,
+        "calls": 13
+      },
+      {
+        "path": "src/report/build.ts",
+        "name": "auditRepo",
+        "range": {
+          "start": {
+            "line": 208,
+            "column": 1
+          },
+          "end": {
+            "line": 273,
+            "column": 2
+          }
+        },
+        "cc": 16,
+        "maxNesting": 1,
+        "flow": 5,
+        "structural": 5,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 20
+      },
+      {
+        "path": "scripts/check-file-sizes.ts",
+        "name": "scan",
+        "range": {
+          "start": {
+            "line": 109,
+            "column": 1
+          },
+          "end": {
+            "line": 164,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 3,
+        "flow": 18,
+        "structural": 10,
+        "nesting": 8,
+        "booleanOperators": 0,
+        "calls": 15
+      },
+      {
+        "path": "scripts/report-test-timing.ts",
+        "name": "parseJUnit",
+        "range": {
+          "start": {
+            "line": 49,
+            "column": 1
+          },
+          "end": {
+            "line": 89,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 2,
+        "flow": 8,
+        "structural": 6,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 20
+      },
+      {
+        "path": "src/compare/fixtures.ts",
+        "name": "entry",
+        "range": {
+          "start": {
+            "line": 118,
+            "column": 1
+          },
+          "end": {
+            "line": 152,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 1,
+        "flow": 7,
+        "structural": 6,
+        "nesting": 0,
+        "booleanOperators": 1,
+        "calls": 3
+      },
+      {
+        "path": "src/report/run.ts",
+        "name": "runAudit",
+        "range": {
+          "start": {
+            "line": 55,
+            "column": 1
+          },
+          "end": {
+            "line": 77,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 1,
+        "flow": 9,
+        "structural": 9,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 9
+      },
+      {
+        "path": "scripts/validate-agents-md.ts",
+        "name": "extractBacktickedPaths",
+        "range": {
+          "start": {
+            "line": 84,
+            "column": 1
+          },
+          "end": {
+            "line": 108,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 2,
+        "flow": 23,
+        "structural": 11,
+        "nesting": 10,
+        "booleanOperators": 2,
+        "calls": 15
+      },
+      {
+        "path": "scripts/validate-corpus.ts",
+        "name": "runCorpusValidation",
+        "range": {
+          "start": {
+            "line": 263,
+            "column": 1
+          },
+          "end": {
+            "line": 315,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 2,
+        "flow": 10,
+        "structural": 5,
+        "nesting": 2,
+        "booleanOperators": 3,
+        "calls": 18
+      },
+      {
+        "path": "src/report/audit-markdown.ts",
+        "name": "renderAuditMarkdown",
+        "range": {
+          "start": {
+            "line": 59,
+            "column": 1
+          },
+          "end": {
+            "line": 141,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 1,
+        "flow": 7,
+        "structural": 7,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 33
+      },
+      {
+        "path": "src/syntax/identity.ts",
+        "name": "containerScope",
+        "range": {
+          "start": {
+            "line": 79,
+            "column": 1
+          },
+          "end": {
+            "line": 105,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 1,
+        "flow": 12,
+        "structural": 5,
+        "nesting": 0,
+        "booleanOperators": 7,
+        "calls": 15
+      },
+      {
+        "path": "src/providers/dependency-cruiser/analysis.ts",
+        "name": "runDependencyCruiserAnalysis",
+        "range": {
+          "start": {
+            "line": 229,
+            "column": 1
+          },
+          "end": {
+            "line": 297,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 10,
+        "structural": 8,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 13
+      },
+      {
+        "path": "src/providers/dependency-cruiser/cruise-run.ts",
+        "name": "runDependencyCruiserCruise",
+        "range": {
+          "start": {
+            "line": 199,
+            "column": 1
+          },
+          "end": {
+            "line": 296,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 13,
+        "structural": 10,
+        "nesting": 1,
+        "booleanOperators": 2,
+        "calls": 31
+      },
+      {
+        "path": "src/providers/jscpd/mode-run.ts",
+        "name": "runJscpdMode",
+        "range": {
+          "start": {
+            "line": 140,
+            "column": 1
+          },
+          "end": {
+            "line": 277,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 13,
+        "structural": 11,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 28
+      },
+      {
+        "path": "src/providers/knip/analysis.ts",
+        "name": "runKnipAnalysis",
+        "range": {
+          "start": {
+            "line": 229,
+            "column": 1
+          },
+          "end": {
+            "line": 300,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 10,
+        "structural": 8,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 15
+      },
+      {
+        "path": "src/providers/process.ts",
+        "name": "runControlledProcess",
+        "range": {
+          "start": {
+            "line": 284,
+            "column": 1
+          },
+          "end": {
+            "line": 383,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 8,
+        "structural": 6,
+        "nesting": 2,
+        "booleanOperators": 0,
+        "calls": 14
+      },
+      {
+        "path": "src/providers/staging.ts",
+        "name": "assertSelectionEntry",
+        "range": {
+          "start": {
+            "line": 242,
+            "column": 1
+          },
+          "end": {
+            "line": 272,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 12,
+        "structural": 4,
+        "nesting": 0,
+        "booleanOperators": 8,
+        "calls": 10
+      },
+      {
+        "path": "src/safeguards/wiring.ts",
+        "name": "ciReachableScripts",
+        "range": {
+          "start": {
+            "line": 33,
+            "column": 1
+          },
+          "end": {
+            "line": 59,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 3,
+        "flow": 12,
+        "structural": 7,
+        "nesting": 5,
+        "booleanOperators": 0,
+        "calls": 7
+      },
+      {
+        "path": "scripts/report-quality-metrics.ts",
+        "name": "parseLcov",
+        "range": {
+          "start": {
+            "line": 44,
+            "column": 1
+          },
+          "end": {
+            "line": 84,
+            "column": 2
+          }
+        },
+        "cc": 12,
+        "maxNesting": 2,
+        "flow": 12,
+        "structural": 8,
+        "nesting": 4,
+        "booleanOperators": 0,
+        "calls": 8
+      }
+    ],
+    "byFlow": [
+      {
+        "path": "scripts/validate-agents-md.ts",
+        "name": "extractBacktickedPaths",
+        "range": {
+          "start": {
+            "line": 84,
+            "column": 1
+          },
+          "end": {
+            "line": 108,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 2,
+        "flow": 23,
+        "structural": 11,
+        "nesting": 10,
+        "booleanOperators": 2,
+        "calls": 15
+      },
+      {
+        "path": "scripts/check-debt-markers.ts",
+        "name": "scan",
+        "range": {
+          "start": {
+            "line": 142,
+            "column": 1
+          },
+          "end": {
+            "line": 205,
+            "column": 2
+          }
+        },
+        "cc": 19,
+        "maxNesting": 3,
+        "flow": 22,
+        "structural": 11,
+        "nesting": 11,
+        "booleanOperators": 0,
+        "calls": 19
+      },
+      {
+        "path": "scripts/check-file-sizes.ts",
+        "name": "scan",
+        "range": {
+          "start": {
+            "line": 109,
+            "column": 1
+          },
+          "end": {
+            "line": 164,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 3,
+        "flow": 18,
+        "structural": 10,
+        "nesting": 8,
+        "booleanOperators": 0,
+        "calls": 15
+      },
+      {
+        "path": "scripts/validate-agents-md.ts",
+        "name": "validate",
+        "range": {
+          "start": {
+            "line": 122,
+            "column": 1
+          },
+          "end": {
+            "line": 165,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 3,
+        "flow": 16,
+        "structural": 7,
+        "nesting": 9,
+        "booleanOperators": 0,
+        "calls": 16
+      },
+      {
+        "path": "scripts/corpus-report.ts",
+        "name": "formatMarkdown",
+        "range": {
+          "start": {
+            "line": 235,
+            "column": 1
+          },
+          "end": {
+            "line": 284,
+            "column": 2
+          }
+        },
+        "cc": 10,
+        "maxNesting": 2,
+        "flow": 15,
+        "structural": 9,
+        "nesting": 6,
+        "booleanOperators": 0,
+        "calls": 19
+      },
+      {
+        "path": "src/detectors/lang/typescript/testing.ts",
+        "name": "coverageThresholdConfig",
+        "range": {
+          "start": {
+            "line": 98,
+            "column": 1
+          },
+          "end": {
+            "line": 122,
+            "column": 2
+          }
+        },
+        "cc": 18,
+        "maxNesting": 2,
+        "flow": 15,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 9,
+        "calls": 6
+      },
+      {
+        "path": "src/providers/knip/normalize.ts",
+        "name": "exemptingSurface",
+        "range": {
+          "start": {
+            "line": 137,
+            "column": 1
+          },
+          "end": {
+            "line": 160,
+            "column": 2
+          }
+        },
+        "cc": 10,
+        "maxNesting": 3,
+        "flow": 15,
+        "structural": 6,
+        "nesting": 6,
+        "booleanOperators": 3,
+        "calls": 0
+      },
+      {
+        "path": "scripts/check-debt-markers.ts",
+        "name": "loadBudget",
+        "range": {
+          "start": {
+            "line": 75,
+            "column": 1
+          },
+          "end": {
+            "line": 115,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 2,
+        "flow": 14,
+        "structural": 8,
+        "nesting": 4,
+        "booleanOperators": 2,
+        "calls": 12
+      },
+      {
+        "path": "scripts/report-test-timing.ts",
+        "name": "parseArgs",
+        "range": {
+          "start": {
+            "line": 136,
+            "column": 1
+          },
+          "end": {
+            "line": 153,
+            "column": 2
+          }
+        },
+        "cc": 8,
+        "maxNesting": 4,
+        "flow": 14,
+        "structural": 5,
+        "nesting": 7,
+        "booleanOperators": 2,
+        "calls": 3
+      },
+      {
+        "path": "src/contract/architecture-policy.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 246,
+            "column": 15
+          },
+          "end": {
+            "line": 287,
+            "column": 3
+          }
+        },
+        "cc": 9,
+        "maxNesting": 4,
+        "flow": 14,
+        "structural": 6,
+        "nesting": 7,
+        "booleanOperators": 1,
+        "calls": 13
+      },
+      {
+        "path": "src/providers/dependency-cruiser/normalize.ts",
+        "name": "countLocalEdges",
+        "range": {
+          "start": {
+            "line": 250,
+            "column": 1
+          },
+          "end": {
+            "line": 267,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 3,
+        "flow": 14,
+        "structural": 6,
+        "nesting": 8,
+        "booleanOperators": 0,
+        "calls": 3
+      },
+      {
+        "path": "src/standards/drift.ts",
+        "name": "subsetDivergences",
+        "range": {
+          "start": {
+            "line": 162,
+            "column": 1
+          },
+          "end": {
+            "line": 182,
+            "column": 2
+          }
+        },
+        "cc": 9,
+        "maxNesting": 3,
+        "flow": 14,
+        "structural": 7,
+        "nesting": 6,
+        "booleanOperators": 1,
+        "calls": 12
+      },
+      {
+        "path": "scripts/validate-agents-md.ts",
+        "name": "parseArgs",
+        "range": {
+          "start": {
+            "line": 173,
+            "column": 1
+          },
+          "end": {
+            "line": 188,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 5,
+        "flow": 13,
+        "structural": 6,
+        "nesting": 7,
+        "booleanOperators": 0,
+        "calls": 2
+      },
+      {
+        "path": "src/cli/main.ts",
+        "name": "run",
+        "range": {
+          "start": {
+            "line": 67,
+            "column": 1
+          },
+          "end": {
+            "line": 90,
+            "column": 2
+          }
+        },
+        "cc": 9,
+        "maxNesting": 3,
+        "flow": 13,
+        "structural": 5,
+        "nesting": 5,
+        "booleanOperators": 3,
+        "calls": 7
+      },
+      {
+        "path": "src/detectors/lang/typescript/code-quality.ts",
+        "name": "namingConsistency",
+        "range": {
+          "start": {
+            "line": 113,
+            "column": 44
+          },
+          "end": {
+            "line": 133,
+            "column": 2
+          }
+        },
+        "cc": 11,
+        "maxNesting": 2,
+        "flow": 13,
+        "structural": 6,
+        "nesting": 4,
+        "booleanOperators": 3,
+        "calls": 13
+      },
+      {
+        "path": "src/metrics/duplication-index-input.ts",
+        "name": "alphabet",
+        "range": {
+          "start": {
+            "line": 27,
+            "column": 1
+          },
+          "end": {
+            "line": 58,
+            "column": 2
+          }
+        },
+        "cc": 10,
+        "maxNesting": 3,
+        "flow": 13,
+        "structural": 6,
+        "nesting": 5,
+        "booleanOperators": 2,
+        "calls": 13
+      },
+      {
+        "path": "src/metrics/duplication.ts",
+        "name": "collectTokens",
+        "range": {
+          "start": {
+            "line": 176,
+            "column": 1
+          },
+          "end": {
+            "line": 215,
+            "column": 2
+          }
+        },
+        "cc": 7,
+        "maxNesting": 3,
+        "flow": 13,
+        "structural": 6,
+        "nesting": 7,
+        "booleanOperators": 0,
+        "calls": 20
+      },
+      {
+        "path": "src/providers/dependency-cruiser/cruise-run.ts",
+        "name": "runDependencyCruiserCruise",
+        "range": {
+          "start": {
+            "line": 199,
+            "column": 1
+          },
+          "end": {
+            "line": 296,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 13,
+        "structural": 10,
+        "nesting": 1,
+        "booleanOperators": 2,
+        "calls": 31
+      },
+      {
+        "path": "src/providers/jscpd/mode-run.ts",
+        "name": "runJscpdMode",
+        "range": {
+          "start": {
+            "line": 140,
+            "column": 1
+          },
+          "end": {
+            "line": 277,
+            "column": 2
+          }
+        },
+        "cc": 13,
+        "maxNesting": 1,
+        "flow": 13,
+        "structural": 11,
+        "nesting": 1,
+        "booleanOperators": 1,
+        "calls": 28
+      },
+      {
+        "path": "scripts/check-all.ts",
+        "name": "main",
+        "range": {
+          "start": {
+            "line": 121,
+            "column": 1
+          },
+          "end": {
+            "line": 153,
+            "column": 2
+          }
+        },
+        "cc": 9,
+        "maxNesting": 2,
+        "flow": 12,
+        "structural": 7,
+        "nesting": 4,
+        "booleanOperators": 1,
+        "calls": 21
+      }
+    ]
+  },
+  "ccHistogram": {
+    "1": 824,
+    "2": 302,
+    "3": 252,
+    "4": 154,
+    "5": 126,
+    "6": 94,
+    "7": 67,
+    "8": 35,
+    "9": 38,
+    "10": 32,
+    "11": 17,
+    "12": 8,
+    "13": 7,
+    "14": 4,
+    "15": 4,
+    "16": 2,
+    "18": 1,
+    "19": 1
+  }
+}

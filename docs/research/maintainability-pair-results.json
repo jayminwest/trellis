@@ -1,0 +1,242 @@
+[
+  {
+    "id": "guard-clauses",
+    "prediction": "flow-decreases",
+    "before": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 3,
+      "maxFlow": 3,
+      "totalFlow": 3,
+      "calls": 0
+    },
+    "after": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 3,
+      "maxFlow": 2,
+      "totalFlow": 2,
+      "calls": 0
+    }
+  },
+  {
+    "id": "else-if-chain",
+    "prediction": "flow-decreases",
+    "before": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 4,
+      "maxFlow": 6,
+      "totalFlow": 6,
+      "calls": 0
+    },
+    "after": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 4,
+      "maxFlow": 3,
+      "totalFlow": 3,
+      "calls": 0
+    }
+  },
+  {
+    "id": "helper-extraction",
+    "prediction": "flow-decreases-context-increases",
+    "before": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 3,
+      "maxFlow": 3,
+      "totalFlow": 3,
+      "calls": 0
+    },
+    "after": {
+      "files": 1,
+      "functions": 2,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 2,
+      "maxFlow": 1,
+      "totalFlow": 2,
+      "calls": 1
+    }
+  },
+  {
+    "id": "forwarding-layers",
+    "prediction": "flow-blind",
+    "before": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 1,
+      "maxFlow": 0,
+      "totalFlow": 0,
+      "calls": 0
+    },
+    "after": {
+      "files": 1,
+      "functions": 3,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 1,
+      "maxFlow": 0,
+      "totalFlow": 0,
+      "calls": 2
+    }
+  },
+  {
+    "id": "switch-to-table",
+    "prediction": "flow-decreases",
+    "before": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 4,
+      "maxFlow": 1,
+      "totalFlow": 1,
+      "calls": 0
+    },
+    "after": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 2,
+      "maxFlow": 0,
+      "totalFlow": 0,
+      "calls": 0
+    }
+  },
+  {
+    "id": "boolean-rewrite",
+    "prediction": "flow-ties",
+    "before": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 4,
+      "maxFlow": 3,
+      "totalFlow": 3,
+      "calls": 0
+    },
+    "after": {
+      "files": 1,
+      "functions": 1,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 4,
+      "maxFlow": 3,
+      "totalFlow": 3,
+      "calls": 0
+    }
+  },
+  {
+    "id": "shared-rule",
+    "prediction": "flow-decreases",
+    "before": {
+      "files": 1,
+      "functions": 3,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 2,
+      "maxFlow": 1,
+      "totalFlow": 2,
+      "calls": 2
+    },
+    "after": {
+      "files": 1,
+      "functions": 2,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 2,
+      "maxFlow": 1,
+      "totalFlow": 1,
+      "calls": 2
+    }
+  },
+  {
+    "id": "forced-generalization",
+    "prediction": "flow-decreases-semantic-blind-spot",
+    "before": {
+      "files": 1,
+      "functions": 3,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 2,
+      "maxFlow": 1,
+      "totalFlow": 2,
+      "calls": 2
+    },
+    "after": {
+      "files": 1,
+      "functions": 2,
+      "eroded": 0,
+      "shallowEroded": 0,
+      "cloneGroups": 0,
+      "overlappingGroups": 0,
+      "registrationGroups": 0,
+      "maxCc": 2,
+      "maxFlow": 1,
+      "totalFlow": 1,
+      "calls": 2
+    }
+  }
+]

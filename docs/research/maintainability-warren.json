@@ -1,0 +1,940 @@
+{
+  "protocol": "maintainability-v1",
+  "status": "experimental-evidence-only",
+  "compiler": "6.0.3",
+  "snapshot": "781da04758d37270224896a916616d61672b738248575ab19a1137a27a8dc002",
+  "completeness": "complete",
+  "diagnostics": [],
+  "skipped": [],
+  "summary": {
+    "files": 907,
+    "functions": 7496,
+    "eroded": 269,
+    "shallowEroded": 140,
+    "cloneGroups": null,
+    "overlappingGroups": null,
+    "registrationGroups": null
+  },
+  "duplication": {
+    "state": "incomplete",
+    "metrics": [
+      {
+        "id": "duplication.density.production",
+        "unit": "ratio",
+        "state": "incomplete",
+        "reason": "match-work budget of 100000000 exceeded in index; duplication not measured"
+      },
+      {
+        "id": "duplication.duplicated-lines.production",
+        "unit": "lines",
+        "state": "incomplete",
+        "reason": "match-work budget of 100000000 exceeded in index; duplication not measured"
+      },
+      {
+        "id": "duplication.groups.production",
+        "unit": "count",
+        "state": "incomplete",
+        "reason": "match-work budget of 100000000 exceeded in index; duplication not measured"
+      }
+    ],
+    "exhaustion": {
+      "kind": "match-work",
+      "limit": 100000000,
+      "phase": "index"
+    },
+    "clones": []
+  },
+  "sourceConfig": {
+    "exclude": [],
+    "classify": {}
+  },
+  "excluded": [],
+  "unsupported": {
+    "files": 25,
+    "byExtension": {
+      ".jsx": 24,
+      ".py": 1
+    }
+  },
+  "rankings": {
+    "byCc": [
+      {
+        "path": "src/runs/reap/run.ts",
+        "name": "reapRun",
+        "range": {
+          "start": {
+            "line": 21,
+            "column": 1
+          },
+          "end": {
+            "line": 513,
+            "column": 2
+          }
+        },
+        "cc": 104,
+        "maxNesting": 5,
+        "flow": 106,
+        "structural": 46,
+        "nesting": 26,
+        "booleanOperators": 34,
+        "calls": 54
+      },
+      {
+        "path": "src/runs/spawn/dispatch.ts",
+        "name": "dispatchRun",
+        "range": {
+          "start": {
+            "line": 67,
+            "column": 1
+          },
+          "end": {
+            "line": 425,
+            "column": 2
+          }
+        },
+        "cc": 71,
+        "maxNesting": 3,
+        "flow": 44,
+        "structural": 28,
+        "nesting": 8,
+        "booleanOperators": 8,
+        "calls": 51
+      },
+      {
+        "path": "src/runs/stream/bridge.ts",
+        "name": "bridgeRunStream",
+        "range": {
+          "start": {
+            "line": 53,
+            "column": 1
+          },
+          "end": {
+            "line": 415,
+            "column": 2
+          }
+        },
+        "cc": 68,
+        "maxNesting": 6,
+        "flow": 80,
+        "structural": 37,
+        "nesting": 40,
+        "booleanOperators": 3,
+        "calls": 49
+      },
+      {
+        "path": "src/server/main/index.ts",
+        "name": "bootServer",
+        "range": {
+          "start": {
+            "line": 95,
+            "column": 1
+          },
+          "end": {
+            "line": 485,
+            "column": 2
+          }
+        },
+        "cc": 46,
+        "maxNesting": 1,
+        "flow": 39,
+        "structural": 37,
+        "nesting": 0,
+        "booleanOperators": 2,
+        "calls": 61
+      },
+      {
+        "path": "extensions/tracker-conformance/src/fake-tracker/server.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 129,
+            "column": 9
+          },
+          "end": {
+            "line": 205,
+            "column": 3
+          }
+        },
+        "cc": 35,
+        "maxNesting": 2,
+        "flow": 41,
+        "structural": 20,
+        "nesting": 11,
+        "booleanOperators": 10,
+        "calls": 48
+      },
+      {
+        "path": "src/runs/reap/mulch.ts",
+        "name": "mergeMulchFile",
+        "range": {
+          "start": {
+            "line": 77,
+            "column": 1
+          },
+          "end": {
+            "line": 167,
+            "column": 2
+          }
+        },
+        "cc": 32,
+        "maxNesting": 4,
+        "flow": 52,
+        "structural": 18,
+        "nesting": 21,
+        "booleanOperators": 13,
+        "calls": 19
+      },
+      {
+        "path": "src/server/bridge-reconnect.ts",
+        "name": "runWithReconnect",
+        "range": {
+          "start": {
+            "line": 90,
+            "column": 1
+          },
+          "end": {
+            "line": 297,
+            "column": 2
+          }
+        },
+        "cc": 32,
+        "maxNesting": 3,
+        "flow": 68,
+        "structural": 26,
+        "nesting": 40,
+        "booleanOperators": 2,
+        "calls": 19
+      },
+      {
+        "path": "src/server/server.ts",
+        "name": "handleRequest",
+        "range": {
+          "start": {
+            "line": 219,
+            "column": 1
+          },
+          "end": {
+            "line": 368,
+            "column": 2
+          }
+        },
+        "cc": 30,
+        "maxNesting": 3,
+        "flow": 47,
+        "structural": 23,
+        "nesting": 21,
+        "booleanOperators": 3,
+        "calls": 37
+      },
+      {
+        "path": "src/ui/src/pages/dispatch-plan/walk-state.ts",
+        "name": "useWalkState",
+        "range": {
+          "start": {
+            "line": 155,
+            "column": 1
+          },
+          "end": {
+            "line": 297,
+            "column": 2
+          }
+        },
+        "cc": 28,
+        "maxNesting": 0,
+        "flow": 7,
+        "structural": 0,
+        "nesting": 0,
+        "booleanOperators": 7,
+        "calls": 28
+      },
+      {
+        "path": "src/ui/src/pages/runs.tsx",
+        "name": "RunsPage",
+        "range": {
+          "start": {
+            "line": 49,
+            "column": 1
+          },
+          "end": {
+            "line": 315,
+            "column": 2
+          }
+        },
+        "cc": 27,
+        "maxNesting": 0,
+        "flow": 19,
+        "structural": 10,
+        "nesting": 4,
+        "booleanOperators": 5,
+        "calls": 25
+      },
+      {
+        "path": "src/preview/launch/orchestrate.ts",
+        "name": "launchPreview",
+        "range": {
+          "start": {
+            "line": 34,
+            "column": 1
+          },
+          "end": {
+            "line": 185,
+            "column": 2
+          }
+        },
+        "cc": 24,
+        "maxNesting": 2,
+        "flow": 18,
+        "structural": 12,
+        "nesting": 6,
+        "booleanOperators": 0,
+        "calls": 34
+      },
+      {
+        "path": "src/runtime/adapters/parsers/pi.ts",
+        "name": "parsePiEvents",
+        "range": {
+          "start": {
+            "line": 66,
+            "column": 1
+          },
+          "end": {
+            "line": 119,
+            "column": 2
+          }
+        },
+        "cc": 24,
+        "maxNesting": 1,
+        "flow": 7,
+        "structural": 5,
+        "nesting": 0,
+        "booleanOperators": 2,
+        "calls": 4
+      },
+      {
+        "path": "extensions/tracker-jira/src/server.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 120,
+            "column": 9
+          },
+          "end": {
+            "line": 179,
+            "column": 3
+          }
+        },
+        "cc": 23,
+        "maxNesting": 2,
+        "flow": 28,
+        "structural": 14,
+        "nesting": 6,
+        "booleanOperators": 8,
+        "calls": 24
+      },
+      {
+        "path": "src/runtime/local/engine.ts",
+        "name": "terminate",
+        "range": {
+          "start": {
+            "line": 406,
+            "column": 2
+          },
+          "end": {
+            "line": 440,
+            "column": 3
+          }
+        },
+        "cc": 22,
+        "maxNesting": 2,
+        "flow": 6,
+        "structural": 5,
+        "nesting": 1,
+        "booleanOperators": 0,
+        "calls": 14
+      },
+      {
+        "path": "src/server/handlers/runs/dispatch.ts",
+        "name": "resolveDispatchFields",
+        "range": {
+          "start": {
+            "line": 112,
+            "column": 1
+          },
+          "end": {
+            "line": 148,
+            "column": 2
+          }
+        },
+        "cc": 22,
+        "maxNesting": 0,
+        "flow": 5,
+        "structural": 3,
+        "nesting": 0,
+        "booleanOperators": 2,
+        "calls": 13
+      },
+      {
+        "path": "extensions/judge/src/wire.ts",
+        "name": "parseProvenance",
+        "range": {
+          "start": {
+            "line": 183,
+            "column": 1
+          },
+          "end": {
+            "line": 220,
+            "column": 2
+          }
+        },
+        "cc": 21,
+        "maxNesting": 1,
+        "flow": 20,
+        "structural": 10,
+        "nesting": 0,
+        "booleanOperators": 10,
+        "calls": 13
+      },
+      {
+        "path": "src/plan-runs/coordinator.ts",
+        "name": "advancePlanRun",
+        "range": {
+          "start": {
+            "line": 139,
+            "column": 1
+          },
+          "end": {
+            "line": 321,
+            "column": 2
+          }
+        },
+        "cc": 21,
+        "maxNesting": 4,
+        "flow": 39,
+        "structural": 17,
+        "nesting": 22,
+        "booleanOperators": 0,
+        "calls": 42
+      },
+      {
+        "path": "src/runs/cancel.ts",
+        "name": "cancelRun",
+        "range": {
+          "start": {
+            "line": 126,
+            "column": 1
+          },
+          "end": {
+            "line": 245,
+            "column": 2
+          }
+        },
+        "cc": 21,
+        "maxNesting": 3,
+        "flow": 26,
+        "structural": 15,
+        "nesting": 11,
+        "booleanOperators": 0,
+        "calls": 16
+      },
+      {
+        "path": "src/server/handlers/projects.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 321,
+            "column": 9
+          },
+          "end": {
+            "line": 440,
+            "column": 3
+          }
+        },
+        "cc": 21,
+        "maxNesting": 1,
+        "flow": 14,
+        "structural": 14,
+        "nesting": 0,
+        "booleanOperators": 0,
+        "calls": 18
+      },
+      {
+        "path": "src/ui/src/pages/dispatch/use-dispatch-state.ts",
+        "name": "useDispatchState",
+        "range": {
+          "start": {
+            "line": 67,
+            "column": 1
+          },
+          "end": {
+            "line": 190,
+            "column": 2
+          }
+        },
+        "cc": 21,
+        "maxNesting": 0,
+        "flow": 9,
+        "structural": 3,
+        "nesting": 0,
+        "booleanOperators": 6,
+        "calls": 21
+      }
+    ],
+    "byFlow": [
+      {
+        "path": "src/runs/reap/run.ts",
+        "name": "reapRun",
+        "range": {
+          "start": {
+            "line": 21,
+            "column": 1
+          },
+          "end": {
+            "line": 513,
+            "column": 2
+          }
+        },
+        "cc": 104,
+        "maxNesting": 5,
+        "flow": 106,
+        "structural": 46,
+        "nesting": 26,
+        "booleanOperators": 34,
+        "calls": 54
+      },
+      {
+        "path": "src/runs/stream/bridge.ts",
+        "name": "bridgeRunStream",
+        "range": {
+          "start": {
+            "line": 53,
+            "column": 1
+          },
+          "end": {
+            "line": 415,
+            "column": 2
+          }
+        },
+        "cc": 68,
+        "maxNesting": 6,
+        "flow": 80,
+        "structural": 37,
+        "nesting": 40,
+        "booleanOperators": 3,
+        "calls": 49
+      },
+      {
+        "path": "src/server/bridge-reconnect.ts",
+        "name": "runWithReconnect",
+        "range": {
+          "start": {
+            "line": 90,
+            "column": 1
+          },
+          "end": {
+            "line": 297,
+            "column": 2
+          }
+        },
+        "cc": 32,
+        "maxNesting": 3,
+        "flow": 68,
+        "structural": 26,
+        "nesting": 40,
+        "booleanOperators": 2,
+        "calls": 19
+      },
+      {
+        "path": "src/runs/reap/mulch.ts",
+        "name": "mergeMulchFile",
+        "range": {
+          "start": {
+            "line": 77,
+            "column": 1
+          },
+          "end": {
+            "line": 167,
+            "column": 2
+          }
+        },
+        "cc": 32,
+        "maxNesting": 4,
+        "flow": 52,
+        "structural": 18,
+        "nesting": 21,
+        "booleanOperators": 13,
+        "calls": 19
+      },
+      {
+        "path": "src/server/server.ts",
+        "name": "handleRequest",
+        "range": {
+          "start": {
+            "line": 219,
+            "column": 1
+          },
+          "end": {
+            "line": 368,
+            "column": 2
+          }
+        },
+        "cc": 30,
+        "maxNesting": 3,
+        "flow": 47,
+        "structural": 23,
+        "nesting": 21,
+        "booleanOperators": 3,
+        "calls": 37
+      },
+      {
+        "path": "src/runs/spawn/dispatch.ts",
+        "name": "dispatchRun",
+        "range": {
+          "start": {
+            "line": 67,
+            "column": 1
+          },
+          "end": {
+            "line": 425,
+            "column": 2
+          }
+        },
+        "cc": 71,
+        "maxNesting": 3,
+        "flow": 44,
+        "structural": 28,
+        "nesting": 8,
+        "booleanOperators": 8,
+        "calls": 51
+      },
+      {
+        "path": "extensions/tracker-conformance/src/fake-tracker/server.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 129,
+            "column": 9
+          },
+          "end": {
+            "line": 205,
+            "column": 3
+          }
+        },
+        "cc": 35,
+        "maxNesting": 2,
+        "flow": 41,
+        "structural": 20,
+        "nesting": 11,
+        "booleanOperators": 10,
+        "calls": 48
+      },
+      {
+        "path": "src/plan-runs/coordinator.ts",
+        "name": "advancePlanRun",
+        "range": {
+          "start": {
+            "line": 139,
+            "column": 1
+          },
+          "end": {
+            "line": 321,
+            "column": 2
+          }
+        },
+        "cc": 21,
+        "maxNesting": 4,
+        "flow": 39,
+        "structural": 17,
+        "nesting": 22,
+        "booleanOperators": 0,
+        "calls": 42
+      },
+      {
+        "path": "src/server/main/index.ts",
+        "name": "bootServer",
+        "range": {
+          "start": {
+            "line": 95,
+            "column": 1
+          },
+          "end": {
+            "line": 485,
+            "column": 2
+          }
+        },
+        "cc": 46,
+        "maxNesting": 1,
+        "flow": 39,
+        "structural": 37,
+        "nesting": 0,
+        "booleanOperators": 2,
+        "calls": 61
+      },
+      {
+        "path": "extensions/tracker-jira/src/server.ts",
+        "name": "(anonymous)",
+        "range": {
+          "start": {
+            "line": 120,
+            "column": 9
+          },
+          "end": {
+            "line": 179,
+            "column": 3
+          }
+        },
+        "cc": 23,
+        "maxNesting": 2,
+        "flow": 28,
+        "structural": 14,
+        "nesting": 6,
+        "booleanOperators": 8,
+        "calls": 24
+      },
+      {
+        "path": "src/preview/proxy/rewrite.ts",
+        "name": "matchAttributeAt",
+        "range": {
+          "start": {
+            "line": 245,
+            "column": 1
+          },
+          "end": {
+            "line": 278,
+            "column": 2
+          }
+        },
+        "cc": 18,
+        "maxNesting": 3,
+        "flow": 27,
+        "structural": 10,
+        "nesting": 10,
+        "booleanOperators": 7,
+        "calls": 1
+      },
+      {
+        "path": "extensions/judge/src/judge-loop.ts",
+        "name": "judgeRun",
+        "range": {
+          "start": {
+            "line": 164,
+            "column": 1
+          },
+          "end": {
+            "line": 305,
+            "column": 2
+          }
+        },
+        "cc": 19,
+        "maxNesting": 4,
+        "flow": 26,
+        "structural": 11,
+        "nesting": 13,
+        "booleanOperators": 2,
+        "calls": 20
+      },
+      {
+        "path": "src/runs/cancel.ts",
+        "name": "cancelRun",
+        "range": {
+          "start": {
+            "line": 126,
+            "column": 1
+          },
+          "end": {
+            "line": 245,
+            "column": 2
+          }
+        },
+        "cc": 21,
+        "maxNesting": 3,
+        "flow": 26,
+        "structural": 15,
+        "nesting": 11,
+        "booleanOperators": 0,
+        "calls": 16
+      },
+      {
+        "path": "src/runs/reap/seeds.ts",
+        "name": "mirrorPlans",
+        "range": {
+          "start": {
+            "line": 131,
+            "column": 1
+          },
+          "end": {
+            "line": 181,
+            "column": 2
+          }
+        },
+        "cc": 20,
+        "maxNesting": 3,
+        "flow": 26,
+        "structural": 12,
+        "nesting": 8,
+        "booleanOperators": 6,
+        "calls": 20
+      },
+      {
+        "path": "extensions/judge/src/calibration.ts",
+        "name": "computeAgreement",
+        "range": {
+          "start": {
+            "line": 90,
+            "column": 1
+          },
+          "end": {
+            "line": 134,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 3,
+        "flow": 24,
+        "structural": 11,
+        "nesting": 11,
+        "booleanOperators": 2,
+        "calls": 9
+      },
+      {
+        "path": "scripts/check-debt-markers.ts",
+        "name": "scan",
+        "range": {
+          "start": {
+            "line": 121,
+            "column": 1
+          },
+          "end": {
+            "line": 177,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 3,
+        "flow": 23,
+        "structural": 12,
+        "nesting": 11,
+        "booleanOperators": 0,
+        "calls": 20
+      },
+      {
+        "path": "scripts/validate-agents-md.ts",
+        "name": "extractBacktickedPaths",
+        "range": {
+          "start": {
+            "line": 95,
+            "column": 1
+          },
+          "end": {
+            "line": 122,
+            "column": 2
+          }
+        },
+        "cc": 14,
+        "maxNesting": 2,
+        "flow": 23,
+        "structural": 11,
+        "nesting": 10,
+        "booleanOperators": 2,
+        "calls": 15
+      },
+      {
+        "path": "src/runs/seed.ts",
+        "name": "buildPiArtifactFiles",
+        "range": {
+          "start": {
+            "line": 182,
+            "column": 1
+          },
+          "end": {
+            "line": 242,
+            "column": 2
+          }
+        },
+        "cc": 16,
+        "maxNesting": 2,
+        "flow": 23,
+        "structural": 11,
+        "nesting": 8,
+        "booleanOperators": 4,
+        "calls": 16
+      },
+      {
+        "path": "scripts/acceptance/lib/http.ts",
+        "name": "streamNdjson",
+        "range": {
+          "start": {
+            "line": 106,
+            "column": 2
+          },
+          "end": {
+            "line": 152,
+            "column": 3
+          }
+        },
+        "cc": 13,
+        "maxNesting": 4,
+        "flow": 22,
+        "structural": 12,
+        "nesting": 10,
+        "booleanOperators": 0,
+        "calls": 14
+      },
+      {
+        "path": "scripts/check-file-sizes.ts",
+        "name": "scan",
+        "range": {
+          "start": {
+            "line": 110,
+            "column": 1
+          },
+          "end": {
+            "line": 168,
+            "column": 2
+          }
+        },
+        "cc": 15,
+        "maxNesting": 3,
+        "flow": 22,
+        "structural": 13,
+        "nesting": 9,
+        "booleanOperators": 0,
+        "calls": 20
+      }
+    ]
+  },
+  "ccHistogram": {
+    "1": 3236,
+    "2": 1252,
+    "3": 801,
+    "4": 554,
+    "5": 423,
+    "6": 301,
+    "7": 251,
+    "8": 174,
+    "9": 132,
+    "10": 103,
+    "11": 72,
+    "12": 53,
+    "13": 35,
+    "14": 23,
+    "15": 31,
+    "16": 14,
+    "17": 4,
+    "18": 8,
+    "19": 3,
+    "20": 6,
+    "21": 5,
+    "22": 2,
+    "23": 1,
+    "24": 2,
+    "27": 1,
+    "28": 1,
+    "30": 1,
+    "32": 2,
+    "35": 1,
+    "46": 1,
+    "68": 1,
+    "71": 1,
+    "104": 1
+  }
+}

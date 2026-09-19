@@ -1,0 +1,50 @@
+[
+  {
+    "id": "guard-clauses",
+    "before": "export function run(x) { if(x>0) { if(x<10) { return x+1; } } return 0; }",
+    "after": "export function run(x) { if(x<=0) return 0; if(x>=10) return 0; return x+1; }",
+    "prediction": "flow-decreases"
+  },
+  {
+    "id": "else-if-chain",
+    "before": "export function run(x) { if(x===1) return 10; else { if(x===2) return 20; else { if(x===3) return 30; } } return 0; }",
+    "after": "export function run(x) { if(x===1) return 10; else if(x===2) return 20; else if(x===3) return 30; return 0; }",
+    "prediction": "flow-decreases"
+  },
+  {
+    "id": "helper-extraction",
+    "before": "export function run(x) { if(x>0) { if(x<10) return x+1; } return 0; }",
+    "after": "function inner(x) { if(x<10) return x+1; return 0; } export function run(x) { if(x>0) return inner(x); return 0; }",
+    "prediction": "flow-decreases-context-increases"
+  },
+  {
+    "id": "forwarding-layers",
+    "before": "export function run(x) { return x+1; }",
+    "after": "function core(x) { return x+1; } function service(x) { return core(x); } export function run(x) { return service(x); }",
+    "prediction": "flow-blind"
+  },
+  {
+    "id": "switch-to-table",
+    "before": "export function run(x) { switch(x) { case 1: return 10; case 2: return 20; case 3: return 30; default: return 0; } }",
+    "after": "export function run(x) { return ({1:10,2:20,3:30})[x] ?? 0; }",
+    "prediction": "flow-decreases"
+  },
+  {
+    "id": "boolean-rewrite",
+    "before": "export function run(x) { if(x>0 && x<10 && x!==5) return 1; return 0; }",
+    "after": "export function run(x) { if(x<=0) return 0; if(x>=10) return 0; if(x===5) return 0; return 1; }",
+    "prediction": "flow-ties"
+  },
+  {
+    "id": "shared-rule",
+    "before": "function a(x) { if(x>10) return x*2; return x+1; } function b(x) { if(x>10) return x*2; return x+1; } export function run(x) { return a(x)+b(x); }",
+    "after": "function rule(x) { if(x>10) return x*2; return x+1; } export function run(x) { return rule(x)+rule(x); }",
+    "prediction": "flow-decreases"
+  },
+  {
+    "id": "forced-generalization",
+    "before": "function first(x) { if(x>10) return x*2; return x+1; } function second(x) { if(x>20) return x*3; return x+2; } export function run(x) { return first(x)+second(x); }",
+    "after": "function rule(x,threshold,multiplier,increment) { if(x>threshold) return x*multiplier; return x+increment; } export function run(x) { return rule(x,10,2,1)+rule(x,20,3,2); }",
+    "prediction": "flow-decreases-semantic-blind-spot"
+  }
+]
