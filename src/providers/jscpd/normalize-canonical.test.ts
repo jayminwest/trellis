@@ -106,8 +106,15 @@ describe("normalizeJscpdReport", () => {
 		expect(forward).toEqual(reversed);
 	});
 
-	test("normalizes the pinned tool's reordered corpus report to an identical result", () => {
-		const report = spikeReport("production-normalized.json");
+	test("normalizes reordered independent fixture pairs to an identical result", () => {
+		const report = spikeReport("renamed-normalized.json");
+		report.duplicates = ["alpha", "beta", "gamma"].flatMap((prefix) =>
+			report.duplicates.map((clone) => ({
+				...clone,
+				firstFile: { ...clone.firstFile, name: `${prefix}/${clone.firstFile.name}` },
+				secondFile: { ...clone.secondFile, name: `${prefix}/${clone.secondFile.name}` },
+			})),
+		);
 		const stub = "export const accounted = 1;\n".repeat(40);
 		const names = [
 			...new Set(
@@ -125,7 +132,8 @@ describe("normalizeJscpdReport", () => {
 			files,
 		);
 		expect(forward).toEqual(reordered);
-		expect(forward.cloneEvidence.length).toBeGreaterThan(0);
+		expect(forward.cloneEvidence).toHaveLength(1);
+		expect(forward.cloneEvidence[0]?.members).toHaveLength(6);
 		expect(forward.lineAccounting.production.affectedCodeLines).toBeGreaterThan(0);
 	});
 });

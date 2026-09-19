@@ -1,12 +1,12 @@
 /**
- * Canonical standards manifest (SPEC §10).
+ * Canonical standards manifest (SPEC §11).
  *
  * trellis bundles a versioned set of shared tooling files under
  * {@link CANONICAL_DIR} (`src/standards/canonical/`), described by
  * `src/standards/manifest.yaml`. The manifest carries, per file: the path it
  * occupies in a target repo, the semver of that file's canonical form, a
  * `sha256:` digest of its exact bytes on disk, and the {@link MatcherKind} the
- * drift engine (SPEC §10, `drift.ts`) uses to compare a target against it.
+ * drift engine (SPEC §11, `drift.ts`) uses to compare a target against it.
  *
  * The digest makes the canonical set **byte-tracked**: {@link verifyManifest}
  * recomputes every hash from disk, so any unrecorded edit to a bundled file —
@@ -68,7 +68,7 @@ const relPath = z
 		message: "must be a relative POSIX path without '..' segments",
 	});
 
-/** One canonical file's manifest entry (SPEC §10). */
+/** One canonical file's manifest entry (SPEC §11). */
 export const manifestFileSchema = z.strictObject({
 	path: relPath,
 	version: semver,

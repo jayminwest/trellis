@@ -39,7 +39,7 @@ Use descriptive branch names with a category prefix:
 
 ```bash
 bun test                      # run all tests
-bun test src/scoring/index.test.ts   # run a single test file
+bun test src/scoring/sloppiness.test.ts   # run a single test file
 bun run lint                  # biome check --error-on-warnings .
 bun run lint:fix              # biome check --write --error-on-warnings .
 bun run typecheck             # tsc --noEmit
@@ -55,9 +55,9 @@ modules); the CLI (`src/cli/`) and SDK (`src/client/`) are thin pass-throughs
 (SPEC §13.1). When you add behavior:
 
 - Put the logic in the appropriate core module, never in `cli/` or `client/`.
-- The **rubric (WHAT) never names a tool.** Tool-specific checks go in
-  `detectors/` adapters (`common/`, `lang/{typescript,swift,python}/`,
-  `oseco/`), bound to criteria via `detectors/registry.ts`.
+- Native metrics consume the shared TypeScript syntax inventory in `metrics/`;
+  scoring stays a pure function of raw metrics. Safeguards and optional
+  provider evidence never enter the score (SPEC §5, §7, §16).
 - SDK types **mirror** the core's exported types (annotate `// Mirrors src/<x>`).
 
 ## TypeScript Conventions
@@ -74,31 +74,36 @@ modules); the CLI (`src/cli/`) and SDK (`src/client/`) are thin pass-throughs
 
 - **No mocks for filesystem or SQLite.** Use real temp dirs (`mkdtemp`) and
   `:memory:`/temp-file databases. Clean up in `afterEach`.
-- The only stub boundary is the **Pi RPC process** — capture and canonicalize
-  sessions into `__golden__/` and run the parser → zod → grader chain fully
-  offline (SPEC §9.7). Regenerate goldens only via the documented update gate.
+- Stub only true external process boundaries, such as optional provider
+  execution. Exercise the layers above them through real code and fixtures.
+  Tests must run offline; regenerate goldens only via a documented update gate.
 - Tests are colocated: `src/foo.test.ts` beside `src/foo.ts`.
 - `describe("<unitUnderTest>")` + `test("verb-led behaviour")` — no `should`,
   no `it`.
 
-## Adding a Detector
+History renderer snapshots are updated with
+`bun test src/history/render.test.ts --update-snapshots` after reviewing the
+intended output change.
 
-1. Implement against the `DetectorResult` contract (SPEC §8.1) in the right
-   adapter under `src/detectors/`.
-2. Bind it to its criterion id in `src/detectors/registry.ts`.
-3. Observe the `not-applicable` vs `no-detector` discipline — never silently
-   pass an unimplemented check.
-4. Add tests with real fixture repos under a temp dir.
-5. Update the rubric/docs if criterion coverage changed.
+## Adding Native Analysis
+
+1. Define versioned metrics and findings in `src/contract/` (SPEC §6).
+2. Implement the analyzer in `src/metrics/` over the shared syntax inventory.
+3. Wire it into `src/audit/`; represent incomplete measurement explicitly.
+4. Add fixture tests for measured values, coverage and deterministic output.
+5. Update metric documentation and review analyzer/scoring compatibility.
+
+Optional tool adapters belong in `src/providers/` under the controlled
+execution contract (SPEC §16). Audits never run target scripts or models.
 
 ## Commit Message Style
 
 Use concise, descriptive messages prefixed by area:
 
 ```
-scoring: clamp coverage at category boundary
-detectors: add knip undeclared-deps check for the TS adapter
-docs: document targets.yaml allowed-deltas
+metrics: preserve unresolved import evidence
+providers: validate Knip observed coverage
+docs: document declarative policy budgets
 ```
 
 `fix:` / `feat:` / `docs:` prefixes are also fine when the category is clear.

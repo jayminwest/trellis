@@ -1,5 +1,5 @@
 /**
- * Drift renderers (SPEC §10) — the three projections of a {@link DriftReport}
+ * Drift renderers (SPEC §11) — the three projections of a {@link DriftReport}
  * the `trellis drift` command and the audit report's `report.drift` section
  * surface. Pure functions over the report: a per-file state table for the
  * terminal, a PR/issue-ready markdown table, and the canonical JSON document.

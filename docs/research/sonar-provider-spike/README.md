@@ -1,5 +1,11 @@
 # SonarJS provider spike
 
+Production-source snapshots from the recorded commit are archived in Git;
+checked-in fixture inputs and tool metadata remain available. Historical
+production measurements below describe that commit, not the current tree.
+Regenerate production outputs against the current source before using them
+for new comparisons.
+
 Decision: cognitive complexity adds useful *different* evidence about control-flow shape,
 while the chosen bug rules add a separate category of located evidence. Neither warrants
 changing the sloppiness score from this experiment. Resolve provider licensing evidence

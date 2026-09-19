@@ -30,7 +30,7 @@ describe("loadFleet", () => {
 	test("loads the bundled targets.yaml.example and resolves its paths", () => {
 		const fleet = loadFleet("targets.yaml.example");
 		expect(fleet.targets.map((t) => t.spec.id)).toEqual(["warren", "trellis", "external-repo"]);
-		expect(fleet.defaults.canonicalVersion).toBe("1.0.0");
+		expect(fleet.defaults.canonicalVersion).toBe("1.0.1");
 		// The relative target path resolves off the fleet-file directory, not cwd.
 		const external = fleet.targets[2];
 		expect(external?.spec.path).toBe("../some-non-oseco-repo");
@@ -79,48 +79,6 @@ describe("loadFleet", () => {
 	test("defaults to an empty defaults object when omitted", async () => {
 		const fleet = await loadYaml(dir, "targets:\n  - id: a\n    path: a\n");
 		expect(fleet.defaults).toEqual({});
-	});
-
-	test("rejects retired defaults.investigation with an actionable message", async () => {
-		const body =
-			"defaults:\n  investigation:\n    provider: anthropic\n    model: claude-opus-4-8\n" +
-			"targets:\n  - id: a\n    path: a\n";
-		let caught: unknown;
-		try {
-			await loadYaml(dir, body);
-		} catch (error) {
-			caught = error;
-		}
-		expect(caught).toBeInstanceOf(TargetsError);
-		expect((caught as Error).message).toContain("defaults.investigation");
-		expect((caught as Error).message).toContain("no longer exists");
-		expect((caught as Error).message).toContain("Remove defaults.investigation");
-	});
-
-	test("rejects a retired readiness skip with an actionable migration message", async () => {
-		let caught: unknown;
-		try {
-			await loadYaml(dir, "targets:\n  - id: warren\n    path: a\n    skip: [dast_scanning]\n");
-		} catch (error) {
-			caught = error;
-		}
-		expect(caught).toBeInstanceOf(TargetsError);
-		expect((caught as Error).message).toContain("target 'warren'.skip");
-		expect((caught as Error).message).toContain("no longer exists");
-		expect((caught as Error).message).toContain("Remove target 'warren'.skip");
-	});
-
-	test("rejects a retired language hint with an actionable migration message", async () => {
-		let caught: unknown;
-		try {
-			await loadYaml(dir, "targets:\n  - id: app\n    path: a\n    languages: [swift]\n");
-		} catch (error) {
-			caught = error;
-		}
-		expect(caught).toBeInstanceOf(TargetsError);
-		expect((caught as Error).message).toContain("target 'app'.languages");
-		expect((caught as Error).message).toContain("no longer exists");
-		expect((caught as Error).message).toContain("Remove target 'app'.languages");
 	});
 });
 

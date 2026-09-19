@@ -14,11 +14,6 @@ audit needs neither Git nor credentials, a database, network, or installed
 project dependencies; one deterministic core serves local, fleet, and CI use
 with CLI/SDK parity.
 
-> **Deterministic pivot delivered (plan `pl-b2ea`, SPEC §14).** The public
-> readiness catalog and assessment APIs are retired. Legacy internals remain
-> for historical compatibility and fixtures; current audit surfaces never
-> call them. Legacy readiness history stays separate from sloppiness.
-
 [`SPEC.md`](SPEC.md) is the authoritative design record. [`AGENTS.md`](AGENTS.md)
 is the canonical agent guide; this file adds tool-specific conventions and the
 os-eco session bootstrap.
@@ -41,14 +36,14 @@ os-eco session bootstrap.
 
 All behavior lives in one surface-agnostic **domain core**; every other surface
 is a thin pass-through, so the surfaces cannot drift out of sync. The tree
-below is the current layout; `rubric/` and `detectors/` are internal legacy
-compatibility modules, excluded from the public deterministic audit path.
+below is the current layout.
 
 ```
 src/
   cli/            # THIN commander entrypoints; parse args, call core, shape output
   client/         # typed SDK; request/response types MIRROR the core (// Mirrors src/<x>)
   audit/          # deterministic core: auditWorkspace + runWorkspaceAudit service
+  guides/         # bundled, read-only task guidance
   config/         # declarative audit configuration (trellis.yaml, SPEC §6.5)
   contract/       # versioned zod contracts: metrics, findings, report, config (§6)
   discovery/      # TS/TSX source discovery → classified source-set inventory (§3.1)
@@ -58,15 +53,11 @@ src/
   scoring/        # pure provisional sloppiness formula (§7)
   report/         # terminal / JSON / markdown renderers
   compare/        # artifact comparison + declarative failure policies (§9)
-  store/          # schema.sql + migrations/ (opt-in history; legacy runs kept
-                  #   separate, SPEC §10)
+  store/          # migrations/ (opt-in audit history, SPEC §10)
   history/        # sloppiness dashboard projection over the store
   fleet/          # targets.yaml loader + multi-repo orchestration (optional, §11)
   standards/      # canonical/ (bundled files), manifest.yaml, drift.ts
                   #   (separate capability; never feeds the sloppiness index)
-  rubric/         # internal legacy rubric data + historical types/fixtures
-  detectors/      # internal legacy adapters; not called by public audits
-  legacy.ts       # retired investigation-config rejection (actionable errors)
   index.ts        # public lib entry — VERSION constant only (lockstep w/ package.json)
 ```
 
@@ -79,16 +70,16 @@ src/
   golden snapshots of stable output shapes, all wired into one `check:all` CI
   runs verbatim. Drift becomes a red build, not a review judgment call.
 
-**Provider evidence (planned, SPEC §16, plan `pl-43c5`):** optional
+**Provider evidence (SPEC §16, plan `pl-43c5`):** optional
 supplemental providers — pinned jscpd, dependency-cruiser, Knip; SonarJS
 gated on a documented distribution decision — run only on explicit opt-in,
 stay unscored, and never relax the no-model, offline, no-target-command
 invariants. Native analysis and the calibrated scoring remain
 authoritative; provider failures are located `unavailable`/`incomplete`
 evidence (policy exit `2` only via a violated declarative requirement;
-invalid configuration stays exit `1`). Implementation lands with steps
-`trellis-90d6` onward; research record:
-[`docs/research/provider-spike.md`](docs/research/provider-spike.md).
+invalid configuration stays exit `1`). SonarJS remains deferred. Setup and
+executed-platform evidence: [quality evidence](docs/quality-evidence.md) and
+[provider acceptance](docs/provider-acceptance.md).
 
 See [`docs/architecture.mmd`](docs/architecture.mmd) for the rendered graph.
 
@@ -106,14 +97,14 @@ See [`docs/architecture.mmd`](docs/architecture.mmd) for the rendered graph.
   same line — `trellis-XXXX` / `mx-XXXX` / `#NNN` / a URL.
 - **Dogfood:** trellis audits
   itself offline; a regression in its own sloppiness index is a real failure.
-  The quality-gate ratchets stay binding throughout the transition.
+  The quality-gate ratchets stay binding for every change.
 
 ## Build & Test Commands
 
 ```bash
 bun install                   # install dependencies
 bun test                      # run all tests
-bun test src/scoring/index.test.ts   # single file
+bun test src/scoring/sloppiness.test.ts   # single file
 bun run lint                  # biome check --error-on-warnings .
 bun run typecheck             # tsc --noEmit
 bun run check:all             # canonical quiet runner: 9 core gates in fleet order

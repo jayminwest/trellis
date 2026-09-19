@@ -18,7 +18,7 @@ analysis runs use local tools. The harnesses write their research artifacts expl
 
 Base commit: `f3743bc0154ba032ef957a20dea678face1b3fa8`.
 
-The [shared manifest](provider-spike-corpus.json) freezes 162 production files,
+The shared manifest (archived with the production outputs in Git) freezes 162 production files,
 including source and scripts, with individual content hashes. These contain 1,129
 functions and 15,147 trellis code lines. The corpus SHA-256 is:
 

@@ -1,35 +1,4 @@
-/**
- * Sloppiness-audit history (SPEC §10, trellis-424d) — the typed store
- * operations over the `audit_runs` table (migration 0002), composed into the
- * central {@link import("./store.ts").Store} by `openStore`.
- *
- * **Legacy separation (SPEC §10).** New deterministic audits persist here;
- * legacy readiness runs stay in the legacy `runs`/`criterion_results` tables
- * behind the legacy API. The two never form a mixed score trend: every query
- * in this module reads `audit_runs` only, and every row is tagged
- * `kind: "sloppiness"` (legacy rows carry `kind: "legacy-readiness"`), so a
- * view can label the product a number belongs to. Readiness percentages and
- * sloppiness indices are never compared, averaged, or trended together.
- *
- * **Repository identity (SPEC §10).** {@link repoIdentity} derives a
- * collision-resistant identity from the canonical workspace root: a
- * human-readable label (the report's declared identity, else the directory
- * basename) plus a SHA-256 hash prefix of the canonical absolute path. Two
- * unrelated directories that share a basename hash differently, so their
- * histories can never collide; the same checkout reached through different
- * spellings or symlinks canonicalizes to one identity. No Git, no network —
- * identity is a pure function of the filesystem path.
- *
- * **Compatible trends (SPEC §3.5, §10, §16.6 — trellis-ab01).** Trend and
- * baseline selection reuses the step-6 scored-basis compatibility verdicts
- * (`src/compare/`): a stored run joins a series — or resolves as the
- * baseline — exactly when `assessScoredBasis` says its scored basis is
- * comparable with the reference report's, decided over the stored JSON
- * provenance (`compatible-runs.ts`). Advisory-only provider changes never
- * fragment a series; a changed scored measurement or scoring basis starts a
- * distinct one. The row's version columns remain the recorded headline; the
- * verdict never trusts them alone.
- */
+/** SQLite audit report storage and compatible score history. */
 
 import type { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
@@ -41,7 +10,7 @@ import { scoredBasisCompatible } from "./compatible-runs.ts";
 
 /** A row read back from `audit_runs`, with columns mapped to camelCase. */
 export interface StoredAuditRun {
-	/** Product discriminator — visibly distinct from legacy readiness history (SPEC §10). */
+	/** Audit record kind. */
 	kind: "sloppiness";
 	id: number;
 	repoRoot: string;
@@ -49,7 +18,7 @@ export interface StoredAuditRun {
 	schemaVersion: string;
 	analyzerVersion: string;
 	scoringVersion: string;
-	/** The 0–100 sloppiness index (lower is better) — never a readiness percentage. */
+	/** The 0–100 sloppiness index (lower is better). */
 	sloppinessIndex: number;
 	partial: boolean;
 	completeness: Completeness;
@@ -92,7 +61,7 @@ export interface AuditStore {
 	 * the newest row instead of accepting it blindly: the latest run may be
 	 * an incompatible basis (or a foreign row), and the latest *compatible*
 	 * run is the baseline. Consumers read it before inserting the new run
-	 * (the legacy path's read-before-write pattern).
+	 * (read before inserting the new run).
 	 */
 	latestCompatibleRun(identity: string, reference: AuditReport): StoredAuditRun | null;
 	/** The compatible sloppiness-index series for `identity`, oldest first. */

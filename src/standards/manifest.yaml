@@ -1,4 +1,4 @@
-# Canonical standards manifest (SPEC §10).
+# Canonical standards manifest (SPEC §11).
 #
 # Describes the bundled canonical set under canonical/. Each file records the
 # path it occupies in a target repo, the semver of its canonical form, a
@@ -10,7 +10,7 @@
 # Storage note: the bundled bytes live at canonical/<path>.canon (the .canon
 # suffix keeps tools — e.g. Biome — from auto-loading them as live config). The
 # `path` and `hash` below describe the unsuffixed target file.
-version: "1.0.0"
+version: "1.0.1"
 files:
   # Biome lint/format baseline. json-subset: repos may extend rules/overrides;
   # the canonical keys must be present and equal.
@@ -64,8 +64,8 @@ files:
   # Agent entry point. template: section/heading structure is canonical, not
   # byte content — repos fill in repo-specific tokens.
   - path: AGENTS.md
-    version: "1.0.0"
-    hash: "sha256:7512662d2813c55f024ac52fc9b3e73e4d4174d0781310f9b177fa8bd49a7995"
+    version: "1.0.1"
+    hash: "sha256:a23a3b00d38880925ff773699750637e7ad7d56d3a15afa46c74a38282e4c54e"
     matcher: template
 
   # Pre-commit gate (lint + typecheck). exact: a fixed hook that must be

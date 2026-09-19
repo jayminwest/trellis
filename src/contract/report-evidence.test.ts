@@ -65,7 +65,7 @@ function baseReport(): PreProviderAuditReport {
 		findings: [
 			{
 				kind: "complexity.hotspot",
-				path: "src/report/build.ts",
+				path: "src/audit/audit.ts",
 				range: { start: { line: 41 }, end: { line: 128 } },
 				summary: "CC 23, mass 214",
 			},

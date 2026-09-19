@@ -9,8 +9,8 @@ import { seedFixtureRepo } from "../report/audit-fixtures.ts";
  * trips (the report is still emitted to stdout; reasons go to stderr), `1`
  * on an operational error (the command could not run). On the deterministic
  * `audit`/`fleet` surfaces the policy is declarative (`trellis.yaml`, SPEC
- * §6.5) — no policy configured means nothing to trip. The transitional
- * `drift` command keeps its legacy `--fail-on` knob until the release stages.
+ * §6.5) — no policy configured means nothing to trip. The separate
+ * `drift` command uses `--fail-on` for its separate drift policy.
  */
 
 /** Absolute path to the CLI entrypoint, resolved relative to this test file. */

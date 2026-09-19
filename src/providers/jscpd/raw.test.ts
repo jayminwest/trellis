@@ -163,7 +163,8 @@ describe("validateRawJscpdEvidence", () => {
 	});
 
 	test("bounds the reported reasons", () => {
-		const report = parsedSpike("production-normalized.json");
+		const report = parsedSpike("renamed-normalized.json");
+		report.duplicates = Array.from({ length: 10 }, () => structuredClone(firstClone(report)));
 		const reasons = validateRawJscpdEvidence(report, new Set(["scripts/x.ts"]), "exact");
 		expect(reasons.length).toBeLessThanOrEqual(9);
 		expect(reasons[reasons.length - 1]).toMatch(/…and \d+ more problems/);

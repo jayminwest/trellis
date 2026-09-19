@@ -8,15 +8,13 @@
 # here, not inside the audited repos themselves.
 
 defaults:
-  canonicalVersion: "1.0.0" # which standards/ version to compare against
-  # NOTE: the `investigation` provider/model keys are retired (SPEC §14) —
-  # trellis runs no agent pass; setting them is rejected with an error.
+  canonicalVersion: "1.0.1" # which standards/ version to compare against
 
 targets:
   - id: warren
     path: /Users/jaymin/Projects/os-eco/warren
     canonical:
-      version: "1.0.0" # per-repo override of defaults.canonicalVersion
+      version: "1.0.1" # per-repo override of defaults.canonicalVersion
       allowedDeltas: # files/keys this repo is allowed to diverge on
         - file: biome.json
           reason: "wider line width for generated migrations"
@@ -30,7 +28,3 @@ targets:
 
   - id: external-repo
     path: ../some-non-oseco-repo
-
-# NOTE: the readiness-era target keys `skip` (force-N/A criteria) and
-# `languages` (detector hints) went away with the rubric (SPEC §14) — setting
-# them is rejected with an actionable migration error.

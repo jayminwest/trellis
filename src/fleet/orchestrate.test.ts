@@ -176,9 +176,6 @@ describe("runFleet (stubbed seams)", () => {
 		expect(opts?.history).toBe(true);
 		expect(opts?.db).toBe("/tmp/fleet.db");
 		expect(opts?.now).toBe(NOW);
-		// No investigation/readiness wiring remains on the audit path (SPEC §14).
-		expect(opts && "investigation" in opts).toBe(false);
-		expect(opts && "rubric" in opts).toBe(false);
 	});
 
 	test("computes the index delta against the stored baseline when history is on", async () => {
@@ -322,24 +319,6 @@ describe("runFleetTargets (real core, two-repository fixtures)", () => {
 		await writeTargets();
 		await expect(runFleetTargets(targetsFile, { db: dbPath })).rejects.toThrow(
 			/db is meaningful only with history/,
-		);
-	});
-
-	test("rejects retired readiness and investigation options actionably", async () => {
-		await writeTargets();
-		const legacy = { noCache: true } as unknown as Parameters<typeof runFleetTargets>[1];
-		await expect(runFleetTargets(targetsFile, legacy)).rejects.toThrow(
-			/option 'noCache' no longer exists/,
-		);
-		const readiness = { rubricVersion: "1.0.0" } as unknown as Parameters<
-			typeof runFleetTargets
-		>[1];
-		await expect(runFleetTargets(targetsFile, readiness)).rejects.toThrow(
-			/option 'rubricVersion' no longer exists/,
-		);
-		const failOn = { failOn: "gate" } as unknown as Parameters<typeof runFleetTargets>[1];
-		await expect(runFleetTargets(targetsFile, failOn)).rejects.toThrow(
-			/option 'failOn' no longer exists/,
 		);
 	});
 });

@@ -1,11 +1,18 @@
 # Architecture provider spike
 
+Production-source snapshots from the recorded commit are archived in Git;
+checked-in fixture inputs and tool metadata remain available. Historical
+production measurements below describe that commit, not the current tree.
+Regenerate production outputs against the current source before using them
+for new comparisons.
+
 Bounded provider experiment for trellis-ff55. No production integration or score change.
 
 ## Reproduce
 
 Requires Node (tested v24.16.0), root dependencies installed with the repository lockfile,
-Knip **6.16.1**, and the shared `../provider-spike-corpus.json` manifest. The runner
+Knip **6.16.1**, and a shared `../provider-spike-corpus.json` manifest
+generated first by the jscpd research runner. The runner
 verifies all 162 production content hashes before analysis. Corpus digest:
 `420cdd12431c6c4e1badeb13917c39a4d9da02a6ab6cfb2ca3e801db4379a848`.
 

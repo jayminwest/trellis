@@ -50,24 +50,12 @@ const REPORT: HistoryReport = {
 			},
 		],
 	},
-	legacy: [
-		{
-			repo: "warren",
-			runs: 3,
-			latestLevel: 4,
-			latestPassRate: 0.8,
-			latestCoverage: 0.9,
-			latestRubricVersion: "1.0.0",
-			latestScoredAt: "2026-05-01T00:00:00.000Z",
-		},
-	],
 };
 
 /** An empty history report. */
 const EMPTY: HistoryReport = {
 	scope: { repo: null, since: null },
 	audits: { snapshot: [], repos: [] },
-	legacy: [],
 };
 
 describe("renderHistoryTerminal", () => {
@@ -86,18 +74,9 @@ describe("renderHistoryTerminal", () => {
 		expect(out).toContain("trend: 10 → 14");
 	});
 
-	test("labels the legacy section as a different, never-compared scale", () => {
-		const out = renderHistoryTerminal(REPORT);
-		expect(out).toContain("legacy readiness history");
-		expect(out).toContain("never compared with the sloppiness index");
-		expect(out).toContain("L4");
-		expect(out).toContain("80%");
-	});
-
 	test("renders empty sections honestly", () => {
 		const out = renderHistoryTerminal(EMPTY);
 		expect(out).toContain("(no audit runs recorded)");
-		expect(out).toContain("(no legacy runs recorded)");
 	});
 });
 
@@ -112,7 +91,5 @@ describe("renderHistoryMarkdown", () => {
 		expect(out).toContain("**lower is better**");
 		expect(out).toContain("## `fixture#abc123def456` · 2 runs");
 		expect(out).toContain("Trend: 10 → 14");
-		expect(out).toContain("## Legacy readiness history");
-		expect(out).toContain("never compared with, averaged into, or trended against");
 	});
 });

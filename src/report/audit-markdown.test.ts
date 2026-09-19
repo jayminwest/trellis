@@ -22,9 +22,6 @@ function render(kind: string): string {
 	return renderAuditMarkdown(fixture.report);
 }
 
-/** Legacy readiness vocabulary that must never appear in the new reports (SPEC §14). */
-const LEGACY_LABELS = ["Level", "pass-rate", "rubric", "maturity", "readiness", "agent progress"];
-
 describe("renderAuditMarkdown across the render fixtures", () => {
 	test("renders clean, sloppy, mixed-language, incomplete and function-free repositories", () => {
 		for (const kind of FIXTURE_KINDS) {
@@ -52,15 +49,6 @@ describe("renderAuditMarkdown across the render fixtures", () => {
 			}
 			// The index is 0–100 lower-is-better — output never implies a % of bad code (§3.4).
 			expect(output).not.toMatch(/\d+%/);
-		}
-	});
-
-	test("shows no readiness levels, agent progress, or legacy category labels", () => {
-		for (const kind of FIXTURE_KINDS) {
-			const output = render(kind);
-			for (const label of LEGACY_LABELS) {
-				expect(output).not.toContain(label);
-			}
 		}
 	});
 

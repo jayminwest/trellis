@@ -4,7 +4,7 @@ import { type Finding, findingSchema, rangeSchema } from "./finding.ts";
 /** The SPEC §6.2 example: a located complexity hotspot. */
 const hotspot: Finding = {
 	kind: "complexity.hotspot",
-	path: "src/report/build.ts",
+	path: "src/audit/audit.ts",
 	range: { start: { line: 41 }, end: { line: 128 } },
 	summary: "CC 23, mass 214",
 	facts: { cc: 23, mass: 214 },

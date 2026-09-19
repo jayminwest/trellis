@@ -116,7 +116,7 @@ validation and scoring calibration remain separate (`trellis-f999`).
 The native baseline is `eac0f57fc038d7ffb22ea04ec53d95e8b465c4b0`,
 the parent of the first provider-contract commit `538996d`. It includes
 `ac263e7` (asset resolution) and `1de0c90` (count-gradient calibration).
-The earlier pivot-release commit `1bcb8e8` predates those foundation fixes
+The earlier release commit `1bcb8e8` predates those foundation fixes
 and must not be used to attribute their changes to optional providers.
 
 Verified after combining local `69135e9` with merged Knip `e1618b8` on

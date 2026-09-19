@@ -1,6 +1,6 @@
 /**
  * `trellis standards` — print the bundled canonical manifest + versions (SPEC
- * §10, §12). Thin per SPEC §13.1: it loads the manifest via the core loader and
+ * §11, §12). Thin per SPEC §13.1: it loads the manifest via the core loader and
  * shapes the three output variants (per-file path / version / matcher table),
  * computing nothing itself. The JSON variant is the manifest document verbatim,
  * so it doubles as the machine-readable canonical-set descriptor.

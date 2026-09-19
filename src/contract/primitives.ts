@@ -20,7 +20,7 @@ export const dottedIdSchema = z
 	);
 
 /**
- * Repo-relative POSIX path (`src/report/build.ts`). Rejects absolute paths,
+ * Repo-relative POSIX path (`src/audit/audit.ts`). Rejects absolute paths,
  * Windows drive paths, backslashes, empty segments, and `..` traversal so a
  * finding can never point outside the audited root.
  */

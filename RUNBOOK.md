@@ -14,16 +14,15 @@ Key facts:
 
 - **Package:** `@os-eco/trellis-cli`
 - **Primary branch:** `main`
-- **Release workflow:** `.github/workflows/publish.yml` (version-gated; lands
-  with seeds `trellis-7baf`)
+- **Release workflow:** `.github/workflows/publish.yml` (version-gated)
 - **Version sources (must agree):** `package.json` `"version"` and
   `src/index.ts` `export const VERSION`
 - **Changelog:** `CHANGELOG.md`
 - **Tracker prefix:** `trellis-`
 - **Package smoke test:** `bun run smoke:package`
   (`scripts/smoke-package.ts`) — packs the tarball and confirms the
-  deterministic analyzer ships complete after the readiness rubric's
-  retirement: bin entry, runtime dependencies, analyzer assets, and a real
+  deterministic analyzer ships complete: bin entry, runtime dependencies,
+  analyzer assets, and a real
   audit of a fixture workspace through the packed CLI.
 
 ## Pre-flight (do once per machine)

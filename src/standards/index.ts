@@ -1,4 +1,4 @@
-/** Canonical config drift core (SPEC §10): the bundled canonical set + manifest. */
+/** Canonical config drift core (SPEC §11): the bundled canonical set + manifest. */
 export {
 	type AllowedDelta,
 	type Divergence,

@@ -38,7 +38,7 @@ After all three agents complete:
 
 - **Deduplicate**: Match GitHub issues to Seeds issues that describe the same work (same title, overlapping description, related files / criterion ids)
 - **Dependency mapping**: Identify chains — issues that must be done before others can start (honor the seeds plan graph)
-- **Cluster detection**: Group related issues that could be tackled together (same subsystem, same language adapter, same rubric category)
+- **Cluster detection**: Group related issues that could be tackled together (same subsystem, same analyzer, same metric family)
 - **Staleness check**: Flag issues that have been open a long time with no activity
 
 ## scoring
@@ -58,8 +58,8 @@ For every unique issue (deduplicated), assess:
 - Can it be done independently or does it require coordination across adapters / the core?
 
 ### c. Complexity
-- Is the change localized or does it cut across multiple subsystems (rubric, detectors, scoring, store, report, fleet)?
-- Does it affect rubric comparability (RUBRIC_VERSION) or the SQLite schema (migrations)?
+- Is the change localized or does it cut across multiple subsystems (metrics, providers, scoring, store, report, fleet)?
+- Does it affect analyzer/scoring compatibility or the SQLite schema (migrations)?
 - Are there merge conflict risks with other candidate issues?
 - Does it need human judgment or can it be handled autonomously?
 
@@ -74,7 +74,7 @@ For every unique issue (deduplicated), assess:
 Before finalizing recommendations, check if any high-scoring issues need more investigation:
 
 - **Ambiguous scope**: If an issue's file scope is unclear, use Grep/Glob to trace the affected code paths and estimate the real blast radius
-- **Hidden dependencies**: If an issue looks independent but touches shared code (rubric schema, scoring, registry, store), check what else depends on those files
+- **Hidden dependencies**: If an issue looks independent but touches shared code (metric contracts, scoring, registry, store), check what else depends on those files
 - **Conflict risk**: If two candidate issues touch overlapping files, read those files to assess whether parallel work would cause merge conflicts
 - **Stale context**: If an issue references old code or merged PRs, verify the problem still exists
 

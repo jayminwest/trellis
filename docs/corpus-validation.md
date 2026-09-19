@@ -1,7 +1,7 @@
 > Historical 0.1.0-provisional calibration record. The subsequent count-curve
 > recalibration and current corpus checks are in [count calibration](count-calibration.md).
 
-# Corpus validation record (trellis-e924, SPEC §14 stage 10)
+# Corpus validation record (trellis-e924, SPEC §14)
 
 The fixed TypeScript corpus that validates the deterministic audit's score
 behavior and performance, and the calibration record for the provisional
@@ -160,7 +160,7 @@ duplication dimension saturated (30/30 points) on a repo that passes a
 idiomatic-structure matches (repeated branch blocks, registry-entry
 shapes), exactly the noise the trellis-5a91 record assigned this stage to
 control. At 100 tokens the surviving groups are true copy-paste (the
-legacy cross-language detector adapters, the ratchet-script clones,
+the measured revision’s source composition, ratchet-script clones,
 self-similar generated tables), matching the 5a91 recall baseline at 100
 tokens. Corpus construction reinforced this: every templated fixture
 (repeated `if` blocks, generated function families) self-cloned under

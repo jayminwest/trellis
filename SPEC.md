@@ -1,15 +1,5 @@
 # trellis — deterministic TypeScript sloppiness audit
 
-> Spec. Codename **trellis** — the structure that keeps growth aligned.
-> Created 2026-06-06 as an agent-readiness audit; **pivoted 2026-09** (plan
-> `pl-b2ea`, feature `trellis-253e`) to a deterministic TypeScript sloppiness
-> audit. This document is the authoritative product contract for the pivoted
-> tool. The pivot is a **breaking change**: the 90-criterion readiness rubric,
-> maturity levels, and the LLM investigation layer are retired, not
-> reinterpreted. See §14 for the staged transition and what is actually built
-> at any moment — nothing in this document claims unbuilt behavior. §16
-> records the optional-provider integration contract under the same rule.
-
 ---
 
 ## 1. What trellis is
@@ -47,8 +37,7 @@ Three invariants define the product:
    (deep-equal tests), not aspirational.
 
 trellis answers one question: *how sloppy is this TypeScript tree, where
-exactly, and is it getting worse?* It does not grade documentation, process,
-or "agent-readiness," and it does not execute or verify the project's own
+exactly, and is it getting worse?* It does not grade documentation or process, and it does not execute or verify the project's own
 checks.
 
 ---
@@ -75,8 +64,7 @@ checks.
   contributions (§7).
 - **Baseline comparison and failure policies** over saved report artifacts,
   with the 0/1/2 exit-code convention (§9).
-- **Optional history** in SQLite that preserves legacy readiness runs
-  separately (§10); **optional fleet** aggregation and the pre-existing
+- **Optional history** in SQLite (§10); **optional fleet** aggregation and the pre-existing
   canonical-standards drift capability as independent consumers (§11).
 - **CLI and SDK parity** over the single core (§12).
 
@@ -94,8 +82,7 @@ checks.
   executes them and never claims they pass.
 - **AI features** of any kind — no model calls, agent passes, embeddings, or
   LLM-assisted grading, per the §1 invariant.
-- **New language adapters** — TypeScript/TSX only. The retired Swift/Python
-  detector adapters are not replaced; other languages are reported as
+- **New language adapters** — TypeScript/TSX only. Other languages are reported as
   unsupported coverage (§3.3), never analyzed.
 - Also deferred: a web UI, automatic remediation / fix fan-out, hosted or
   scheduled services, README badges, and any rewrite in another language.
@@ -214,7 +201,7 @@ participate in identity.
 
 ## 4. Architecture
 
-Deterministic module layout (legacy compatibility modules omitted — see §14):
+Deterministic module layout:
 
 ```
 trellis/
@@ -229,7 +216,7 @@ trellis/
 │  ├─ scoring/             # provisional sloppiness formula (pure)
 │  ├─ report/              # report assembly + terminal / JSON / markdown renderers
 │  ├─ compare/             # baseline comparison + failure policies
-│  ├─ store/               # OPTIONAL SQLite history (append-only; legacy separation)
+│  ├─ store/               # OPTIONAL SQLite history (opt-in audit history)
 │  ├─ fleet/               # OPTIONAL targets orchestration over the same core
 │  ├─ standards/           # canonical-config drift (separate capability, §11)
 │  └─ index.ts             # public lib entry — VERSION constant only
@@ -553,7 +540,7 @@ version data, and misleading `complete` states.
 ```jsonc
 {
   "kind": "complexity.hotspot",     // stable, versioned kind
-  "path": "src/report/build.ts",    // repo-relative
+  "path": "src/audit/audit.ts",    // repo-relative
   "range": { "start": { "line": 41 }, "end": { "line": 128 } },
   "summary": "CC 23, mass 214",
   "facts": { "cc": 23, "mass": 214 }
@@ -891,19 +878,13 @@ and SDK wiring landed with trellis-9a88.)*
 
 ---
 
-## 10. History (optional) & legacy separation
+## 10. History (optional)
 
 - Persistence is **opt-in** (`--history` / SDK option); the default audit is
   stateless (§8).
 - When enabled, runs append to a local SQLite database (`bun:sqlite`,
   append-only migrations). Repository identity avoids accidental collisions
   between unrelated directories that share a basename.
-- **Legacy separation.** Databases from the readiness product keep their
-  rows: legacy runs are preserved as *legacy readiness history*, visibly
-  distinct in every view, and their numeric values (0–100% readiness, levels)
-  are **never** compared with, averaged into, or trended against sloppiness
-  indices. There is no migration of legacy scores into the new scale — the
-  two products measure different things.
 - Trend queries select only compatible runs (§3.5).
 
 ---
@@ -912,9 +893,8 @@ and SDK wiring landed with trellis-9a88.)*
 
 - **Fleet** (`targets.yaml`) orchestrates the same core over multiple repos
   and aggregates results; per-repo findings and completeness are preserved,
-  and fleet results match independent core audits. Legacy targets
-  configuration (readiness skips, investigation defaults, maturity
-  comparisons) is rejected with actionable migration errors. No scheduling
+  and fleet results match independent core audits. Unknown configuration
+  keys are rejected. No scheduling
   or hosting is added.
 - **Standards / canonical-config drift** remains as a **separate
   capability**: it compares shared tooling files against the bundled
@@ -922,9 +902,8 @@ and SDK wiring landed with trellis-9a88.)*
   the sloppiness index** in either direction. It is not expanded in this
   release.
 
-*(Landed, trellis-8366: `src/fleet/` loads the pivoted `targets.yaml`
-(id/path/config/canonical; readiness `skip`/`languages` and investigation
-defaults rejected with actionable migration errors), runs each target
+*(Landed, trellis-8366: `src/fleet/` loads strict `targets.yaml`
+(id/path/config/canonical), runs each target
 through the same `runWorkspaceAudit` the single-repo surfaces fold, and
 aggregates a `FleetReport` whose entries preserve the full §6.4 report and
 the §9 policy assessment — deep-equal to independent core audits. Drift
@@ -934,8 +913,7 @@ declarative policies only). Fleet runs are stateless by default;
 `--history` records each run and surfaces index moves against stored
 compatible baselines. `src/history/` renders the sloppiness dashboard —
 latest-run snapshot with compatible index deltas plus per-repo
-§3.5-compatible series — with legacy readiness runs in a visibly distinct,
-never-compared section (§10).)*
+§3.5-compatible series (§10).)*
 
 *(Per-target provider scope, trellis-f3e5 — plan `pl-43c5` step 20: optional
 provider selection rides each fleet member's own configuration through the
@@ -994,9 +972,6 @@ capabilities land instead of maintaining another workflow copy.
   renderer re-validates the contract at the boundary. `audit-fixtures.ts`
   audits the five render-fixture repositories — clean, sloppy,
   mixed-language, incomplete, function-free — through the real core.)*
-- Retired flags (`--rubric-version`, `--min-level`, provider/model/cache
-  knobs, …) fail with a useful "removed in the deterministic pivot" error,
-  not a silent ignore.
 - The SDK (`src/client/`) exposes the same audit/compare/fleet/report calls
   over the same core; deep-equal tests prove CLI and SDK are one code path.
 
@@ -1009,14 +984,10 @@ is stateless: no database is opened and no report file is written unless
 `--history`/`--out` ask. `trellis compare` folds `runComparison`
 (`src/compare/run.ts`) — two artifacts, no audit — with terminal/Markdown
 views in `src/report/compare-render.ts`; an incompatible pair fails closed
-(exit 2, the comparison still emitted). Retired readiness/investigation
-flags are hidden commander options that fail fast with actionable
-messages. The SDK's `audit`/`compare` are direct calls to the same
+(exit 2, the comparison still emitted). The SDK's `audit`/`compare` are direct calls to the same
 services; deep-equal parity tests cover measurement and policy.
 `fleet`/`report` adapted with trellis-8366 (§11);
-`drift`/`standards` remain separate canonical-config capabilities. The
-release acceptance stage retired public `rubric` and SDK readiness exports;
-legacy internals remain for history compatibility and regression fixtures.)*
+`drift`/`standards` remain separate canonical-config capabilities.)*
 
 ---
 
@@ -1039,7 +1010,7 @@ Unchanged from the warren/burrow stack:
 - **Conventions:** kebab-case filenames, tab indent / 100-col, `.ts` import
   extensions, tests as `<name>.test.ts` beside the unit, golden fixtures
   under `__golden__/`. trellis keeps the quality-gate ratchets and audits
-  itself with the deterministic audit once it lands (dogfood, §14).
+  itself with the deterministic audit (dogfood, §14).
 
 ### 13.1 api>cli>sdk core discipline
 
@@ -1051,54 +1022,20 @@ network API remains a deferred surface over the same core.
 
 ---
 
-## 14. Transition from the readiness product
+## 14. Validation and acceptance
 
-The pivot is delivered as a **staged, forward-chained plan** (`pl-b2ea`, 23
-issues under feature `trellis-253e`). This section is the map; it describes
-the delivery sequence. All 23 plan stages are complete; the final evidence
-and bounded follow-ups are recorded in
-[`docs/release-acceptance.md`](docs/release-acceptance.md). Internal legacy
-modules remain for history compatibility and regression fixtures, outside
-the public deterministic audit paths.
+Native measurement is tested against a fixed TypeScript corpus with recorded
+revisions, analyzer versions, runtime and memory budgets. Paired refactors
+exercise clone removal, branch growth and cycle introduction; score changes
+require versioned calibration. Corpus preparation is separate from offline audits.
 
-1. **Contract** (this document) — the deterministic product contract replaces
-   the readiness specification.
-2. **Disconnect** — agent execution is removed from every public audit path
-   (CLI, SDK, fleet, persistence defaults); legacy provider/cache flags are
-   rejected with actionable errors.
-3. **Delete** — the investigation subsystem, its cache API, golden capture
-   tooling, and os-eco scoring overlays are removed; historical migrations
-   stay append-only and existing user data is untouched.
-4. **Contracts** — versioned measurement/finding/configuration schemas (§6).
-5. **Foundation** — source discovery & classification (§3.1); the shared
-   parse layer and function inventory.
-6. **Metrics** — complexity & erosion (§5.1–5.2); duplication feasibility
-   decision then implementation (§5.3); workspace-aware import resolution
-   then cycle measurement (§5.4); safeguard inspection (§5.5).
-7. **Score & report** — the provisional formula (§7); the deterministic audit
-   core; terminal/JSON/Markdown renderers.
-8. **Policy & history** — baseline comparison and failure policies (§9);
-   opt-in history with legacy separation (§10).
-9. **Surfaces** — CLI/SDK rewiring (§12); fleet & standards adaptation (§11).
-10. **Validation** — a fixed TypeScript corpus (recorded revisions, sizes,
-    machine, analyzer versions) exercises paired refactors — clone removal,
-    branch growth, cycle introduction — to validate score behavior and
-    performance, calibrate the provisional formula if evidence requires it
-    (bumping the scoring version), and set runtime/memory budgets. No model
-    judgments or network access occur during an audit; corpus acquisition is
-    a separate preparation step.
-11. **Release** — documentation and portable examples reflect the pivot; the
-    legacy Seeds backlog is reconciled (keep / superseded / deferred, with
-    reasons); the breaking release passes complete offline acceptance and
-    all quality gates with no model/provider configuration shipped.
+CLI, SDK and fleet parity tests exercise the same core, configuration, policy
+and optional history. Package smoke tests verify the installed CLI and its assets.
+See [release acceptance](docs/release-acceptance.md) and
+[corpus validation](docs/corpus-validation.md) for evidence and limitations.
 
-**Legacy score separation** is a hard rule throughout: readiness scores and
-levels are a different quantity from the sloppiness index. They are preserved
-in history, labeled as legacy, and never numerically compared (§10).
-
-**Dogfood** after the pivot: trellis audits itself with the deterministic
-audit; a regression in its own index is a real failure. (The retired
-"band L4+ against the readiness rubric" gate is gone with the rubric.)
+trellis audits itself offline. A regression in its own sloppiness index is a
+real failure; safeguards and optional provider evidence never offset the score.
 
 ---
 
@@ -1379,18 +1316,3 @@ implementation.
 > carrier is `src/providers/capabilities.ts` (a `sonarjs` request is known
 > configuration resolving to `unsupported` with the recorded reason); the
 > clearance prerequisite is tracked separately as `trellis-7f5d`.
-
----
-
-## Appendix A — provenance
-
-- The pre-pivot readiness design (9 categories / 90 criteria, coverage-aware
-  leveling, 4 investigation areas, Pi-RPC provider, canonical drift) was
-  de-branded from `../notes/` and a day-job rubric v0.2.0 as a clean-room
-  reimplementation. It is superseded by this document; its history lives in
-  git and in legacy run rows (§10). Canonical-config drift (§11) is the one
-  capability carried forward unchanged.
-- The pivot rationale: the readiness product's differentiating layer was its
-  LLM investigation pass, which made scores non-reproducible per commit and
-  coupled a measurement tool to provider availability. The deterministic
-  core — the part that was always trustworthy — is the product.

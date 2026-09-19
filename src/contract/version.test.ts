@@ -59,7 +59,7 @@ describe("versionStringSchema", () => {
 
 describe("isRepoRelativePath", () => {
 	test("accepts nested repo-relative POSIX paths", () => {
-		expect(isRepoRelativePath("src/report/build.ts")).toBe(true);
+		expect(isRepoRelativePath("src/audit/audit.ts")).toBe(true);
 		expect(isRepoRelativePath("trellis.yaml")).toBe(true);
 	});
 

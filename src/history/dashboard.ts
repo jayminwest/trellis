@@ -1,32 +1,6 @@
-/**
- * History dashboard (SPEC §10, §11, trellis-8366) — the surface-agnostic
- * projection behind `trellis report`. {@link buildHistory} reads the central
- * SQLite store and assembles a {@link HistoryReport} over the **sloppiness
- * audit history**: a snapshot of every repo's latest audit run, and per-repo
- * scored-basis-compatible index series (§3.5, §16.6).
- *
- * **Legacy separation (SPEC §10).** Legacy readiness runs survive in the same
- * database and surface here as a visibly distinct `legacy` section — repo,
- * run count, and the latest readiness numbers, labeled as a different
- * product. Readiness percentages and levels are **never** compared with,
- * averaged into, or trended against sloppiness indices: the two sections
- * share no series, no scale, and no delta.
- *
- * **Compatible trends (SPEC §3.5, §16.6).** A repo's series anchors on its
- * latest run and selects every stored run whose scored basis is comparable
- * with that anchor — the step-6 verdicts reused over the stored JSON
- * provenance, never a re-derived rule. An advisory-only provider change
- * (added, removed, upgraded optional provider) never fragments a series; a
- * changed scored measurement or scoring basis starts a distinct, clearly
- * marked series (the snapshot's index move reads `new` again, and the old
- * runs never silently join it). The snapshot's index delta compares the
- * latest two compatible runs (positive = worse; lower is better).
- *
- * The whole report is pure over the store, so tests seed a `:memory:`/temp
- * DB and assert the projection.
- */
+/** Audit history dashboard with scored-basis-compatible index series. */
 import type { AuditReport, Completeness } from "../contract/index.ts";
-import type { Store, StoredAuditRun, StoredRun } from "../store/index.ts";
+import type { Store, StoredAuditRun } from "../store/index.ts";
 import { decodedStoredReport } from "../store/index.ts";
 
 /** One repo's headline state in the sloppiness snapshot (its most recent audit run). */
@@ -61,34 +35,17 @@ export interface AuditRepoHistory {
 	runs: AuditRunPoint[];
 }
 
-/**
- * One repo's legacy readiness history, visibly distinct (SPEC §10): a
- * different product's numbers, never trended against the sloppiness index.
- */
-export interface LegacyRepoEntry {
-	repo: string;
-	/** Total legacy readiness runs recorded within the report's `since` window. */
-	runs: number;
-	latestLevel: number;
-	latestPassRate: number;
-	latestCoverage: number;
-	latestRubricVersion: string;
-	latestScoredAt: string;
-}
-
-/** The `trellis report` document (SPEC §10, §11) — sloppiness history + the distinct legacy section. */
+/** The `trellis report` document (SPEC §10, §11) — sloppiness history. */
 export interface HistoryReport {
 	/** The query scope echoed back: a single repo or all, and the `since` floor. */
 	scope: { repo: string | null; since: string | null };
-	/** Sloppiness audit history (the pivoted product). */
+	/** Sloppiness audit history. */
 	audits: {
 		/** Latest audit run per repo in scope, sorted by repo identity. */
 		snapshot: AuditSnapshotEntry[];
 		/** Per-repo compatible index series for every repo with a run in the window. */
 		repos: AuditRepoHistory[];
 	};
-	/** Legacy readiness history — a different scale, never compared (SPEC §10). */
-	legacy: LegacyRepoEntry[];
 }
 
 /** Options for {@link buildHistory} — both narrow the query (SPEC §12 flags). */
@@ -149,19 +106,6 @@ function repoHistory(
 	return { repo: latest.repoIdentity, runs: runs.map(toRunPoint) };
 }
 
-/** Build one repo's legacy readiness entry from its latest legacy run (SPEC §10 — distinct scale). */
-function legacyEntry(latest: StoredRun, runCount: number): LegacyRepoEntry {
-	return {
-		repo: latest.repo,
-		runs: runCount,
-		latestLevel: latest.level,
-		latestPassRate: latest.passRate,
-		latestCoverage: latest.coverage,
-		latestRubricVersion: latest.rubricVersion,
-		latestScoredAt: latest.scoredAt,
-	};
-}
-
 /**
  * Build the `trellis report` dashboard from the central history. The
  * sloppiness snapshot reflects each repo's most recent audit run overall
@@ -172,8 +116,7 @@ function legacyEntry(latest: StoredRun, runCount: number): LegacyRepoEntry {
  * delta — unknown provenance never implies compatibility. A `--repo` filter
  * narrows both sections to a single repo; a repo with no run in the window is
  * dropped from the series but still shown in the snapshot if it has any
- * latest run. Legacy readiness repos surface only in the distinct `legacy`
- * section.
+ * latest run.
  */
 export function buildHistory(store: Store, opts: HistoryOptions = {}): HistoryReport {
 	const auditRepos = opts.repo ? [opts.repo] : store.auditRepos();
@@ -190,16 +133,8 @@ export function buildHistory(store: Store, opts: HistoryOptions = {}): HistoryRe
 		if (detail) repos.push(detail);
 	}
 
-	const legacyRepos = opts.repo ? [opts.repo] : store.repos();
-	const legacy: LegacyRepoEntry[] = [];
-	for (const repo of legacyRepos) {
-		const latest = store.latestRun(repo);
-		if (latest) legacy.push(legacyEntry(latest, store.runs(repo, opts.since).length));
-	}
-
 	return {
 		scope: { repo: opts.repo ?? null, since: opts.since ?? null },
 		audits: { snapshot, repos },
-		legacy,
 	};
 }

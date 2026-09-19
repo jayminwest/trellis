@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { CliError, formatForPath, type Rendered, writeReportFile } from "./output.ts";
 
 /**
- * `--output` file export (SPEC §12): the file format is inferred from the path
+ * `--out` file export (SPEC §12): the file format is inferred from the path
  * extension, with `--json` / `--md` taking precedence; an unknown extension
  * falls back to the human terminal text. Writing routes through a {@link CliError}
  * on I/O failure so the top-level handler renders it consistently.

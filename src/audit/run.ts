@@ -1,36 +1,7 @@
-/**
- * Audit run service (SPEC §12, §13.1, trellis-9a88) — the composition the CLI
- * and SDK both fold, wrapping the pure measurement pass
- * ({@link auditWorkspace}) with the downstream steps of the §4 pipeline:
- *
- *   configure → auditWorkspace (pure) → resolve baseline → assess policy
- *   → persist, if asked
- *
- * One code path: the CLI's `trellis audit` and the SDK's `audit()` call this
- * exact function, so a terminal audit and a programmatic audit can never
- * drift (the deep-equal parity test proves it).
- *
- * **Stateless by default (SPEC §8, §10).** No database is opened and no file
- * is written unless `history` is opted into — then the run appends to the
- * central SQLite history (`db` overrides its location) and, absent an
- * explicit `baselinePath`, the baseline resolves to the latest stored run
- * whose scored basis is compatible with the new report (read before the new
- * run is inserted).
- *
- * **Policy (SPEC §6.5, §9).** The declarative `policy` block of the resolved
- * configuration is evaluated independently of scoring; the structured
- * {@link PolicyAssessment} comes back on the result for the caller to map
- * onto its exit-code contract (CLI: `2` when tripped, report still emitted).
- *
- * Operational errors only ever throw: an unreadable root, an invalid
- * `trellis.yaml`, an unloadable baseline artifact
- * ({@link ReportArtifactError}), or retired readiness/investigation options
- * ({@link AuditRunError} / {@link LegacyConfigError}).
- */
+/** Core audit service: configuration, measurement, baseline, policy and opt-in history. */
 import { assessPolicy, loadReportArtifact, type PolicyAssessment } from "../compare/index.ts";
 import { loadAuditConfig, loadAuditConfigFile } from "../config/index.ts";
 import type { AuditConfig, AuditReport } from "../contract/index.ts";
-import { LegacyConfigError, legacyConfigMessage, retiredReadinessMessage } from "../legacy.ts";
 import type { DuplicationBudget } from "../metrics/index.ts";
 import { openStore, repoIdentity, storedAuditReport } from "../store/index.ts";
 import { auditWorkspace } from "./audit.ts";
@@ -71,35 +42,6 @@ export interface WorkspaceAuditResult {
 	baseline?: AuditReport;
 	/** The `audit_runs` row id, present exactly when the run was persisted (`history`). */
 	historyRunId?: number;
-}
-
-/** Option-bag keys retired with the readiness product (SPEC §14 stage 9), rejected actionably. */
-const RETIRED_READINESS_KEYS = [
-	"rubric",
-	"rubricDir",
-	"rubricVersion",
-	"minLevel",
-	"failOn",
-	"canonical",
-	"persist",
-	"repoId",
-	"output",
-] as const;
-
-/**
- * Reject retired knobs on the public options bag. TypeScript callers get a
- * compile error from the narrowed option type; this guard gives untyped
- * callers the same actionable failure instead of a silent ignore — the
- * investigation-era keys via {@link legacyConfigMessage}, the readiness-era
- * keys via {@link retiredReadinessMessage}.
- */
-function rejectRetiredOptions(opts: object): void {
-	for (const key of ["noCache", "piBin", "investigation", "provider", "model"]) {
-		if (key in opts) throw new LegacyConfigError(legacyConfigMessage(`option '${key}'`));
-	}
-	for (const key of RETIRED_READINESS_KEYS) {
-		if (key in opts) throw new AuditRunError(retiredReadinessMessage(`option '${key}'`));
-	}
 }
 
 /** Resolve the audit configuration from the options (at most one explicit source). */
@@ -147,7 +89,6 @@ export async function runWorkspaceAudit(
 	root: string,
 	opts: WorkspaceAuditOptions = {},
 ): Promise<WorkspaceAuditResult> {
-	rejectRetiredOptions(opts);
 	if (opts.db !== undefined && opts.history !== true) {
 		throw new AuditRunError(
 			"db is meaningful only with history: audits are stateless by default (SPEC §10) — " +

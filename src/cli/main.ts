@@ -24,7 +24,6 @@ import {
 	resolveFormat,
 } from "./output.ts";
 import { registerReport } from "./report.ts";
-import { registerRubric } from "./rubric.ts";
 import { registerStandards } from "./standards.ts";
 
 export function buildProgram(): Command {
@@ -45,7 +44,6 @@ export function buildProgram(): Command {
 	registerFleet(program);
 	registerGuide(program);
 	registerReport(program);
-	registerRubric(program);
 	registerStandards(program);
 
 	return program;

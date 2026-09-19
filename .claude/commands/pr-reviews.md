@@ -30,21 +30,21 @@ Use the Task tool to spawn parallel agents (one per PR). Each agent should:
 - Check for bugs, edge cases, and error handling gaps
 - Check adherence to project conventions (see `CLAUDE.md` / `AGENTS.md`): strict TypeScript (`noUncheckedIndexedAccess`, no `any`), zod at boundaries, Biome formatting, tab indentation, 100-char line width, `.ts` import extensions, `kebab-case` filenames
 - **Architecture discipline (SPEC §13.1):** verify all behavior lives in the core `src/` modules and that `src/cli/` + `src/client/` stay thin pass-throughs — no logic leaking into a surface. Confirm SDK types still mirror the core (`// Mirrors src/<x>`).
-- **Rubric WHAT/HOW seam:** the rubric must never name a tool; tool-specific checks belong in `detectors/` adapters bound via `detectors/registry.ts`. Flag any leak across the seam.
-- Check test coverage — are new code paths tested? Do tests follow the "no mocks for fs/SQLite, stub only the Pi RPC boundary" philosophy? Are golden fixtures under `__golden__/` regenerated only via the update gate?
+- **Native scoring seam:** metrics consume the shared syntax inventory; safeguards and provider evidence never enter the score.
+- Check test coverage — are new code paths tested? Do tests follow the "no mocks for fs/SQLite, stub only external process boundaries" philosophy? Are golden fixtures under `__golden__/` regenerated only via the update gate?
 - Flag any security concerns (path traversal on audited repos, credential leakage through pino logs / the store / reports, unsafe execution of audited-repo code)
 
 #### c. Project alignment review
 - Does this change fit trellis's architecture and direction (SPEC)?
 - Does it follow existing patterns or introduce unnecessary new ones?
 - Is the scope appropriate — does it do too much or too little?
-- Does it preserve `not-applicable` vs `no-detector` discipline and rubric comparability (RUBRIC_VERSION) where relevant?
+- Does it preserve explicit incomplete/unavailable analysis states and analyzer/scoring compatibility where relevant?
 - Are there breaking changes to the CLI surface, exit-code contract, or report shapes?
 
 #### d. Risk assessment
 - What could go wrong if this is merged?
-- Are there performance implications (large fleets, many criteria, Pi calls)?
-- Does it touch critical paths (rubric loader/schema, scoring engine, drift matchers, SQLite store/migrations, Pi provider)?
+- Are there performance implications (large fleets, large syntax inventories, provider processes)?
+- Does it touch critical paths (metric contracts, scoring, drift matchers, SQLite migrations, provider runner)?
 - Could it change scores in a way that breaks comparability with historical runs?
 - Could it conflict with other open PRs?
 

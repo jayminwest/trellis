@@ -58,7 +58,6 @@ describe("trellis report", () => {
 		const report = JSON.parse(stdout);
 		expect(report.audits.snapshot).toEqual([]);
 		expect(report.audits.repos).toEqual([]);
-		expect(report.legacy).toEqual([]);
 	}, 20_000);
 
 	test("after two recorded audits, shows the snapshot and the compatible series", async () => {
@@ -96,36 +95,6 @@ describe("trellis report", () => {
 		const report = JSON.parse(stdout);
 		expect(report.scope.repo).toBe(identity);
 		expect(report.audits.snapshot.map((e: { repo: string }) => e.repo)).toEqual([identity]);
-	}, 20_000);
-
-	test("legacy readiness runs surface in a visibly distinct section", async () => {
-		await auditRun();
-		// Seed a legacy readiness run directly into the same database.
-		const { openStore } = await import("../store/index.ts");
-		const store = openStore(dbPath);
-		try {
-			store.insertRun({
-				repo: "warren",
-				rubricVersion: "1.0.0",
-				scoredAt: "2026-05-01T00:00:00.000Z",
-				commit: "c0",
-				level: 3,
-				passRate: 0.75,
-				coverage: 0.9,
-				apps: { ".": { description: "warren" } },
-				criteria: { a: { numerator: 1, denominator: 1, rationale: "x" } },
-			});
-		} finally {
-			store.close();
-		}
-
-		const { code, stdout } = await runCli(["report", "--db", dbPath], { TRELLIS_DB: "" });
-		expect(code).toBe(0);
-		expect(stdout).toContain("sloppiness snapshot");
-		expect(stdout).toContain("legacy readiness history");
-		expect(stdout).toContain("never compared with the sloppiness index");
-		expect(stdout).toContain("warren");
-		expect(stdout).toContain("L3");
 	}, 20_000);
 
 	test("renders the human dashboard with the snapshot table after a run", async () => {

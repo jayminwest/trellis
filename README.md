@@ -205,7 +205,6 @@ compatible analyzer, scoring, and configuration identities.
 
 - [CLI reference, configuration, and CI workflows](docs/cli-reference.md)
 - [Metrics, scoring, and known limitations](docs/metrics-and-scoring.md)
-- [Migration from the readiness product](docs/migration.md)
 - [Product contract and configuration](SPEC.md)
 - [Architecture](docs/architecture.md)
 - [Corpus validation](docs/corpus-validation.md)

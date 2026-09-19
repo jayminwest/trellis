@@ -14,10 +14,7 @@ fixture#abc123def456 · 2 runs
   2026-06-01T00:00:00.000Z  10/100  complete  0.1.0-provisional
   2026-06-06T00:00:00.000Z  14/100  complete  0.1.0-provisional
   trend: 10 → 14
-
-legacy readiness history (a different product — never compared with the sloppiness index)
-  repo    level   pass    cov  runs  rubric    scored
-  warren  L4       80%    90%     3  1.0.0     2026-05-01T00:00:00.000Z"
+"
 `;
 
 exports[`renderHistoryMarkdown renders the dashboard 1`] = `
@@ -42,13 +39,5 @@ Index 0–100, **lower is better**; Δ is the index move vs the previous compati
 | 2026-06-06T00:00:00.000Z | 14/100 | complete | 0.1.0-provisional |
 
 Trend: 10 → 14
-
-## Legacy readiness history
-
-_A different product: readiness percentages and levels are never compared with, averaged into, or trended against the sloppiness index._
-
-| Repo | Level | Pass | Coverage | Runs | Rubric | Scored |
-| --- | --- | --- | --- | --- | --- | --- |
-| \`warren\` | L4 | 80% | 90% | 3 | 1.0.0 | 2026-05-01T00:00:00.000Z |
 "
 `;

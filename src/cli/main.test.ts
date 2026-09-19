@@ -25,19 +25,14 @@ async function runCli(
 	return { code, stdout, stderr };
 }
 
-describe("retired readiness catalog", () => {
-	// Tests spawn the CLI as a subprocess (audit runs, reads); the 20s budget
-	// accommodates slow CI containers where the 5s default is marginal.
-	test("rejects rubric and its old options with migration guidance", async () => {
-		const { code, stdout, stderr } = await runCli(["rubric", "--validate", "--rubric-dir", "gone"]);
-		expect(code).toBe(1);
-		expect(stdout).toBe("");
-		expect(stderr).toContain("removed in the deterministic pivot");
-		expect(stderr).toContain("trellis.yaml");
-	}, 20_000);
-});
-
 describe("trellis (program)", () => {
+	test("rejects unknown audit flags before accessing the workspace", async () => {
+		const result = await runCli(["audit", "/missing-workspace", "--unknown-option"]);
+		expect(result.code).toBe(1);
+		expect(result.stdout).toBe("");
+		expect(result.stderr).toContain("unknown option");
+	});
+
 	test("--version prints the package version", async () => {
 		const { code, stdout } = await runCli(["--version"]);
 		expect(code).toBe(0);
@@ -149,6 +144,5 @@ describe("trellis audit (program smoke)", () => {
 		expect(stdout).toContain("sloppiness audit");
 		expect(stdout).toContain("audit");
 		expect(stdout).toContain("compare");
-		expect(stdout).not.toContain("rubric");
 	}, 20_000);
 });

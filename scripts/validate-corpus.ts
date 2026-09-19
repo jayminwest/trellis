@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Fixed-corpus validation harness (SPEC §14 stage 10, trellis-e924).
+ * Fixed-corpus validation harness (SPEC §14, trellis-e924).
  *
  * Runs the deterministic audit core over the committed corpus in `corpus/`
  * (fixture workspaces plus the trellis checkout itself), records runtime and

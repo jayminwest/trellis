@@ -1,39 +1,4 @@
-/**
- * Typed SDK over the domain core (SPEC §13.1) — the programmatic surface for
- * driving trellis from scripts and other tools.
- *
- * Every function here is a direct call to the SAME core service the CLI folds,
- * in-process: `audit` → {@link runWorkspaceAudit} (the deterministic audit:
- * configuration → measurement → baseline resolution → policy assessment →
- * opt-in history), `compare` → {@link runComparison} (artifact comparison
- * without an audit). Because there is exactly one implementation of each
- * operation, a programmatic audit and a CLI audit exercise one code path and
- * cannot drift (proven by the deep-equal test in `index.test.ts`).
- *
- * `fleet` / `report` (trellis-8366, SPEC §11) fold the same deterministic
- * core: `fleet` → {@link runFleetTargets} (multi-repo orchestration over
- * `runWorkspaceAudit`, with canonical drift as a separate non-scoring
- * capability) and `report` → {@link buildReport} (the sloppiness history
- * dashboard, with legacy readiness runs visibly distinct and never trended
- * against the index, SPEC §10). `drift` remains a separate, non-scoring
- * canonical-configuration capability. Readiness catalog and assessment
- * exports were retired with the deterministic release.
- *
- * Request types mirror the core option types and response types ARE the core
- * report types — re-exported below, each annotated with its source module. No
- * business logic lives in this file; it is pure type shaping over the core.
- *
- * **Provider-capable requests (SPEC §16.4, trellis-ad4b)** ride the same
- * declarative `providers` block the CLI's `--provider` flag translates
- * into: pass it inside a `config` object (mirroring `trellis.yaml`) or
- * through `configPath`. The SDK invents no provider surface of its own — no
- * selection validation, planning, execution or policy evaluation — so a
- * programmatic provider request and a CLI `--provider` run exercise one core
- * path (proven by the deep-equal parity tests in `index.test.ts` and
- * `provider-parity.test.ts`). Provider evidence is advisory, namespaced
- * and unscored: it never changes the sloppiness index, and callers that
- * pass no provider fields get exactly the pre-provider behavior.
- */
+/** Typed SDK over the same deterministic core services used by the CLI. */
 
 import {
 	AuditRunError,
@@ -191,8 +156,7 @@ export type ReportQuery = ReportRunOptions;
 /**
  * Project the run-history dashboard from the central store: the sloppiness
  * snapshot and per-repo scored-basis-compatible index series (§3.5, §16.6),
- * with legacy readiness history in a visibly distinct section that is never
- * compared with the sloppiness index (SPEC §10). Identical to `trellis report`.
+ * over compatible sloppiness runs (SPEC §10). Identical to `trellis report`.
  */
 export function report(query: ReportQuery = {}): HistoryReport {
 	return buildReport(query);

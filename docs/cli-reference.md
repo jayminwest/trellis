@@ -20,8 +20,11 @@ trellis compare <a.json> <b.json>  # compare two saved report artifacts (no audi
 trellis fleet                      # audit every target in targets.yaml through the same core
   [--targets targets.yaml] [--history]
 trellis report                     # sloppiness history/dashboard from SQLite
-  [--repo <id>] [--since <date>]   #   (legacy readiness runs kept visibly separate)
+  [--repo <id>] [--since <date>]
+trellis drift <path>               # inspect canonical-config drift (separate, unscored)
+  [--fail-on drift|none]
 trellis standards                  # canonical-config drift manifest (separate capability)
+trellis guide cleanup              # print bundled, read-only cleanup guidance
 ```
 
 The default `audit` run is **stateless** — no database, no report files —
@@ -118,12 +121,11 @@ trellis fleet --history                   # every target through the same core
 
 Fleet entries preserve each target's full report and its own declarative
 policy verdict; canonical-config drift rides along as separate, non-scoring
-evidence. Legacy readiness runs already in the database stay visible in a
-distinct section and are never compared with sloppiness indices.
+evidence.
 
 ### CI — pre-release gate (policy failure ≠ operational error)
 
-Once the package is published, pin the analyzer version (report comparability is versioned, SPEC §3.5),
+Pin the analyzer version (report comparability is versioned, SPEC §3.5),
 retain the report artifact, and branch on the exit code so a policy failure
 and an operational failure page differently:
 

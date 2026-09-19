@@ -1,21 +1,4 @@
-/**
- * Markdown renderer for the §6.4 metric report (SPEC §12, trellis-a059) — a
- * bounded, report-shaped summary for pull requests and docs: the headline
- * index with its direction and scoring version, source coverage, score
- * contributions traceable to raw metrics, the raw metric table, ranked
- * hotspots (bounded; the total is always printed), remaining located
- * findings, safeguard evidence (never folded into the score), and — when
- * the report actually carries external provider analyses — a distinct
- * advisory evidence section with its own completeness, separate from the
- * score (see `./audit-markdown-providers.ts`). A default native-only audit
- * renders byte-identically, with no provider noise. JSON remains the full
- * structured document; this view is the human summary.
- *
- * All numbers and locations come from {@link ./audit-format.ts} so this view
- * can never disagree with the terminal/JSON ones, and no readiness levels,
- * agent progress, or legacy category labels can appear here — the §6.4
- * report does not carry them.
- */
+/** Render the native audit report with bounded findings and traceable score contributions. */
 import type { AuditReport, Finding } from "../contract/index.ts";
 import {
 	boundFindings,

@@ -1,8 +1,8 @@
 /**
- * Migration runner (SPEC §6.4) — applies the sequential `.sql` files under
+ * Migration runner (SPEC §10) — applies the sequential `.sql` files under
  * `migrations/` to a `bun:sqlite` database, gating on `PRAGMA user_version` so
  * `openStore` can migrate-on-open idempotently. Each filename leads with its
- * version (`0001-initial.sql` → 1); only files newer than the DB's recorded
+ * version (`0002-audit-runs.sql` → 2); only files newer than the DB's recorded
  * `user_version` run, all inside one transaction, after which `user_version` is
  * advanced to the highest applied version. Re-opening an up-to-date DB is a
  * no-op.

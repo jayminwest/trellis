@@ -2,14 +2,11 @@ version: '1'
 domains:
   trellis: {}
   ci: {}
-  rubric: {}
   cli: {}
   scoring: {}
-  detectors: {}
   discovery: {}
   report: {}
   store: {}
-  investigation: {}
   standards: {}
   fleet: {}
   quality: {}

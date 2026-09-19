@@ -1,41 +1,8 @@
-/**
- * `targets.yaml` loader (SPEC §11) — the single declaration of the fleet.
- *
- * Post-pivot (trellis-8366), a target is a workspace the **deterministic core**
- * audits: `id` + `path`, an optional explicit `config` pointing at that repo's
- * `trellis.yaml` (when absent, the audit discovers it at the target root), and
- * the optional `canonical` block that feeds the **separate** standards-drift
- * capability (SPEC §11 — drift never enters the sloppiness index). `defaults`
- * carries the fleet-wide canonical version.
- *
- * Legacy readiness configuration is rejected with **actionable migration
- * errors**, never silently ignored (SPEC §11):
- *
- * - `defaults.investigation` — the agent investigation pass is gone (SPEC §14);
- * - `targets[].skip` — readiness criterion skips went away with the rubric;
- *   failure policy is now the declarative `policy` block of `trellis.yaml`;
- * - `targets[].languages` — the per-language detector hints went away with the
- *   rubric; the deterministic audit measures TypeScript/TSX source.
- *
- * Loading is zod-validated and strict (unknown keys are rejected so a typo fails
- * loudly rather than silently no-op'ing). Target ids must be unique — they label
- * the aggregate report. Every target `path` (and `config`) is resolved relative
- * to the `targets.yaml` location, so a fleet file is portable regardless of
- * where `trellis fleet` is invoked from. The loader does **not** touch the
- * target filesystem: a missing/unreadable path is the orchestrator's per-target
- * failure (`orchestrate.ts`), not a load-time abort of the whole fleet.
- *
- * {@link targetDriftOptions} is the fleet→standards seam: it maps a resolved
- * target (+ fleet defaults) onto the {@link DriftOptions} the canonical-drift
- * capability consumes — plumbing the resolved canonical version and the repo's
- * allowed deltas through without the orchestrator reaching into target
- * internals.
- */
+/** Strict declarative fleet configuration; paths resolve relative to targets.yaml. */
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import yaml from "js-yaml";
 import { z } from "zod";
-import { legacyConfigMessage, retiredReadinessMessage } from "../legacy.ts";
 import type { AllowedDelta, DriftOptions } from "../standards/index.ts";
 
 /** Default fleet declaration filename, relative to the invocation cwd. */
@@ -57,31 +24,17 @@ const canonicalSchema = z.strictObject({
 	allowedDeltas: z.array(allowedDeltaSchema).optional(),
 });
 
-/**
- * One fleet target (SPEC §11). `path` (and `config`) resolve relative to the
- * `targets.yaml`. The retired readiness keys `skip` / `languages` are accepted
- * by the schema only so {@link loadFleet} can reject them with actionable
- * migration messages instead of a bare "unrecognized key" — they have no
- * effect otherwise.
- */
+/** One fleet target; paths resolve relative to targets.yaml. */
 const targetSchema = z.strictObject({
 	id: z.string().min(1),
 	path: z.string().min(1),
 	config: z.string().min(1).optional(),
 	canonical: canonicalSchema.optional(),
-	skip: z.unknown().optional(),
-	languages: z.unknown().optional(),
 });
 
-/**
- * Fleet-wide defaults (SPEC §11): the canonical version. `investigation` is
- * accepted by the schema only so {@link loadFleet} can reject it with an
- * actionable retirement message (SPEC §14) instead of a bare "unrecognized
- * key" — it has no effect otherwise.
- */
+/** Fleet-wide canonical version. */
 const defaultsSchema = z.strictObject({
 	canonicalVersion: semver.optional(),
-	investigation: z.unknown().optional(),
 });
 
 /** The full `targets.yaml` document. */
@@ -127,28 +80,9 @@ export class TargetsError extends Error {
 }
 
 /**
- * Reject retired readiness/investigation keys with actionable migration
- * messages (SPEC §11) — the schema accepted them only so this guard can name
- * what to remove and what replaced it.
- */
-function rejectRetiredKeys(data: TargetsFile): void {
-	if (data.defaults?.investigation !== undefined) {
-		throw new TargetsError(legacyConfigMessage("defaults.investigation"), "defaults.investigation");
-	}
-	for (const target of data.targets) {
-		if (target.skip !== undefined) {
-			throw new TargetsError(retiredReadinessMessage(`target '${target.id}'.skip`), target.id);
-		}
-		if (target.languages !== undefined) {
-			throw new TargetsError(retiredReadinessMessage(`target '${target.id}'.languages`), target.id);
-		}
-	}
-}
-
-/**
  * Load, validate, and path-resolve the fleet from `file` (default
  * {@link TARGETS_FILE}). Throws {@link TargetsError} on an unreadable file, a
- * schema violation, a retired readiness/investigation key, or a duplicate
+ * schema violation or a duplicate
  * target id. Target paths are resolved relative to the fleet file's directory;
  * the target filesystem is not touched here.
  */
@@ -167,7 +101,6 @@ export function loadFleet(file: string = TARGETS_FILE): Fleet {
 		const where = issue?.path.join(".") || "<root>";
 		throw new TargetsError(issue?.message ?? "schema validation failed", where);
 	}
-	rejectRetiredKeys(result.data);
 
 	const seen = new Set<string>();
 	for (const target of result.data.targets) {

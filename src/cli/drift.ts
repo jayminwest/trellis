@@ -1,5 +1,5 @@
 /**
- * `trellis drift <repo-path>` — canonical-config drift only (SPEC §10, §12).
+ * `trellis drift <repo-path>` — canonical-config drift only (SPEC §11, §12).
  *
  * Thin per SPEC §13.1: it calls the core {@link driftRepo} and shapes the three
  * output variants. Run standalone (no fleet context), allowed deltas default to
@@ -36,7 +36,7 @@ export function registerDrift(program: Command): void {
 	program
 		.command("drift")
 		.argument("<repo-path>", "path to the repository to compare")
-		.description("L1 canonical-config drift only")
+		.description("canonical-config drift only")
 		.option("--canonical <v>", "pin the canonical standards version")
 		.addOption(
 			new Option("--fail-on <mode>", "exit non-zero on: drift|none (default: drift)").choices([

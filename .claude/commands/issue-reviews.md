@@ -31,20 +31,20 @@ Use the Task tool to spawn parallel agents (one per issue, or batch small sets i
 - What files/subsystems would need to change?
 - Estimate scope: small (1-2 files), medium (3-5 files), large (6+ files / architectural)
 - Are there prerequisite changes or dependencies on other issues?
-- Are there technical blockers or unknowns (e.g. a new language adapter, a Pi RPC behaviour, a rubric-version bump)?
+- Are there technical blockers or unknowns (e.g. a new analyzer, a provider execution boundary, a scoring-version bump)?
 
 #### c. Project alignment review
-- Does this issue align with trellis's goals (stack-agnostic rubric + per-language detector adapters, deterministic-first with a bounded agent layer, central history, api>cli>sdk discipline)?
-- Does it respect the rubric WHAT/HOW seam (the rubric never names a tool)?
+- Does this issue align with trellis's goals (offline TypeScript structural measurement, deterministic scoring, opt-in evidence and history, api>cli>sdk discipline)?
+- Does it keep native scoring separate from safeguards and provider evidence?
 - Does it conflict with existing architecture decisions (SPEC)?
 - Is it a feature request, bug fix, improvement, or maintenance task?
-- Would addressing it create technical debt or reduce it? Would it affect rubric comparability (RUBRIC_VERSION)?
+- Would addressing it create technical debt or reduce it? Would it affect analyzer/scoring compatibility?
 
 #### d. Risk assessment
 - What could go wrong if this is implemented naively?
 - Are there breaking changes to the CLI surface, exit-code contract, report shapes, or SQLite schema (migrations)?
-- Does it touch critical infrastructure (rubric loader/schema, scoring engine, drift matchers, store, Pi provider, fleet loader)?
-- Could it introduce performance regressions on large fleets or many Pi calls?
+- Does it touch critical infrastructure (metric contracts, scoring, drift matchers, store, provider runner, fleet loader)?
+- Could it introduce performance regressions on large fleets or many provider processes?
 - Are there security implications (untrusted audited repos, credential handling)?
 
 #### e. Priority recommendation

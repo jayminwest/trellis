@@ -170,9 +170,12 @@ describe("analysisDiagnosticSchema", () => {
 
 describe("unsupportedContextSchema", () => {
 	test("accepts located, reasoned context and rejects bare entries", () => {
-		const context: UnsupportedContext = { path: "src/legacy.ts", reason: "outside the parser set" };
+		const context: UnsupportedContext = {
+			path: "src/example.js",
+			reason: "outside the parser set",
+		};
 		expect(unsupportedContextSchema.parse(context)).toEqual(context);
-		expect(unsupportedContextSchema.safeParse({ path: "src/legacy.ts" }).success).toBe(false);
+		expect(unsupportedContextSchema.safeParse({ path: "src/example.js" }).success).toBe(false);
 	});
 });
 

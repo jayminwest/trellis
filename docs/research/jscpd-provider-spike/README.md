@@ -1,5 +1,11 @@
 # jscpd provider spike (trellis-ff55)
 
+Production-source snapshots from the recorded commit are archived in Git;
+checked-in fixture inputs and tool metadata remain available. Historical
+production measurements below describe that commit, not the current tree.
+Regenerate production outputs against the current source before using them
+for new comparisons.
+
 jscpd **5.2.1** is a viable candidate for further integration work. Its actual
 Darwin ARM64 binary supports identifier/literal normalization and near-clone
 flags. The historical SPEC comparison using default exact matching did not

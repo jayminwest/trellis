@@ -16,7 +16,7 @@ export type OutputFormat = "human" | "json" | "md";
 
 /**
  * Stable process exit codes (SPEC §12). `0` clean, `1` an operational/usage
- * error (the command could not run), `2` a tripped `--fail-on` policy (the
+ * error (the command could not run), `2` a tripped policy (the
  * command ran and emitted its report, but the audit failed the gate). CI scripts
  * can tell "trellis broke" (`1`) from "the repo failed the bar" (`2`).
  */
@@ -25,7 +25,7 @@ export const EXIT = {
 	OK: 0,
 	/** A handled failure: bad usage, invalid data, or a surfaced core error. */
 	ERROR: 1,
-	/** A `--fail-on` policy tripped — the report was emitted, but it failed the bar. */
+	/** A policy tripped — the report was emitted, but it failed the bar. */
 	FAIL: 2,
 } as const;
 
@@ -47,7 +47,7 @@ export class CliError extends Error {
 }
 
 /**
- * Signals a clean run whose `--fail-on` policy tripped (SPEC §12). Thrown by a
+ * Signals a clean run whose policy tripped (SPEC §12). Thrown by a
  * command *after* it has already emitted its report to stdout, so the top-level
  * handler must not re-render it — it only writes the reasons to stderr and exits
  * with {@link code}. Distinct from {@link CliError} (which means the command
@@ -98,7 +98,7 @@ export function emit(format: OutputFormat, rendered: Rendered): void {
 }
 
 /**
- * Resolve the file format for `--output <path>`: an explicit `--json` / `--md`
+ * Resolve the file format for `--out <path>`: an explicit `--json` / `--md`
  * (`override`) wins, else the extension decides (`.json` → JSON, `.md` →
  * markdown), else the human terminal text is written verbatim.
  */

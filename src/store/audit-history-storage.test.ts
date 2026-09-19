@@ -156,16 +156,10 @@ describe("a pre-existing history database", () => {
 		const root = join(dir, "workspace");
 		mkdirSync(root, { recursive: true });
 		// Simulate the on-disk state exactly as the pre-step-8 code left it:
-		// schema 0002 (user_version 2), a legacy readiness row, and audit
 		// rows written through the same renderAuditJson bytes.
 		const db = new Database(dbPath);
-		db.exec(readFileSync(join(import.meta.dir, "migrations", "0001-initial.sql"), "utf8"));
 		db.exec(readFileSync(join(import.meta.dir, "migrations", "0002-audit-runs.sql"), "utf8"));
 		db.exec("PRAGMA user_version = 2");
-		db.query(
-			`INSERT INTO runs (repo, commit_sha, rubric_version, level, pass_rate, coverage, report_json, scored_at)
-			 VALUES ('history-fixture', 'abc123', '1.0.0', 3, 0.75, 0.9, '{"legacy":true}', '2026-01-01T00:00:00.000Z')`,
-		).run();
 		const identity = repoIdentity(root, "history-fixture");
 		const insertAudit = (report: AuditReport): void => {
 			db.query(
@@ -218,8 +212,6 @@ describe("a pre-existing history database", () => {
 			expect(
 				store.compatibleAuditRuns(identity, current).map((run) => run.sloppinessIndex),
 			).toEqual([40, 30]);
-			// The legacy readiness row is still there, untouched, never trended.
-			expect(store.runs("history-fixture")).toHaveLength(1);
 		} finally {
 			store.close();
 		}

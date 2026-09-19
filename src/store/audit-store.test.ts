@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -61,7 +61,7 @@ function makeAuditReport(
 }
 
 describe("migration 0002", () => {
-	test("a fresh DB gains audit_runs alongside the preserved legacy tables", () => {
+	test("creates the audit history table in a fresh database", () => {
 		const db = new Database(":memory:");
 		migrate(db);
 		const names = db
@@ -69,50 +69,7 @@ describe("migration 0002", () => {
 			.all()
 			.map((r) => r.name);
 		expect(names).toContain("audit_runs");
-		expect(names).toContain("runs");
-		expect(names).toContain("criterion_results");
-		expect(names).toContain("investigation_cache");
-		db.close();
-	});
 
-	test("a populated legacy database migrates without losing original report records", () => {
-		const db = new Database(":memory:");
-		// Simulate a legacy (user_version 1) database exactly as the retired
-		// readiness product left it: schema 0001 plus real rows.
-		const initial = readFileSync(join(import.meta.dir, "migrations", "0001-initial.sql"), "utf8");
-		db.exec(initial);
-		db.exec("PRAGMA user_version = 1");
-		db.query(
-			`INSERT INTO runs (repo, commit_sha, rubric_version, level, pass_rate, coverage, report_json, scored_at)
-			 VALUES ('legacy-repo', 'abc123', '1.0.0', 3, 0.75, 0.9, '{"legacy":true}', '2026-01-01T00:00:00.000Z')`,
-		).run();
-		db.query(
-			`INSERT INTO criterion_results (run_id, criterion, numerator, denominator, na_kind, rationale)
-			 VALUES (1, 'agents_md', 1, 1, NULL, 'present')`,
-		).run();
-		db.query(
-			`INSERT INTO investigation_cache (repo, commit_sha, area, findings_json, created_at)
-			 VALUES ('legacy-repo', 'abc123', 'debt', '[]', '2026-01-01T00:00:00.000Z')`,
-		).run();
-
-		migrate(db);
-
-		const version = db.query<{ user_version: number }, []>("PRAGMA user_version").get();
-		expect(version?.user_version).toBe(2);
-		const run = db
-			.query<{ repo: string; level: number; report_json: string }, []>(
-				"SELECT repo, level, report_json FROM runs",
-			)
-			.get();
-		expect(run).toEqual({ repo: "legacy-repo", level: 3, report_json: '{"legacy":true}' });
-		const criterion = db
-			.query<{ criterion: string; rationale: string }, []>(
-				"SELECT criterion, rationale FROM criterion_results",
-			)
-			.get();
-		expect(criterion).toEqual({ criterion: "agents_md", rationale: "present" });
-		const cache = db.query<{ area: string }, []>("SELECT area FROM investigation_cache").get();
-		expect(cache?.area).toBe("debt");
 		db.close();
 	});
 });
@@ -308,35 +265,6 @@ describe("compatible run selection", () => {
 		expect(
 			store.sloppinessTrend(identity, current, "2026-02-15T00:00:00.000Z").map((p) => p.index),
 		).toEqual([10]);
-	});
-
-	test("legacy readiness runs and sloppiness runs never form a mixed trend", () => {
-		// A legacy readiness run for the same repo label…
-		store.insertRun({
-			repo: "fixture",
-			rubricVersion: "1.0.0",
-			scoredAt: "2026-01-01T00:00:00.000Z",
-			commit: "abc123",
-			level: 3,
-			passRate: 0.75,
-			coverage: 0.9,
-			apps: {},
-			criteria: {},
-		});
-		// …and a sloppiness run for the same checkout.
-		const report = makeAuditReport({ root: dir, index: 12 });
-		store.insertAuditRun(report);
-		const identity = repoIdentity(dir, "fixture");
-
-		// The sloppiness trend sees only the sloppiness run — readiness never enters it.
-		const trend = store.sloppinessTrend(identity, report);
-		expect(trend).toHaveLength(1);
-		expect(trend[0]?.index).toBe(12);
-
-		// The legacy trend sees only the legacy run — sloppiness never enters it.
-		expect(store.runs("fixture")).toHaveLength(1);
-		expect(store.latestRun("fixture")?.kind).toBe("legacy-readiness");
-		expect(store.latestAuditRun(identity)?.kind).toBe("sloppiness");
 	});
 });
 

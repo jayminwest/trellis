@@ -3,8 +3,8 @@
  * Install/package smoke test (trellis-7203, SPEC §14 release stage).
  *
  * Packs the published tarball with `bun pm pack`, unpacks it into a temp
- * dir, and confirms the deterministic-pivot package still ships every asset
- * the analyzer needs now that the readiness rubric is retired:
+ * dir, and confirms the package still ships every asset
+ * the analyzer needs:
  *
  *   1. **Metadata** — the `trellis` bin entry and the runtime dependencies
  *      the analyzer requires (commander, js-yaml, typescript, zod).

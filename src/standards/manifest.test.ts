@@ -30,8 +30,8 @@ describe("loadManifest (bundled)", () => {
 		expect(manifest.files.length).toBeGreaterThan(0);
 	});
 
-	test("starts the canonical set at version 1.0.0", () => {
-		expect(loadManifest().version).toBe("1.0.0");
+	test("pins the bundled canonical set version", () => {
+		expect(loadManifest().version).toBe("1.0.1");
 	});
 
 	test("declares unique file paths", () => {
@@ -39,7 +39,7 @@ describe("loadManifest (bundled)", () => {
 		expect(new Set(paths).size).toBe(paths.length);
 	});
 
-	test("covers the SPEC §10 core canonical files", () => {
+	test("covers the SPEC §11 core canonical files", () => {
 		const paths = new Set(loadManifest().files.map((f) => f.path));
 		for (const required of [
 			"biome.json",

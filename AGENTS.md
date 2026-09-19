@@ -26,13 +26,6 @@ Three invariants define the product (SPEC §1):
 3. **One core, every surface.** Local, fleet, and CI runs exercise the same
    deterministic core; CLI and SDK are thin pass-throughs.
 
-> **Deterministic pivot delivered (plan `pl-b2ea`, SPEC §14).** Public
-> readiness catalog and assessment APIs are retired. Internal legacy modules
-> remain for historical report compatibility and regression fixtures; they
-> are not used by the audit, compare, fleet, or history surfaces. Legacy
-> readiness scores are preserved separately and never compared with the
-> sloppiness index. See [`docs/release-acceptance.md`](docs/release-acceptance.md).
-
 > **Optional quality-evidence providers (plan `pl-43c5`, SPEC §16).**
 > jscpd and dependency-cruiser run as explicitly opt-in, unscored evidence.
 > Knip supplies contextual reachability candidates; SonarJS remains deferred.
@@ -74,17 +67,15 @@ trellis audit <path>          # measure + score one workspace; print the sloppin
 trellis compare <a> <b>       # compare two saved report artifacts (no audit)
 trellis fleet                 # audit every target in targets.yaml through the same core
                               #   [--history] [--db <path>] (drift rides along, never scored)
-trellis report                # sloppiness history from SQLite; legacy readiness kept distinct
+trellis report                # sloppiness history from SQLite
 trellis drift <repo-path>     # canonical-config drift only (separate, unscored)
 trellis standards             # show canonical manifest + versions
+trellis guide cleanup         # print bundled, read-only cleanup guidance
 ```
 
 `--json` / `--md` switch terminal output to machine/report shapes. The
 default `audit` run is **stateless** — no database, no report files — unless
-`--history` / `--out` ask. Retired readiness/investigation flags
-(`--fail-on`, `--min-level`, `--rubric-version`, `--no-persist`, `--output`,
-`--no-cache`, …) fail fast with actionable "removed in the deterministic
-pivot" errors.
+`--history` / `--out` ask.
 
 ### Exit codes (SPEC §9)
 
@@ -133,8 +124,7 @@ own audit checks for). Never edit it in place; per-repo variation lives in
 - `check:ci-parity` — `scripts/check-ci-parity.ts` (CI ⇄ check:all parity;
   escape hatches in `scripts/ci-parity-config.json`)
 
-The ratchet scripts and their JSON budgets land with the L5 quality toolkit
-(seeds `trellis-4ec4`). Budgets ratchet in one direction only (file-size and
+The ratchet scripts and their JSON budgets live under `scripts/`. Budgets ratchet in one direction only (file-size and
 debt-markers tighten downward; coverage tightens upward). Do not loosen a
 budget without filing `trellis-XXXX` and noting it in the commit body.
 
@@ -170,10 +160,10 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
 ### Architecture discipline (api>cli>sdk, SPEC §13.1)
 
 - All behavior lives in the **core** modules under `src/` (current core:
-  `src/audit/`, `src/rubric/`, `src/discovery/`, `src/syntax/`, `src/detectors/`,
-  `src/scoring/`, `src/standards/`, `src/fleet/`, `src/store/`, `src/report/`,
-  `src/providers/`;
-  the target layout is SPEC §4). No business logic anywhere else.
+  `src/audit/`, `src/config/`, `src/contract/`, `src/discovery/`, `src/syntax/`,
+  `src/metrics/`, `src/safeguards/`, `src/scoring/`, `src/compare/`,
+  `src/standards/`, `src/fleet/`, `src/store/`, `src/history/`, `src/report/`,
+  `src/providers/`, `src/guides/`; see SPEC §4). No business logic anywhere else.
   `src/audit/` is the deterministic audit core (trellis-ef85):
   `auditWorkspace(root)` runs discover → parse → measure → safeguards →
   score → assemble and returns the versioned §6.4 `AuditReport`, with no
@@ -186,7 +176,7 @@ Enforced by Biome's `style.useFilenamingConvention` rule in `biome.json`.
   SDK whose types **mirror the core** (annotate `// Mirrors src/<x>`). Both
   call the same core functions so a programmatic audit and a CLI audit
   exercise one code path.
-- The pivoted seam: deterministic analyzers over one shared syntax inventory;
+- The analysis seam: deterministic analyzers over one shared syntax inventory;
   scoring is a pure function of raw metrics; safeguards never enter the
   score. Keep that seam clean. The provider seam (SPEC §16, plan
   `pl-43c5`) keeps native analyzers and their shared inventory authoritative
@@ -375,8 +365,7 @@ mechanically: every `bun run <x>` in `ci*.yml` must be reachable from the
 
 trellis audits itself (SPEC §14):
 `trellis audit .` runs offline with no model, and a regression in trellis's
-own sloppiness index is a real failure. (The retired "band L4+ against the
-readiness rubric" gate went with the rubric.)
+own sloppiness index is a real failure.
 
 ## Further reading
 
@@ -398,5 +387,5 @@ readiness rubric" gate went with the rubric.)
   supported-tool manifest and local resolver: operator-prepared
   installation, artifact verification, honest platform records, and
   upgrade/identity rules (trellis-ff52)
-- `scripts/` — ratchet scripts and pre-commit hook (lands with `trellis-4ec4`)
-- `.github/workflows/` — CI + sync-labels + publish (lands with `trellis-7baf`)
+- `scripts/` — ratchet scripts and pre-commit hook
+- `.github/workflows/` — CI + sync-labels + publish

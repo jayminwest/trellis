@@ -101,15 +101,6 @@ describe("client SDK (deterministic surface)", () => {
 		expect(withoutRun(second.baseline ?? second.report)).toEqual(withoutRun(first.report));
 	});
 
-	test("audit() rejects retired investigation and readiness options actionably", async () => {
-		const legacy = { piBin: "pi" } as unknown as client.AuditRequest;
-		await expect(client.audit(dir, legacy)).rejects.toThrow(/option 'piBin' no longer exists/);
-		const legacyCache = { noCache: true } as unknown as client.AuditRequest;
-		await expect(client.audit(dir, legacyCache)).rejects.toThrow(/option 'noCache'/);
-		const readiness = { persist: false } as unknown as client.AuditRequest;
-		await expect(client.audit(dir, readiness)).rejects.toThrow(/option 'persist' no longer exists/);
-	});
-
 	test("compare() and the CLI produce deep-equal comparisons (one code path)", async () => {
 		const clean = await auditFixture("clean");
 		const sloppy = await auditFixture("sloppy");
@@ -187,12 +178,11 @@ describe("client SDK (deterministic surface)", () => {
 		}
 	});
 
-	test("report() projects the sloppiness history with legacy runs distinct", async () => {
+	test("report() projects the sloppiness history", async () => {
 		await client.audit(dir, { history: true, db: dbPath });
 		const dashboard = client.report({ db: dbPath });
 		expect(dashboard.audits.snapshot).toHaveLength(1);
 		expect(dashboard.audits.snapshot[0]?.index).toBeGreaterThan(0);
-		expect(dashboard.legacy).toEqual([]);
 	});
 });
 
@@ -209,7 +199,7 @@ describe("client SDK compatibility boundaries", () => {
 	let dir: string;
 
 	beforeEach(() => {
-		dir = mkdtempSync(join(tmpdir(), "trellis-sdk-legacy-"));
+		dir = mkdtempSync(join(tmpdir(), "trellis-sdk-history-"));
 		writeFileSync(join(dir, "README.md"), "# fixture\n");
 		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", main: "./i.ts" }));
 		writeFileSync(join(dir, ".gitignore"), "node_modules\n");
@@ -219,13 +209,6 @@ describe("client SDK compatibility boundaries", () => {
 		rmSync(dir, { recursive: true, force: true });
 	});
 
-	test("fleet() rejects retired investigation options with an actionable message", async () => {
-		const legacy = { noCache: true } as unknown as client.FleetRequest;
-		await expect(client.fleet("missing-targets.yaml", legacy)).rejects.toThrow(
-			/option 'noCache' no longer exists/,
-		);
-	});
-
 	test("drift() matches the CLI's JSON drift report", async () => {
 		const sdk = client.drift(dir);
 		const cli = await runCli(["drift", dir, "--json", "--fail-on", "none"]);
@@ -233,22 +216,9 @@ describe("client SDK compatibility boundaries", () => {
 		expect(sdk).toEqual(JSON.parse(cli.stdout));
 	});
 
-	test("exposes no retired readiness catalog or assessment API", () => {
-		for (const name of [
-			"rubric",
-			"loadRubric",
-			"assessReport",
-			"DEFAULT_MIN_LEVEL",
-			"FAIL_ON_MODES",
-		]) {
-			expect(Object.hasOwn(client, name)).toBe(false);
-		}
-	});
-
 	test("report() on an empty store returns an empty dashboard", () => {
 		const dashboard = client.report({ db: ":memory:" });
 		expect(dashboard.audits.snapshot).toEqual([]);
 		expect(dashboard.audits.repos).toEqual([]);
-		expect(dashboard.legacy).toEqual([]);
 	});
 });

@@ -7,6 +7,7 @@ src/
 ├─ cli/            # THIN commander entrypoints; delegate to core (SPEC §13.1)
 ├─ client/         # typed SDK over the core; mirrors core types
 ├─ audit/          # deterministic core: discover → parse → measure → score → assemble
+├─ guides/         # bundled, read-only task guidance
 ├─ config/         # declarative audit configuration (trellis.yaml)
 ├─ contract/       # versioned zod contracts: metrics, findings, report, config
 ├─ discovery/      # TS/TSX source discovery → classified workspace inventory
@@ -19,6 +20,7 @@ src/
 ├─ store/          # OPTIONAL SQLite history (append-only; legacy runs separate)
 ├─ history/        # history dashboard projection
 ├─ fleet/          # OPTIONAL targets.yaml orchestration over the same core
+├─ providers/      # opt-in local tool evidence (unscored)
 └─ standards/      # canonical-config drift (separate capability)
 ```
 

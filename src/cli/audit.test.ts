@@ -9,8 +9,7 @@ import { seedFixtureRepo } from "../report/audit-fixtures.ts";
  * default run is stateless — no database, no report files — and prints the
  * sloppiness report in the caller's format; `--out` writes an artifact,
  * `--history` opts into persistence, `--baseline`/`--config` drive the
- * declarative policy (exit 2, report still emitted), and retired
- * readiness/investigation flags fail fast with actionable errors (exit 1).
+ * declarative policy (exit 2, report still emitted).
  * Every fixture is a real non-Git temp workspace seeded through the shared
  * render fixtures; progress goes to stderr so stdout stays machine-clean.
  */
@@ -249,86 +248,5 @@ describe("trellis audit (deterministic core)", () => {
 		const { code, stderr } = await runCli(["audit", dir, "--quiet"], { TRELLIS_DB: dbPath });
 		expect(code).toBe(0);
 		expect(stderr).toBe("");
-	}, 20_000);
-
-	test("help text describes the new surface and hides retired flags", async () => {
-		const { code, stdout } = await runCli(["audit", "--help"]);
-		expect(code).toBe(0);
-		for (const flag of ["--out", "--baseline", "--config", "--history", "--quiet", "--verbose"]) {
-			expect(stdout).toContain(flag);
-		}
-		for (const retired of [
-			"--fail-on",
-			"--min-level",
-			"--rubric-version",
-			"--output",
-			"--no-persist",
-		]) {
-			expect(stdout).not.toContain(retired);
-		}
-	}, 20_000);
-});
-
-describe("trellis audit retired flags (SPEC §14)", () => {
-	let dir: string;
-
-	beforeEach(async () => {
-		dir = mkdtempSync(join(tmpdir(), "trellis-cli-retired-"));
-		await seedFixtureRepo(dir, "clean");
-	});
-
-	afterEach(() => {
-		rmSync(dir, { recursive: true, force: true });
-	});
-
-	test("--no-cache is rejected with an actionable retirement message", async () => {
-		const { code, stdout, stderr } = await runCli(["audit", dir, "--no-cache", "--quiet"]);
-		expect(code).toBe(1);
-		expect(stdout).toBe("");
-		expect(stderr).toContain("--no-cache no longer exists");
-		expect(stderr).toContain("Remove --no-cache");
-	}, 20_000);
-
-	test("TRELLIS_PI_BIN is rejected with an actionable retirement message", async () => {
-		const { code, stdout, stderr } = await runCli(["audit", dir, "--quiet"], {
-			TRELLIS_PI_BIN: "/usr/local/bin/pi",
-		});
-		expect(code).toBe(1);
-		expect(stdout).toBe("");
-		expect(stderr).toContain("TRELLIS_PI_BIN no longer exists");
-	}, 20_000);
-
-	test("--no-persist explains audits are stateless by default now", async () => {
-		const { code, stderr } = await runCli(["audit", dir, "--no-persist", "--quiet"]);
-		expect(code).toBe(1);
-		expect(stderr).toContain("--no-persist no longer exists");
-		expect(stderr).toContain("--history");
-	}, 20_000);
-
-	test("--output points at --out", async () => {
-		const { code, stderr } = await runCli(["audit", dir, "--output", "r.md", "--quiet"]);
-		expect(code).toBe(1);
-		expect(stderr).toContain("--output/--no-output no longer exist");
-		expect(stderr).toContain("--out");
-	}, 20_000);
-
-	test("--fail-on and --min-level point at the declarative policy", async () => {
-		const failOn = await runCli(["audit", dir, "--fail-on", "none", "--quiet"]);
-		expect(failOn.code).toBe(1);
-		expect(failOn.stderr).toContain("--fail-on no longer exists");
-		expect(failOn.stderr).toContain("trellis.yaml");
-		const minLevel = await runCli(["audit", dir, "--min-level", "3", "--quiet"]);
-		expect(minLevel.code).toBe(1);
-		expect(minLevel.stderr).toContain("--min-level no longer exists");
-	}, 20_000);
-
-	test("--rubric-version and --canonical name the pivot", async () => {
-		const rubric = await runCli(["audit", dir, "--rubric-version", "1.0.0", "--quiet"]);
-		expect(rubric.code).toBe(1);
-		expect(rubric.stderr).toContain("--rubric-version no longer exists");
-		const canonical = await runCli(["audit", dir, "--canonical", "1.0.0", "--quiet"]);
-		expect(canonical.code).toBe(1);
-		expect(canonical.stderr).toContain("--canonical no longer exists");
-		expect(canonical.stderr).toContain("trellis drift");
 	}, 20_000);
 });

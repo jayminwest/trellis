@@ -1,11 +1,11 @@
 /**
- * Drift-state vocabulary (SPEC §10) and the `--fail-on drift` predicates (SPEC
+ * Drift-state vocabulary (SPEC §11) and the `--fail-on drift` predicates (SPEC
  * §12). Split from `drift.ts` so the state enum and the failing-state helpers —
  * shared by the engine, the renderers, the fleet, and the exit-code assessment —
  * live in one small, dependency-free module.
  */
 
-/** Per-file drift outcome (SPEC §10). `drift`/`missing` fail; the rest are clean. */
+/** Per-file drift outcome (SPEC §11). `drift`/`missing` fail; the rest are clean. */
 export const DRIFT_STATES = ["match", "allowed-delta", "drift", "missing", "extra"] as const;
 export type DriftState = (typeof DRIFT_STATES)[number];
 

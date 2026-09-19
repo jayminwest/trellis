@@ -210,6 +210,15 @@ result.productionManifestSha256 = createHash("sha256")
 	.update(JSON.stringify(manifest))
 	.digest("hex");
 await save("production-inventory.json", manifest);
+await writeFile(
+ join(here, "../provider-spike-corpus.json"),
+ `${JSON.stringify({
+  protocol: "provider-corpus-v1",
+  scope: "trellis-discovery-production",
+  sha256: result.sharedCorpusSha256,
+  files: manifest,
+ }, null, 2)}\n`,
+);
 await run(
 	"production",
 	corpus,

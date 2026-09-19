@@ -11,7 +11,6 @@ import {
 	type EvidenceArea,
 	SCHEMA_VERSION,
 } from "../contract/index.ts";
-import { LegacyConfigError } from "../legacy.ts";
 import { seedFixtureRepo } from "../report/audit-fixtures.ts";
 import { renderAuditJson } from "../report/audit-json.ts";
 import { openStore } from "../store/index.ts";
@@ -253,23 +252,5 @@ describe("runWorkspaceAudit", () => {
 		const skipped = result.policy.results.filter((r) => r.status === "skipped");
 		expect(skipped.length).toBe(2);
 		expect(skipped.every((r) => r.reasons[0]?.code === "baseline-absent")).toBe(true);
-	});
-
-	test("retired investigation options are rejected actionably", async () => {
-		const legacy = { piBin: "pi" } as unknown as WorkspaceAuditOptions;
-		await expect(runWorkspaceAudit(root, legacy)).rejects.toThrow(LegacyConfigError);
-		await expect(runWorkspaceAudit(root, legacy)).rejects.toThrow(
-			/option 'piBin' no longer exists/,
-		);
-	});
-
-	test("retired readiness options are rejected actionably", async () => {
-		for (const key of ["rubricVersion", "minLevel", "failOn", "canonical", "persist"]) {
-			const legacy = { [key]: "x" } as unknown as WorkspaceAuditOptions;
-			await expect(runWorkspaceAudit(root, legacy)).rejects.toThrow(AuditRunError);
-			await expect(runWorkspaceAudit(root, legacy)).rejects.toThrow(
-				new RegExp(`option '${key}' no longer exists`),
-			);
-		}
 	});
 });

@@ -60,7 +60,7 @@ const REPORT: DriftReport = {
 };
 
 /**
- * Golden-snapshot the drift JSON shape (SPEC §10, §12 sync enforcement) — the
+ * Golden-snapshot the drift JSON shape (SPEC §11, §12 sync enforcement) — the
  * machine contract the `trellis drift --json` CLI and the SDK's `drift()` both
  * emit, so a surface change turns CI red. Set `TRELLIS_UPDATE_DRIFT_GOLDEN=1` to
  * regenerate after an intentional shape change.

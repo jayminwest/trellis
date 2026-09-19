@@ -190,13 +190,6 @@ there; co-located unit tests still use the `.test.ts` suffix.
 `coverage/lcov.info` and `junit.xml`. Local `check:all` failures will
 break CI; do not push hoping CI will pass.
 
-### Validation reports
-
-If `<<REPO_NAME>>` is audited via the Agent-Readiness rubric, the user
-invokes `/readiness-report` manually from this repo's working directory
-inside an interactive `droid` session. Agents do not run the auditor
-themselves; they make the repo pass.
-
 ## Further reading
 
 - `<<UPSTREAM_DOCS>>` — long-form design notes (if present)

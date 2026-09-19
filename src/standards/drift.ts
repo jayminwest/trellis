@@ -1,5 +1,5 @@
 /**
- * Canonical-config drift engine (SPEC §10). Compares a target repo against the
+ * Canonical-config drift engine (SPEC §11). Compares a target repo against the
  * bundled canonical set (see `manifest.ts`) and reports, per file, how far it has
  * drifted — honoring per-repo **allowed deltas** so whitelisted divergences read
  * as `allowed-delta` rather than `drift`.
@@ -16,7 +16,7 @@
  *
  * Each mismatch is a {@link Divergence} carrying a structural path within the
  * file, so an allowed delta can whitelist either a whole file or specific paths.
- * State resolution (SPEC §10): `missing` (target lacks the file) → `drift` (an
+ * State resolution (SPEC §11): `missing` (target lacks the file) → `drift` (an
  * unwhitelisted required divergence) → `allowed-delta` (every required divergence
  * is whitelisted) → `extra` (only target-side additions) → `match`. Only `drift`
  * and `missing` are failing states; `extra`/`allowed-delta`/`match` are clean.
@@ -82,11 +82,11 @@ export interface FileDrift {
 	allowedBy: AllowedDelta[];
 }
 
-/** Whole-repo drift result, folded into the audit report under `report.drift` (SPEC §6.3). */
+/** Whole-repo drift result, separate from the scored audit report (SPEC §11). */
 export interface DriftReport {
 	/** Repo id — basename of the audited path (the fleet supplies the real id later). */
 	repo: string;
-	/** Canonical set version compared against (resolved per-repo, SPEC §10). */
+	/** Canonical set version compared against (resolved per-repo, SPEC §11). */
 	canonicalVersion: string;
 	/** Per-file results, in manifest order. */
 	files: FileDrift[];
@@ -117,7 +117,7 @@ export interface DriftOptions {
 }
 
 /**
- * Resolve which canonical version a target compares against (SPEC §10):
+ * Resolve which canonical version a target compares against (SPEC §11):
  * per-repo override > fleet `defaults.canonicalVersion` > `fallback` (the bundled
  * set's version). Pure so the fleet loader and the drift CLI share one rule.
  */
@@ -155,7 +155,7 @@ function childPath(base: string, key: string): string {
 }
 
 /**
- * Subset divergences of `target` against `canon` rooted at `base` (SPEC §10
+ * Subset divergences of `target` against `canon` rooted at `base` (SPEC §11
  * json/yaml-subset): every canonical object key must be present and deep-equal;
  * target-only keys are reported as `added`; arrays/primitives must match exactly.
  */
