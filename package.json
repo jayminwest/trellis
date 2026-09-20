@@ -67,7 +67,7 @@
 		"@types/js-yaml": "^4.0.9",
 		"dependency-cruiser": "18.3.1",
 		"jscpd": "5.2.1",
-		"knip": "6.16.1",
+		"knip": "6.35.1",
 		"yaml": "^2.8.2"
 	},
 	"dependencies": {
