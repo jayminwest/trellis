@@ -12,7 +12,11 @@ async function runCli(
 	args: string[],
 	env: Record<string, string> = {},
 ): Promise<{ code: number; stdout: string; stderr: string }> {
-	const proc = Bun.spawn(["bun", "run", MAIN, ...args], {
+	// The running Bun binary (not whatever `bun` PATH resolves) from a neutral
+	// cwd, so a loaded full-suite run cannot pick up another runtime or the
+	// checkout's own trellis.yaml (trellis-87d9).
+	const proc = Bun.spawn([process.execPath, "run", MAIN, ...args], {
+		cwd: tmpdir(),
 		stdout: "pipe",
 		stderr: "pipe",
 		env: { ...process.env, TRELLIS_LOG_LEVEL: "silent", ...env },
@@ -44,10 +48,12 @@ describe("trellis report", () => {
 
 	/** Record one audit run of the fixture into the central history. */
 	async function auditRun(): Promise<void> {
-		const { code } = await runCli(["audit", repoDir, "--history", "--db", dbPath, "--quiet"], {
-			TRELLIS_DB: "",
-		});
-		expect(code).toBe(0);
+		const { code, stderr } = await runCli(
+			["audit", repoDir, "--history", "--db", dbPath, "--quiet"],
+			{ TRELLIS_DB: "" },
+		);
+		// Compared with stderr so a failing child names its cause (trellis-87d9).
+		expect({ code, stderr }).toEqual({ code: 0, stderr: "" });
 	}
 
 	// Each test spawns the CLI 1-3 times (audit runs + report reads); the 20s
@@ -86,12 +92,13 @@ describe("trellis report", () => {
 		const full = JSON.parse(
 			(await runCli(["report", "--db", dbPath, "--json"], { TRELLIS_DB: "" })).stdout,
 		);
+		expect(full.audits.snapshot).toHaveLength(1);
 		const identity = full.audits.snapshot[0].repo;
-		const { code, stdout } = await runCli(
+		const { code, stdout, stderr } = await runCli(
 			["report", "--repo", identity, "--db", dbPath, "--json"],
 			{ TRELLIS_DB: "" },
 		);
-		expect(code).toBe(0);
+		expect({ code, stderr }).toEqual({ code: 0, stderr: "" });
 		const report = JSON.parse(stdout);
 		expect(report.scope.repo).toBe(identity);
 		expect(report.audits.snapshot.map((e: { repo: string }) => e.repo)).toEqual([identity]);

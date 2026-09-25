@@ -8,7 +8,7 @@
  * pinned jscpd artifact exactly as the audit does, so provider tests skip
  * (never fabricate) where the pinned tool is not installed.
  */
-import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AuditConfig, AuditReport } from "../contract/index.ts";
@@ -66,6 +66,25 @@ export async function seedClonePair(root: string): Promise<void> {
 	);
 	await putFile(root, "src/clone-a.ts", CLONE_FN);
 	await putFile(root, "src/clone-b.ts", CLONE_FN);
+}
+
+/**
+ * Point `os.tmpdir()` at a fresh test-owned directory until the returned
+ * release runs (trellis-3dfe). Provider staging creates its scratch under
+ * `tmpdir()`, so a test that claims this root before creating its workspace
+ * sees only its own staging in {@link stagedScratchCount} — concurrent suites
+ * and unrelated provider runs can no longer shift the count. Call it first in
+ * `beforeEach` and await the release last in `afterEach`.
+ */
+export async function claimScratchRoot(): Promise<() => Promise<void>> {
+	const previous = process.env.TMPDIR;
+	const root = await mkdtemp(join(tmpdir(), "trellis-test-scratch-"));
+	process.env.TMPDIR = root;
+	return async () => {
+		if (previous === undefined) delete process.env.TMPDIR;
+		else process.env.TMPDIR = previous;
+		await rm(root, { recursive: true, force: true });
+	};
 }
 
 /** The number of trellis-owned staged scratch directories currently in tmpdir. */
