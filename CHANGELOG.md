@@ -20,6 +20,14 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   the native binary). Dependabot now ignores `typescript` 7 majors
   (`docs/typescript-7-decision.md`, trellis-ea21).
 
+### Added
+
+- `scripts/profile-audit.ts` profiles retained heap per audit phase, peak RSS
+  and report serialization cost. `docs/large-workspace-memory.md` records
+  vscode-scale results: the shared parse dominates, and about half of it is
+  TypeScript's cached child lists; analyzers add 1–2% and the report is small.
+  A 1.3 GiB target for the 2.1 GiB baseline is tracked separately (trellis-92b4).
+
 ### Fixed
 
 - A non-literal dynamic `import(expr)` no longer marks the whole dependency
