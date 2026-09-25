@@ -516,7 +516,9 @@ documented set of supported formats:
   named scripts recognized through supported wiring (not named-tool presence
   alone).
 - Coverage / file-size / duplication budgets and references to the checks
-  that enforce them.
+  that enforce them. A JSON budget is also wired when a CI-reachable command
+  runs a repo-local script file whose text names the budget path (one hop,
+  read as text only, never executed; trellis-b412).
 
 Each safeguard is reported at one of four **evidence levels**:
 

@@ -28,6 +28,11 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   syntax-list leaves, matching SPEC §5.3. Thresholds and scoring are
   unchanged; the trellis self-audit moves 41 → 40 and every corpus fixture
   keeps its index (see `docs/corpus-validation.md`, trellis-57aa).
+- Coverage and file-size budget safeguards now recognise enforcement when a
+  CI-reachable script runs a check file that names the budget internally
+  (the l5-toolkit layout). The file is read as text, never executed, and the
+  note records the script → file → budget chain. Safeguards stay unscored
+  (trellis-b412).
 
 ## [0.3.0] — 2026-09-19
 
