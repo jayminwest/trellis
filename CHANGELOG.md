@@ -33,6 +33,11 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   (the l5-toolkit layout). The file is read as text, never executed, and the
   note records the script → file → budget chain. Safeguards stay unscored
   (trellis-b412).
+- npm publishing: `bin.trellis` and `repository.url` are now in npm's
+  normalized form, so `npm publish` no longer rewrites the CLI bin entry, and
+  the package smoke fails if npm would. The publish workflow uses
+  `NPM_TOKEN` when set and otherwise npm trusted publishing via OIDC instead of
+  writing an empty token (trellis-689e).
 
 ## [0.3.0] — 2026-09-19
 

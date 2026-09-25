@@ -7,7 +7,10 @@
  * the analyzer needs:
  *
  *   1. **Metadata** — the `trellis` bin entry and the runtime dependencies
- *      the analyzer requires (commander, js-yaml, typescript, zod).
+ *      the analyzer requires (commander, js-yaml, typescript, zod), and a
+ *      manifest npm publishes unchanged: `bun pm pack` does not run npm's
+ *      normalization, so {@link npmNormalizationChanges} mirrors the rules
+ *      that rewrote `bin` and `repository` at publish time (trellis-689e).
  *   2. **Analyzer assets** — the audit core, metrics, shared syntax layer,
  *      scoring formula, comparison/policy, configuration and report
  *      contracts, safeguard inspection, CLI/SDK surfaces, and the bundled
@@ -88,6 +91,31 @@ export interface SmokeResult {
 interface PackedPackageJson {
 	bin?: Record<string, string>;
 	dependencies?: Record<string, string>;
+	repository?: string | { type?: string; url?: string };
+}
+
+/** npm's `secureAndUnixifyPath` (@npmcli/package-json normalize): `./x` → `x`. */
+function npmBinTarget(target: string): string {
+	return join("/", target.replace(/\\/g, "/")).replace(/\\/g, "/").slice(1);
+}
+
+/**
+ * The corrections npm would apply to `bin` and `repository` at publish time
+ * (it warned "bin[trellis] script name … was invalid" for `./src/cli/main.ts`).
+ * An empty list means `npm publish` ships the manifest as written.
+ */
+export function npmNormalizationChanges(manifest: PackedPackageJson): string[] {
+	const changes: string[] = [];
+	for (const [name, target] of Object.entries(manifest.bin ?? {})) {
+		if (npmBinTarget(target) !== target) {
+			changes.push(`bin[${name}] "${target}" would be rewritten to "${npmBinTarget(target)}"`);
+		}
+	}
+	const url = typeof manifest.repository === "string" ? undefined : manifest.repository?.url;
+	if (url?.startsWith("https://github.com/") === true) {
+		changes.push(`repository.url "${url}" would be normalized to "git+${url}"`);
+	}
+	return changes;
 }
 
 function run(command: string, args: string[], cwd: string): string {
@@ -108,6 +136,10 @@ export function verifyPackedMetadata(packageDir: string): void {
 	const bin = manifest.bin?.trellis;
 	if (bin === undefined || !existsSync(join(packageDir, bin))) {
 		throw new Error(`packed package has no usable bin.trellis entry (got ${String(bin)})`);
+	}
+	const corrections = npmNormalizationChanges(manifest);
+	if (corrections.length > 0) {
+		throw new Error(`npm would rewrite the packed manifest:\n  ${corrections.join("\n  ")}`);
 	}
 	const missing = REQUIRED_DEPENDENCIES.filter((dep) => manifest.dependencies?.[dep] === undefined);
 	if (missing.length > 0) {
