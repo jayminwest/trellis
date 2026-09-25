@@ -242,7 +242,7 @@ describe("analyzeDependencyGraph incompleteness surfacing", () => {
 		expect(analysis.findings[1]?.range.start.line).toBe(2);
 	});
 
-	test("a non-literal dynamic import is surfaced as an unresolved finding", async () => {
+	test("a non-literal dynamic import is surfaced as an opaque finding without incompleteness", async () => {
 		await put(
 			"src/app.ts",
 			"declare const name: string;\nexport const lazy = () => import(name);\n",
@@ -254,7 +254,24 @@ describe("analyzeDependencyGraph incompleteness surfacing", () => {
 			edgeKind: "dynamic",
 			reason: "non-literal-dynamic",
 		});
-		expect(byId(analysis.metrics).get("graph.edges.unresolved")?.state).toBe("incomplete");
+		expect(byId(analysis.metrics).get("graph.edges.unresolved")).toMatchObject({
+			state: "complete",
+			value: 1,
+			detail: { nonLiteralDynamic: 1 },
+		});
+		expect(analysis.graph.completeness).toBe("complete");
+	});
+
+	test("a non-literal dynamic import beside a resolvable miss stays incomplete for the miss only", async () => {
+		await put(
+			"src/app.ts",
+			'import "./gone";\ndeclare const name: string;\nexport const lazy = () => import(name);\n',
+		);
+		const { analysis } = await analyze();
+		const unresolved = byId(analysis.metrics).get("graph.edges.unresolved");
+		expect(unresolved).toMatchObject({ state: "incomplete", value: 2 });
+		expect(unresolved?.reason).toContain("1 local import edge(s) could not be resolved");
+		expect(analysis.graph.completeness).toBe("incomplete");
 	});
 
 	test("parse diagnostics make edge metrics incomplete with partial values", async () => {

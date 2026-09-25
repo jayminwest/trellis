@@ -286,6 +286,25 @@ describe("analyzeCycles with unresolved graph coverage", () => {
 	});
 });
 
+describe("analyzeCycles with opaque non-literal dynamic imports", () => {
+	test("keeps cycle metrics complete when the only unresolved edge is non-literal (trellis-42ad)", async () => {
+		await put("src/a.ts", 'import { b } from "./b";\nexport const a = b;\n');
+		await put(
+			"src/b.ts",
+			'import { a } from "./a";\ndeclare const name: string;\nexport const b = () => [a, import(name)];\n',
+		);
+		const analysis = await analyze();
+		expectContractValid(analysis);
+		for (const metric of analysis.metrics) {
+			expect(metric.state).toBe("complete");
+		}
+		expect(byId(analysis.metrics).get("import-cycle.groups")).toMatchObject({
+			value: 1,
+			detail: { unresolvedEdges: 1 },
+		});
+	});
+});
+
 describe("analyzeCycles determinism", () => {
 	test("produces byte-equal results across graph enumeration order", () => {
 		const nodes = ["m/a.ts", "m/b.ts", "m/c.ts", "m/d.ts"].map((path) => ({

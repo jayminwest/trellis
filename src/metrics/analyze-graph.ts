@@ -19,7 +19,11 @@
  *   (versioned policy `externalPackages: "recorded-never-resolved"`).
  * - `graph.edges.unresolved` — local-intent edges that failed to resolve;
  *   `incomplete` with the count and a reason when non-zero (SPEC §3.3:
- *   unresolved imports are an incompleteness cause).
+ *   unresolved imports are an incompleteness cause). Non-literal dynamic
+ *   imports (`import(expr)`) are counted here and in
+ *   `detail.nonLiteralDynamic` but are **opaque, not incomplete** under
+ *   graph policy 1.1.0: no static analysis can ever resolve them, so they
+ *   never invalidate the literal graph (trellis-42ad).
  *
  * State rules (SPEC §3.3 — the existing analyzer pattern): files with parse
  * diagnostics may hide import sites, so their presence makes every edge
@@ -88,12 +92,24 @@ function stateAndValue(
 		: { state: "incomplete", value, reason };
 }
 
+/**
+ * A non-literal dynamic import: statically unknowable by construction, so it
+ * is recorded (edge + finding) but never an incompleteness cause
+ * (`GRAPH_POLICY.nonLiteralDynamicImports`, trellis-42ad).
+ */
+function isOpaqueEdge(edge: GraphEdge): boolean {
+	return (
+		edge.resolution.status === "unresolved" && edge.resolution.reason === "non-literal-dynamic"
+	);
+}
+
 /** Emit the graph metric set (ids sorted by the caller). */
 function graphMetrics(graph: DependencyGraph, diagnosticFiles: number): MetricValue[] {
 	const edges = graph.edges;
 	const unresolved = countBy(edges, (edge) => edge.resolution.status === "unresolved");
+	const nonLiteralDynamic = countBy(edges, isOpaqueEdge);
 	const localReason = incompletenessReason(0, diagnosticFiles);
-	const unresolvedReason = incompletenessReason(unresolved, diagnosticFiles);
+	const unresolvedReason = incompletenessReason(unresolved - nonLiteralDynamic, diagnosticFiles);
 	const local = edges.filter((edge) => edge.resolution.status === "local");
 	const metrics: MetricValue[] = [
 		{ id: "graph.files", unit: "count", state: "complete", value: graph.nodes.length },
@@ -121,7 +137,7 @@ function graphMetrics(graph: DependencyGraph, diagnosticFiles: number): MetricVa
 			id: "graph.edges.unresolved",
 			unit: "count",
 			...stateAndValue(unresolved, unresolvedReason),
-			detail: { policyVersion: graph.policyVersion },
+			detail: { policyVersion: graph.policyVersion, nonLiteralDynamic },
 		},
 	];
 	return metrics.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));

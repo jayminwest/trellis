@@ -471,7 +471,14 @@ versioned calibration (§16.5).
   policy. *(Landed, trellis-d214: `GRAPH_POLICY` version `1.0.0` in
   `src/metrics/graph-types.ts` — type-only edges retained-distinct,
   literal-only dynamic imports, self-edges retained, externals
-  recorded-never-resolved.)*
+  recorded-never-resolved. Policy `1.1.0` (trellis-42ad) records
+  non-literal `import(expr)` sites as **opaque**: they keep their
+  unresolved edge, finding and `graph.edges.unresolved`
+  `detail.nonLiteralDynamic` count, but no longer make the graph or the
+  cycle metrics `incomplete` — no static resolver can ever resolve them,
+  so one such site no longer degrades the import-cycle dimension to its
+  full weight. Scoring weights are unchanged; the analyzer version
+  separates artifacts across the change.)*
 - **Cycle measurement**: strongly connected components expose **complete
   cyclic module groups** (not first-cycle-only), with affected-module
   density and representative paths. Group identifiers and representative

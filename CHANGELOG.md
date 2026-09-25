@@ -9,6 +9,15 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Fixed
+
+- A non-literal dynamic `import(expr)` no longer marks the whole dependency
+  graph incomplete and charges the full import-cycle dimension. Graph policy
+  1.1.0 records such sites as opaque: the unresolved edge, finding and a
+  `nonLiteralDynamic` count stay visible, while cycle metrics over the literal
+  graph stay complete. Other unresolved edges still degrade as before; scoring
+  weights are unchanged (trellis-42ad).
+
 ## [0.3.0] — 2026-09-19
 
 ### Added
