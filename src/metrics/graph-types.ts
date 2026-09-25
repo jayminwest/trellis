@@ -57,6 +57,13 @@ export const GRAPH_POLICY = {
 	 * 1.0.0 counted them as incompleteness.
 	 */
 	nonLiteralDynamicImports: "recorded-opaque",
+	/**
+	 * Workspace entries naming absent build output map back to source (tsconfig
+	 * `outDir`→`rootDir`, then `dist|build|lib|out`→`src`); source-named and
+	 * tsconfig custom `exports` conditions outrank built-in ones. The build is
+	 * never run. 1.1.0, trellis-a98b.
+	 */
+	workspaceBuildOutputs: "mapped-to-source",
 	/** A file importing itself records a self-edge; cycle policy downstream decides its meaning. */
 	selfEdges: "retained",
 	/** External packages are recorded by name and never resolved into (local files/config only). */

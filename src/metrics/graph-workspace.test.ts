@@ -30,7 +30,9 @@ describe("exportsCandidates", () => {
 			".": { import: "./src/esm.ts", default: "./dist/cjs.js" },
 			"./types-only": { types: "./src/types.d.ts" },
 		};
-		expect(exportsCandidates(exports, "")).toEqual({ candidates: ["./src/esm.ts"] });
+		expect(exportsCandidates(exports, "")).toEqual({
+			candidates: ["./src/esm.ts", "./dist/cjs.js"],
+		});
 		expect(exportsCandidates(exports, "types-only")).toEqual({
 			candidates: ["./src/types.d.ts"],
 		});
@@ -54,17 +56,60 @@ describe("exportsCandidates", () => {
 	});
 
 	test("shapes beyond the documented subset fail as unsupported", () => {
-		expect(exportsCandidates(["./a.ts"], "")).toEqual({ failure: "unsupported-exports" });
-		expect(exportsCandidates({ ".": ["./a.ts"] }, "")).toEqual({
-			failure: "unsupported-exports",
-		});
 		expect(exportsCandidates({ ".": { import: { nested: "./a.ts" } } }, "")).toEqual({
 			failure: "unsupported-exports",
 		});
 		expect(exportsCandidates({ ".": { browser: "./a.ts" } }, "")).toEqual({
 			failure: "unsupported-exports",
 		});
+		expect(exportsCandidates({ ".": { import: 7 } }, "")).toEqual({
+			failure: "unsupported-exports",
+		});
 		expect(exportsCandidates(42, "")).toEqual({ failure: "unsupported-exports" });
+	});
+
+	test("fallback arrays and nested conditions yield every target in priority order", () => {
+		expect(exportsCandidates(["./a.ts", "./b.ts"], "")).toEqual({
+			candidates: ["./a.ts", "./b.ts"],
+		});
+		expect(exportsCandidates({ ".": ["./a.ts", { import: "./b.ts" }] }, "")).toEqual({
+			candidates: ["./a.ts", "./b.ts"],
+		});
+		const nested = {
+			".": {
+				import: { types: "./dist/index.d.mts", default: "./dist/index.mjs" },
+				require: "./dist/index.cjs",
+			},
+		};
+		expect(exportsCandidates(nested, "")).toEqual({
+			candidates: ["./dist/index.mjs", "./dist/index.d.mts", "./dist/index.cjs"],
+		});
+	});
+
+	test("tsconfig customConditions and source-named conditions outrank the built-in conditions", () => {
+		const exports = {
+			".": { "@acme/source": "./src/custom.ts", source: "./src/index.ts", import: "./dist/x.js" },
+		};
+		expect(exportsCandidates(exports, "")).toEqual({
+			candidates: ["./src/custom.ts", "./src/index.ts", "./dist/x.js"],
+		});
+		expect(
+			exportsCandidates({ ".": { "x-custom": "./a.ts", import: "./b.js" } }, "", ["x-custom"]),
+		).toEqual({
+			candidates: ["./a.ts", "./b.js"],
+		});
+		expect(exportsCandidates(exports, "", ["@acme/source"])).toEqual({
+			candidates: ["./src/custom.ts", "./src/index.ts", "./dist/x.js"],
+		});
+	});
+
+	test("a root-only condition object is sugar for the root entry", () => {
+		expect(exportsCandidates({ import: "./src/a.ts" }, "")).toEqual({
+			candidates: ["./src/a.ts"],
+		});
+		expect(exportsCandidates({ import: "./src/a.ts" }, "sub")).toEqual({
+			failure: "exports-encapsulation",
+		});
 	});
 });
 

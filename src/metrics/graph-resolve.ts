@@ -23,12 +23,18 @@
  *    config contributes no options (recorded in `configs`).
  * 3. **Workspace packages** — a bare specifier naming a workspace package
  *    (manifest `name` from discovery) resolves through that package's own
- *    manifest: `exports` (string or one level of conditions, tried in the
- *    order `import` → `require` → `default` → `types`; a single `*` wildcard
- *    per key/target), then `main`, then `types`, then `index` at the package
+ *    manifest: `exports` (strings, fallback arrays and nested conditions,
+ *    tried as the governing tsconfig's `customConditions`, then `source` →
+ *    `import` → `require` → `default` → `types`; a single `*` wildcard per
+ *    key/target), then `main`, then `types`, then `index` at the package
  *    root. A package **with** an `exports` map encapsulates: a subpath with
  *    no matching entry is `unresolved` (`exports-encapsulation`), not a file
- *    probe. Each candidate then resolves like a relative specifier.
+ *    probe. Each candidate then resolves like a relative specifier; when no
+ *    candidate names an existing file (an unbuilt monorepo), each entry
+ *    under a build-output directory maps back to source — the package
+ *    tsconfig's `outDir` → `rootDir` first, then `dist|build|lib|out` →
+ *    `src` — before the edge is `unresolved` (graph policy 1.1.0,
+ *    trellis-a98b). The build is never run.
  * 4. **External** — anything else (including `node:` builtins) is an
  *    `external` edge recorded by package name, never resolved into.
  *
@@ -48,6 +54,11 @@ import ts from "typescript";
 import type { SourceInventory } from "../discovery/index.ts";
 import { resolveAsset } from "./graph-assets.ts";
 import type { ImportSite } from "./graph-imports.ts";
+import {
+	collectOutputMappings,
+	type OutputMapping,
+	sourceCandidatesForOutput,
+} from "./graph-outputs.ts";
 import type { EdgeResolution, GraphConfig } from "./graph-types.ts";
 import { exportsCandidates, manifestCandidates, wildcardMatch } from "./graph-workspace.ts";
 
@@ -134,6 +145,7 @@ interface ResolverState {
 	inventory: ReadonlySet<string>;
 	packagesByName: ReadonlyMap<string, string>;
 	manifestCache: Map<string, Record<string, unknown>>;
+	outputMappingCache: Map<string, OutputMapping[]>;
 	configByDir: Map<string, string | null>;
 	configByPath: Map<string, GoverningConfig>;
 }
@@ -238,6 +250,40 @@ function resolvePackageCandidate(
 	return resolveModule(state, `./${cleaned}`, join(state.root, pkgPath, "package.json"), options);
 }
 
+/** The package's `outDir` → `rootDir` mappings (cached; see {@link collectOutputMappings}). */
+function packageOutputMappings(state: ResolverState, pkgPath: string): OutputMapping[] {
+	const cached = state.outputMappingCache.get(pkgPath);
+	if (cached !== undefined) return cached;
+	const mappings = collectOutputMappings(join(state.root, pkgPath), (absConfig) =>
+		state.host.fileExists(absConfig)
+			? parseConfig(state.root, absConfig, state.host).options
+			: undefined,
+	);
+	state.outputMappingCache.set(pkgPath, mappings);
+	return mappings;
+}
+
+/** Resolve manifest candidates, then their build-output → source mappings (trellis-a98b). */
+function resolveCandidates(
+	state: ResolverState,
+	pkgPath: string,
+	candidates: readonly string[],
+	options: ts.CompilerOptions,
+): string | null {
+	for (const candidate of candidates) {
+		const resolved = resolvePackageCandidate(state, pkgPath, candidate, options);
+		if (resolved !== null) return resolved;
+	}
+	const mappings = packageOutputMappings(state, pkgPath);
+	for (const candidate of candidates) {
+		for (const mapped of sourceCandidatesForOutput(candidate, mappings)) {
+			const resolved = resolvePackageCandidate(state, pkgPath, mapped, options);
+			if (resolved !== null) return resolved;
+		}
+	}
+	return null;
+}
+
 /** Resolve a bare specifier against the workspace package `pkgPath` (exports/main/types/index). */
 function resolveWorkspacePackage(
 	state: ResolverState,
@@ -248,7 +294,7 @@ function resolveWorkspacePackage(
 	const manifest = packageManifest(state, pkgPath);
 	let candidates: string[];
 	if (manifest.exports !== undefined) {
-		const looked = exportsCandidates(manifest.exports, subpath);
+		const looked = exportsCandidates(manifest.exports, subpath, options.customConditions ?? []);
 		if ("failure" in looked) {
 			return {
 				status: "unresolved",
@@ -260,14 +306,12 @@ function resolveWorkspacePackage(
 	} else {
 		candidates = manifestCandidates(manifest, subpath);
 	}
-	for (const candidate of candidates) {
-		const resolved = resolvePackageCandidate(state, pkgPath, candidate, options);
-		if (resolved !== null) return classifyTarget(state, resolved);
-	}
+	const resolved = resolveCandidates(state, pkgPath, candidates, options);
+	if (resolved !== null) return classifyTarget(state, resolved);
 	return {
 		status: "unresolved",
 		reason: "no-target",
-		detail: `workspace package '${pkgPath}' entry points resolved to no file`,
+		detail: `workspace package '${pkgPath}' entry points resolved to no file (build outputs mapped to source found none)`,
 	};
 }
 
@@ -314,6 +358,7 @@ export function createGraphResolver(source: SourceInventory): GraphResolver {
 			source.packages.flatMap((pkg) => (pkg.name === undefined ? [] : [[pkg.name, pkg.path]])),
 		),
 		manifestCache: new Map(),
+		outputMappingCache: new Map(),
 		configByDir: new Map(),
 		configByPath: new Map(),
 	};

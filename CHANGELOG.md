@@ -17,6 +17,13 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   `nonLiteralDynamic` count stay visible, while cycle metrics over the literal
   graph stay complete. Other unresolved edges still degrade as before; scoring
   weights are unchanged (trellis-42ad).
+- Imports of workspace packages in unbuilt monorepos now resolve to source.
+  `exports` lookup accepts fallback arrays and nested conditions, honours
+  tsconfig `customConditions` and source-named conditions (`source`,
+  `@scope/source`), and maps entries naming absent `dist/` output back to
+  source via the package tsconfig `outDir`→`rootDir` or the `dist|build|lib|out`
+  →`src` convention. No build is ever run; a fresh zod clone drops from 108 to 2
+  unresolved `no-target` edges (trellis-a98b).
 
 ## [0.3.0] — 2026-09-19
 

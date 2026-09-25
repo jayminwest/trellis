@@ -458,10 +458,15 @@ versioned calibration (§16.5).
   The governing tsconfig is the nearest `tsconfig.json` walking up from the
   importing file; undeclared `moduleResolution` defaults to `bundler`, and
   `paths` without `baseUrl` resolve against the config's directory.
-  Workspace packages resolve by manifest name through `exports` (string or
-  one condition level, `import`→`require`→`default`→`types`, single `*`
-  wildcard; an `exports`-bearing package encapsulates unlisted subpaths),
-  then `main`, `types`, `index`. Externals are recorded by name and never
+  Workspace packages resolve by manifest name through `exports` (strings,
+  fallback arrays and nested conditions tried as tsconfig
+  `customConditions` → source-named conditions (`source`, `@scope/source`)
+  → `import`→`require`→`default`→`types`, single `*` wildcard; an
+  `exports`-bearing package encapsulates unlisted subpaths), then `main`,
+  `types`, `index`. Entries naming absent build output map back to source
+  through the package tsconfig's `outDir`→`rootDir`, then
+  `dist|build|lib|out`→`src`, without ever running a build (graph policy
+  1.1.0, trellis-a98b). Externals are recorded by name and never
   resolved into — `node_modules` is never consulted, so absent dependencies
   change nothing; workspace entries pointing at absent build outputs surface
   as documented `unresolved` edges. Resolution targets outside the
