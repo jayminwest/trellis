@@ -64,7 +64,6 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.14",
 		"@types/bun": "latest",
-		"@types/js-yaml": "^4.0.9",
 		"dependency-cruiser": "18.3.1",
 		"jscpd": "5.2.1",
 		"knip": "6.16.1",
@@ -72,7 +71,7 @@
 	},
 	"dependencies": {
 		"commander": "^15.0.0",
-		"js-yaml": "^4.1.1",
+		"js-yaml": "^5.4.2",
 		"typescript": "6.0.3",
 		"zod": "^4.4.3"
 	}

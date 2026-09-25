@@ -1,8 +1,8 @@
 /** Strict declarative fleet configuration; paths resolve relative to targets.yaml. */
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
-import yaml from "js-yaml";
 import { z } from "zod";
+import { parseYaml } from "../contract/yaml.ts";
 import type { AllowedDelta, DriftOptions } from "../standards/index.ts";
 
 /** Default fleet declaration filename, relative to the invocation cwd. */
@@ -90,7 +90,7 @@ export function loadFleet(file: string = TARGETS_FILE): Fleet {
 	const path = resolve(file);
 	let raw: unknown;
 	try {
-		raw = yaml.load(readFileSync(path, "utf8"));
+		raw = parseYaml(readFileSync(path, "utf8"));
 	} catch {
 		throw new TargetsError("source file not found or unreadable");
 	}

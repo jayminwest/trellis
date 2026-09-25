@@ -28,7 +28,7 @@
  */
 import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import yaml from "js-yaml";
+import { parseYaml } from "../contract/yaml.ts";
 import type { DriftState } from "./drift-states.ts";
 import {
 	loadManifest,
@@ -193,7 +193,7 @@ function tryParseJson(text: string): unknown {
 /** Parse a single YAML document, returning `undefined` on any parse error. */
 function tryParseYaml(text: string): unknown {
 	try {
-		return yaml.load(text);
+		return parseYaml(text);
 	} catch {
 		return undefined;
 	}

@@ -7,15 +7,15 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import yaml from "js-yaml";
 import { type AuditConfig, auditConfigSchema } from "../contract/index.ts";
+import { parseYaml } from "../contract/yaml.ts";
 
 /** Candidate config filenames at the repo root, in priority order. */
 export const CONFIG_FILENAMES = ["trellis.yaml", "trellis.yml"] as const;
 
 /** Parse + validate one config document, naming its source file in any error. */
 function parseConfig(text: string, name: string): AuditConfig {
-	const data: unknown = yaml.load(text) ?? {};
+	const data: unknown = parseYaml(text) ?? {};
 	const parsed = auditConfigSchema.safeParse(data);
 	if (!parsed.success) {
 		const details = parsed.error.issues

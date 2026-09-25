@@ -23,8 +23,8 @@
  */
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import yaml from "js-yaml";
 import type { SourceConfig, SourceCoverage, SourceSet } from "../contract/index.ts";
+import { parseYaml } from "../contract/yaml.ts";
 import { classifyTsFile, isTypeScriptSource, isUnsupportedSource } from "./classify.ts";
 import { matchAnyGlob } from "./glob.ts";
 
@@ -211,7 +211,7 @@ function manifestWorkspaceGlobs(rootManifest: Record<string, unknown>): string[]
 /** Workspace globs declared by `pnpm-workspace.yaml`; `[]` when absent or unreadable. */
 async function pnpmWorkspaceGlobs(root: string): Promise<string[]> {
 	try {
-		const parsed: unknown = yaml.load(await readFile(join(root, "pnpm-workspace.yaml"), "utf8"));
+		const parsed: unknown = parseYaml(await readFile(join(root, "pnpm-workspace.yaml"), "utf8"));
 		return stringEntries((parsed as Record<string, unknown> | null)?.packages);
 	} catch {
 		// No pnpm-workspace.yaml (or unreadable) — workspace declarations are optional.

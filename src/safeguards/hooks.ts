@@ -19,8 +19,9 @@
  * unsupported → `unknown`, never guessed. `.git/hooks/` is not committed
  * configuration and is never inspected.
  */
-import yaml from "js-yaml";
+
 import type { SafeguardLocation } from "../contract/index.ts";
+import { parseYaml } from "../contract/yaml.ts";
 import type { SafeguardContext, SurfaceEvidence } from "./types.ts";
 import { EVIDENCE_RANK } from "./types.ts";
 import { brokenPathFindings } from "./wiring.ts";
@@ -187,7 +188,7 @@ async function inspectYamlHookConfigs(ctx: SafeguardContext): Promise<SurfaceEvi
 
 function tryYamlMap(text: string): { ok: true } | { ok: false; error: string } {
 	try {
-		const value: unknown = yaml.load(text);
+		const value: unknown = parseYaml(text);
 		if (typeof value !== "object" || value === null) {
 			return { ok: false, error: "document is not a mapping" };
 		}

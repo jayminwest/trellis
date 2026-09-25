@@ -9,6 +9,13 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Changed
+
+- js-yaml upgraded to 5.4.2 (bundled types; `@types/js-yaml` removed). All
+  YAML inputs go through one `parseYaml` helper that keeps the previous
+  semantics: empty documents parse to nothing, merge keys resolve, and
+  multi-document streams are rejected (trellis-06cd).
+
 ### Fixed
 
 - A non-literal dynamic `import(expr)` no longer marks the whole dependency
