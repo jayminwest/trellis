@@ -173,6 +173,55 @@ describe("budgets", () => {
 		expect(result?.evidence).toBe("structurally-wired");
 	});
 
+	test("the l5-toolkit layout is wired one hop through the check script file (trellis-b412)", async () => {
+		await put(
+			"package.json",
+			manifest({
+				"check:size": "bun run scripts/check-file-sizes.ts",
+				"check:coverage:ci": "bun run scripts/check-coverage.ts --junit",
+			}),
+		);
+		await put("scripts/file-size-budgets.json", '{"threshold": 400}\n');
+		await put("scripts/coverage-budgets.json", '{"functions": 96}\n');
+		await put(
+			"scripts/check-file-sizes.ts",
+			'const BUDGETS_PATH = resolve(REPO_ROOT, "scripts/file-size-budgets.json");\n',
+		);
+		await put(
+			"scripts/check-coverage.ts",
+			'const BUDGETS_PATH = join(import.meta.dir, "coverage-budgets.json");\n',
+		);
+		await put(
+			".github/workflows/ci.yml",
+			workflow(["bun run check:size", "bun run check:coverage:ci"]),
+		);
+		const results = byId((await inspectSafeguards(repo)).results);
+		for (const id of ["file-size-budget", "coverage-budget"]) {
+			expect(results.get(id)?.evidence).toBe("structurally-wired");
+		}
+		expect(results.get("file-size-budget")?.notes).toContain(
+			"script 'check:size' (reachable from .github/workflows/ci.yml) runs scripts/check-file-sizes.ts, which names scripts/file-size-budgets.json",
+		);
+	});
+
+	test("a budget no CI-reachable command or script file names stays configured", async () => {
+		await put("package.json", manifest({ "check:size": "bun run scripts/check-file-sizes.ts" }));
+		await put("scripts/file-size-budgets.json", '{"threshold": 400}\n');
+		await put("scripts/check-file-sizes.ts", "const limit = 400;\n");
+		await put(".github/workflows/ci.yml", workflow(["bun run check:size"]));
+		const result = byId((await inspectSafeguards(repo)).results).get("file-size-budget");
+		expect(result?.evidence).toBe("configured");
+	});
+
+	test("a script file naming the budget that CI never reaches stays configured", async () => {
+		await put("package.json", manifest({ "check:size": "bun run scripts/check-file-sizes.ts" }));
+		await put("scripts/file-size-budgets.json", '{"threshold": 400}\n');
+		await put("scripts/check-file-sizes.ts", 'const p = "scripts/file-size-budgets.json";\n');
+		await put(".github/workflows/ci.yml", workflow(["bun test"]));
+		const result = byId((await inspectSafeguards(repo)).results).get("file-size-budget");
+		expect(result?.evidence).toBe("configured");
+	});
+
 	test("an unparseable budget file is unknown", async () => {
 		await put("package.json", manifest({}));
 		await put("scripts/coverage-budgets.json", "{ nope");

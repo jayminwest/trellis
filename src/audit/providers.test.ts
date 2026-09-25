@@ -9,6 +9,7 @@ import { resolvePinnedTool } from "../providers/resolve.ts";
 import { auditWorkspace } from "./audit.ts";
 import {
 	carriedProviderIds,
+	claimScratchRoot,
 	evidenceArea,
 	PINNED,
 	providerAuditConfig,
@@ -37,12 +38,17 @@ import {
 
 let repo: string;
 
+let releaseScratchRoot: () => Promise<void>;
+
 beforeEach(async () => {
+	// Test-owned tmpdir: scratch counts see only this test's staging (trellis-3dfe).
+	releaseScratchRoot = await claimScratchRoot();
 	repo = await mkdtemp(join(tmpdir(), "trellis-providers-"));
 });
 
 afterEach(async () => {
 	await rm(repo, { recursive: true, force: true });
+	await releaseScratchRoot();
 });
 
 /** The discovered inventory of the temp repo (an actual file inventory). */

@@ -9,6 +9,55 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
 
 ## [Unreleased]
 
+### Changed
+
+- js-yaml upgraded to 5.4.2 (bundled types; `@types/js-yaml` removed). All
+  YAML inputs go through one `parseYaml` helper that keeps the previous
+  semantics: empty documents parse to nothing, merge keys resolve, and
+  multi-document streams are rejected (trellis-06cd).
+- Recorded the TypeScript 7 decision: the analyzer stays on `typescript`
+  6.0.3 because 7.x exposes no in-process compiler API (parsing would launch
+  the native binary). Dependabot now ignores `typescript` 7 majors
+  (`docs/typescript-7-decision.md`, trellis-ea21).
+
+### Added
+
+- `scripts/profile-audit.ts` profiles retained heap per audit phase, peak RSS
+  and report serialization cost. `docs/large-workspace-memory.md` records
+  vscode-scale results: the shared parse dominates, and about half of it is
+  TypeScript's cached child lists; analyzers add 1–2% and the report is small.
+  A 1.3 GiB target for the 2.1 GiB baseline is tracked separately (trellis-92b4).
+
+### Fixed
+
+- A non-literal dynamic `import(expr)` no longer marks the whole dependency
+  graph incomplete and charges the full import-cycle dimension. Graph policy
+  1.1.0 records such sites as opaque: the unresolved edge, finding and a
+  `nonLiteralDynamic` count stay visible, while cycle metrics over the literal
+  graph stay complete. Other unresolved edges still degrade as before; scoring
+  weights are unchanged (trellis-42ad).
+- Imports of workspace packages in unbuilt monorepos now resolve to source.
+  `exports` lookup accepts fallback arrays and nested conditions, honours
+  tsconfig `customConditions` and source-named conditions (`source`,
+  `@scope/source`), and maps entries naming absent `dist/` output back to
+  source via the package tsconfig `outDir`→`rootDir` or the `dist|build|lib|out`
+  →`src` convention. No build is ever run; a fresh zod clone drops from 108 to 2
+  unresolved `no-target` edges (trellis-a98b).
+- Native duplication tokens no longer include JSDoc comments or empty
+  syntax-list leaves, matching SPEC §5.3. Thresholds and scoring are
+  unchanged; the trellis self-audit moves 41 → 40 and every corpus fixture
+  keeps its index (see `docs/corpus-validation.md`, trellis-57aa).
+- Coverage and file-size budget safeguards now recognise enforcement when a
+  CI-reachable script runs a check file that names the budget internally
+  (the l5-toolkit layout). The file is read as text, never executed, and the
+  note records the script → file → budget chain. Safeguards stay unscored
+  (trellis-b412).
+- npm publishing: `bin.trellis` and `repository.url` are now in npm's
+  normalized form, so `npm publish` no longer rewrites the CLI bin entry, and
+  the package smoke fails if npm would. The publish workflow uses
+  `NPM_TOKEN` when set and otherwise npm trusted publishing via OIDC instead of
+  writing an empty token (trellis-689e).
+
 ## [0.3.0] — 2026-09-19
 
 ### Added

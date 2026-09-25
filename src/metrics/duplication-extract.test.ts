@@ -208,3 +208,14 @@ describe("extractCloneGroups", () => {
 		}
 	});
 });
+
+describe("collectTokenStream trivia (trellis-57aa)", () => {
+	test("excludes JSDoc and empty syntax lists from the normalized stream", () => {
+		const plain = collectTokenStream(sourceFile("a", "function x(){}\n"));
+		const documented = collectTokenStream(
+			sourceFile("b", "/** docs @param y value */\nfunction x(){}\n"),
+		);
+		expect(documented.kinds).toEqual(plain.kinds);
+		expect(plain.kinds).toHaveLength(6); // function x ( ) { }
+	});
+});

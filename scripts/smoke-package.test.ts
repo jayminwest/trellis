@@ -2,7 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { smokePackage, verifyPackedAssets, verifyPackedMetadata } from "./smoke-package.ts";
+import {
+	npmNormalizationChanges,
+	smokePackage,
+	verifyPackedAssets,
+	verifyPackedMetadata,
+} from "./smoke-package.ts";
 
 const REPO_ROOT = resolve(import.meta.dir, "..");
 
@@ -25,7 +30,7 @@ describe("verifyPackedMetadata", () => {
 			writeFileSync(
 				join(dir, "package.json"),
 				JSON.stringify({
-					bin: { trellis: "./src/cli/main.ts" },
+					bin: { trellis: "src/cli/main.ts" },
 					dependencies: { commander: "1", "js-yaml": "1", typescript: "1", zod: "1" },
 				}),
 			);
@@ -55,9 +60,46 @@ describe("verifyPackedMetadata", () => {
 			writeFileSync(join(dir, "src/cli/main.ts"), "// bin\n");
 			writeFileSync(
 				join(dir, "package.json"),
-				JSON.stringify({ bin: { trellis: "./src/cli/main.ts" }, dependencies: { commander: "1" } }),
+				JSON.stringify({ bin: { trellis: "src/cli/main.ts" }, dependencies: { commander: "1" } }),
 			);
 			expect(() => verifyPackedMetadata(dir)).toThrow(/typescript/);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+});
+
+describe("npmNormalizationChanges (trellis-689e)", () => {
+	test("flags a ./-prefixed bin target and a bare https repository url", () => {
+		expect(
+			npmNormalizationChanges({
+				bin: { trellis: "./src/cli/main.ts" },
+				repository: { type: "git", url: "https://github.com/o/r.git" },
+			}),
+		).toEqual([
+			'bin[trellis] "./src/cli/main.ts" would be rewritten to "src/cli/main.ts"',
+			'repository.url "https://github.com/o/r.git" would be normalized to "git+https://github.com/o/r.git"',
+		]);
+	});
+
+	test("accepts the repository's own manifest unchanged", async () => {
+		const manifest = await Bun.file(join(REPO_ROOT, "package.json")).json();
+		expect(npmNormalizationChanges(manifest)).toEqual([]);
+	});
+
+	test("rejects a packed manifest npm would rewrite", () => {
+		const dir = mkdtempSync(join(tmpdir(), "trellis-smoke-meta-"));
+		try {
+			mkdirSync(join(dir, "src/cli"), { recursive: true });
+			writeFileSync(join(dir, "src/cli/main.ts"), "// bin\n");
+			writeFileSync(
+				join(dir, "package.json"),
+				JSON.stringify({
+					bin: { trellis: "./src/cli/main.ts" },
+					dependencies: { commander: "1", "js-yaml": "1", typescript: "1", zod: "1" },
+				}),
+			);
+			expect(() => verifyPackedMetadata(dir)).toThrow(/npm would rewrite/);
 		} finally {
 			rmSync(dir, { recursive: true, force: true });
 		}

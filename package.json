@@ -4,7 +4,7 @@
 	"description": "Offline TypeScript structural audit with a native 0–100 sloppiness index and optional unscored provider evidence",
 	"type": "module",
 	"bin": {
-		"trellis": "./src/cli/main.ts"
+		"trellis": "src/cli/main.ts"
 	},
 	"main": "src/index.ts",
 	"exports": {
@@ -37,7 +37,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/jayminwest/trellis.git"
+		"url": "git+https://github.com/jayminwest/trellis.git"
 	},
 	"scripts": {
 		"test": "bun test --timeout 20000",
@@ -64,7 +64,6 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.14",
 		"@types/bun": "latest",
-		"@types/js-yaml": "^4.0.9",
 		"dependency-cruiser": "18.3.1",
 		"jscpd": "5.2.1",
 		"knip": "6.16.1",
@@ -72,7 +71,7 @@
 	},
 	"dependencies": {
 		"commander": "^15.0.0",
-		"js-yaml": "^4.1.1",
+		"js-yaml": "^5.4.2",
 		"typescript": "6.0.3",
 		"zod": "^4.4.3"
 	}

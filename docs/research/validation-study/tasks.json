@@ -1,0 +1,124 @@
+[
+  {
+    "id": "facade-over-client",
+    "category": "legitimate-facade",
+    "issues": [
+      "trellis-f999"
+    ],
+    "task": "Add retry to every storage call.",
+    "before": "export class Storage {\n\tconstructor(private readonly client: { get(k: string): Promise<string>; put(k: string, v: string): Promise<void> }) {}\n\tget(key: string) { return this.client.get(key); }\n\tput(key: string, value: string) { return this.client.put(key, value); }\n}",
+    "after": "export class Storage {\n\tconstructor(private readonly client: { get(k: string): Promise<string>; put(k: string, v: string): Promise<void> }) {}\n\tget(key: string) { return retry(() => this.client.get(key)); }\n\tput(key: string, value: string) { return retry(() => this.client.put(key, value)); }\n}\nasync function retry<T>(run: () => Promise<T>, attempts = 3): Promise<T> {\n\tfor (let i = 1; ; i++) {\n\t\ttry { return await run(); } catch (error) { if (i >= attempts) throw error; }\n\t}\n}"
+  },
+  {
+    "id": "callback-adapter",
+    "category": "callback",
+    "issues": [
+      "trellis-f999"
+    ],
+    "task": "Log every click handler invocation.",
+    "before": "export function bind(button: { on(e: string, f: (x: MouseEvent) => void): void }, onClick: (x: MouseEvent) => void) {\n\tbutton.on(\"click\", (event) => onClick(event));\n}",
+    "after": "export function bind(button: { on(e: string, f: (x: MouseEvent) => void): void }, onClick: (x: MouseEvent) => void) {\n\tbutton.on(\"click\", onClick);\n}"
+  },
+  {
+    "id": "transaction-wrapper",
+    "category": "transaction-wrapper",
+    "issues": [
+      "trellis-f999"
+    ],
+    "task": "Ensure every write runs in a transaction.",
+    "before": "export function saveUser(db: Db, user: User) { db.begin(); try { db.insert(\"users\", user); db.commit(); } catch (e) { db.rollback(); throw e; } }\nexport function saveOrder(db: Db, order: Order) { db.begin(); try { db.insert(\"orders\", order); db.commit(); } catch (e) { db.rollback(); throw e; } }\ntype Db = { begin(): void; commit(): void; rollback(): void; insert(t: string, row: unknown): void };\ntype User = { id: string }; type Order = { id: string };",
+    "after": "function inTransaction(db: Db, run: () => void) { db.begin(); try { run(); db.commit(); } catch (e) { db.rollback(); throw e; } }\nexport function saveUser(db: Db, user: User) { inTransaction(db, () => db.insert(\"users\", user)); }\nexport function saveOrder(db: Db, order: Order) { inTransaction(db, () => db.insert(\"orders\", order)); }\ntype Db = { begin(): void; commit(): void; rollback(): void; insert(t: string, row: unknown): void };\ntype User = { id: string }; type Order = { id: string };"
+  },
+  {
+    "id": "unrelated-dispatch-domains",
+    "category": "dispatch-domains",
+    "issues": [
+      "trellis-f999"
+    ],
+    "task": "Add a new HTTP status and a new log level.",
+    "before": "export function statusText(code: number) { switch (code) { case 200: return \"OK\"; case 404: return \"Not Found\"; default: return \"Unknown\"; } }\nexport function levelRank(level: string) { switch (level) { case \"debug\": return 0; case \"info\": return 1; default: return 2; } }",
+    "after": "type Table<K extends string | number, V> = { entries: Map<K, V>; fallback: V };\nconst lookup = <K extends string | number, V>(t: Table<K, V>, k: K) => t.entries.get(k) ?? t.fallback;\nconst STATUS: Table<number, string> = { entries: new Map([[200, \"OK\"], [404, \"Not Found\"]]), fallback: \"Unknown\" };\nconst LEVEL: Table<string, number> = { entries: new Map([[\"debug\", 0], [\"info\", 1]]), fallback: 2 };\nexport const statusText = (code: number) => lookup(STATUS, code);\nexport const levelRank = (level: string) => lookup(LEVEL, level);"
+  },
+  {
+    "id": "default-subset-options",
+    "category": "default-subset",
+    "issues": [
+      "trellis-f999"
+    ],
+    "task": "Add a new optional formatting flag.",
+    "before": "export function format(value: number, options: { digits?: number; grouping?: boolean } = {}) {\n\tconst digits = options.digits ?? 2;\n\tconst grouping = options.grouping ?? true;\n\treturn value.toLocaleString(\"en-US\", { maximumFractionDigits: digits, useGrouping: grouping });\n}\nexport function formatCompact(value: number) { return format(value, { digits: 0, grouping: false }); }",
+    "after": "export function format(value: number, digits = 2, grouping = true) {\n\treturn value.toLocaleString(\"en-US\", { maximumFractionDigits: digits, useGrouping: grouping });\n}\nexport function formatCompact(value: number) { return format(value, 0, false); }"
+  },
+  {
+    "id": "if-chain-to-table",
+    "category": "if-chain-vs-table",
+    "issues": [
+      "trellis-f999",
+      "trellis-ba11"
+    ],
+    "task": "Add a new file-type icon.",
+    "before": "export function icon(ext: string) {\n\tif (ext === \"ts\") return \"typescript\";\n\tif (ext === \"js\") return \"javascript\";\n\tif (ext === \"md\") return \"markdown\";\n\tif (ext === \"json\") return \"braces\";\n\treturn \"file\";\n}",
+    "after": "const ICONS: Record<string, string> = { ts: \"typescript\", js: \"javascript\", md: \"markdown\", json: \"braces\" };\nexport function icon(ext: string) { return ICONS[ext] ?? \"file\"; }"
+  },
+  {
+    "id": "if-chain-with-guards",
+    "category": "if-chain-vs-table",
+    "issues": [
+      "trellis-f999",
+      "trellis-ba11"
+    ],
+    "task": "Add a rule for archived projects.",
+    "before": "export function canEdit(user: { admin: boolean; id: string }, project: { owner: string; locked: boolean }) {\n\tif (user.admin) return true;\n\tif (project.locked) return false;\n\treturn project.owner === user.id;\n}",
+    "after": "const RULES: [(u: { admin: boolean; id: string }, p: { owner: string; locked: boolean }) => boolean | undefined][] = [\n\t[(u) => (u.admin ? true : undefined)],\n\t[(_u, p) => (p.locked ? false : undefined)],\n\t[(u, p) => p.owner === u.id],\n];\nexport function canEdit(user: { admin: boolean; id: string }, project: { owner: string; locked: boolean }) {\n\tfor (const [rule] of RULES) { const verdict = rule(user, project); if (verdict !== undefined) return verdict; }\n\treturn false;\n}"
+  },
+  {
+    "id": "loop-guard",
+    "category": "loop-guard",
+    "issues": [
+      "trellis-ba11"
+    ],
+    "task": "Skip disabled items when totalling.",
+    "before": "export function total(items: { price: number; qty: number; enabled: boolean }[]) {\n\tlet sum = 0;\n\tfor (const item of items) { if (item.enabled) { if (item.qty > 0) { sum += item.price * item.qty; } } }\n\treturn sum;\n}",
+    "after": "export function total(items: { price: number; qty: number; enabled: boolean }[]) {\n\tlet sum = 0;\n\tfor (const item of items) {\n\t\tif (!item.enabled || item.qty <= 0) continue;\n\t\tsum += item.price * item.qty;\n\t}\n\treturn sum;\n}"
+  },
+  {
+    "id": "single-use-extraction",
+    "category": "extraction",
+    "issues": [
+      "trellis-ba11"
+    ],
+    "task": "Change how the greeting is capitalised.",
+    "before": "export function greet(user: { first: string; last: string }) {\n\tconst name = `${user.first} ${user.last}`.trim();\n\treturn name.length > 0 ? `Hello, ${name}!` : \"Hello!\";\n}",
+    "after": "function fullName(user: { first: string; last: string }) { return `${user.first} ${user.last}`.trim(); }\nfunction greetingFor(name: string) { return name.length > 0 ? `Hello, ${name}!` : \"Hello!\"; }\nexport function greet(user: { first: string; last: string }) { return greetingFor(fullName(user)); }"
+  },
+  {
+    "id": "independent-rules",
+    "category": "independent-rules",
+    "issues": [
+      "trellis-ba11"
+    ],
+    "task": "Add a password rule requiring a symbol.",
+    "before": "export function problems(pw: string) {\n\tconst out: string[] = [];\n\tif (pw.length < 12) out.push(\"too short\");\n\tif (!/[0-9]/.test(pw)) out.push(\"needs a digit\");\n\tif (!/[A-Z]/.test(pw)) out.push(\"needs an uppercase letter\");\n\tif (pw.includes(\" \")) out.push(\"no spaces\");\n\treturn out;\n}",
+    "after": "const RULES: [string, (pw: string) => boolean][] = [\n\t[\"too short\", (pw) => pw.length < 12],\n\t[\"needs a digit\", (pw) => !/[0-9]/.test(pw)],\n\t[\"needs an uppercase letter\", (pw) => !/[A-Z]/.test(pw)],\n\t[\"no spaces\", (pw) => pw.includes(\" \")],\n];\nexport function problems(pw: string) { return RULES.filter(([, broken]) => broken(pw)).map(([message]) => message); }"
+  },
+  {
+    "id": "declaration-with-callbacks",
+    "category": "declarations-with-callbacks",
+    "issues": [
+      "trellis-ba11"
+    ],
+    "task": "Add a --json option to one command.",
+    "before": "export function register(cli: Cli) {\n\tcli.command(\"build\").option(\"--watch\").action((o) => (o.watch ? watchBuild() : build()));\n\tcli.command(\"test\").option(\"--watch\").action((o) => (o.watch ? watchTest() : test()));\n}\ntype Cli = { command(n: string): { option(f: string): { action(f: (o: { watch?: boolean }) => void): void } } };\ndeclare function build(): void; declare function watchBuild(): void; declare function test(): void; declare function watchTest(): void;",
+    "after": "const COMMANDS = [[\"build\", build, watchBuild], [\"test\", test, watchTest]] as const;\nexport function register(cli: Cli) {\n\tfor (const [name, once, watch] of COMMANDS) cli.command(name).option(\"--watch\").action((o) => (o.watch ? watch() : once()));\n}\ntype Cli = { command(n: string): { option(f: string): { action(f: (o: { watch?: boolean }) => void): void } } };\ndeclare function build(): void; declare function watchBuild(): void; declare function test(): void; declare function watchTest(): void;"
+  },
+  {
+    "id": "overlapping-clone-ranges",
+    "category": "overlapping-clones",
+    "issues": [
+      "trellis-ba11"
+    ],
+    "task": "Change the truncation limit from 3 to 5.",
+    "before": "type Row = { active: boolean; score: number; weight: number; name: string };\nexport function summarizeA(input: Row[], threshold: number) {\n\tconst rows = input.filter((row) => row.active && row.score > threshold);\n\tconst total = rows.reduce((sum, row) => sum + row.score * row.weight, 0);\n\tconst average = rows.length === 0 ? 0 : total / rows.length;\n\tconst labels = rows.map((row) => `${row.name}:${Math.round(row.score * 100) / 100}`);\n\tif (average > 10 && labels.length > 3) return { average, labels: labels.slice(0, 3), truncated: true };\n\treturn { average, labels, truncated: false };\n}\nexport function summarizeB(input: Row[], threshold: number) {\n\tconst rows = input.filter((row) => row.active && row.score > threshold);\n\tconst total = rows.reduce((sum, row) => sum + row.score * row.weight, 0);\n\tconst average = rows.length === 0 ? 0 : total / rows.length;\n\tconst labels = rows.map((row) => `${row.name}:${Math.round(row.score * 100) / 100}`);\n\tif (average > 10 && labels.length > 3) return { average, labels: labels.slice(0, 3), truncated: true };\n\treturn { average, labels, truncated: false };\n}",
+    "after": "type Row = { active: boolean; score: number; weight: number; name: string };\nfunction summarize(input: Row[], threshold: number) {\n\tconst rows = input.filter((row) => row.active && row.score > threshold);\n\tconst total = rows.reduce((sum, row) => sum + row.score * row.weight, 0);\n\tconst average = rows.length === 0 ? 0 : total / rows.length;\n\tconst labels = rows.map((row) => `${row.name}:${Math.round(row.score * 100) / 100}`);\n\tif (average > 10 && labels.length > 3) return { average, labels: labels.slice(0, 3), truncated: true };\n\treturn { average, labels, truncated: false };\n}\nexport const summarizeA = summarize;\nexport const summarizeB = summarize;"
+  }
+]

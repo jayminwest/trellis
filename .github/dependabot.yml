@@ -15,6 +15,11 @@ updates:
       semver-major-days: 14
       semver-minor-days: 5
       semver-patch-days: 3
+    ignore:
+      # TypeScript 7 ships no in-process compiler API; the analyzer stays on
+      # 6.x until a deliberate migration (docs/typescript-7-decision.md).
+      - dependency-name: typescript
+        versions: [">=7.0.0"]
 
   - package-ecosystem: github-actions
     directory: /

@@ -247,6 +247,79 @@ describe("createGraphResolver workspace packages", () => {
 	});
 });
 
+describe("createGraphResolver unbuilt workspace packages (trellis-a98b)", () => {
+	beforeEach(async () => {
+		await put("package.json", JSON.stringify({ name: "app", workspaces: ["packages/*"] }));
+		await put("src/app.ts", "");
+	});
+
+	test("maps absent dist exports back to source by convention", async () => {
+		await put(
+			"packages/core/package.json",
+			JSON.stringify({
+				name: "@acme/core",
+				exports: {
+					".": { import: { types: "./dist/index.d.mts", default: "./dist/index.mjs" } },
+					"./feature/*": { import: "./dist/feature/*.js" },
+				},
+			}),
+		);
+		await put("packages/core/src/index.ts", "");
+		await put("packages/core/src/feature/flags.tsx", "");
+		const r = await resolver();
+		expect(r.resolve("src/app.ts", site("@acme/core"))).toEqual({
+			status: "local",
+			target: "packages/core/src/index.ts",
+		});
+		expect(r.resolve("src/app.ts", site("@acme/core/feature/flags"))).toEqual({
+			status: "local",
+			target: "packages/core/src/feature/flags.tsx",
+		});
+	});
+
+	test("maps main/types through the package tsconfig outDir and rootDir", async () => {
+		await put(
+			"packages/lib/package.json",
+			JSON.stringify({ name: "lib", main: "./out/cjs/index.js", types: "./out/cjs/index.d.ts" }),
+		);
+		await put(
+			"packages/lib/tsconfig.build.json",
+			JSON.stringify({ compilerOptions: { outDir: "out/cjs", rootDir: "source" } }),
+		);
+		await put("packages/lib/source/index.ts", "");
+		const r = await resolver();
+		expect(r.resolve("src/app.ts", site("lib"))).toEqual({
+			status: "local",
+			target: "packages/lib/source/index.ts",
+		});
+	});
+
+	test("a built entry still resolves to the existing output file first", async () => {
+		await put(
+			"packages/core/package.json",
+			JSON.stringify({ name: "@acme/core", exports: { ".": "./dist/index.js" } }),
+		);
+		await put("packages/core/dist/index.js", "");
+		await put("packages/core/src/index.ts", "");
+		const r = await resolver();
+		expect(r.resolve("src/app.ts", site("@acme/core"))).toMatchObject({
+			target: "packages/core/dist/index.js",
+		});
+	});
+
+	test("stays unresolved when no mapped source exists", async () => {
+		await put(
+			"packages/core/package.json",
+			JSON.stringify({ name: "@acme/core", exports: { ".": "./dist/index.js" } }),
+		);
+		const r = await resolver();
+		expect(r.resolve("src/app.ts", site("@acme/core"))).toMatchObject({
+			status: "unresolved",
+			reason: "no-target",
+		});
+	});
+});
+
 describe("createGraphResolver external classification", () => {
 	test("bare specifiers outside aliases and workspace names are external, install-state independent", async () => {
 		// No node_modules anywhere: externals classify identically (SPEC §8).

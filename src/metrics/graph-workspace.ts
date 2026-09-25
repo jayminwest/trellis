@@ -5,11 +5,18 @@
  * A bare specifier naming a workspace package resolves through that package's
  * own manifest (documented supported subset):
  *
- * - `exports` — a string (root entry only), or a map with one level of
- *   conditions tried in the order `import` → `require` → `default` →
- *   `types`; keys and targets support a single `*` wildcard (longest literal
- *   prefix wins). Arrays, nested condition objects, and non-string scalars
- *   are `unsupported-exports`. A package **with** an `exports` map
+ * - `exports` — a string (root entry only), or a map whose entries are
+ *   strings, fallback arrays, or condition objects (nested up to
+ *   {@link MAX_CONDITION_DEPTH} levels). Conditions are tried in the order:
+ *   the governing tsconfig's `customConditions`, then source-named
+ *   conditions (`source`, `@scope/source`, sorted), then `source` →
+ *   `import` → `require` → `default` → `types`. Every matching target is returned in
+ *   that priority order so the resolver can fall through to the next one
+ *   when an entry points at absent build output (graph policy 1.1.0,
+ *   trellis-a98b). Keys and targets support a single `*` wildcard (longest
+ *   literal prefix wins). An entry yielding no target (only unknown
+ *   conditions, non-string scalars, or deeper nesting) is
+ *   `unsupported-exports`. A package **with** an `exports` map
  *   encapsulates: a subpath with no matching entry fails
  *   `exports-encapsulation` — there is no fallback file probe.
  * - Without `exports`: the root resolves via `main`, then `types`, then
@@ -22,8 +29,11 @@
 
 import type { UnresolvedReason } from "./graph-types.ts";
 
-/** Conditions tried, in order, for one `exports` entry (documented subset). */
-const EXPORTS_CONDITIONS = ["import", "require", "default", "types"] as const;
+/** Built-in conditions tried, in order, after any tsconfig `customConditions`. */
+const EXPORTS_CONDITIONS = ["source", "import", "require", "default", "types"] as const;
+
+/** Condition objects/arrays nest at most this deep (documented subset). */
+const MAX_CONDITION_DEPTH = 4;
 
 /** Match `value` against a pattern with at most one `*`; returns the matched middle or null. */
 export function wildcardMatch(pattern: string, value: string): string | null {
@@ -34,71 +44,115 @@ export function wildcardMatch(pattern: string, value: string): string | null {
 	return value.slice(prefix.length, value.length - suffix.length);
 }
 
-/** Extract the target string from one `exports` entry value (documented subset). */
-function exportsTarget(value: unknown): { target: string } | { unsupported: true } | null {
-	if (typeof value === "string") return { target: value };
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
-		return { unsupported: true };
-	}
-	const conditions = value as Record<string, unknown>;
-	for (const condition of EXPORTS_CONDITIONS) {
-		const selected = conditions[condition];
-		if (typeof selected === "string") return { target: selected };
-		if (selected !== undefined) return { unsupported: true };
-	}
-	return null;
+/** True for a condition that names source by convention: `source`, `@scope/source`, `x:source`. */
+function isSourceCondition(condition: string): boolean {
+	return /(^|[/:])source$/.test(condition);
 }
 
-/** `exportsTarget` returning null on unsupported shapes (wildcard scan helper). */
-function exportsTargetOrNull(value: unknown): string | null {
-	const target = exportsTarget(value);
-	return target === null || "unsupported" in target ? null : target.target;
+/** Source-named conditions used anywhere in an `exports` value, sorted (deterministic). */
+function sourceConditions(value: unknown, depth = 0): string[] {
+	if (depth > MAX_CONDITION_DEPTH || typeof value !== "object" || value === null) return [];
+	const entries = Array.isArray(value)
+		? value.map((item) => ["", item] as const)
+		: Object.entries(value);
+	const found = new Set<string>();
+	for (const [key, item] of entries) {
+		if (isSourceCondition(key)) found.add(key);
+		for (const nested of sourceConditions(item, depth + 1)) found.add(nested);
+	}
+	return [...found].sort();
 }
 
-/** One exact `exports` entry lookup; unsupported shapes fail explicitly. */
-function exactCandidate(value: unknown): { candidates: string[] } | { failure: UnresolvedReason } {
-	const target = exportsTarget(value);
-	return target === null || "unsupported" in target
-		? { failure: "unsupported-exports" }
-		: { candidates: [target.target] };
+/** Collect every target of one `exports` entry value, in condition priority order. */
+function collectTargets(
+	value: unknown,
+	conditions: readonly string[],
+	depth: number,
+	into: string[],
+): void {
+	if (typeof value === "string") {
+		if (!into.includes(value)) into.push(value);
+		return;
+	}
+	if (depth >= MAX_CONDITION_DEPTH || typeof value !== "object" || value === null) return;
+	if (Array.isArray(value)) {
+		for (const item of value) collectTargets(item, conditions, depth + 1, into);
+		return;
+	}
+	const map = value as Record<string, unknown>;
+	for (const condition of conditions) {
+		if (condition in map) collectTargets(map[condition], conditions, depth + 1, into);
+	}
+}
+
+/** The targets of one `exports` entry value; empty when the shape yields none. */
+function exportsTargets(value: unknown, conditions: readonly string[]): string[] {
+	const targets: string[] = [];
+	collectTargets(value, conditions, 0, targets);
+	return targets;
+}
+
+/** One exact `exports` entry lookup; shapes yielding no target fail explicitly. */
+function exactCandidate(
+	value: unknown,
+	conditions: readonly string[],
+): { candidates: string[] } | { failure: UnresolvedReason } {
+	const targets = exportsTargets(value, conditions);
+	return targets.length === 0 ? { failure: "unsupported-exports" } : { candidates: targets };
 }
 
 /** Single-`*` wildcard `exports` keys, longest literal prefix wins (documented subset). */
 function wildcardCandidate(
 	map: Record<string, unknown>,
 	key: string,
+	conditions: readonly string[],
 ): { candidates: string[] } | { failure: UnresolvedReason } {
-	let best: { prefix: number; target: string } | null = null;
+	let best: { prefix: number; targets: string[] } | null = null;
 	for (const [pattern, value] of Object.entries(map)) {
 		const middle = wildcardMatch(pattern, key);
 		if (middle === null) continue;
-		const target = exportsTargetOrNull(value);
-		if (target === null) continue;
+		const targets = exportsTargets(value, conditions);
+		if (targets.length === 0) continue;
 		if (best === null || pattern.indexOf("*") > best.prefix) {
-			best = { prefix: pattern.indexOf("*"), target: target.replace("*", middle) };
+			best = {
+				prefix: pattern.indexOf("*"),
+				targets: targets.map((target) => target.replace("*", middle)),
+			};
 		}
 	}
-	return best === null ? { failure: "exports-encapsulation" } : { candidates: [best.target] };
+	return best === null ? { failure: "exports-encapsulation" } : { candidates: best.targets };
 }
 
 /**
  * Manifest `exports` lookup for `subpath` (`""` = the package root); returns
- * candidate target paths or a failure reason (see the module docblock).
+ * candidate target paths in priority order or a failure reason (see the
+ * module docblock). `customConditions` come from the importer's governing
+ * tsconfig and outrank the built-in conditions.
  */
 export function exportsCandidates(
 	exports: unknown,
 	subpath: string,
+	customConditions: readonly string[] = [],
 ): { candidates: string[] } | { failure: UnresolvedReason } {
 	const key = subpath === "" ? "." : `./${subpath}`;
 	if (typeof exports === "string") {
 		return key === "." ? { candidates: [exports] } : { failure: "exports-encapsulation" };
 	}
-	if (typeof exports !== "object" || exports === null || Array.isArray(exports)) {
+	if (typeof exports !== "object" || exports === null) {
 		return { failure: "unsupported-exports" };
+	}
+	const conditions = [
+		...new Set([...customConditions, ...sourceConditions(exports), ...EXPORTS_CONDITIONS]),
+	];
+	if (Array.isArray(exports) || !Object.keys(exports).some((entry) => entry.startsWith("."))) {
+		// Sugar: a root-only fallback array or condition object.
+		return key === "." ? exactCandidate(exports, conditions) : { failure: "exports-encapsulation" };
 	}
 	const map = exports as Record<string, unknown>;
 	const exact = map[key];
-	return exact !== undefined ? exactCandidate(exact) : wildcardCandidate(map, key);
+	return exact !== undefined
+		? exactCandidate(exact, conditions)
+		: wildcardCandidate(map, key, conditions);
 }
 
 /** Manifest fallback candidates when no `exports` map governs (`main`, then `types`, then `index`). */

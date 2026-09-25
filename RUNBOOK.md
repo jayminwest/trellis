@@ -164,6 +164,9 @@ gh run view --log-failed
 |---------|--------------|-----|
 | `version mismatch` | `package.json` / `src/index.ts` disagree | Sync versions, push fix commit. |
 | `npm publish ... 403` | Missing/expired `NPM_TOKEN` secret | Settings → Secrets → update `NPM_TOKEN`, re-run. |
+| `npm publish ... ENEEDAUTH` | No usable credential: `NPM_TOKEN` unset and no npm trusted publisher for `publish.yml` | Either add a granular automation `NPM_TOKEN` secret, or on npmjs.com → package → Settings → Trusted publishing add GitHub Actions `jayminwest/trellis` / `publish.yml`, then re-run. |
+| `bin[trellis] script name … was invalid` warning | `bin`/`repository` not in npm's normalized form | Keep `bin.trellis` as `src/cli/main.ts` (no `./`) and `repository.url` as `git+https://…`; `bun run scripts/smoke-package.ts` fails when npm would rewrite them. |
+| auto-merge: `auto-merge GitHub App not configured` | `AUTO_MERGE_APP_ID` variable or `AUTO_MERGE_APP_PRIVATE_KEY` secret unset (trellis-0ee4) | Settings → Secrets and variables → Actions: set variable `AUTO_MERGE_APP_ID` to the App's ID and secret `AUTO_MERGE_APP_PRIVATE_KEY` to its PEM key; the App must be installed on this repo with contents + pull-requests write. `ci` is independent — merge manually meanwhile. |
 | `npm publish ... E409` | Version already published | Bump to next patch; do **not** unpublish a live version. |
 | `gh release create ... already exists` | Tag exists, prior run left an incomplete release | Delete the orphan release in the UI, re-run. |
 | `tsc` / `biome` / `bun test` failure | Local greens diverged from CI | Reproduce with `bun run check:all`; do **not** force-push to `main`. |

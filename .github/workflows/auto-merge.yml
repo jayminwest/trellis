@@ -42,6 +42,22 @@ jobs:
                  format(',{0},', github.event.pull_request.user.login)))) &&
       !contains(github.event.pull_request.labels.*.name, 'no-automerge')
     steps:
+      # Fail with the exact missing setting instead of create-github-app-token's
+      # generic "client-id/app-id must be non-empty" (trellis-0ee4). The ci
+      # check is independent; PRs stay manually mergeable meanwhile.
+      - name: Check app credentials are configured
+        env:
+          APP_ID: ${{ vars.AUTO_MERGE_APP_ID }}
+          HAS_PRIVATE_KEY: ${{ secrets.AUTO_MERGE_APP_PRIVATE_KEY != '' }}
+        run: |
+          missing=""
+          [ -n "$APP_ID" ] || missing="$missing repository variable AUTO_MERGE_APP_ID;"
+          [ "$HAS_PRIVATE_KEY" = "true" ] || missing="$missing repository secret AUTO_MERGE_APP_PRIVATE_KEY;"
+          if [ -n "$missing" ]; then
+            echo "::error::auto-merge GitHub App not configured:$missing set under Settings → Secrets and variables → Actions (RUNBOOK.md §2.1)."
+            exit 1
+          fi
+
       - name: Mint app installation token
         id: app-token
         uses: actions/create-github-app-token@v3.2.0

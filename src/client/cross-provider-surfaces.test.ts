@@ -39,9 +39,11 @@ describe("cross-provider public surfaces", () => {
 			const core = await runWorkspaceAudit(root);
 			const sdk = await client.audit(root);
 			expect(withoutRun(sdk.report)).toEqual(withoutRun(core.report));
-			expect(providerEntry(core.report, "jscpd").state).toBe("complete");
-			expect(providerEntry(core.report, "knip").state).toBe("complete");
-			expect(providerEntry(core.report, "dependency-cruiser").state).toBe("complete");
+			// State with its reason, so an incomplete run names its cause (trellis-3dfe).
+			for (const id of ["jscpd", "knip", "dependency-cruiser"]) {
+				const { state, reason } = providerEntry(core.report, id);
+				expect({ id, state, reason }).toEqual({ id, state: "complete", reason: undefined });
+			}
 			expect(providerEntry(core.report, "sonarjs").state).toBe("unsupported");
 			const cli = Bun.spawn(
 				[process.execPath, join(import.meta.dir, "../cli/main.ts"), "audit", root, "--json"],

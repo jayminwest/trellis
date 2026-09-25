@@ -12,8 +12,9 @@
  * Documented semantics (fixed by the trellis-5a91 decision, SPEC §5.3):
  *
  * - **Token stream**: the leaf tokens of the shared `ts.SourceFile` in
- *   document order (comments and trivia never appear; the end-of-file
- *   token is dropped). A raw scanner loop is deliberately not used — it
+ *   document order (comments and trivia never appear — JSDoc nodes and
+ *   empty `SyntaxList` leaves are skipped after analyzer 0.3.0,
+ *   trellis-57aa; the end-of-file token is dropped). A raw scanner loop is deliberately not used — it
  *   mis-tokenizes template literals without manual re-scan state.
  * - **Normalization**: every identifier maps to one placeholder, every
  *   literal (string, numeric, bigint, regex, template part) maps to one
@@ -163,6 +164,20 @@ function normalizeKind(kind: ts.SyntaxKind): ts.SyntaxKind {
 }
 
 /**
+ * JSDoc nodes are comments: `getChildren` surfaces them as AST children, but
+ * SPEC §5.3 keeps comments and trivia out of the stream (trellis-57aa).
+ */
+/** Leaves never tokenized: end-of-file and empty syntax lists (trellis-57aa). */
+const DROPPED_LEAF_KINDS: ReadonlySet<ts.SyntaxKind> = new Set([
+	ts.SyntaxKind.EndOfFileToken,
+	ts.SyntaxKind.SyntaxList,
+]);
+
+function isTrivia(node: ts.Node): boolean {
+	return node.kind >= ts.SyntaxKind.FirstJSDocNode && node.kind <= ts.SyntaxKind.LastJSDocNode;
+}
+
+/**
  * Collect the normalized token stream of one parsed file. Iterative (an
  * explicit stack, so pathologically deep ASTs cannot overflow the call
  * stack); leaf tokens are visited in document order. The end-of-file token
@@ -185,9 +200,10 @@ function collectTokens(file: FileSyntax, work: TokenCollectionWork): TokenStream
 		work.release(2);
 		const node = stack.pop();
 		if (node === undefined) continue;
+		if (isTrivia(node)) continue;
 		const children = node.getChildren(sourceFile);
 		if (children.length === 0) {
-			if (node.kind === ts.SyntaxKind.EndOfFileToken) continue;
+			if (DROPPED_LEAF_KINDS.has(node.kind)) continue;
 			work.token();
 			work.charge(2 + 2 * Math.ceil(Math.log2(file.lines.total + 1)));
 			kinds.push(normalizeKind(node.kind));

@@ -17,7 +17,12 @@
  * - additionally, an enforcing check reference exists — a manifest script or
  *   CI `run:` command naming the budget file (or invoking `jscpd`, which reads
  *   `.jscpd.json` by convention) — and that reference is CI-reachable →
- *   `structurally-wired`;
+ *   `structurally-wired`. For the JSON budgets the evidence may take **one
+ *   hop**: a CI-reachable script body or CI command runs a repo-local file
+ *   (e.g. `bun run scripts/check-file-sizes.ts`) whose text names the budget
+ *   path — or its basename when the file sits beside the budget. The file is
+ *   read as text only, never imported or executed, and the note records the
+ *   chain script → file → budget (trellis-b412);
  * - an unparseable budget file, or coverage thresholds living only in an
  *   executable test-runner config (`vitest.config.ts`, `jest.config.js`), →
  *   `unknown`: executable configuration is never imported or guessed;
@@ -40,20 +45,25 @@ interface BudgetSpec {
 	 * config by convention.
 	 */
 	enforcedBy: (body: string, budgetPath: string) => boolean;
+	/** Follow one hop into repo-local files a CI-reachable command runs (trellis-b412). */
+	followScriptFiles: boolean;
 }
 
 const BUDGET_SPECS: Record<string, BudgetSpec> = {
 	"coverage-budget": {
 		files: ["scripts/coverage-budgets.json", "coverage-budgets.json"],
 		enforcedBy: (body, budgetPath) => body.includes(budgetPath),
+		followScriptFiles: true,
 	},
 	"file-size-budget": {
 		files: ["scripts/file-size-budgets.json", "file-size-budgets.json"],
 		enforcedBy: (body, budgetPath) => body.includes(budgetPath),
+		followScriptFiles: true,
 	},
 	"duplication-budget": {
 		files: [".jscpd.json"],
 		enforcedBy: (body) => /\bjscpd\b/.test(body),
+		followScriptFiles: false,
 	},
 };
 
@@ -65,6 +75,54 @@ const EXECUTABLE_COVERAGE_CONFIGS = [
 	"jest.config.js",
 ];
 
+/** The directory part of a repo-relative POSIX path (`""` at the root). */
+function dirOf(rel: string): string {
+	const slash = rel.lastIndexOf("/");
+	return slash === -1 ? "" : rel.slice(0, slash);
+}
+
+/** True when a script file's text names the budget (full path, or basename beside it). */
+function fileNamesBudget(filePath: string, text: string, budgetPath: string): boolean {
+	if (text.includes(budgetPath)) return true;
+	const basename = budgetPath.slice(budgetPath.lastIndexOf("/") + 1);
+	return dirOf(filePath) === dirOf(budgetPath) && text.includes(basename);
+}
+
+/** CI-reachable command bodies with a label naming where each is reached from. */
+function ciReachableBodies(ctx: SafeguardContext): { label: string; body: string }[] {
+	const bodies = ctx.workflows.flatMap((w) =>
+		w.commands.map((c) => ({ label: `${w.path} runs`, body: c.text })),
+	);
+	const reach = ciReachableScripts(ctx);
+	for (const script of ctx.manifest?.scripts ?? []) {
+		const via = reach.get(script.name);
+		if (via !== undefined) {
+			bodies.push({
+				label: `script '${script.name}' (reachable from ${via.workflow}) runs`,
+				body: script.body,
+			});
+		}
+	}
+	return bodies;
+}
+
+/** One hop: a CI-reachable command runs a local file whose text names the budget. */
+async function budgetEnforcedViaFile(
+	ctx: SafeguardContext,
+	budgetPath: string,
+): Promise<string | null> {
+	for (const { label, body } of ciReachableBodies(ctx)) {
+		for (const filePath of extractLocalPaths(body)) {
+			if (filePath === budgetPath) continue;
+			const text = await ctx.readText(filePath);
+			if (text !== null && fileNamesBudget(filePath, text, budgetPath)) {
+				return `${label} ${filePath}, which names ${budgetPath}`;
+			}
+		}
+	}
+	return null;
+}
+
 /** True when `body` runs the check directly or via a `run` reference chain. */
 async function budgetEnforced(
 	ctx: SafeguardContext,
@@ -72,17 +130,20 @@ async function budgetEnforced(
 	budgetPath: string,
 ): Promise<string | null> {
 	const scripts = ctx.manifest?.scripts ?? [];
-	const direct = scripts.find((s) => spec.enforcedBy(s.body, budgetPath));
 	const ciDirect = ctx.workflows.some((w) =>
 		w.commands.some((c) => spec.enforcedBy(c.text, budgetPath)),
 	);
 	if (ciDirect) return "a CI workflow invokes the enforcing check";
-	if (direct === undefined) return null;
 	// ciReachableScripts computes the full run-reference closure, so a hit here
 	// covers direct and transitive wiring alike.
-	const via = ciReachableScripts(ctx).get(direct.name);
-	if (via !== undefined) return `script '${direct.name}' is reachable from ${via.workflow}`;
-	return null;
+	const reach = ciReachableScripts(ctx);
+	for (const script of scripts) {
+		const via = reach.get(script.name);
+		if (via !== undefined && spec.enforcedBy(script.body, budgetPath)) {
+			return `script '${script.name}' is reachable from ${via.workflow}`;
+		}
+	}
+	return spec.followScriptFiles ? budgetEnforcedViaFile(ctx, budgetPath) : null;
 }
 
 /** Inspect one budget kind. */

@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import { auditWorkspace } from "../../audit/audit.ts";
 import {
 	carriedProviderIds,
+	claimScratchRoot,
 	evidenceArea,
 	PINNED,
 	providerAuditConfig,
@@ -42,13 +43,18 @@ const PACKAGE_JSON = resolve(import.meta.dir, "../../../package.json");
 
 let repo: string;
 
+let releaseScratchRoot: () => Promise<void>;
+
 beforeEach(async () => {
+	// Test-owned tmpdir: scratch counts see only this test's staging (trellis-3dfe).
+	releaseScratchRoot = await claimScratchRoot();
 	repo = await mkdtemp(join(tmpdir(), "trellis-sonar-deferred-"));
 	await seedClonePair(repo);
 });
 
 afterEach(async () => {
 	await rm(repo, { recursive: true, force: true });
+	await releaseScratchRoot();
 });
 
 describe("sonarjs deferred capability", () => {

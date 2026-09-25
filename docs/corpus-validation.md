@@ -180,6 +180,29 @@ depended on the 50-token minimum were updated in the same change
 are now 105 tokens over 13 lines at CC 10, so they never leak hotspot
 findings).
 
+## Token-stream trivia fix (trellis-57aa, 2026-09-25)
+
+`collectTokenStream` now skips JSDoc nodes and empty `SyntaxList` leaves, as
+SPEC §5.3 already required ("comments and trivia never appear"). Before the
+fix `function x(){}` yielded eight tokens and a JSDoc block added another;
+it now yields six and is JSDoc-invariant. The minimum clone size (100
+tokens, 3 lines), normalization, and scoring formula are unchanged; the
+analyzer version bump at the next release separates artifacts across the
+change.
+
+Corpus effect (`--in-process --runs 1`, exit 0 before and after): every
+fixture index is unchanged. Measured workspaces:
+
+| Workspace | Index | Prod groups | Prod density | Test groups |
+|---|---|---|---|---|
+| trellis-self (before → after) | 41 → 40 | 21 → 20 | 0.0501 → 0.0486 | 117 → 109 |
+| zod (fresh clone) | 89 → 89 | 365 → 362 | 0.3538 → 0.3546 | 409 → 378 |
+| hono (fresh clone) | 85 → 85 | 131 → 131 | 0.1594 → 0.1594 | 690 → 647 |
+
+Groups whose shared run was padded by identical doc comments fall below the
+minimum; a few runs previously broken by differing JSDoc merge, so density
+can rise slightly (zod). No threshold recalibration is warranted.
+
 ## Reproduce
 
 ```bash

@@ -458,10 +458,15 @@ versioned calibration (§16.5).
   The governing tsconfig is the nearest `tsconfig.json` walking up from the
   importing file; undeclared `moduleResolution` defaults to `bundler`, and
   `paths` without `baseUrl` resolve against the config's directory.
-  Workspace packages resolve by manifest name through `exports` (string or
-  one condition level, `import`→`require`→`default`→`types`, single `*`
-  wildcard; an `exports`-bearing package encapsulates unlisted subpaths),
-  then `main`, `types`, `index`. Externals are recorded by name and never
+  Workspace packages resolve by manifest name through `exports` (strings,
+  fallback arrays and nested conditions tried as tsconfig
+  `customConditions` → source-named conditions (`source`, `@scope/source`)
+  → `import`→`require`→`default`→`types`, single `*` wildcard; an
+  `exports`-bearing package encapsulates unlisted subpaths), then `main`,
+  `types`, `index`. Entries naming absent build output map back to source
+  through the package tsconfig's `outDir`→`rootDir`, then
+  `dist|build|lib|out`→`src`, without ever running a build (graph policy
+  1.1.0, trellis-a98b). Externals are recorded by name and never
   resolved into — `node_modules` is never consulted, so absent dependencies
   change nothing; workspace entries pointing at absent build outputs surface
   as documented `unresolved` edges. Resolution targets outside the
@@ -471,7 +476,14 @@ versioned calibration (§16.5).
   policy. *(Landed, trellis-d214: `GRAPH_POLICY` version `1.0.0` in
   `src/metrics/graph-types.ts` — type-only edges retained-distinct,
   literal-only dynamic imports, self-edges retained, externals
-  recorded-never-resolved.)*
+  recorded-never-resolved. Policy `1.1.0` (trellis-42ad) records
+  non-literal `import(expr)` sites as **opaque**: they keep their
+  unresolved edge, finding and `graph.edges.unresolved`
+  `detail.nonLiteralDynamic` count, but no longer make the graph or the
+  cycle metrics `incomplete` — no static resolver can ever resolve them,
+  so one such site no longer degrades the import-cycle dimension to its
+  full weight. Scoring weights are unchanged; the analyzer version
+  separates artifacts across the change.)*
 - **Cycle measurement**: strongly connected components expose **complete
   cyclic module groups** (not first-cycle-only), with affected-module
   density and representative paths. Group identifiers and representative
@@ -504,7 +516,9 @@ documented set of supported formats:
   named scripts recognized through supported wiring (not named-tool presence
   alone).
 - Coverage / file-size / duplication budgets and references to the checks
-  that enforce them.
+  that enforce them. A JSON budget is also wired when a CI-reachable command
+  runs a repo-local script file whose text names the budget path (one hop,
+  read as text only, never executed; trellis-b412).
 
 Each safeguard is reported at one of four **evidence levels**:
 

@@ -21,6 +21,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+          registry-url: https://registry.npmjs.org
 
       - run: bun install
       - run: bun run lint
@@ -51,12 +52,20 @@ jobs:
             exit 1
           fi
 
+      # Auth (trellis-689e): an NPM_TOKEN secret is used when set; otherwise npm
+      # trusted publishing exchanges this job's OIDC token (id-token: write),
+      # which needs npm >= 11.5.1 and a trusted publisher for this workflow on
+      # npmjs.com. An empty token used to reach npm and fail with ENEEDAUTH.
       - name: Publish to npm
         if: steps.version-check.outputs.publish == 'true'
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "No NPM_TOKEN secret: publishing via npm trusted publishing (OIDC)."
+            npm install -g "npm@^11.5.1"
+            unset NODE_AUTH_TOKEN
+          fi
           npm publish --access public --provenance
 
       - name: Tag release

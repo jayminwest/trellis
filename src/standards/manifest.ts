@@ -20,8 +20,8 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import yaml from "js-yaml";
 import { z } from "zod";
+import { parseYaml } from "../contract/yaml.ts";
 
 /** Directory holding the bundled canonical files, relative to this module. */
 export const CANONICAL_DIR = "canonical";
@@ -130,7 +130,7 @@ export function readCanonical(path: string, canonicalDir?: string): Buffer {
 export function loadManifest(dir: string = import.meta.dir): Manifest {
 	let raw: unknown;
 	try {
-		raw = yaml.load(readFileSync(join(dir, MANIFEST_FILE), "utf8"));
+		raw = parseYaml(readFileSync(join(dir, MANIFEST_FILE), "utf8"));
 	} catch {
 		throw new ManifestError("source file not found or unreadable", "");
 	}
