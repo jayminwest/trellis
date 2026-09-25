@@ -24,6 +24,10 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   source via the package tsconfig `outDir`→`rootDir` or the `dist|build|lib|out`
   →`src` convention. No build is ever run; a fresh zod clone drops from 108 to 2
   unresolved `no-target` edges (trellis-a98b).
+- Native duplication tokens no longer include JSDoc comments or empty
+  syntax-list leaves, matching SPEC §5.3. Thresholds and scoring are
+  unchanged; the trellis self-audit moves 41 → 40 and every corpus fixture
+  keeps its index (see `docs/corpus-validation.md`, trellis-57aa).
 
 ## [0.3.0] — 2026-09-19
 
