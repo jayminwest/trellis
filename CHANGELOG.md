@@ -15,6 +15,10 @@ While pre-1.0, breaking changes go in MINOR and additive changes go in PATCH.
   YAML inputs go through one `parseYaml` helper that keeps the previous
   semantics: empty documents parse to nothing, merge keys resolve, and
   multi-document streams are rejected (trellis-06cd).
+- Recorded the TypeScript 7 decision: the analyzer stays on `typescript`
+  6.0.3 because 7.x exposes no in-process compiler API (parsing would launch
+  the native binary). Dependabot now ignores `typescript` 7 majors
+  (`docs/typescript-7-decision.md`, trellis-ea21).
 
 ### Fixed
 
