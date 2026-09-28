@@ -958,6 +958,7 @@ trellis compare <a.json> <b.json>   # artifact comparison without an audit
 trellis fleet                  # optional multi-repo run (§11)
 trellis report                 # history views (only with --history data)
 trellis standards              # canonical drift (separate capability, §11)
+trellis brand <path>           # static os-eco CLI brand findings (docs/brand-standard.md; unscored)
 trellis guide cleanup          # bundled instructions only; no audit or agent execution
 ```
 

@@ -11,6 +11,7 @@
 import { Command } from "commander";
 import { VERSION } from "../index.ts";
 import { registerAudit } from "./audit.ts";
+import { registerBrand } from "./brand.ts";
 import { registerCompare } from "./compare.ts";
 import { registerDrift } from "./drift.ts";
 import { registerFleet } from "./fleet.ts";
@@ -39,6 +40,7 @@ export function buildProgram(): Command {
 		.option("--md", "emit a markdown report");
 
 	registerAudit(program);
+	registerBrand(program);
 	registerCompare(program);
 	registerDrift(program);
 	registerFleet(program);

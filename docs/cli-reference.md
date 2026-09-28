@@ -24,6 +24,8 @@ trellis report                     # sloppiness history/dashboard from SQLite
 trellis drift <path>               # inspect canonical-config drift (separate, unscored)
   [--fail-on drift|none]
 trellis standards                  # canonical-config drift manifest (separate capability)
+trellis brand <path>               # static os-eco CLI brand check (findings, unscored)
+  [--fail-on findings|none]        #   see brand-standard.md
 trellis guide cleanup              # print bundled, read-only cleanup guidance
 ```
 
