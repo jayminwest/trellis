@@ -70,6 +70,7 @@ trellis fleet                 # audit every target in targets.yaml through the s
 trellis report                # sloppiness history from SQLite
 trellis drift <repo-path>     # canonical-config drift only (separate, unscored)
 trellis standards             # show canonical manifest + versions
+trellis brand <repo-path>     # static os-eco CLI brand check (docs/brand-standard.md)
 trellis guide cleanup         # print bundled, read-only cleanup guidance
 ```
 

@@ -1,4 +1,12 @@
-/** Canonical config drift core (SPEC §11): the bundled canonical set + manifest. */
+/** Canonical config drift core (SPEC §11) + the static os-eco brand check. */
+
+export {
+	BRAND_RULES,
+	type BrandFinding,
+	type BrandReport,
+	type BrandRule,
+	checkBrand,
+} from "./brand.ts";
 export {
 	type AllowedDelta,
 	type Divergence,

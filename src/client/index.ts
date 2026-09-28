@@ -41,7 +41,13 @@ import {
 } from "../fleet/index.ts"; // Mirrors src/fleet
 import { type Guide, getGuide } from "../guides/index.ts"; // Mirrors src/guides
 import { buildReport, type HistoryReport, type ReportRunOptions } from "../history/index.ts"; // Mirrors src/history
-import { type DriftOptions, type DriftReport, driftRepo } from "../standards/index.ts"; // Mirrors src/standards
+import {
+	type BrandReport,
+	checkBrand,
+	type DriftOptions,
+	type DriftReport,
+	driftRepo,
+} from "../standards/index.ts"; // Mirrors src/standards
 
 // Mirrors src/guides: response shape and discoverable names/errors are core-owned.
 export { GUIDE_NAMES, type Guide, GuideError } from "../guides/index.ts";
@@ -56,6 +62,7 @@ export type {
 	AnalysisResult,
 	AuditConfig,
 	AuditReport,
+	BrandReport,
 	DependencyCruiserProviderRequest,
 	DriftReport,
 	EvidenceArea,
@@ -120,6 +127,15 @@ export function compare(
 	opts: CompareRequest = {},
 ): Promise<CompareRunResult> {
 	return runComparison(baselinePath, currentPath, opts);
+}
+
+/**
+ * Check one repo against the static parts of the os-eco CLI brand standard
+ * (docs/brand-standard.md) — findings only, never scored. Identical to
+ * `trellis brand`.
+ */
+export function brand(repoPath: string): BrandReport {
+	return checkBrand(repoPath);
 }
 
 /** Request for {@link drift}. Mirrors src/standards {@link DriftOptions}. */
